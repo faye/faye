@@ -13,6 +13,7 @@ get '/faye.js' do
 end
 
 get '/user/:id' do
+  sleep(0.1) while params[:id] == 'hang'
   JSON.unparse :success => true, :user => params[:id]
 end
 
