@@ -11,6 +11,7 @@ lib/javascript/faye.js
 lib/javascript/class.js
 lib/javascript/event.js
 lib/javascript/xhr.js
+lib/javascript/transport.js
 lib/javascript/client.js
 lib/faye-min.js
 examples/chat/app.rb
