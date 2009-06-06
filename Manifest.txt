@@ -9,6 +9,7 @@ lib/faye/client.rb
 lib/javascript/json.js
 lib/javascript/faye.js
 lib/javascript/class.js
+lib/javascript/event.js
 lib/javascript/xhr.js
 lib/javascript/client.js
 lib/faye-min.js

@@ -9,6 +9,7 @@ packages:
   faye:
     - faye
     - class
+    - event
     - xhr
     - client
     - json
