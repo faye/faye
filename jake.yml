@@ -1,0 +1,14 @@
+---
+source_directory:   lib/javascript
+build_directory:    lib
+builds:
+  min:
+    shrink_vars:    true
+    private:        true
+packages:
+  faye:
+    - json
+    - faye
+    - class
+    - xhr
+

@@ -2,5 +2,13 @@ History.txt
 Manifest.txt
 README.txt
 Rakefile
+jake.yml
 lib/faye.rb
+lib/javascript/json.js
+lib/javascript/faye.js
+lib/javascript/class.js
+lib/javascript/xhr.js
+lib/faye-min.js
+examples/chat/app.rb
+examples/chat/public/index.html
 test/test_faye.rb
