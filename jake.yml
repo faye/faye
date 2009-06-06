@@ -7,8 +7,9 @@ builds:
     private:        true
 packages:
   faye:
-    - json
     - faye
     - class
     - xhr
+    - client
+    - json
 
