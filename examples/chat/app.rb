@@ -23,10 +23,6 @@ post '/comet-channel' do
 end
 
 get '/comet-channel' do
-  while params[:message] == 'hang'
-    puts 'Sleeping GET request'
-    sleep(2.0)
-  end
   SERVER.process(params[:message], :jsonp => params[:callback])
 end
 
