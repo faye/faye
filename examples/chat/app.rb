@@ -11,7 +11,7 @@ get '/' do
 end
 
 get '/faye.js' do
-  File.read(Faye::CLIENT_SCRIPT)
+  send_file(Faye::CLIENT_SCRIPT)
 end
 
 post '/comet-channel' do

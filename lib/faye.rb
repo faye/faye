@@ -4,7 +4,7 @@ require 'json'
 module Faye
   VERSION = '0.1.0'
   
-  ROOT = File.dirname(__FILE__)
+  ROOT = File.expand_path(File.dirname(__FILE__))
   CLIENT_SCRIPT = File.join(ROOT, 'faye-min.js')
   
   ID_LENGTH = 128
