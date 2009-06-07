@@ -21,7 +21,7 @@ module Faye
   def self.random(bitlength = ID_LENGTH)
     field  = 2 ** bitlength
     strlen = bitlength / 4
-    "%0#{strlen}s" % rand(field).to_s(16)
+    ("%0#{strlen}s" % rand(field).to_s(16)).gsub(' ', '0')
   end
 end
 
