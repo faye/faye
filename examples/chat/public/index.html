@@ -9,9 +9,7 @@
 <body>
   
   <script type="text/javascript">
-    Faye.XHR.request('post', '/comet-channel', {message: 'hang'});
-    
-    var client = new Faye.Client('/comet-channel');
+    var client = new Faye.Client('/comet-channel?jsonp=callback');
     client.connect();
   </script>
   

@@ -15,8 +15,19 @@ get '/faye.js' do
 end
 
 post '/comet-channel' do
-  sleep(0.1) while params[:message] == 'hang'
+  while params[:message] == 'hang'
+    puts 'Sleeping POST request'
+    sleep(2.0)
+  end
   SERVER.process(params[:message])
+end
+
+get '/comet-channel' do
+  while params[:message] == 'hang'
+    puts 'Sleeping GET request'
+    sleep(2.0)
+  end
+  SERVER.process(params[:message], :jsonp => params[:callback])
 end
 
 get '/user/:id' do

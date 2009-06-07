@@ -15,7 +15,7 @@ module Faye
       @clients.keys
     end
     
-    def process(messages)
+    def process(messages, options = {})
       messages = JSON.parse(messages) if String === messages
       messages = [messages] unless Array === messages
       
@@ -23,7 +23,8 @@ module Faye
         resp << handle(msg)
         resp
       end
-      JSON.unparse(responses)
+      response = JSON.unparse(responses)
+      options[:jsonp] ? "#{ options[:jsonp] }(#{ response });" : response
     end
     
     def handle(message)

@@ -10,6 +10,7 @@ packages:
     - faye
     - class
     - event
+    - uri
     - xhr
     - transport
     - client

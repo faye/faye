@@ -10,6 +10,7 @@ lib/javascript/json.js
 lib/javascript/faye.js
 lib/javascript/class.js
 lib/javascript/event.js
+lib/javascript/uri.js
 lib/javascript/xhr.js
 lib/javascript/transport.js
 lib/javascript/client.js
