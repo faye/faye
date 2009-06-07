@@ -23,7 +23,7 @@ post '/comet-channel' do
 end
 
 get '/comet-channel' do
-  SERVER.process(params[:message], :jsonp => params[:callback])
+  SERVER.process(params[:message], :jsonp => params[:jsonp])
 end
 
 get '/user/:id' do

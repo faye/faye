@@ -19,6 +19,8 @@ module Faye
       messages = JSON.parse(messages) if String === messages
       messages = [messages] unless Array === messages
       
+      options[:jsonp] ||= JSONP_CALLBACK if options.has_key?(:jsonp)
+      
       responses = messages.inject([]) do |resp, msg|
         resp << handle(msg)
         resp
@@ -47,6 +49,7 @@ module Faye
     
     # TODO
     # * support authentication
+    # * check we can support the client's connection type
     # * unsuccessful handshakes
     def handshake(message)
       id = generate_id
@@ -54,7 +57,7 @@ module Faye
       
       { :channel    => Channel::HANDSHAKE,
         :version    => message['version'],
-        :supportedConnectionTypes => message['supportedConnectionTypes'],
+        :supportedConnectionTypes => CONNECTION_TYPES,
         :clientId   => id,
         :successful => true,
         :id         => message['id'] }

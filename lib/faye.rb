@@ -7,7 +7,9 @@ module Faye
   ROOT = File.expand_path(File.dirname(__FILE__))
   CLIENT_SCRIPT = File.join(ROOT, 'faye-min.js')
   
-  ID_LENGTH = 128
+  ID_LENGTH        = 128
+  JSONP_CALLBACK   = 'jsonpcallback'
+  CONNECTION_TYPES = %w[long-polling callback-polling]
   
   class Channel
     HANDSHAKE   = '/meta/handshake'
