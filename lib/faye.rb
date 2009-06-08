@@ -15,16 +15,6 @@ module Faye
     require File.join(Faye::ROOT, 'faye', lib)
   end
   
-  LOWALPHA      = Grammar.rule { '[a-z]' }
-  UPALPHA       = Grammar.rule { '[A-Z]' }
-  ALPHA         = Grammar.rule { choice(LOWALPHA, UPALPHA) }
-  DIGIT         = Grammar.rule { '[0-9]' }
-  ALPHANUM      = Grammar.rule { choice(ALPHA, DIGIT) }
-  MARK          = Grammar.rule { choice(*%w[\\- \\_ \\! \\~ \\( \\) \\$ \\@]) }
-  STRING        = Grammar.rule { repeat(choice(ALPHANUM, MARK, ' ', '\\/', '\\*', '\\.')) }
-  TOKEN         = Grammar.rule { oneormore(choice(ALPHANUM, MARK)) }
-  INTEGER       = Grammar.rule { oneormore(DIGIT) }
-  
   class Channel
     HANDSHAKE   = '/meta/handshake'
     CONNECT     = '/meta/connect'
