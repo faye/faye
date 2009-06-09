@@ -8,11 +8,11 @@ builds:
 packages:
   faye:
     - faye
-    - class
-    - event
-    - uri
-    - xhr
+    - util/class
+    - util/event
+    - util/uri
+    - util/xhr
     - transport
     - client
-    - json
+    - util/json
 
