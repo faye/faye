@@ -9,19 +9,32 @@ module Faye
     
     META        = 'meta'
     
-    def self.valid?(name)
-      test = (Grammar::CHANNEL_NAME =~ name)
-      not test.nil?
+    class << self
+      def valid?(name)
+        test = (Grammar::CHANNEL_NAME =~ name)
+        not test.nil?
+      end
+      
+      def parse(name)
+        return nil unless valid?(name)
+        name.split('/')[1..-1]
+      end
+      
+      def meta?(name)
+        segments = parse(name)
+        segments ? (segments.first == META) : nil
+      end
     end
     
-    def self.parse(name)
-      return nil unless valid?(name)
-      name.split('/')[1..-1]
+    attr_reader :name
+    
+    def initialize(name)
+      @name    = name
+      @clients = []
     end
     
-    def self.meta?(name)
-      segments = parse(name)
-      segments ? (segments.first == META) : nil
+    def <<(client)
+      @clients << client
     end
   end
 end

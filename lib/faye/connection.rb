@@ -3,7 +3,12 @@ module Faye
     attr_reader :id
     
     def initialize(id)
-      @id = id
+      @id    = id
+      @inbox = []
+    end
+    
+    def <<(event)
+      @inbox << event
     end
   end
 end

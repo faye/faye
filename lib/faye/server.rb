@@ -85,8 +85,8 @@ module Faye
       subscription = [subscription] unless Array === subscription
       
       subscription.each do |channel|
-        sub = @subscriptions[channel] ||= Subscription.new(channel)
-        sub.add_recipient(client)
+        sub = @subscriptions[channel] ||= Channel.new(channel)
+        sub << client
       end
       
       { :channel      => Channel::SUBSCRIBE,
