@@ -1,8 +1,8 @@
 module Faye
   class Server
     def initialize
-      @clients  = {}
-      @subscriptions = {}
+      @subscriptions = Channel::Tree.new
+      @clients = {}
     end
     
     def generate_id

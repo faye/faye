@@ -66,10 +66,24 @@ class TestFaye < Test::Unit::TestCase
     assert Grammar::CLIENT_ID !~ 'dfg_hs5r'
     
     assert Grammar::ERROR =~ '401::No client ID'
+    assert Grammar::ERROR !~ '401:No client ID'
     assert Grammar::ERROR !~ '40::No client ID'
     assert Grammar::ERROR !~ '40k::No client ID'
     assert Grammar::ERROR =~ '402:xj3sjdsjdsjad:Unknown Client ID'
     assert Grammar::ERROR =~ '403:xj3sjdsjdsjad,/foo/bar:Subscription denied'
     assert Grammar::ERROR =~ '404:/foo/bar:Unknown Channel'
+  end
+  
+  def test_channel_tree
+    tree = Channel::Tree.new
+    
+    tree['invalid/name'] = 1
+    assert_equal nil, tree['invalid/name']
+    
+    tree['/valid/name'] = 2
+    assert_equal 2, tree['/valid/name']
+    
+    tree['/va()$$lid/name'] = 3
+    assert_equal 3, tree['/va()$$lid/name']
   end
 end
