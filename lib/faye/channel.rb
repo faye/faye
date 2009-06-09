@@ -11,8 +11,8 @@ module Faye
     
     class << self
       def valid?(name)
-        test = (Grammar::CHANNEL_NAME =~ name)
-        not test.nil?
+        Grammar::CHANNEL_NAME =~ name or
+        Grammar::CHANNEL_PATTERN =~ name
       end
       
       def parse(name)
@@ -67,12 +67,42 @@ module Faye
       
       def traverse(path, create_if_absent = false)
         path = Channel.parse(path) if String === path
+        
         return nil if path.nil?
         return self if path.empty?
+        
         subtree = @children[path.first]
         return nil if subtree.nil? and not create_if_absent
         subtree = @children[path.first] = self.class.new if subtree.nil?
+        
         subtree.traverse(path[1..-1], create_if_absent)
+      end
+      
+      def glob(path = [])
+        path = Channel.parse(path) if String === path
+        
+        return [] if path.nil?
+        return @value.nil? ? [] : [@value] if path.empty?
+        
+        if path == %w[*]
+          return @children.inject([]) do |list, (key, subtree)|
+            list << subtree.value unless subtree.value.nil?
+            list
+          end
+        end
+        
+        if path == %w[**]
+          list = map { |key, value| value }
+          list.pop
+          return list
+        end
+        
+        list = @children.values_at(path.first, '*').
+                         compact.
+                         map { |t| t.glob(path[1..-1]) }
+        
+        list << @children['**'].value if @children['**']
+        list.flatten
       end
     end
     
