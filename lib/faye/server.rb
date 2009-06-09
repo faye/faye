@@ -30,21 +30,10 @@ module Faye
     end
     
     def handle(message)
-      return handshake(message)   if handshake?(message)
-      return connect(message)     if connect?(message)
-      return disconnect(message)  if disconnect?(message)
-    end
-    
-    def handshake?(message)
-      message['channel'] == Channel::HANDSHAKE
-    end
-    
-    def connect?(message)
-      message['channel'] == Channel::CONNECT
-    end
-    
-    def disconnect?(message)
-      message['channel'] == Channel::DISCONNECT
+      channel = message['channel']
+      if Channel.meta?(channel)
+        return __send__(Channel.parse(channel)[1], message)
+      end
     end
     
     # TODO

@@ -11,17 +11,8 @@ module Faye
   JSONP_CALLBACK   = 'jsonpcallback'
   CONNECTION_TYPES = %w[long-polling callback-polling]
   
-  %w[grammar server client].each do |lib|
+  %w[grammar server channel client].each do |lib|
     require File.join(Faye::ROOT, 'faye', lib)
-  end
-  
-  class Channel
-    HANDSHAKE   = '/meta/handshake'
-    CONNECT     = '/meta/connect'
-    SUBSCRIBE   = '/meta/subscribe'
-    UNSUBSCRIBE = '/meta/unsubscribe'
-    DISCONNECT  = '/meta/disconnect'
-    ECHO        = '/service/echo'
   end
   
   def self.random(bitlength = ID_LENGTH)
