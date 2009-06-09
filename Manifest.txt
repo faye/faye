@@ -7,7 +7,8 @@ lib/faye.rb
 lib/faye/grammar.rb
 lib/faye/server.rb
 lib/faye/channel.rb
-lib/faye/client.rb
+lib/faye/subscription.rb
+lib/faye/connection.rb
 lib/javascript/json.js
 lib/javascript/faye.js
 lib/javascript/class.js

@@ -2,7 +2,7 @@ module Faye
   class Server
     def initialize
       @clients  = {}
-      @channels = {}
+      @subscriptions = {}
     end
     
     def generate_id
@@ -42,7 +42,7 @@ module Faye
     # * unsuccessful handshakes
     def handshake(message)
       id = generate_id
-      @clients[id] = Client.new
+      @clients[id] = Connection.new(id)
       
       { :channel    => Channel::HANDSHAKE,
         :version    => message['version'],
@@ -52,15 +52,18 @@ module Faye
         :id         => message['id'] }
     end
     
+    # TODO error messages
     def connect(message)
       id = message['clientId']
       client = @clients[id]
       
       { :channel    => Channel::CONNECT,
         :successful => !client.nil?,
-        :clientId   => id }
+        :clientId   => id,
+        :id         => message['id'] }
     end
     
+    # TODO error messages
     def disconnect(message)
       id = message['clientId']
       client = @clients[id]
@@ -68,7 +71,29 @@ module Faye
       
       { :channel    => Channel::DISCONNECT,
         :successful => !client.nil?,
-        :clientId   => id }
+        :clientId   => id,
+        :id         => message['id'] }
+    end
+    
+    # TODO
+    # * error messages
+    # * deliver pending events for the new subscription
+    def subscribe(message)
+      client       = @clients[message['clientId']]
+      subscription = message['subscription']
+      
+      subscription = [subscription] unless Array === subscription
+      
+      subscription.each do |channel|
+        sub = @subscriptions[channel] ||= Subscription.new(channel)
+        sub.add_recipient(client)
+      end
+      
+      { :channel      => Channel::SUBSCRIBE,
+        :successful   => true,
+        :clientId     => client.id,
+        :subscription => subscription,
+        :id           => message['id'] }
     end
   end
 end
