@@ -7,8 +7,16 @@ module Faye
       @inbox = []
     end
     
-    def <<(event)
+    def update(event)
       @inbox << event
+    end
+    
+    def subscribe(channel)
+      channel.add_observer(self)
+    end
+    
+    def unsubscribe(channel)
+      channel.delete_observer(self)
     end
   end
 end

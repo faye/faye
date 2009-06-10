@@ -1,3 +1,5 @@
+require 'observer'
+
 module Faye
   class Channel
     HANDSHAKE   = '/meta/handshake'
@@ -7,7 +9,7 @@ module Faye
     DISCONNECT  = '/meta/disconnect'
     ECHO        = '/service/echo'
     
-    META        = 'meta'
+    META        = :meta
     
     class << self
       def valid?(name)
@@ -26,15 +28,16 @@ module Faye
       end
     end
     
+    include Observable
     attr_reader :name
     
     def initialize(name)
-      @name    = name
-      @clients = []
+      @name = name
     end
     
-    def <<(client)
-      @clients << client
+    def <<(message)
+      changed(true)
+      notify_observers(message)
     end
     
     class Tree

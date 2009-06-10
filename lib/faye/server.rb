@@ -1,8 +1,8 @@
 module Faye
   class Server
     def initialize
-      @subscriptions = Channel::Tree.new
-      @clients = {}
+      @channels = Channel::Tree.new
+      @clients  = {}
     end
     
     def generate_id
@@ -84,15 +84,17 @@ module Faye
       
       subscription = [subscription] unless Array === subscription
       
-      subscription.each do |channel|
-        sub = @subscriptions[channel] ||= Channel.new(channel)
-        sub << client
+      output = subscription.inject([]) do |list, channel|
+        channel = @channels[channel] ||= Channel.new(channel)
+        client.subscribe(channel)
+        list << channel.name
+        list
       end
       
       { :channel      => Channel::SUBSCRIBE,
         :successful   => true,
         :clientId     => client.id,
-        :subscription => subscription,
+        :subscription => output,
         :id           => message['id'] }
     end
   end
