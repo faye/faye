@@ -5,16 +5,6 @@ module Faye
       @clients  = {}
     end
     
-    def generate_id
-      id = Faye.random
-      id = Faye.random while @clients.has_key?(id)
-      id
-    end
-    
-    def ids
-      @clients.keys
-    end
-    
     def process(messages, options = {})
       messages = JSON.parse(messages) if String === messages
       messages = [messages] unless Array === messages
@@ -22,8 +12,9 @@ module Faye
       options[:jsonp] ||= JSONP_CALLBACK if options.has_key?(:jsonp)
       
       responses = messages.inject([]) do |resp, msg|
-        resp << handle(msg)
-        resp
+        reply = handle(msg)
+        reply = [reply] unless Array === reply
+        resp  + reply
       end
       response = JSON.unparse(responses)
       options[:jsonp] ? "#{ options[:jsonp] }(#{ response });" : response
@@ -36,13 +27,24 @@ module Faye
       end
     end
     
+  private
+    
+    def generate_id
+      id = Faye.random
+      id = Faye.random while @clients.has_key?(id)
+      connection(id).id
+    end
+    
+    def connection(id)
+      @clients[id] ||= Connection.new(id)
+    end
+    
     # TODO
     # * support authentication
     # * check we can support the client's connection type
     # * unsuccessful handshakes
     def handshake(message)
       id = generate_id
-      @clients[id] = Connection.new(id)
       
       { :channel    => Channel::HANDSHAKE,
         :version    => message['version'],
@@ -54,19 +56,21 @@ module Faye
     
     # TODO error messages
     def connect(message)
-      id = message['clientId']
-      client = @clients[id]
+      events = connection(message['clientId']).poll_events
       
-      { :channel    => Channel::CONNECT,
-        :successful => !client.nil?,
-        :clientId   => id,
-        :id         => message['id'] }
+      events << { :channel    => Channel::CONNECT,
+                  :successful => !connection(id).nil?,
+                  :clientId   => id,
+                  :id         => message['id'] }
+      events
     end
     
     # TODO error messages
     def disconnect(message)
       id = message['clientId']
+      
       client = @clients[id]
+      client.disconnect!
       @clients.delete(id)
       
       { :channel    => Channel::DISCONNECT,
@@ -79,7 +83,7 @@ module Faye
     # * error messages
     # * deliver pending events for the new subscription
     def subscribe(message)
-      client       = @clients[message['clientId']]
+      client       = connection(message['clientId'])
       subscription = message['subscription']
       
       subscription = [subscription] unless Array === subscription
