@@ -22,9 +22,15 @@ module Faye
     
     def handle(message)
       channel = message['channel']
-      if Channel.meta?(channel)
-        return __send__(Channel.parse(channel)[1], message)
-      end
+      return __send__(Channel.parse(channel)[1], message) if Channel.meta?(channel)
+      
+      return [] if message['clientId'].nil?
+      
+      @channels.glob(message['channel']).each { |c| c << message }
+      
+      { :channel    => message['channel'],
+        :successful => true,
+        :id         => message['id'] }
     end
     
   private
@@ -56,11 +62,12 @@ module Faye
     
     # TODO error messages
     def connect(message)
-      events = connection(message['clientId']).poll_events
+      client = connection(message['clientId'])
+      events = client.poll_events
       
       events << { :channel    => Channel::CONNECT,
-                  :successful => !connection(id).nil?,
-                  :clientId   => id,
+                  :successful => !client.nil?,
+                  :clientId   => message['clientId'],
                   :id         => message['id'] }
       events
     end

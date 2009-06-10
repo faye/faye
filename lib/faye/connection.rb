@@ -7,11 +7,11 @@ module Faye
     def initialize(id)
       @id       = id
       @channels = Set.new
-      @inbox    = []
+      @inbox    = Set.new
     end
     
     def update(event)
-      @inbox << event
+      @inbox.add(event)
     end
     
     def subscribe(channel)
@@ -31,15 +31,13 @@ module Faye
     end
     
     def poll_events
-      loop do
-        break if not @inbox.empty? or
-                     @disconnect
-      end
+      loop { break if @disconnect or not @inbox.empty? }
       
-      if @disconnect
-        @disconnect = false
-        return []
-      end
+      @disconnect = false
+      
+      events = @inbox.entries
+      @inbox = Set.new
+      events
     end
   end
 end

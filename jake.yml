@@ -12,6 +12,7 @@ packages:
     - util/event
     - util/uri
     - util/xhr
+    - channel
     - transport
     - client
     - util/json
