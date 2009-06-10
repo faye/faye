@@ -17,7 +17,7 @@ module Faye
       
       def parse(name)
         return nil unless valid?(name)
-        name.split('/')[1..-1]
+        name.split('/')[1..-1].map { |s| s.to_sym }
       end
       
       def meta?(name)
@@ -84,24 +84,24 @@ module Faye
         return [] if path.nil?
         return @value.nil? ? [] : [@value] if path.empty?
         
-        if path == %w[*]
+        if path == [:*]
           return @children.inject([]) do |list, (key, subtree)|
             list << subtree.value unless subtree.value.nil?
             list
           end
         end
         
-        if path == %w[**]
+        if path == [:**]
           list = map { |key, value| value }
           list.pop
           return list
         end
         
-        list = @children.values_at(path.first, '*').
+        list = @children.values_at(path.first, :*).
                          compact.
                          map { |t| t.glob(path[1..-1]) }
         
-        list << @children['**'].value if @children['**']
+        list << @children[:**].value if @children[:**]
         list.flatten
       end
     end
