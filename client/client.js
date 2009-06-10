@@ -3,10 +3,13 @@ Faye.Client = Faye.Class({
   _CONNECTING:   {},
   _CONNECTED:    {},
   
+  DEFAULT_ENDPOINT:   '<%= Faye::App::DEFAULT_ENDPOINT %>',
+  
   initialize: function(endpoint) {
-    this._endpoint  = endpoint;
+    this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
     this._transport = Faye.Transport.get(this);
     this._state     = this._UNCONNECTED;
+    this._outbox    = [];
     
     Faye.Event.on(Faye.ENV, 'unload', this.disconnect, this);
   },
@@ -98,9 +101,6 @@ Faye.Client = Faye.Class({
       subscription: channels,
       id:           id
       
-    }, function(message) {
-      if (message.id !== id) return;
-      alert(message.subscription);
     });
   },
   
@@ -110,14 +110,26 @@ Faye.Client = Faye.Class({
     if (!Faye.Channel.valid(channel))
       throw '"' + channel + '" is not a valid channel name';
     
-    var id = this.generateId();
-    
-    this._transport.send({
+    this.enqueue({
       channel:      channel,
       data:         data,
-      clientId:     this._clientId,
-      id:           id
+      clientId:     this._clientId
     });
+    if (!this._batching) this.flush();
+  },
+  
+  enqueue: function(message) {
+    this._outbox.push(message);
+  },
+  
+  batch: function() {
+    this._batching = true;
+  },
+  
+  flush: function() {
+    this._batching = false;
+    this._transport.send(this._outbox);
+    this._outbox = [];
   },
   
   // TODO might be better as a retry loop

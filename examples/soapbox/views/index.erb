@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  <title>Faye demo: chat client</title>
+  <script src="/jquery.js" type="text/javascript"></script>
+  <script src="/comet.js" type="text/javascript"></script>
+  <script src="/soapbox.js" type="text/javascript"></script>
+</head>
+<body>
+  
+  <h1>Faye Comet demo: Soapbox</h1>
+  
+  <form id="enterUsername">
+    <label for="username">Pick a username</label>
+    <input type="text" name="username" id="username">
+    <input type="submit" value="Go">
+  </form>
+  
+  <div id="app" style="display: none;">
+    <form id="addFollowee">
+      <label for="followee">Follow</label>
+      <input type="text" name="followee" id="followee">
+      <input type="submit" value="Go">
+    </form>
+    
+    <form id="postMessage">
+      <label for="message">Post a message</label>
+      <textarea name="message" id="message" rows="3" cols="50"></textarea>
+      <input type="submit" value="Go">
+    </form>
+  </div>
+  
+  <script type="text/javascript">
+    Comet = new Faye.Client('/comet');
+    Comet.connect();
+    
+    Soapbox.init(Comet);
+  </script>
+  
+</body>
+</html>
+
