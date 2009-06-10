@@ -1,5 +1,5 @@
 ---
-source_directory:   lib/javascript
+source_directory:   client
 build_directory:    lib
 builds:
   min:
