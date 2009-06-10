@@ -10,6 +10,7 @@ Faye.Client = Faye.Class({
     this._transport = Faye.Transport.get(this);
     this._state     = this._UNCONNECTED;
     this._outbox    = [];
+    this._channels  = new Faye.Channel.Tree();
     
     Faye.Event.on(Faye.ENV, 'unload', this.disconnect, this);
   },
@@ -82,6 +83,8 @@ Faye.Client = Faye.Class({
       channel:  Faye.Channel.DISCONNECT,
       clientId: this._clientId
     });
+    
+    this._channels = new Faye.Channel.Tree();
   },
   
   subscribe: function(channels, callback, scope) {
@@ -100,8 +103,11 @@ Faye.Client = Faye.Class({
       clientId:     this._clientId,
       subscription: channels,
       id:           id
-      
     });
+    
+    Faye.each(channels, function(channel) {
+      this._channels.set(channel, [callback, scope]);
+    }, this);
   },
   
   // TODO support anonymous publishing
@@ -145,6 +151,13 @@ Faye.Client = Faye.Class({
       case 'none':
       default:          break;
     }
+  },
+  
+  sendToSubscribers: function(message) {
+    var channels = this._channels.glob(message.channel);
+    Faye.each(channels, function(callback) {
+      callback[0].call(callback[1], message.data);
+    });
   }
 });
 

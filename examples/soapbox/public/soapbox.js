@@ -17,7 +17,7 @@ Soapbox = {
   
   launch: function() {
     var self = this;
-    this._comet.subscribe('/mentioning/' + this._username);
+    this._comet.subscribe('/mentioning/' + this._username, function() {});
     
     this._login.fadeOut('slow', function() {
       self._app.fadeIn('slow');
@@ -25,7 +25,9 @@ Soapbox = {
     
     this._follow.submit(function() {
       var follow = $('#followee');
-      self._comet.subscribe('/from/' + follow.val());
+      self._comet.subscribe('/from/' + follow.val(), function(message) {
+        alert(message);
+      });
       follow.val('');
       return false;
     });
@@ -51,13 +53,10 @@ Soapbox = {
     });
     
     this._comet.batch();
-    
     this._comet.publish('/from/' + this._username, message);
-    
     $.each(mentions, function(i, name) {
       self._comet.publish('/mentioning/' + name, message);
     });
-    
     this._comet.flush();
   }
 };

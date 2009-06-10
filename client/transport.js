@@ -14,7 +14,7 @@ Faye.Transport = Faye.extend(Faye.Class({
         if (response.advice)
           this._client.handleAdvice(response.advice);
         if (response.data && response.channel)
-          window.console ? window.console.info(response) : alert(response);
+          this._client.sendToSubscribers(response);
       }, this);
     }, this);
   }
