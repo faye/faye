@@ -2,6 +2,8 @@ require 'set'
 
 module Faye
   class Connection
+    SLEEP_INTERVAL = 0.2
+    
     attr_reader :id
     
     def initialize(id)
@@ -31,7 +33,10 @@ module Faye
     end
     
     def poll_events
-      loop { break if @disconnect or not @inbox.empty? }
+      loop do
+        break if @disconnect or not @inbox.empty?
+        sleep(SLEEP_INTERVAL)
+      end
       
       @disconnect = false
       

@@ -7,6 +7,7 @@ Soapbox = {
     this._app     = $('#app');
     this._follow  = $('#addFollowee');
     this._post    = $('#postMessage');
+    this._stream  = $('#stream');
     
     this._login.submit(function() {
       self._username = $('#username').val();
@@ -17,17 +18,17 @@ Soapbox = {
   
   launch: function() {
     var self = this;
-    this._comet.subscribe('/mentioning/' + this._username, function() {});
+    this._comet.subscribe('/mentioning/' + this._username, this.accept, this);
     
     this._login.fadeOut('slow', function() {
       self._app.fadeIn('slow');
     });
     
     this._follow.submit(function() {
-      var follow = $('#followee');
-      self._comet.subscribe('/from/' + follow.val(), function(message) {
-        alert(message);
-      });
+      var follow = $('#followee'),
+          name   = follow.val();
+      
+      self._comet.subscribe('/from/' + name, self.accept, self);
       follow.val('');
       return false;
     });
@@ -52,12 +53,19 @@ Soapbox = {
       if (word !== self._username) mentions.push(word);
     });
     
+    message = {user: this._username, message: message};
+    
     this._comet.batch();
     this._comet.publish('/from/' + this._username, message);
     $.each(mentions, function(i, name) {
       self._comet.publish('/mentioning/' + name, message);
     });
     this._comet.flush();
+  },
+  
+  accept: function(message) {
+    this._stream.prepend('<li><b>' + message.user + ':</b> ' +
+                                     message.message + '</li>');
   }
 };
 
