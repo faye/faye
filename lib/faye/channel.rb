@@ -49,13 +49,13 @@ module Faye
         @children = {}
       end
       
-      def each_child(&block)
-        @children.each { |key, subtree| block.call(key, subtree) }
+      def each_child
+        @children.each { |key, subtree| yield(key, subtree) }
       end
       
       def each(prefix = [], &block)
         each_child { |path, subtree| subtree.each(prefix + [path], &block) }
-        block.call(prefix, @value) unless @value.nil?
+        yield(prefix, @value) unless @value.nil?
       end
       
       def [](name)
