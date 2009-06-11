@@ -1,10 +1,10 @@
 require "test/unit"
 require "faye"
 
-class TestFaye < Test::Unit::TestCase
+class TestGrammar < Test::Unit::TestCase
   include Faye
   
-  def test_grammar
+  def test_single_chars
     assert Grammar::LOWALPHA =~ 'a'
     assert Grammar::LOWALPHA !~ 'A'
     assert Grammar::LOWALPHA !~ 'aa'
@@ -30,7 +30,9 @@ class TestFaye < Test::Unit::TestCase
     assert Grammar::MARK =~ '-'
     assert Grammar::MARK =~ '@'
     assert Grammar::MARK !~ '!-'
-    
+  end
+  
+  def test_strings
     assert Grammar::STRING =~ ''
     assert Grammar::STRING =~ ' 4tv4 (($ !/~ ..* /) ___'
     assert Grammar::STRING !~ ' 4tv4 (($ !/~ ..* /) _}_'
@@ -42,7 +44,9 @@ class TestFaye < Test::Unit::TestCase
     assert Grammar::INTEGER =~ '09'
     assert Grammar::INTEGER !~ '9.0'
     assert Grammar::INTEGER !~ '9a'
-    
+  end
+  
+  def test_channels
     assert Grammar::CHANNEL_NAME =~ '/fo_o/$@()bar'
     assert Grammar::CHANNEL_NAME !~ '/foo/$@()bar/'
     assert Grammar::CHANNEL_NAME !~ 'foo/$@()bar'
@@ -53,18 +57,24 @@ class TestFaye < Test::Unit::TestCase
     assert Grammar::CHANNEL_PATTERN !~ '/!!/$/**/'
     assert Grammar::CHANNEL_PATTERN !~ '!!/$/**'
     assert Grammar::CHANNEL_PATTERN !~ '/!!/$/**/*'
-    
+  end
+  
+  def test_version
     assert Grammar::VERSION =~ '9'
     assert Grammar::VERSION =~ '9.a-delta4'
     assert Grammar::VERSION !~ '9.a-delta4.'
     assert Grammar::VERSION !~ 'K.a-delta4'
-    
+  end
+  
+  def test_ids
     assert Grammar::CLIENT_ID =~ '9'
     assert Grammar::CLIENT_ID =~ 'j'
     assert Grammar::CLIENT_ID !~ ''
     assert Grammar::CLIENT_ID =~ 'dfghs5r'
     assert Grammar::CLIENT_ID !~ 'dfg_hs5r'
-    
+  end
+  
+  def test_errors
     assert Grammar::ERROR =~ '401::No client ID'
     assert Grammar::ERROR !~ '401:No client ID'
     assert Grammar::ERROR !~ '40::No client ID'
@@ -72,31 +82,5 @@ class TestFaye < Test::Unit::TestCase
     assert Grammar::ERROR =~ '402:xj3sjdsjdsjad:Unknown Client ID'
     assert Grammar::ERROR =~ '403:xj3sjdsjdsjad,/foo/bar:Subscription denied'
     assert Grammar::ERROR =~ '404:/foo/bar:Unknown Channel'
-  end
-  
-  def test_channel_tree
-    tree = Channel::Tree.new
-    tree['invalid/name']    = 1
-    tree['/valid/name']     = 2
-    tree['/va()$$lid/name'] = 3
-    
-    assert_equal nil, tree['invalid/name']
-    assert_equal 2,   tree['/valid/name']
-    assert_equal 3,   tree['/va()$$lid/name']
-    
-    globber = Channel::Tree.new
-    globber['/foo/bar']     = 1
-    globber['/foo/boo']     = 2
-    globber['/foo']         = 3
-    globber['/foobar']      = 4
-    globber['/foo/bar/boo'] = 5
-    globber['/foobar/boo']  = 6
-    globber['/foo/*']       = 7
-    globber['/foo/**']      = 8
-    
-    assert_equal  [1,2,7,8],    globber.glob('/foo/*').sort
-    assert_equal  [1,7,8],      globber.glob('/foo/bar').sort
-    assert_equal  [1,2,5,7,8],  globber.glob('/foo/**').sort
-    assert_equal  [5,8],        globber.glob('/foo/bar/boo').sort
   end
 end
