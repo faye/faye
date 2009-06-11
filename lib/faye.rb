@@ -10,11 +10,12 @@ module Faye
   ROOT = File.expand_path(File.dirname(__FILE__))
   CLIENT_SCRIPT = File.join(ROOT, 'faye-min.js')
   
+  BAYEUX_VERSION   = '1.0'
   ID_LENGTH        = 128
   JSONP_CALLBACK   = 'jsonpcallback'
   CONNECTION_TYPES = %w[long-polling callback-polling]
   
-  %w[grammar server channel connection rack_adapter].each do |lib|
+  %w[grammar server channel connection error rack_adapter].each do |lib|
     require File.join(Faye::ROOT, 'faye', lib)
   end
   

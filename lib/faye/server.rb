@@ -25,39 +25,48 @@ module Faye
       
       @channels.glob(message['channel']).each { |c| c << message }
       
-      { :channel    => message['channel'],
-        :successful => true,
-        :id         => message['id'] }
+      { 'channel'     => message['channel'],
+        'successful'  => true,
+        'id'          => message['id'] }
     end
     
-    # TODO
-    # * support authentication
-    # * check we can support the client's connection type
-    # * unsuccessful handshakes
     def handshake(message)
-      id = generate_id
+      response =  { 'channel' => Channel::HANDSHAKE,
+                    'version' => BAYEUX_VERSION,
+                    'supportedConnectionTypes' => CONNECTION_TYPES,
+                    'id'      => message['id'] }
       
-      { :channel    => Channel::HANDSHAKE,
-        :version    => message['version'],
-        :supportedConnectionTypes => CONNECTION_TYPES,
-        :clientId   => id,
-        :successful => true,
-        :id         => message['id'] }
+      response['error'] = Error.version_mismatch('Missing version') if
+                          message['version'].nil?
+      
+      client_conns = message['supportedConnectionTypes']
+      if client_conns
+        common_conns = client_conns.select { |c| CONNECTION_TYPES.include?(c) }
+        response['error'] = Error.conntype_mismatch(
+                            "Server does not support connection types {#{ client_conns * ', ' }}") if
+                            common_conns.empty?
+      else
+        response['error'] = Error.conntype_mismatch('Missing supportedConnectionTypes')
+      end
+      
+      response['successful'] = response['error'].nil?
+      return response unless response['successful']
+      
+      response.update('clientId' => generate_id)
+      response
     end
     
-    # TODO error messages
     def connect(message)
       client = connection(message['clientId'])
       events = client.poll_events
       
-      events << { :channel    => Channel::CONNECT,
-                  :successful => !client.nil?,
-                  :clientId   => message['clientId'],
-                  :id         => message['id'] }
+      events << { 'channel'     => Channel::CONNECT,
+                  'successful'  => !client.nil?,
+                  'clientId'    => message['clientId'],
+                  'id'          => message['id'] }
       events
     end
     
-    # TODO error messages
     def disconnect(message)
       id = message['clientId']
       
@@ -65,15 +74,12 @@ module Faye
       client.disconnect!
       @clients.delete(id)
       
-      { :channel    => Channel::DISCONNECT,
-        :successful => !client.nil?,
-        :clientId   => id,
-        :id         => message['id'] }
+      { 'channel'     => Channel::DISCONNECT,
+        'successful'  => !client.nil?,
+        'clientId'    => id,
+        'id'          => message['id'] }
     end
     
-    # TODO
-    # * error messages
-    # * deliver pending events for the new subscription
     def subscribe(message)
       client       = connection(message['clientId'])
       subscription = message['subscription']
@@ -87,11 +93,11 @@ module Faye
         list
       end
       
-      { :channel      => Channel::SUBSCRIBE,
-        :successful   => true,
-        :clientId     => client.id,
-        :subscription => output,
-        :id           => message['id'] }
+      { 'channel'       => Channel::SUBSCRIBE,
+        'successful'    => true,
+        'clientId'      => client.id,
+        'subscription'  => output,
+        'id'            => message['id'] }
     end
     
   private

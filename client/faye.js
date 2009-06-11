@@ -12,7 +12,7 @@ Faye.extend = function(dest, source, overwrite) {
 };
 
 Faye.extend(Faye, {
-  BAYEUX_VERSION: '1.0',
+  BAYEUX_VERSION: '<%= Faye::BAYEUX_VERSION %>',
   ENV:  this,
   
   VERSION:  '<%= Faye::VERSION %>',
