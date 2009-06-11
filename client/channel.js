@@ -25,7 +25,7 @@ Faye.Channel = {
   
   Tree: Faye.Class({
     initialize: function(value) {
-      this.value = value;
+      this._value = value;
       this._children = {};
     },
     
@@ -46,19 +46,19 @@ Faye.Channel = {
     map: function(block, context) {
       var result = [];
       this.each([], function(path, value) {
-        results.push(block.call(context, path, value));
+        result.push(block.call(context, path, value));
       });
-      return results;
+      return result;
     },
     
     get: function(name) {
       var tree = this.traverse(name);
-      return tree ? tree.value : null;
+      return tree ? tree._value : null;
     },
     
     set: function(name, value) {
       var subtree = this.traverse(name, true);
-      if (subtree) subtree.value = value;
+      if (subtree) subtree._value = value;
     },
     
     traverse: function(path, createIfAbsent) {
@@ -75,9 +75,51 @@ Faye.Channel = {
     },
     
     glob: function(path) {
-      var tree = this.traverse(path);
-      return tree && tree.value ? [tree.value] : [];
+      if (typeof path === 'string') path = Faye.Channel.parse(path);
+      
+      if (path === null) return [];
+      if (path.length === 0) return (this._value === undefined) ? [] : [this._value];
+      
+      var list = [];
+      
+      if (Faye.enumEqual(path, ['*'])) {
+        Faye.each(this._children, function(key, subtree) {
+          if (subtree._value !== undefined) list.push(subtree._value);
+        });
+        return list;
+      }
+      
+      if (Faye.enumEqual(path, ['**'])) {
+        list = this.map(function(key, value) { return value });
+        list.pop();
+        return list;
+      }
+      
+      Faye.each(this._children, function(key, subtree) {
+        if (key !== path[0] && key !== '*') return;
+        var sublist = subtree.glob(path.slice(1));
+        Faye.each(sublist, function(channel) { list.push(channel) });
+      });
+      
+      if (this._children['**']) list.push(this._children['**']._value);
+      return list;
     }
+    
+    /**
+      Tests
+      
+      glob = new Faye.Channel.Tree();
+      list = '/foo/bar /foo/boo /foo /foobar /foo/bar/boo /foobar/boo /foo/* /foo/**'.split(' ');
+
+      Faye.each(list, function(c, i) {
+          glob.set(c, i + 1);
+      });
+
+      console.log(glob.glob('/foo/*').sort());        // 1,2,7,8
+      console.log(glob.glob('/foo/bar').sort());      // 1,7,8
+      console.log(glob.glob('/foo/**').sort());       // 1,2,5,7,8
+      console.log(glob.glob('/foo/bar/boo').sort());  // 5,8
+    **/
   })
 };
 

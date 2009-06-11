@@ -64,6 +64,32 @@ Faye.extend(Faye, {
           callback.call(scope || null, key, object[key]);
       }
     }
+  },
+  
+  size: function(object) {
+    var size = 0;
+    this.each(object, function() { size += 1 });
+    return size;
+  },
+  
+  enumEqual: function(actual, expected) {
+    if (expected instanceof Array) {
+      if (!(actual instanceof Array)) return false;
+      var i = actual.length;
+      if (i !== expected.length) return false;
+      while (i--) {
+        if (actual[i] !== expected[i]) return false;
+      }
+      return true;
+    } else {
+      if (!(actual instanceof Object)) return false;
+      if (this.size(expected) !== this.size(actual)) return false;
+      var result = true;
+      this.each(actual, function(key, value) {
+        result = result && (expected[key] === value);
+      });
+      return result;
+    }
   }
 });
 
