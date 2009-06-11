@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rack'
 
 module Faye
-  class App
+  class RackAdapter
     DEFAULT_ENDPOINT  = '/bayeux'
     
     TYPE_JSON   = {'Content-Type' => 'text/json'}

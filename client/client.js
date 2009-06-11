@@ -3,7 +3,7 @@ Faye.Client = Faye.Class({
   _CONNECTING:   {},
   _CONNECTED:    {},
   
-  DEFAULT_ENDPOINT:   '<%= Faye::App::DEFAULT_ENDPOINT %>',
+  DEFAULT_ENDPOINT:   '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   
   initialize: function(endpoint) {
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;

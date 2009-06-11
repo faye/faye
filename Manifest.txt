@@ -9,7 +9,7 @@ lib/faye/grammar.rb
 lib/faye/server.rb
 lib/faye/channel.rb
 lib/faye/connection.rb
-lib/faye/app.rb
+lib/faye/rack_adapter.rb
 client/util/class.js
 client/util/event.js
 client/util/json.js

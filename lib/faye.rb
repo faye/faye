@@ -11,7 +11,7 @@ module Faye
   JSONP_CALLBACK   = 'jsonpcallback'
   CONNECTION_TYPES = %w[long-polling callback-polling]
   
-  %w[grammar server channel connection app].each do |lib|
+  %w[grammar server channel connection rack_adapter].each do |lib|
     require File.join(Faye::ROOT, 'faye', lib)
   end
   
