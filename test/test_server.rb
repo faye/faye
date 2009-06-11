@@ -89,54 +89,48 @@ class TestServer < Test::Unit::TestCase
     id = get_client_id
     # MUST
     connect(  'clientId'        => id,
-              'connectionType'  => 'long-polling' ) do |ev|
-      @r = ev.first
-      # MUST
-      assert_equal  '/meta/connect',    @r['channel']
-      assert_equal  true,               @r['successful']
-      assert_equal  id,                 @r['clientId']
-      # MAY
-      assert_equal  nil,                @r['id']
-      # MAY include error, advice, ext, timestamp
-    end
+              'connectionType'  => 'long-polling' )
+      
+    # MUST
+    assert_equal  '/meta/connect',    @r['channel']
+    assert_equal  true,               @r['successful']
+    assert_equal  id,                 @r['clientId']
+    # MAY
+    assert_equal  nil,                @r['id']
+    # MAY include error, advice, ext, timestamp
     
     connect(  'clientId'        => id,
               'connectionType'  => 'long-polling',
-              'id'              => 'foo' ) do |ev|
-      @r = ev.first
-      # MUST
-      assert_equal  '/meta/connect',    @r['channel']
-      assert_equal  true,               @r['successful']
-      assert_equal  id,                 @r['clientId']
-      # MAY
-      assert_equal  'foo',              @r['id']
-    end
+              'id'              => 'foo' )
+    
+    # MUST
+    assert_equal  '/meta/connect',    @r['channel']
+    assert_equal  true,               @r['successful']
+    assert_equal  id,                 @r['clientId']
+    # MAY
+    assert_equal  'foo',              @r['id']
     
     # no client ID
-    connect(  'connectionType'  => 'long-polling' ) do |ev|
-      @r = ev.first
-      # MUST
-      assert_equal  '/meta/connect',    @r['channel']
-      assert_equal  false,              @r['successful']
-      assert_equal  nil,                @r['clientId']
-      # MAY
-      assert_equal  '402::Missing clientId', @r['error']
-      assert_equal  nil,                @r['id']
-      # MAY include advice, ext, timestamp
-    end
+    connect(  'connectionType'  => 'long-polling' )
+    # MUST
+    assert_equal  '/meta/connect',    @r['channel']
+    assert_equal  false,              @r['successful']
+    assert_equal  nil,                @r['clientId']
+    # MAY
+    assert_equal  '402::Missing clientId', @r['error']
+    assert_equal  nil,                @r['id']
+    # MAY include advice, ext, timestamp
     
     # no connection type
-    connect(  'clientId'  => id ) do |ev|
-      @r = ev.first
-      # MUST
-      assert_equal  '/meta/connect',    @r['channel']
-      assert_equal  false,              @r['successful']
-      assert_equal  nil,                @r['clientId']
-      # MAY
-      assert_equal  '402::Missing connectionType', @r['error']
-      assert_equal  nil,                @r['id']
-      # MAY include advice, ext, timestamp
-    end
+    connect(  'clientId'  => id )
+    # MUST
+    assert_equal  '/meta/connect',    @r['channel']
+    assert_equal  false,              @r['successful']
+    assert_equal  nil,                @r['clientId']
+    # MAY
+    assert_equal  '402::Missing connectionType', @r['error']
+    assert_equal  nil,                @r['id']
+    # MAY include advice, ext, timestamp
   end
   
   def test_disconnect

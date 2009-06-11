@@ -24,7 +24,13 @@ module Faye
     
     def handle(message)
       channel = message['channel']
-      return __send__(Channel.parse(channel)[1], message) if Channel.meta?(channel)
+      
+      if Channel.meta?(channel)
+        response = __send__(Channel.parse(channel)[1], message)
+        return response unless response['channel'] == Channel::CONNECT and response['successful'] = true
+        events = connection(response['clientId']).poll_events
+        return [response] + events
+      end
       
       return [] if message['clientId'].nil?
       
@@ -70,7 +76,7 @@ module Faye
     #               * connectionType
     # MAY contain   * ext
     #               * id
-    def connect(message, &block)
+    def connect(message)
       response  = { 'channel' => Channel::CONNECT,
                     'id'      => message['id'] }
       client_id = message['clientId']
@@ -82,18 +88,11 @@ module Faye
                           message['connectionType'].nil?
       
       response['successful'] = response['error'].nil?
-      return block_given? ? block.call([response]) : [response] unless response['successful']
+      return response unless response['successful']
       
       client = connection(client_id)
       response['clientId'] = client.id
-      
-      if block_given?
-        client.poll_events do |events|
-          block.call([response] + events)
-        end
-      else
-        [response] + client.poll_events
-      end
+      response
     end
     
     # MUST contain  * clientId
