@@ -8,6 +8,10 @@ class TestServer < Test::Unit::TestCase
     @server = Server.new
   end
   
+  def teardown
+    @server.destroy!
+  end
+  
   def method_missing(*args, &block)
     @r = @server.__send__(*args, &block)
   end

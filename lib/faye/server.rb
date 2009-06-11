@@ -5,6 +5,11 @@ module Faye
       @clients  = {}
     end
     
+    def destroy!
+      @clients.each { |id, client| client.disconnect! }
+      @clients.clear
+    end
+    
     def process(messages, options = {})
       messages = [messages] unless Array === messages
       
