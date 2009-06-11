@@ -23,11 +23,11 @@ module Faye
       case request.path_info
       
       when @endpoint then
-        args = [ request.params['message'] ]
-        args << {:jsonp => request.params['jsonp']} if request.get?
-        puts args.inspect
+        args     = [ request.params['message'] ]
+        args     << {:jsonp => request.params['jsonp']} if request.get?
         response = @server.process(*args)
-        [200, TYPE_JSON, [response]]
+        type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
+        [200, type, [response]]
       
       when @script then
         [200, TYPE_SCRIPT, File.new(CLIENT_SCRIPT)]
