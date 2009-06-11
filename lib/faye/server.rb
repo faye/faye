@@ -35,13 +35,18 @@ module Faye
         'id'          => message['id'] }
     end
     
+    # MUST contain  * version
+    #               * supportedConnectionTypes
+    # MAY contain   * minimumVersion
+    #               * ext
+    #               * id
     def handshake(message)
       response =  { 'channel' => Channel::HANDSHAKE,
                     'version' => BAYEUX_VERSION,
                     'supportedConnectionTypes' => CONNECTION_TYPES,
                     'id'      => message['id'] }
       
-      response['error'] = Error.version_mismatch('Missing version') if
+      response['error'] = Error.parameter_missing('Missing version') if
                           message['version'].nil?
       
       client_conns = message['supportedConnectionTypes']
@@ -51,7 +56,7 @@ module Faye
                             "Server does not support connection types {#{ client_conns * ', ' }}") if
                             common_conns.empty?
       else
-        response['error'] = Error.conntype_mismatch('Missing supportedConnectionTypes')
+        response['error'] = Error.parameter_missing('Missing supportedConnectionTypes')
       end
       
       response['successful'] = response['error'].nil?
@@ -61,15 +66,34 @@ module Faye
       response
     end
     
-    def connect(message)
-      client = connection(message['clientId'])
-      events = client.poll_events
+    # MUST contain  * clientId
+    #               * connectionType
+    # MAY contain   * ext
+    #               * id
+    def connect(message, &block)
+      response  = { 'channel' => Channel::CONNECT,
+                    'id'      => message['id'] }
+      client_id = message['clientId']
       
-      events << { 'channel'     => Channel::CONNECT,
-                  'successful'  => !client.nil?,
-                  'clientId'    => message['clientId'],
-                  'id'          => message['id'] }
-      events
+      response['error'] = Error.parameter_missing('Missing clientId') if
+                          client_id.nil?
+      
+      response['error'] = Error.parameter_missing('Missing connectionType') if
+                          message['connectionType'].nil?
+      
+      response['successful'] = response['error'].nil?
+      return block_given? ? block.call([response]) : [response] unless response['successful']
+      
+      client = connection(client_id)
+      response['clientId'] = client.id
+      
+      if block_given?
+        client.poll_events do |events|
+          block.call([response] + events)
+        end
+      else
+        [response] + client.poll_events
+      end
     end
     
     def disconnect(message)

@@ -30,7 +30,10 @@ module Faye
       @disconnect = true
     end
     
-    def poll_events
+    # TODO sort out async I/O
+    def poll_events(&block)
+      return block.call([]) if block_given?
+      
       loop do
         break if @disconnect or not @inbox.empty?
         sleep(SLEEP_INTERVAL)
