@@ -1,6 +1,3 @@
-require 'rubygems'
-require 'rack'
-
 module Faye
   class RackAdapter
     DEFAULT_ENDPOINT  = '/bayeux'
@@ -23,9 +20,12 @@ module Faye
       case request.path_info
       
       when @endpoint then
-        args     = [ request.params['message'] ]
-        args     << {:jsonp => request.params['jsonp']} if request.get?
-        response = @server.process(*args)
+        message  = JSON.parse(request.params['message'])
+        response = JSON.unparse(@server.process(message))
+        
+        jsonp    = request.params['jsonp'] || JSONP_CALLBACK
+        response = "#{ jsonp }(#{ response });" if request.get?
+        
         type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
         [200, type, [response]]
       

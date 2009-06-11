@@ -1,4 +1,7 @@
+require 'observer'
+require 'set'
 require 'rubygems'
+require 'rack'
 require 'json'
 
 module Faye

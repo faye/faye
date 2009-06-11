@@ -1,5 +1,3 @@
-require 'set'
-
 module Faye
   class Connection
     SLEEP_INTERVAL = 0.2

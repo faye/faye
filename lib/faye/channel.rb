@@ -1,5 +1,3 @@
-require 'observer'
-
 module Faye
   class Channel
     HANDSHAKE   = '/meta/handshake'

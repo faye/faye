@@ -6,18 +6,15 @@ module Faye
     end
     
     def process(messages, options = {})
-      messages = JSON.parse(messages) if String === messages
       messages = [messages] unless Array === messages
-      
-      options[:jsonp] ||= JSONP_CALLBACK if options.has_key?(:jsonp)
       
       responses = messages.inject([]) do |resp, msg|
         reply = handle(msg)
         reply = [reply] unless Array === reply
         resp  + reply
       end
-      response = JSON.unparse(responses)
-      options[:jsonp] ? "#{ options[:jsonp] }(#{ response });" : response
+      
+      responses
     end
     
     def handle(message)
@@ -31,18 +28,6 @@ module Faye
       { :channel    => message['channel'],
         :successful => true,
         :id         => message['id'] }
-    end
-    
-  private
-    
-    def generate_id
-      id = Faye.random
-      id = Faye.random while @clients.has_key?(id)
-      connection(id).id
-    end
-    
-    def connection(id)
-      @clients[id] ||= Connection.new(id)
     end
     
     # TODO
@@ -107,6 +92,18 @@ module Faye
         :clientId     => client.id,
         :subscription => output,
         :id           => message['id'] }
+    end
+    
+  private
+    
+    def generate_id
+      id = Faye.random
+      id = Faye.random while @clients.has_key?(id)
+      connection(id).id
+    end
+    
+    def connection(id)
+      @clients[id] ||= Connection.new(id)
     end
   end
 end
