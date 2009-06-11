@@ -12,7 +12,7 @@ class TestServer < Test::Unit::TestCase
     @server.destroy!
   end
   
-  def get_id
+  def get_client_id
     handshake(  'version' => '1.0',
                 'supportedConnectionTypes' => %w[long-polling] )
     @r['clientId']
@@ -39,17 +39,19 @@ class TestServer < Test::Unit::TestCase
     assert_equal  nil,                                @r['id']
     # MAY include minimumVersion, advice, ext, authSuccessful
     
+    # Unique IDs
+    id1 = @r['clientId']
+    assert_equal [id1], @server.client_ids
+    handshake( 'version' => '1.0', 'supportedConnectionTypes' => %w[callback-polling] )
+    id2 = @r['clientId']
+    assert_not_equal id1, id2
+    assert_equal [id1, id2].sort, @server.client_ids.sort
+    
     handshake(  'version' => '1.0',
                 'supportedConnectionTypes' => %w[long-polling],
                 'id' => 'foo' )
     # MAY
     assert_equal 'foo', @r['id']
-    
-    # Unique IDs
-    id = @r['clientId']
-    handshake(  'version' => '1.0',
-                'supportedConnectionTypes' => %w[callback-polling] )
-    assert_not_equal  id, @r['clientId']
     
     # missing version
     handshake('supportedConnectionTypes' => %w[long-polling])
@@ -84,7 +86,7 @@ class TestServer < Test::Unit::TestCase
   end
   
   def test_connect
-    id = get_id
+    id = get_client_id
     # MUST
     connect(  'clientId'        => id,
               'connectionType'  => 'long-polling' ) do |ev|
@@ -120,7 +122,7 @@ class TestServer < Test::Unit::TestCase
       # MAY
       assert_equal  '402::Missing clientId', @r['error']
       assert_equal  nil,                @r['id']
-      # MAY advice, ext, timestamp
+      # MAY include advice, ext, timestamp
     end
     
     # no connection type
@@ -133,7 +135,45 @@ class TestServer < Test::Unit::TestCase
       # MAY
       assert_equal  '402::Missing connectionType', @r['error']
       assert_equal  nil,                @r['id']
-      # MAY advice, ext, timestamp
+      # MAY include advice, ext, timestamp
     end
+  end
+  
+  def test_disconnect
+    id = get_client_id
+    assert_equal  [id], @server.client_ids
+    
+    # MUST
+    disconnect( 'clientId' => id )
+    # MUST
+    assert_equal  '/meta/disconnect',   @r['channel']
+    assert_equal  id,                   @r['clientId']
+    assert_equal  true,                 @r['successful']
+    # MAY
+    assert_equal  nil,                  @r['id']
+    # MAY include error, ext
+    assert_equal  [], @server.client_ids
+    
+    # missing client ID
+    disconnect( 'id' => 'foo' )
+    # MUST
+    assert_equal  '/meta/disconnect',   @r['channel']
+    assert_equal  nil,                  @r['clientId']
+    assert_equal  false,                @r['successful']
+    # MAY
+    assert_equal  '402::Missing clientId', @r['error']
+    assert_equal  'foo',                @r['id']
+    # MAY include ext
+    
+    # unrecognised client ID
+    disconnect( 'clientId' => id )
+    # MUST
+    assert_equal  '/meta/disconnect',   @r['channel']
+    assert_equal  nil,                  @r['clientId']
+    assert_equal  false,                @r['successful']
+    # MAY
+    assert_equal  "401::Unknown client ID #{id}", @r['error']
+    assert_equal  nil,                  @r['id']
+    # MAY include ext
   end
 end

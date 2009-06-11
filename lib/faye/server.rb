@@ -96,17 +96,29 @@ module Faye
       end
     end
     
+    # MUST contain  * clientId
+    # MAY contain   * ext
+    #               * id
     def disconnect(message)
-      id = message['clientId']
+      response  = { 'channel' => Channel::DISCONNECT,
+                    'id'      => message['id'] }
+      client_id = message['clientId']
+      client    = client_id ? @clients[client_id] : nil
       
-      client = @clients[id]
+      response['error'] = Error.client_unknown("Unknown client ID #{client_id}") if
+                          client.nil?
+      
+      response['error'] = Error.parameter_missing('Missing clientId') if
+                          client_id.nil?
+      
+      response['successful'] = response['error'].nil?
+      return response unless response['successful']
+      
       client.disconnect!
-      @clients.delete(id)
+      @clients.delete(client_id)
       
-      { 'channel'     => Channel::DISCONNECT,
-        'successful'  => !client.nil?,
-        'clientId'    => id,
-        'id'          => message['id'] }
+      response['clientId'] = client_id
+      response
     end
     
     def subscribe(message)
@@ -127,6 +139,10 @@ module Faye
         'clientId'      => client.id,
         'subscription'  => output,
         'id'            => message['id'] }
+    end
+    
+    def client_ids
+      @clients.keys
     end
     
   private
