@@ -1,3 +1,7 @@
+require 'rubygems'
+require 'rack'
+require 'json'
+
 module Faye
   class RackAdapter
     DEFAULT_ENDPOINT  = '/bayeux'
