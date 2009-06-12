@@ -197,7 +197,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  ['/foo'],             @r['subscription']
     # MAY
     assert_equal  nil,                  @r['id']
-    # MAY include error, advice, ext
+    # MAY include error, advice, ext, timestamp
     
     #================================================================
     # MUST
@@ -212,7 +212,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  ['/foo/**'],          @r['subscription']
     # MAY
     assert_equal  nil,                  @r['id']
-    # MAY include error, advice, ext
+    # MAY include error, advice, ext, timestamp
     
     #================================================================
     # MUST
@@ -228,7 +228,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  ['/bar/*', '/foo'],   @r['subscription']
     # MAY
     assert_equal  'baz',                @r['id']
-    # MAY include error, advice, ext
+    # MAY include error, advice, ext, timestamp
     
     #================================================================
     # missing client ID
@@ -239,11 +239,11 @@ class TestServer < Test::Unit::TestCase
     assert_equal  '/meta/subscribe',    @r['channel']
     assert_equal  false,                @r['successful']
     assert_equal  nil,                  @r['clientId']
-    assert_equal  [],                   @r['subscription']
+    assert_equal  ['/foo'],             @r['subscription']
     # MAY
     assert_equal  '402::Missing clientId', @r['error']
     assert_equal  nil,                  @r['id']
-    # MAY include advice, ext
+    # MAY include advice, ext, timestamp
     
     #================================================================
     # unknown client
@@ -255,11 +255,11 @@ class TestServer < Test::Unit::TestCase
     assert_equal  '/meta/subscribe',    @r['channel']
     assert_equal  false,                @r['successful']
     assert_equal  'nonesuch',           @r['clientId']
-    assert_equal  [],                   @r['subscription']
+    assert_equal  ['/j'],               @r['subscription']
     # MAY
     assert_equal  '401::Unknown client ID nonesuch', @r['error']
     assert_equal  nil,                  @r['id']
-    # MAY include advice, ext
+    # MAY include advice, ext, timestamp
     
     #================================================================
     # missing subscription
@@ -274,7 +274,7 @@ class TestServer < Test::Unit::TestCase
     # MAY
     assert_equal  '402::Missing subscription', @r['error']
     assert_equal  nil,                  @r['id']
-    # MAY include advice, ext
+    # MAY include advice, ext, timestamp
     
     #================================================================
     # invalid channel
@@ -286,10 +286,92 @@ class TestServer < Test::Unit::TestCase
     assert_equal  '/meta/subscribe',    @r['channel']
     assert_equal  false,                @r['successful']
     assert_equal  @id,                  @r['clientId']
-    assert_equal  [],                   @r['subscription']
+    assert_equal  ['/not/**/valid'],    @r['subscription']
     # MAY
     assert_equal  "405::Invalid channel '/not/**/valid'", @r['error']
     assert_equal  nil,                  @r['id']
-    # MAY include advice, ext
+    # MAY include advice, ext, timestamp
+  end
+  
+  def test_unsubscribe
+    @id = get_client_id
+    subscribe( 'clientId' => @id, 'subscription' => '/foo' )
+    
+    #================================================================
+    # MUST
+    unsubscribe(  'clientId'      => @id,
+                  'subscription'  => '/foo' )
+    # MAY include ext, id
+    
+    # MUST
+    assert_equal  '/meta/unsubscribe',  @r['channel']
+    assert_equal  true,                 @r['successful']
+    assert_equal  @id,                  @r['clientId']
+    assert_equal  ['/foo'],             @r['subscription']
+    # MAY
+    assert_equal  nil,                  @r['id']
+    # MAY include error, advice, ext, timestamp
+    
+    #================================================================
+    # missing client ID
+    unsubscribe(  'subscription'  => '/foo' )
+    # MAY include ext, id
+    
+    # MUST
+    assert_equal  '/meta/unsubscribe',  @r['channel']
+    assert_equal  false,                @r['successful']
+    assert_equal  nil,                  @r['clientId']
+    assert_equal  ['/foo'],             @r['subscription']
+    # MAY
+    assert_equal  '402::Missing clientId', @r['error']
+    assert_equal  nil,                  @r['id']
+    # MAY include advice, ext, timestamp
+    
+    #================================================================
+    # unknown client
+    unsubscribe(  'clientId'      => 'matz',
+                  'subscription'  => '/foo' )
+    # MAY include ext, id
+    
+    # MUST
+    assert_equal  '/meta/unsubscribe',  @r['channel']
+    assert_equal  false,                @r['successful']
+    assert_equal  'matz',               @r['clientId']
+    assert_equal  ['/foo'],             @r['subscription']
+    # MAY
+    assert_equal  '401::Unknown client ID matz', @r['error']
+    assert_equal  nil,                  @r['id']
+    # MAY include advice, ext, timestamp
+    
+    #================================================================
+    # missing subscription
+    unsubscribe(  'clientId' => @id )
+    # MAY include ext, id
+    
+    # MUST
+    assert_equal  '/meta/unsubscribe',  @r['channel']
+    assert_equal  false,                @r['successful']
+    assert_equal  @id,                  @r['clientId']
+    assert_equal  [],                   @r['subscription']
+    # MAY
+    assert_equal  '402::Missing subscription', @r['error']
+    assert_equal  nil,                  @r['id']
+    # MAY include advice, ext, timestamp
+    
+    #================================================================
+    # invalid channel
+    unsubscribe(  'clientId'      => @id,
+                  'subscription'  => '/not/**/valid'  )
+    # MAY include ext, id
+    
+    # MUST
+    assert_equal  '/meta/unsubscribe',  @r['channel']
+    assert_equal  false,                @r['successful']
+    assert_equal  @id,                  @r['clientId']
+    assert_equal  ['/not/**/valid'],    @r['subscription']
+    # MAY
+    assert_equal  "405::Invalid channel '/not/**/valid'", @r['error']
+    assert_equal  nil,                  @r['id']
+    # MAY include advice, ext, timestamp
   end
 end
