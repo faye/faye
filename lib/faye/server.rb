@@ -68,7 +68,7 @@ module Faye
       response['successful'] = response['error'].nil?
       return response unless response['successful']
       
-      response.update('clientId' => generate_id)
+      response['clientId'] = generate_id
       response
     end
     
@@ -120,24 +120,47 @@ module Faye
       response
     end
     
+    # MUST contain  * clientId
+    #               * subscription
+    # MAY contain   * ext
+    #               * id
     def subscribe(message)
-      client       = connection(message['clientId'])
-      subscription = message['subscription']
+      response      = { 'channel'   => Channel::SUBSCRIBE,
+                        'clientId'  => message['clientId'],
+                        'id'        => message['id'] }
       
-      subscription = [subscription] unless Array === subscription
+      client_id     = message['clientId']
+      client        = client_id ? @clients[client_id] : nil
       
-      output = subscription.inject([]) do |list, channel|
+      subscription  = message['subscription']
+      subscription  = [subscription] unless Array === subscription
+      
+      response['error'] = Error.client_unknown("Unknown client ID #{client_id}") if
+                          client.nil?
+      
+      response['error'] = Error.parameter_missing('Missing clientId') if
+                          client_id.nil?
+      
+      response['error'] = Error.parameter_missing('Missing subscription') if
+                          message['subscription'].nil?
+      
+      response['subscription'] = []
+      
+      subscription.each do |channel|
+        next if response['error']
+        
+        if not Channel.valid?(channel)
+          response['error'] = Error.channel_invalid("Invalid channel '#{channel}'")
+          next
+        end
+        
         channel = @channels[channel] ||= Channel.new(channel)
         client.subscribe(channel)
-        list << channel.name
-        list
+        response['subscription'] << channel.name
       end
       
-      { 'channel'       => Channel::SUBSCRIBE,
-        'successful'    => true,
-        'clientId'      => client.id,
-        'subscription'  => output,
-        'id'            => message['id'] }
+      response['successful'] = response['error'].nil?
+      response
     end
     
     def client_ids
