@@ -52,17 +52,14 @@ module Faye
                     'supportedConnectionTypes' => CONNECTION_TYPES,
                     'id'      => message['id'] }
       
-      response['error'] = Error.parameter_missing('Missing version') if
-                          message['version'].nil?
+      response['error'] = Error.parameter_missing('version') if message['version'].nil?
       
       client_conns = message['supportedConnectionTypes']
       if client_conns
         common_conns = client_conns.select { |c| CONNECTION_TYPES.include?(c) }
-        response['error'] = Error.conntype_mismatch(
-                            "Server does not support connection types {#{ client_conns * ', ' }}") if
-                            common_conns.empty?
+        response['error'] = Error.conntype_mismatch(*client_conns) if common_conns.empty?
       else
-        response['error'] = Error.parameter_missing('Missing supportedConnectionTypes')
+        response['error'] = Error.parameter_missing('supportedConnectionTypes')
       end
       
       response['successful'] = response['error'].nil?
@@ -81,11 +78,8 @@ module Faye
                     'id'      => message['id'] }
       client_id = message['clientId']
       
-      response['error'] = Error.parameter_missing('Missing clientId') if
-                          client_id.nil?
-      
-      response['error'] = Error.parameter_missing('Missing connectionType') if
-                          message['connectionType'].nil?
+      response['error'] = Error.parameter_missing('clientId') if client_id.nil?
+      response['error'] = Error.parameter_missing('connectionType') if message['connectionType'].nil?
       
       response['successful'] = response['error'].nil?
       return response unless response['successful']
@@ -104,11 +98,8 @@ module Faye
       client_id = message['clientId']
       client    = client_id ? @clients[client_id] : nil
       
-      response['error'] = Error.client_unknown("Unknown client ID #{client_id}") if
-                          client.nil?
-      
-      response['error'] = Error.parameter_missing('Missing clientId') if
-                          client_id.nil?
+      response['error'] = Error.client_unknown(client_id) if client.nil?
+      response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       
       response['successful'] = response['error'].nil?
       return response unless response['successful']
@@ -135,14 +126,9 @@ module Faye
       subscription  = message['subscription']
       subscription  = [subscription] unless Array === subscription
       
-      response['error'] = Error.client_unknown("Unknown client ID #{client_id}") if
-                          client.nil?
-      
-      response['error'] = Error.parameter_missing('Missing clientId') if
-                          client_id.nil?
-      
-      response['error'] = Error.parameter_missing('Missing subscription') if
-                          message['subscription'].nil?
+      response['error'] = Error.client_unknown(client_id) if client.nil?
+      response['error'] = Error.parameter_missing('clientId') if client_id.nil?
+      response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
       
       response['subscription'] = subscription.compact
       
@@ -150,7 +136,7 @@ module Faye
         next if response['error']
         
         if not Channel.valid?(channel)
-          response['error'] = Error.channel_invalid("Invalid channel '#{channel}'")
+          response['error'] = Error.channel_invalid(channel)
           next
         end
         
@@ -177,14 +163,9 @@ module Faye
       subscription  = message['subscription']
       subscription  = [subscription] unless Array === subscription
       
-      response['error'] = Error.client_unknown("Unknown client ID #{client_id}") if
-                          client.nil?
-      
-      response['error'] = Error.parameter_missing('Missing clientId') if
-                          client_id.nil?
-      
-      response['error'] = Error.parameter_missing('Missing subscription') if
-                          message['subscription'].nil?
+      response['error'] = Error.client_unknown(client_id) if client.nil?
+      response['error'] = Error.parameter_missing('clientId') if client_id.nil?
+      response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
       
       response['subscription'] = subscription.compact
       
@@ -192,7 +173,7 @@ module Faye
         next if response['error']
         
         if not Channel.valid?(channel)
-          response['error'] = Error.channel_invalid("Invalid channel '#{channel}'")
+          response['error'] = Error.channel_invalid(channel)
           next
         end
         

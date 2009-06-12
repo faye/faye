@@ -8,9 +8,9 @@ module Faye
       new(parts[0].to_i, args, parts[2])
     end
     
-    def self.method_missing(type, message = '', args = [])
+    def self.method_missing(type, *args)
       code = const_get(type.to_s.upcase)
-      new(code, args, message).to_s
+      new(code[0], args, code[1]).to_s
     end
     
     attr_reader :code, :args, :message
@@ -26,18 +26,18 @@ module Faye
     end
     
     # http://code.google.com/p/cometd/wiki/BayeuxCodes
-    VERSION_MISMATCH    = 300
-    CONNTYPE_MISMATCH   = 301
-    EXT_MISMATCH        = 302
-    BAD_REQUEST         = 400
-    CLIENT_UNKNOWN      = 401
-    PARAMETER_MISSING   = 402
-    CHANNEL_FORBIDDEN   = 403
-    CHANNEL_UNKNOWN     = 404
-    CHANNEL_INVALID     = 405
-    EXT_UNKNOWN         = 406
-    PUBLISH_FAILED      = 407
-    SERVER_ERROR        = 500
+    VERSION_MISMATCH    = [300, 'Version mismatch']
+    CONNTYPE_MISMATCH   = [301, 'Connection types not supported']
+    EXT_MISMATCH        = [302, 'Extension mismatch']
+    BAD_REQUEST         = [400, 'Bad request']
+    CLIENT_UNKNOWN      = [401, 'Unknown client']
+    PARAMETER_MISSING   = [402, 'Missing required parameter']
+    CHANNEL_FORBIDDEN   = [403, 'Forbidden channel']
+    CHANNEL_UNKNOWN     = [404, 'Unknown channel']
+    CHANNEL_INVALID     = [405, 'Invalid channel']
+    EXT_UNKNOWN         = [406, 'Unknown extension']
+    PUBLISH_FAILED      = [407, 'Failed to publish']
+    SERVER_ERROR        = [500, 'Internal server error']
     
   end
 end

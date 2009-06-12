@@ -62,7 +62,7 @@ class TestServer < Test::Unit::TestCase
     # MUST
     assert_equal  '/meta/handshake',      @r['channel']
     assert_equal  false,                  @r['successful']
-    assert_equal  '402::Missing version', @r['error']
+    assert_equal  '402:version:Missing required parameter', @r['error']
     # MAY
     assert_not_equal  nil,                            @r['version']
     assert_equal  %w[long-polling callback-polling],  @r['supportedConnectionTypes']
@@ -74,7 +74,7 @@ class TestServer < Test::Unit::TestCase
     # MUST
     assert_equal  '/meta/handshake',      @r['channel']
     assert_equal  false,                  @r['successful']
-    assert_equal  '301::Server does not support connection types {iframe, flash}', @r['error']
+    assert_equal  '301:iframe,flash:Connection types not supported', @r['error']
     # MAY
     assert_equal  %w[long-polling callback-polling],  @r['supportedConnectionTypes']
     assert_equal  nil,                    @r['id']
@@ -85,7 +85,7 @@ class TestServer < Test::Unit::TestCase
     # MUST
     assert_equal  '/meta/handshake',      @r['channel']
     assert_equal  false,                  @r['successful']
-    assert_equal  '402::Missing supportedConnectionTypes', @r['error']
+    assert_equal  '402:supportedConnectionTypes:Missing required parameter', @r['error']
     # MAY
     assert_equal  %w[long-polling callback-polling],  @r['supportedConnectionTypes']
     assert_equal  'foo',                  @r['id']
@@ -124,7 +124,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  false,              @r['successful']
     assert_equal  nil,                @r['clientId']
     # MAY
-    assert_equal  '402::Missing clientId', @r['error']
+    assert_equal  '402:clientId:Missing required parameter', @r['error']
     assert_equal  nil,                @r['id']
     # MAY include advice, ext, timestamp
     
@@ -136,7 +136,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  false,              @r['successful']
     assert_equal  nil,                @r['clientId']
     # MAY
-    assert_equal  '402::Missing connectionType', @r['error']
+    assert_equal  '402:connectionType:Missing required parameter', @r['error']
     assert_equal  nil,                @r['id']
     # MAY include advice, ext, timestamp
   end
@@ -165,7 +165,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  nil,                  @r['clientId']
     assert_equal  false,                @r['successful']
     # MAY
-    assert_equal  '402::Missing clientId', @r['error']
+    assert_equal  '402:clientId:Missing required parameter', @r['error']
     assert_equal  'foo',                @r['id']
     # MAY include ext
     
@@ -177,7 +177,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  nil,                  @r['clientId']
     assert_equal  false,                @r['successful']
     # MAY
-    assert_equal  "401::Unknown client ID #{@id}", @r['error']
+    assert_equal  "401:#{@id}:Unknown client", @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include ext
   end
@@ -241,7 +241,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  nil,                  @r['clientId']
     assert_equal  ['/foo'],             @r['subscription']
     # MAY
-    assert_equal  '402::Missing clientId', @r['error']
+    assert_equal  '402:clientId:Missing required parameter', @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
     
@@ -257,7 +257,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  'nonesuch',           @r['clientId']
     assert_equal  ['/j'],               @r['subscription']
     # MAY
-    assert_equal  '401::Unknown client ID nonesuch', @r['error']
+    assert_equal  '401:nonesuch:Unknown client', @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
     
@@ -272,7 +272,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  @id,                  @r['clientId']
     assert_equal  [],                   @r['subscription']
     # MAY
-    assert_equal  '402::Missing subscription', @r['error']
+    assert_equal  '402:subscription:Missing required parameter', @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
     
@@ -288,7 +288,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  @id,                  @r['clientId']
     assert_equal  ['/not/**/valid'],    @r['subscription']
     # MAY
-    assert_equal  "405::Invalid channel '/not/**/valid'", @r['error']
+    assert_equal  "405:/not/**/valid:Invalid channel", @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
   end
@@ -323,7 +323,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  nil,                  @r['clientId']
     assert_equal  ['/foo'],             @r['subscription']
     # MAY
-    assert_equal  '402::Missing clientId', @r['error']
+    assert_equal  '402:clientId:Missing required parameter', @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
     
@@ -339,7 +339,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  'matz',               @r['clientId']
     assert_equal  ['/foo'],             @r['subscription']
     # MAY
-    assert_equal  '401::Unknown client ID matz', @r['error']
+    assert_equal  '401:matz:Unknown client', @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
     
@@ -354,7 +354,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  @id,                  @r['clientId']
     assert_equal  [],                   @r['subscription']
     # MAY
-    assert_equal  '402::Missing subscription', @r['error']
+    assert_equal  '402:subscription:Missing required parameter', @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
     
@@ -370,7 +370,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  @id,                  @r['clientId']
     assert_equal  ['/not/**/valid'],    @r['subscription']
     # MAY
-    assert_equal  "405::Invalid channel '/not/**/valid'", @r['error']
+    assert_equal  "405:/not/**/valid:Invalid channel", @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
   end
