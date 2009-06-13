@@ -32,11 +32,11 @@ module Faye
         return [response] + events
       end
       
-      return [] if message['clientId'].nil?
+      return {} if message['clientId'].nil? or Channel.service?(channel)
       
-      @channels.glob(message['channel']).each { |c| c << message }
+      @channels.glob(channel).each { |c| c << message }
       
-      { 'channel'     => message['channel'],
+      { 'channel'     => channel,
         'successful'  => true,
         'id'          => message['id'] }
     end
