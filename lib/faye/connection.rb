@@ -18,15 +18,15 @@ module Faye
       channel.add_observer(self) if @channels.add?(channel)
     end
     
-    def unsubscribe(channel = nil)
-      return @channels.each(&method(:unsubscribe)) if channel.nil?
+    def unsubscribe(channel)
+      return @channels.each(&method(:unsubscribe)) if channel == :all
       return unless @channels.member?(channel)
       @channels.delete(channel)
       channel.delete_observer(self)
     end
     
     def disconnect!
-      unsubscribe
+      unsubscribe(:all)
       @disconnect = true
     end
     

@@ -176,7 +176,7 @@ module Faye
         end
         
         channel = @channels[channel]
-        client.unsubscribe(channel)
+        client.unsubscribe(channel) if channel
       end
       
       response['successful'] = response['error'].nil?
