@@ -134,12 +134,10 @@ module Faye
       
       subscription.each do |channel|
         next if response['error']
+        response['error'] = Error.channel_forbidden(channel) unless Channel.subscribable?(channel)
+        response['error'] = Error.channel_invalid(channel) unless Channel.valid?(channel)
         
-        if not Channel.valid?(channel)
-          response['error'] = Error.channel_invalid(channel)
-          next
-        end
-        
+        next if response['error']
         channel = @channels[channel] ||= Channel.new(channel)
         client.subscribe(channel)
       end

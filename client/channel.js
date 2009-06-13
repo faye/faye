@@ -4,23 +4,33 @@ Faye.Channel = {
   SUBSCRIBE:    '<%= Faye::Channel::SUBSCRIBE %>',
   UNSUBSCRIBE:  '<%= Faye::Channel::UNSUBSCRIBE %>',
   DISCONNECT:   '<%= Faye::Channel::DISCONNECT %>',
-  ECHO:         '<%= Faye::Channel::ECHO %>',
   
   META:         '<%= Faye::Channel::META %>',
+  SERVICE:      '<%= Faye::Channel::SERVICE %>',
   
-  valid: function(name) {
+  isValid: function(name) {
     return Faye.Grammar.CHANNEL_NAME.test(name) ||
            Faye.Grammar.CHANNEL_PATTERN.test(name);
   },
   
   parse: function(name) {
-    if (!this.valid(name)) return null;
+    if (!this.isValid(name)) return null;
     return name.split('/').slice(1);
   },
   
-  meta: function(name) {
+  isMeta: function(name) {
     var segments = this.parse(name);
     return segments ? (segments[0] === this.META) : null;
+  },
+  
+  isService: function(name) {
+    var segments = this.parse(name);
+    return segments ? (segments[0] === this.SERVICE) : null;
+  },
+  
+  isSubscribable: function(name) {
+    if (!this.isValid(name)) return null;
+    return !this.isMeta(name) && !this.isService(name);
   },
   
   Tree: Faye.Class({

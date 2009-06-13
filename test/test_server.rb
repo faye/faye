@@ -291,6 +291,38 @@ class TestServer < Test::Unit::TestCase
     assert_equal  "405:/not/**/valid:Invalid channel", @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
+    
+    #================================================================
+    # cannot subscribe to meta channels
+    subscribe(  'clientId'      => @id,
+                'subscription'  => '/meta/foo' )
+    # MAY include ext, id
+    
+    # MUST
+    assert_equal  '/meta/subscribe',    @r['channel']
+    assert_equal  false,                @r['successful']
+    assert_equal  @id,                  @r['clientId']
+    assert_equal  ['/meta/foo'],        @r['subscription']
+    # MAY
+    assert_equal  "403:/meta/foo:Forbidden channel", @r['error']
+    assert_equal  nil,                  @r['id']
+    # MAY include advice, ext, timestamp
+    
+    #================================================================
+    # cannot subscribe to service channels
+    subscribe(  'clientId'      => @id,
+                'subscription'  => '/service/foo' )
+    # MAY include ext, id
+    
+    # MUST
+    assert_equal  '/meta/subscribe',    @r['channel']
+    assert_equal  false,                @r['successful']
+    assert_equal  @id,                  @r['clientId']
+    assert_equal  ['/service/foo'],     @r['subscription']
+    # MAY
+    assert_equal  "403:/service/foo:Forbidden channel", @r['error']
+    assert_equal  nil,                  @r['id']
+    # MAY include advice, ext, timestamp
   end
   
   def test_unsubscribe

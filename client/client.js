@@ -94,8 +94,10 @@ Faye.Client = Faye.Class({
     var id = this.generateId();
     
     Faye.each(channels, function(channel) {
-      if (!Faye.Channel.valid(channel))
+      if (!Faye.Channel.isValid(channel))
         throw '"' + channel + '" is not a valid channel name';
+      if (!Faye.Channel.isSubscribable(channel))
+        throw 'Clients may not subscribe to channel "' + channel + '"';
     });
     
     this._transport.send({
@@ -113,8 +115,11 @@ Faye.Client = Faye.Class({
   // TODO support anonymous publishing
   publish: function(channel, data) {
     if (this._state !== this._CONNECTED) return;
-    if (!Faye.Channel.valid(channel))
+    
+    if (!Faye.Channel.isValid(channel))
       throw '"' + channel + '" is not a valid channel name';
+    if (!Faye.Channel.isSubscribable(channel))
+      throw 'Clients may not publish to channel "' + channel + '"';
     
     this.enqueue({
       channel:      channel,

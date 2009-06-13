@@ -5,9 +5,9 @@ module Faye
     SUBSCRIBE   = '/meta/subscribe'
     UNSUBSCRIBE = '/meta/unsubscribe'
     DISCONNECT  = '/meta/disconnect'
-    ECHO        = '/service/echo'
     
     META        = :meta
+    SERVICE     = :service
     
     class << self
       def valid?(name)
@@ -23,6 +23,16 @@ module Faye
       def meta?(name)
         segments = parse(name)
         segments ? (segments.first == META) : nil
+      end
+      
+      def service?(name)
+        segments = parse(name)
+        segments ? (segments.first == SERVICE) : nil
+      end
+      
+      def subscribable?(name)
+        return nil unless valid?(name)
+        not meta?(name) and not service?(name)
       end
     end
     
