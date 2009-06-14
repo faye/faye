@@ -25,17 +25,17 @@ module Faye
       
       when @endpoint then
         message  = JSON.parse(request.params['message'])
+        jsonp    = request.params['jsonp'] || JSONP_CALLBACK
+        type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
         response = nil
         
+        @server.process(message, false) do |replies|
+          response = JSON.unparse(replies)
+          response = "#{ jsonp }(#{ response });" if request.get?
+        end
+        
         # TODO support Thin's async responses
-        @server.process(message, false) { |replies| response = replies }
         sleep(0.1) while response.nil?
-        response = JSON.unparse(response)
-        
-        jsonp    = request.params['jsonp'] || JSONP_CALLBACK
-        response = "#{ jsonp }(#{ response });" if request.get?
-        
-        type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
         [200, type, [response]]
       
       when @script then
