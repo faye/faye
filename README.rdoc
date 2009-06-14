@@ -55,7 +55,12 @@ and may not be subscribed to.
 
 == Examples
 
-See demo apps in +examples+.
+See demo apps in +examples+. If you've checked this out from the repo rather than
+installing the gem you will need to build the JavaScript client from source, this
+is done as follows:
+
+  sudo gem install jake
+  jake -f
 
 
 == To-do:
