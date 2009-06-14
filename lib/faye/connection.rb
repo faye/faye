@@ -59,6 +59,7 @@ module Faye
     
     def disconnect!
       unsubscribe(:all)
+      flush!
       @disconnect = true
     end
   end
