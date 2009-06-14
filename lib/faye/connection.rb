@@ -15,11 +15,21 @@ module Faye
       flush!
     end
     
+    def poll_events(&block)
+      @connected = true
+      callback(&block)
+    end
+    
     def flush!
+      return unless @connected
+      
       events = @inbox.entries
       @inbox = Set.new
+      
       set_deferred_status(:succeeded, events)
       set_deferred_status(:deferred)
+      
+      @connected = false
       events
     end
     
@@ -38,8 +48,6 @@ module Faye
       unsubscribe(:all)
       @disconnect = true
     end
-    
-    alias :poll_events :callback
   end
 end
 
