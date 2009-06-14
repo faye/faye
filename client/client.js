@@ -4,6 +4,7 @@ Faye.Client = Faye.Class({
   _CONNECTED:    {},
   
   DEFAULT_ENDPOINT:   '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
+  MAX_DELAY:          <%= Faye::Connection::MAX_DELAY %>,
   
   initialize: function(endpoint) {
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
@@ -126,19 +127,21 @@ Faye.Client = Faye.Class({
       data:         data,
       clientId:     this._clientId
     });
-    if (!this._batching) this.flush();
+    
+    if (this._timeout) return;
+    
+    var self = this;
+    this._timeout = setTimeout(function() {
+      delete self._timeout;
+      self.flush();
+    }, this.MAX_DELAY * 1000);
   },
   
   enqueue: function(message) {
     this._outbox.push(message);
   },
   
-  batch: function() {
-    this._batching = true;
-  },
-  
   flush: function() {
-    this._batching = false;
     this._transport.send(this._outbox);
     this._outbox = [];
   },

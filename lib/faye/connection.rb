@@ -3,7 +3,7 @@ module Faye
     include EventMachine::Deferrable
     attr_reader :id   
     
-    MAX_LATENCY = 0.1
+    MAX_DELAY = 0.1
     
     def initialize(id)
       @id       = id
@@ -40,7 +40,7 @@ module Faye
                     not @inbox.empty? and
                     @timeout.nil?
       
-      @timeout = EventMachine.add_timer(MAX_LATENCY) do
+      @timeout = EventMachine.add_timer(MAX_DELAY) do
         @timeout = nil
         flush!
       end

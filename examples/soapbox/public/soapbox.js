@@ -55,12 +55,10 @@ Soapbox = {
     
     message = {user: this._username, message: message};
     
-    this._comet.batch();
     this._comet.publish('/from/' + this._username, message);
     $.each(mentions, function(i, name) {
       self._comet.publish('/mentioning/' + name, message);
     });
-    this._comet.flush();
   },
   
   accept: function(message) {
