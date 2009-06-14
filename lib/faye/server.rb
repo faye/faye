@@ -10,35 +10,40 @@ module Faye
       @clients.clear
     end
     
-    def process(messages, options = {})
-      messages = [messages] unless Array === messages
+    def process(messages, local = false, &callback)
+      messages = [messages].flatten
+      processed, responses = 0, []
       
-      responses = messages.inject([]) do |resp, msg|
-        reply = handle(msg)
-        reply = [reply] unless Array === reply
-        resp  + reply
+      messages.each do |message|
+        handle(message, local) do |reply|
+          reply = [reply].flatten
+          responses.concat(reply)
+          processed += 1
+          callback[responses] if processed == messages.size
+        end
       end
-      
-      responses
     end
     
-    def handle(message)
+    def handle(message, local = false, &callback)
       channel = message['channel']
       
       if Channel.meta?(channel)
         response = __send__(Channel.parse(channel)[1], message)
-        return response unless response['channel'] == Channel::CONNECT and response['successful'] = true
-        events = connection(response['clientId']).poll_events
-        return [response] + events
+        return callback[response] unless response['channel'] == Channel::CONNECT and
+                                         response['successful'] == true
+        
+        return connection(response['clientId']).poll_events do |events|
+          callback[[response] + events]
+        end
       end
       
-      return {} if message['clientId'].nil? or Channel.service?(channel)
+      return callback[[]] if message['clientId'].nil? or Channel.service?(channel)
       
       @channels.glob(channel).each { |c| c << message }
       
-      { 'channel'     => channel,
-        'successful'  => true,
-        'id'          => message['id'] }
+      callback[ { 'channel'     => channel,
+                  'successful'  => true,
+                  'id'          => message['id']  } ]
     end
     
     # MUST contain  * version
@@ -46,7 +51,7 @@ module Faye
     # MAY contain   * minimumVersion
     #               * ext
     #               * id
-    def handshake(message)
+    def handshake(message, local = false)
       response =  { 'channel' => Channel::HANDSHAKE,
                     'version' => BAYEUX_VERSION,
                     'supportedConnectionTypes' => CONNECTION_TYPES,
@@ -73,7 +78,7 @@ module Faye
     #               * connectionType
     # MAY contain   * ext
     #               * id
-    def connect(message)
+    def connect(message, local = false)
       response  = { 'channel' => Channel::CONNECT,
                     'id'      => message['id'] }
       client_id = message['clientId']
@@ -92,7 +97,7 @@ module Faye
     # MUST contain  * clientId
     # MAY contain   * ext
     #               * id
-    def disconnect(message)
+    def disconnect(message, local = false)
       response  = { 'channel' => Channel::DISCONNECT,
                     'id'      => message['id'] }
       client_id = message['clientId']
@@ -115,7 +120,7 @@ module Faye
     #               * subscription
     # MAY contain   * ext
     #               * id
-    def subscribe(message)
+    def subscribe(message, local = false)
       response      = { 'channel'   => Channel::SUBSCRIBE,
                         'clientId'  => message['clientId'],
                         'id'        => message['id'] }
@@ -124,7 +129,7 @@ module Faye
       client        = client_id ? @clients[client_id] : nil
       
       subscription  = message['subscription']
-      subscription  = [subscription] unless Array === subscription
+      subscription  = [subscription].flatten
       
       response['error'] = Error.client_unknown(client_id) if client.nil?
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
@@ -150,7 +155,7 @@ module Faye
     #               * subscription
     # MAY contain   * ext
     #               * id
-    def unsubscribe(message)
+    def unsubscribe(message, local = false)
       response      = { 'channel'   => Channel::UNSUBSCRIBE,
                         'clientId'  => message['clientId'],
                         'id'        => message['id'] }
@@ -159,7 +164,7 @@ module Faye
       client        = client_id ? @clients[client_id] : nil
       
       subscription  = message['subscription']
-      subscription  = [subscription] unless Array === subscription
+      subscription  = [subscription].flatten
       
       response['error'] = Error.client_unknown(client_id) if client.nil?
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?

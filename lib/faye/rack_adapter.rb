@@ -25,7 +25,12 @@ module Faye
       
       when @endpoint then
         message  = JSON.parse(request.params['message'])
-        response = JSON.unparse(@server.process(message))
+        response = nil
+        
+        # TODO support Thin's async responses
+        @server.process(message, false) { |replies| response = replies }
+        sleep(0.1) while response.nil?
+        response = JSON.unparse(response)
         
         jsonp    = request.params['jsonp'] || JSONP_CALLBACK
         response = "#{ jsonp }(#{ response });" if request.get?

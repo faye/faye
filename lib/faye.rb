@@ -1,5 +1,7 @@
 require 'observer'
 require 'set'
+require 'rubygems'
+require 'eventmachine'
 
 module Faye
   VERSION = '0.1.0'

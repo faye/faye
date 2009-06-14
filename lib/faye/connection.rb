@@ -1,8 +1,7 @@
 module Faye
   class Connection
-    SLEEP_INTERVAL = 0.2
-    
-    attr_reader :id
+    include EventMachine::Deferrable
+    attr_reader :id   
     
     def initialize(id)
       @id       = id
@@ -10,8 +9,18 @@ module Faye
       @inbox    = Set.new
     end
     
+    # TODO queue up events so we make fewer requests
     def update(event)
       @inbox.add(event)
+      flush!
+    end
+    
+    def flush!
+      events = @inbox.entries
+      @inbox = Set.new
+      set_deferred_status(:succeeded, events)
+      set_deferred_status(:deferred)
+      events
     end
     
     def subscribe(channel)
@@ -30,19 +39,7 @@ module Faye
       @disconnect = true
     end
     
-    # TODO sort out async I/O
-    def poll_events
-      loop do
-        break if @disconnect or not @inbox.empty?
-        sleep(SLEEP_INTERVAL)
-      end
-      
-      @disconnect = false
-      
-      events = @inbox.entries
-      @inbox = Set.new
-      events
-    end
+    alias :poll_events :callback
   end
 end
 
