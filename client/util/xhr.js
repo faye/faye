@@ -43,14 +43,14 @@ Faye.XHR = {
           poll = null;
         }
         
-        Faye.Event.detach(Faye.ENV, 'unload', self.abort, self);
+        Faye.Event.detach(Faye.ENV, 'beforeunload', self.abort, self);
         self._waiting = false;
         self._handleResponse();
         self = null;
       };
       
       var poll = setInterval(handleState, 10);
-      Faye.Event.on(Faye.ENV, 'unload', this.abort, this);
+      Faye.Event.on(Faye.ENV, 'beforeunload', this.abort, this);
       this._xhr.send(body);
     },
     

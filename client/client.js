@@ -13,7 +13,7 @@ Faye.Client = Faye.Class({
     this._outbox    = [];
     this._channels  = new Faye.Channel.Tree();
     
-    Faye.Event.on(Faye.ENV, 'unload', this.disconnect, this);
+    Faye.Event.on(Faye.ENV, 'beforeunload', this.disconnect, this);
   },
   
   generateId: function(bitdepth) {
