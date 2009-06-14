@@ -1,9 +1,13 @@
 module Faye
   class Connection
     include EventMachine::Deferrable
+    include Observable
+    
     attr_reader :id   
     
     MAX_DELAY = 0.1
+    INTERVAL  = 1.0
+    TIMEOUT   = 60.0
     
     def initialize(id)
       @id       = id
@@ -13,37 +17,28 @@ module Faye
     
     def update(event)
       @inbox.add(event)
-      begin_timeout! if @connected
+      begin_delivery_timeout! if @connected
     end
     
     def flush!
       return unless @connected
+      release_connection!
       
       events = @inbox.entries
       @inbox = Set.new
       
       set_deferred_status(:succeeded, events)
       set_deferred_status(:deferred)
-      
-      @connected = false
-      events
     end
     
     def connect(&block)
       callback(&block)
-      @connected = true
-      begin_timeout! unless @inbox.empty?
-    end
-    
-    def begin_timeout!
-      return unless @connected and
-                    not @inbox.empty? and
-                    @timeout.nil?
       
-      @timeout = EventMachine.add_timer(MAX_DELAY) do
-        @timeout = nil
-        flush!
-      end
+      @mark_for_deletion  = false
+      @connected          = true
+      
+      begin_delivery_timeout! unless @inbox.empty?
+      begin_connection_timeout!
     end
     
     def subscribe(channel)
@@ -60,8 +55,47 @@ module Faye
     def disconnect!
       unsubscribe(:all)
       flush!
-      @disconnect = true
     end
+    
+  private
+    
+    def begin_delivery_timeout!
+      return unless @connected and not @inbox.empty? and @delivery_timeout.nil?
+      @delivery_timeout = EventMachine.add_timer(MAX_DELAY) { flush! }
+    end
+    
+    def begin_connection_timeout!
+      return unless @connected and @connection_timeout.nil?
+      @connection_timeout = EventMachine.add_timer(TIMEOUT) { flush! }
+    end
+    
+    def release_connection!
+      if @connection_timeout
+        EventMachine.cancel_timer(@connection_timeout)
+        @connection_timeout = nil
+      end
+      
+      if @delivery_timeout
+        EventMachine.cancel_timer(@delivery_timeout)
+        @delivery_timeout = nil
+      end
+      
+      @connected = false
+      schedule_for_deletion!
+    end
+    
+    def schedule_for_deletion!
+      return if @mark_for_deletion
+      @mark_for_deletion = true
+      
+      EventMachine.add_timer(10 * INTERVAL) do
+        if @mark_for_deletion
+          changed(true)
+          notify_observers(:stale_client, self)
+        end
+      end
+    end
+    
   end
 end
 

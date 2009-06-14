@@ -6,11 +6,6 @@ module Faye
       Thread.new { EventMachine.run } unless EventMachine.reactor_running?
     end
     
-    def destroy!
-      @clients.each { |id, client| client.disconnect! }
-      @clients.clear
-    end
-    
     def process(messages, local = false, &callback)
       messages = [messages].flatten
       processed, responses = 0, []
@@ -72,6 +67,8 @@ module Faye
       return response unless response['successful']
       
       response['clientId'] = generate_id
+      
+      puts "CLIENTS: #{@clients.size}"
       response
     end
     
@@ -110,8 +107,7 @@ module Faye
       response['successful'] = response['error'].nil?
       return response unless response['successful']
       
-      client.disconnect!
-      @clients.delete(client_id)
+      destroy_client(client)
       
       response['clientId'] = client_id
       response
@@ -189,6 +185,12 @@ module Faye
       response
     end
     
+    # Notifies the server of stale connections that should be deleted
+    def update(message, client)
+      return unless message == :stale_client
+      destroy_client(client)
+    end
+    
     def client_ids
       @clients.keys
     end
@@ -202,7 +204,17 @@ module Faye
     end
     
     def connection(id)
-      @clients[id] ||= Connection.new(id)
+      return @clients[id] if @clients.has_key?(id)
+      client = Connection.new(id)
+      client.add_observer(self)
+      @clients[id] = client
+    end
+    
+    def destroy_client(client)
+      puts "DISCONNECT #{client.id}"
+      client.disconnect!
+      client.delete_observer(self)
+      @clients.delete(client.id)
     end
   end
 end
