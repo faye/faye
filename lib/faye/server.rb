@@ -3,6 +3,7 @@ module Faye
     def initialize
       @channels = Channel::Tree.new
       @clients  = {}
+      Thread.new { EventMachine.run } unless EventMachine.reactor_running?
     end
     
     def destroy!
@@ -32,7 +33,7 @@ module Faye
         return callback[response] unless response['channel'] == Channel::CONNECT and
                                          response['successful'] == true
         
-        return connection(response['clientId']).poll_events do |events|
+        return connection(response['clientId']).connect do |events|
           callback[[response] + events]
         end
       end

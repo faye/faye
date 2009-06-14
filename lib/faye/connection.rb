@@ -3,21 +3,17 @@ module Faye
     include EventMachine::Deferrable
     attr_reader :id   
     
+    MAX_LATENCY = 0.1
+    
     def initialize(id)
       @id       = id
       @channels = Set.new
       @inbox    = Set.new
     end
     
-    # TODO queue up events so we make fewer requests
     def update(event)
       @inbox.add(event)
-      flush!
-    end
-    
-    def poll_events(&block)
-      @connected = true
-      callback(&block)
+      begin_timeout! if @connected
     end
     
     def flush!
@@ -31,6 +27,23 @@ module Faye
       
       @connected = false
       events
+    end
+    
+    def connect(&block)
+      callback(&block)
+      @connected = true
+      begin_timeout! unless @inbox.empty?
+    end
+    
+    def begin_timeout!
+      return unless @connected and
+                    not @inbox.empty? and
+                    @timeout.nil?
+      
+      @timeout = EventMachine.add_timer(MAX_LATENCY) do
+        @timeout = nil
+        flush!
+      end
     end
     
     def subscribe(channel)
