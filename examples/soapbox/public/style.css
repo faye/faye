@@ -1,0 +1,43 @@
+body {
+  background:   #c9eb70;
+  margin:       0;
+  padding:      0;
+  font:         16px/1.5 Helvetica, Arial, sans-serif;
+  text-align:   center;
+}
+
+.container {
+  text-align:   left;
+  width:        400px;
+  margin:       40px auto;
+}
+
+h1, form, ul li {
+  background:   #fff;
+  padding:      24px;
+  border:       1px solid #9dba4f;
+}
+
+h1 {
+  font-size:    20px;
+}
+
+h1 em {
+  font-style:   normal;
+  font-weight:  normal;
+  color:        #444;
+  text-transform: uppercase;
+  letter-spacing: -0.06em;
+}
+
+label {
+  color:        #444;
+  font-weight:  bold;
+}
+
+ul, li {
+  list-style:   none;
+  margin:       0;
+  padding:      0;
+}
+

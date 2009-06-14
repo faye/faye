@@ -14,6 +14,8 @@ Soapbox = {
     this._post    = $('#postMessage');
     this._stream  = $('#stream');
     
+    this._app.hide();
+    
     // When the user enters a username, store it and start the app
     this._login.submit(function() {
       self._username = $('#username').val();
