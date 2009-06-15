@@ -18,9 +18,31 @@ module Faye
       @inbox    = Set.new
     end
     
+    def subscribe(channel)
+      channel.add_observer(self) if @channels.add?(channel)
+    end
+    
+    def unsubscribe(channel)
+      return @channels.each(&method(:unsubscribe)) if channel == :all
+      return unless @channels.member?(channel)
+      @channels.delete(channel)
+      channel.delete_observer(self)
+    end
+    
     def update(event)
       @inbox.add(event)
       begin_delivery_timeout! if @connected
+    end
+    
+    def connect(&block)
+      callback(&block)
+      return if @connected
+      
+      @mark_for_deletion  = false
+      @connected          = true
+      
+      begin_delivery_timeout! unless @inbox.empty?
+      begin_connection_timeout!
     end
     
     def flush!
@@ -32,27 +54,6 @@ module Faye
       
       set_deferred_status(:succeeded, events)
       set_deferred_status(:deferred)
-    end
-    
-    def connect(&block)
-      callback(&block)
-      
-      @mark_for_deletion  = false
-      @connected          = true
-      
-      begin_delivery_timeout! unless @inbox.empty?
-      begin_connection_timeout!
-    end
-    
-    def subscribe(channel)
-      channel.add_observer(self) if @channels.add?(channel)
-    end
-    
-    def unsubscribe(channel)
-      return @channels.each(&method(:unsubscribe)) if channel == :all
-      return unless @channels.member?(channel)
-      @channels.delete(channel)
-      channel.delete_observer(self)
     end
     
     def disconnect!
