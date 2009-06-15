@@ -1,10 +1,15 @@
 Faye.Client = Faye.Class({
-  _UNCONNECTED:  {},
-  _CONNECTING:   {},
-  _CONNECTED:    {},
+  _UNCONNECTED: {},
+  _CONNECTING:  {},
+  _CONNECTED:   {},
+  
+  _HANDSHAKE:   'handshake',
+  _RETRY:       'retry',
+  _NONE:        'none',
   
   DEFAULT_ENDPOINT:   '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   MAX_DELAY:          <%= Faye::Connection::MAX_DELAY %>,
+  INTERVAL:           <%= Faye::Connection::INTERVAL * 1000 %>,
   
   initialize: function(endpoint) {
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
@@ -12,6 +17,8 @@ Faye.Client = Faye.Class({
     this._state     = this._UNCONNECTED;
     this._outbox    = [];
     this._channels  = new Faye.Channel.Tree();
+    
+    this._advice = {reconnect: this._HANDSHAKE, interval: this.INTERVAL};
     
     Faye.Event.on(Faye.ENV, 'beforeunload', this.disconnect, this);
   },
@@ -39,7 +46,12 @@ Faye.Client = Faye.Class({
       
     }, function(message) {
       if (message.id !== id) return;
-      if (!message.successful) return;   // TODO retry
+      var self = this;
+      
+      if (!message.successful) {
+        setTimeout(function() { self.handshake(callback, scope) }, this._advice.interval);
+        return this._state = this._UNCONNECTED;
+      }
       
       this._state     = this._CONNECTED;
       this._clientId  = message.clientId;
@@ -54,6 +66,7 @@ Faye.Client = Faye.Class({
       this.connect(callback, scope);
     }, this);
     
+    if (this._advice.reconnect === this._NONE) return;
     if (this._state !== this._CONNECTED) return;
     
     if (this._connectionId) return;
@@ -68,7 +81,9 @@ Faye.Client = Faye.Class({
     }, function(message) {
       if (message.id !== this._connectionId) return;
       delete this._connectionId;
-      this.connect();
+      
+      var self = this;
+      setTimeout(function() { self.connect() }, this._advice.interval);
     }, this);
     
     if (callback) callback.call(scope);
@@ -148,17 +163,8 @@ Faye.Client = Faye.Class({
   
   // TODO might be better as a retry loop
   handleAdvice: function(advice) {
-    var client = this;
-    switch (advice.reconnect) {
-      case 'retry':     setTimeout(function() {
-                          client.connect();
-                        }, advice.interval || Faye.Client.BACKOFF);
-                        break;
-      case 'handshake': client.handshake();
-                        break;
-      case 'none':
-      default:          break;
-    }
+    Faye.extend(this._advice, advice);
+    if (this._advice.reconnect === this._HANDSHAKE) this._clientId = null;
   },
   
   sendToSubscribers: function(message) {
@@ -167,9 +173,5 @@ Faye.Client = Faye.Class({
       callback[0].call(callback[1], message.data);
     });
   }
-});
-
-Faye.extend(Faye.Client, {
-  BACKOFF:  5000
 });
 

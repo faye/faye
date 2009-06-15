@@ -10,11 +10,15 @@ Faye.Transport = Faye.extend(Faye.Class({
       if (!callback) return;
       responses = [].concat(responses);
       Faye.each(responses, function(response) {
+        
         callback.call(scope, response);
+        
         if (response.advice)
           this._client.handleAdvice(response.advice);
+        
         if (response.data && response.channel)
           this._client.sendToSubscribers(response);
+        
       }, this);
     }, this);
   }

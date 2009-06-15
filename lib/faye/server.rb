@@ -27,9 +27,10 @@ module Faye
       if Channel.meta?(channel)
         response = __send__(Channel.parse(channel)[1], message, local)
         
-        response['advice'] = {}
-        response['advice']['reconnect'] = @clients.has_key?(client_id) ? 'retry' : 'handshake'
-        response['advice']['interval']  = Connection::INTERVAL * 1000
+        client_id ||= response['clientId']
+        response['advice'] ||= {}
+        response['advice']['reconnect'] ||= @clients.has_key?(client_id) ? 'retry' : 'handshake'
+        response['advice']['interval']  ||= Connection::INTERVAL * 1000
         
         response['id'] = message['id']
         
