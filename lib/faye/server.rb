@@ -25,7 +25,7 @@ module Faye
       channel   = message['channel']
       
       if Channel.meta?(channel)
-        response = __send__(Channel.parse(channel)[1], message)
+        response = __send__(Channel.parse(channel)[1], message, local)
         
         response['advice'] = {}
         response['advice']['reconnect'] = @clients.has_key?(client_id) ? 'retry' : 'handshake'
