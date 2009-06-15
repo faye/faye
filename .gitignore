@@ -1,3 +1,4 @@
 *.rbc
 lib/faye-min.js
-
+README.txt
+pkg
