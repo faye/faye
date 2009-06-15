@@ -1,3 +1,4 @@
+require 'forwardable'
 require 'observer'
 require 'set'
 require 'rubygems'

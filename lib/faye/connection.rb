@@ -3,11 +3,14 @@ module Faye
     include EventMachine::Deferrable
     include Observable
     
-    attr_reader :id   
+    extend  Forwardable
+    def_delegators :EventMachine, :add_timer, :cancel_timer
     
     MAX_DELAY = 0.1
     INTERVAL  = 1.0
     TIMEOUT   = 60.0
+    
+    attr_reader :id   
     
     def initialize(id)
       @id       = id
@@ -61,22 +64,22 @@ module Faye
     
     def begin_delivery_timeout!
       return unless @connected and not @inbox.empty? and @delivery_timeout.nil?
-      @delivery_timeout = EventMachine.add_timer(MAX_DELAY) { flush! }
+      @delivery_timeout = add_timer(MAX_DELAY) { flush! }
     end
     
     def begin_connection_timeout!
       return unless @connected and @connection_timeout.nil?
-      @connection_timeout = EventMachine.add_timer(TIMEOUT) { flush! }
+      @connection_timeout = add_timer(TIMEOUT) { flush! }
     end
     
     def release_connection!
       if @connection_timeout
-        EventMachine.cancel_timer(@connection_timeout)
+        cancel_timer(@connection_timeout)
         @connection_timeout = nil
       end
       
       if @delivery_timeout
-        EventMachine.cancel_timer(@delivery_timeout)
+        cancel_timer(@delivery_timeout)
         @delivery_timeout = nil
       end
       
@@ -88,7 +91,7 @@ module Faye
       return if @mark_for_deletion
       @mark_for_deletion = true
       
-      EventMachine.add_timer(10 * INTERVAL) do
+      add_timer(10 * INTERVAL) do
         if @mark_for_deletion
           changed(true)
           notify_observers(:stale_client, self)
