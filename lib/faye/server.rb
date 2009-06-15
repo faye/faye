@@ -1,6 +1,7 @@
 module Faye
   class Server
-    def initialize
+    def initialize(options = {})
+      @options  = options
       @channels = Channel::Tree.new
       @clients  = {}
       Thread.new { EventMachine.run } unless EventMachine.reactor_running?
@@ -215,7 +216,7 @@ module Faye
     
     def connection(id)
       return @clients[id] if @clients.has_key?(id)
-      client = Connection.new(id)
+      client = Connection.new(id, @options)
       client.add_observer(self)
       @clients[id] = client
     end

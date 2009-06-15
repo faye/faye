@@ -16,7 +16,7 @@ module Faye
       
       @endpoint = @options[:mount] || DEFAULT_ENDPOINT
       @script   = @endpoint + '.js'
-      @server   = Server.new
+      @server   = Server.new(@options)
     end
     
     def call(env)

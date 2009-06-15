@@ -12,10 +12,15 @@ module Faye
     
     attr_reader :id   
     
-    def initialize(id)
+    def initialize(id, options = {})
       @id       = id
+      @options  = options
       @channels = Set.new
       @inbox    = Set.new
+    end
+    
+    def timeout
+      @options[:timeout] || TIMEOUT
     end
     
     def subscribe(channel)
@@ -70,7 +75,7 @@ module Faye
     
     def begin_connection_timeout!
       return unless @connected and @connection_timeout.nil?
-      @connection_timeout = add_timer(TIMEOUT) { flush! }
+      @connection_timeout = add_timer(timeout) { flush! }
     end
     
     def release_connection!

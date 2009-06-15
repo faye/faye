@@ -21,14 +21,22 @@ example, here's a <tt>config.ru</tt> for running it with Sinatra:
 
   require 'rubygems'
   require 'faye'
+  require 'sinatra'
   require 'path/to/sinatra/app'
   
-  use Faye::RackAdapter, :mount => '/comet'
+  use Faye::RackAdapter, :mount   => '/comet',
+                         :timeout => 30
+  
   run Sinatra::Application
 
 This starts a Comet endpoint at <tt>http://localhost:9292/comet</tt> with
-the client script at <tt>http://localhost:9292/comet.js</tt>. On the client
-side, set up the client as follows:
+the client script at <tt>http://localhost:9292/comet.js</tt>. The +timeout+
+option sets how long (in seconds) a long-polling request will wait before
+timing out; this must be less than the timeout set on your frontend web server
+so that the Comet server can send a response before Apache (for example)
+closes the connection.
+
+In your front-end code, set up the client as follows:
 
   <script type="text/javascript" src="/comet.js"></script>
   
