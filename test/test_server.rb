@@ -8,10 +8,6 @@ class TestServer < Test::Unit::TestCase
     @server = Server.new
   end
   
-  def teardown
-    @server.destroy!
-  end
-  
   def get_client_id
     handshake(  'version' => '1.0',
                 'supportedConnectionTypes' => %w[long-polling] )
