@@ -8,16 +8,15 @@ Faye.Transport = Faye.extend(Faye.Class({
     message = {message: JSON.stringify(message)};
     return this.request(message, function(responses) {
       if (!callback) return;
-      responses = [].concat(responses);
-      Faye.each(responses, function(response) {
+      Faye.each([].concat(responses), function(response) {
         
         callback.call(scope, response);
         
         if (response.advice)
-          this._client.handleAdvice(response.advice);
+          this._client._handleAdvice(response.advice);
         
         if (response.data && response.channel)
-          this._client.sendToSubscribers(response);
+          this._client._sendToSubscribers(response);
         
       }, this);
     }, this);

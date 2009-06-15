@@ -76,8 +76,6 @@ module Faye
       return response unless response['successful']
       
       response['clientId'] = generate_id
-      
-      puts "CLIENTS: #{@clients.size}"
       response
     end
     
@@ -223,7 +221,6 @@ module Faye
     end
     
     def destroy_client(client)
-      puts "DISCONNECT #{client.id}"
       client.disconnect!
       client.delete_observer(self)
       @clients.delete(client.id)

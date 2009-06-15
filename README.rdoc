@@ -63,7 +63,7 @@ is done as follows:
   jake -f
 
 
-== To-do:
+== To-do
 
 * Provide support for user-defined <tt>/service/*</tt> channels
 * Support Thin's async response
@@ -76,7 +76,8 @@ is done as follows:
 
   sudo gem install hoe faye
 
-== LICENSE:
+
+== License
 
 (The MIT License)
 
