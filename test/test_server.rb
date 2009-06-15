@@ -402,4 +402,19 @@ class TestServer < Test::Unit::TestCase
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
   end
+  
+  def test_advice
+    handle( 'channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => 'fake' ) do |r|
+      assert_equal  '401:fake:Unknown client', r['error']
+      assert_equal  'handshake',      r['advice']['reconnect']
+      assert_equal  1000,             r['advice']['interval']
+    end
+    
+    id = get_client_id
+    handle( 'channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => id ) do |r|
+      assert_equal  true,             r['successful']
+      assert_equal  'retry',          r['advice']['reconnect']
+      assert_equal  1000,             r['advice']['interval']
+    end
+  end
 end

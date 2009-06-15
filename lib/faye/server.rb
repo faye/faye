@@ -21,10 +21,18 @@ module Faye
     end
     
     def handle(message, local = false, &callback)
-      channel = message['channel']
+      client_id = message['clientId']
+      channel   = message['channel']
       
       if Channel.meta?(channel)
         response = __send__(Channel.parse(channel)[1], message)
+        
+        response['advice'] = {}
+        response['advice']['reconnect'] = @clients.has_key?(client_id) ? 'retry' : 'handshake'
+        response['advice']['interval']  = Connection::INTERVAL * 1000
+        
+        response['id'] = message['id']
+        
         return callback[response] unless response['channel'] == Channel::CONNECT and
                                          response['successful'] == true
         
@@ -79,15 +87,17 @@ module Faye
     def connect(message, local = false)
       response  = { 'channel' => Channel::CONNECT,
                     'id'      => message['id'] }
-      client_id = message['clientId']
       
+      client_id = message['clientId']
+      client    = client_id ? @clients[client_id] : nil
+      
+      response['error'] = Error.client_unknown(client_id) if client.nil?
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       response['error'] = Error.parameter_missing('connectionType') if message['connectionType'].nil?
       
       response['successful'] = response['error'].nil?
       return response unless response['successful']
       
-      client = connection(client_id)
       response['clientId'] = client.id
       response
     end
@@ -98,6 +108,7 @@ module Faye
     def disconnect(message, local = false)
       response  = { 'channel' => Channel::DISCONNECT,
                     'id'      => message['id'] }
+      
       client_id = message['clientId']
       client    = client_id ? @clients[client_id] : nil
       
