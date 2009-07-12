@@ -13,12 +13,14 @@ client/faye.js
 client/transport.js
 client/client.js
 client/channel.js
+bin/faye
 lib/faye-min.js
 lib/faye.rb
 lib/faye/channel.rb
 lib/faye/connection.rb
 lib/faye/error.rb
 lib/faye/grammar.rb
+lib/faye/proxy.rb
 lib/faye/rack_adapter.rb
 lib/faye/server.rb
 examples/soapbox/README
