@@ -13,9 +13,9 @@ Faye.extend = function(dest, source, overwrite) {
 
 Faye.extend(Faye, {
   BAYEUX_VERSION: '<%= Faye::BAYEUX_VERSION %>',
-  ENV:  this,
-  
-  VERSION:  '<%= Faye::VERSION %>',
+  VERSION:        '<%= Faye::VERSION %>',
+  JSONP_CALLBACK: '<%= Faye::JSONP_CALLBACK %>',
+  ENV:            this,
   
   Grammar: {
 <% %w[  LOWALPHA    UPALPHA     ALPHA     DIGIT

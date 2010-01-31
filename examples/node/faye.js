@@ -13,9 +13,9 @@ Faye.extend = function(dest, source, overwrite) {
 
 Faye.extend(Faye, {
   BAYEUX_VERSION: '1.0',
-  ENV:  this,
-  
-  VERSION:  '0.1.1',
+  VERSION:        '0.1.1',
+  JSONP_CALLBACK: 'jsonpcallback',
+  ENV:            this,
   
   Grammar: {
 
@@ -143,23 +143,53 @@ Faye.Class = function(parent, methods) {
 };
 
 
+Faye.Server = Faye.Class({
+  initialize: function(options) {
+    this._options = options || {};
+  },
+  
+  process: function(message, local, callback) {
+    callback(message);
+  }
+});
+
+
 var path  = require('path'),
-    posix = require('posix');
+    posix = require('posix'),
+    sys   = require('sys'),
+    querystring = require('querystring');
 
 Faye.NodeAdapter = Faye.Class({
   initialize: function(options) {
     this._options  = options || {};
     this._endpoint = this._options.mount || Faye.NodeAdapter.DEFAULT_ENDPOINT;
     this._script   = this._endpoint + '.js';
+    this._server   = new Faye.Server(this._options);
   },
   
   call: function(request, response) {
     switch (request.url) {
       
       case this._endpoint:
-        response.sendHeader(200, {'Content-Type': 'text/plain'});
-        response.sendBody('TODO: send a Bayeux response');
-        response.finish();
+        var isGet  = (request.method === 'GET'),
+            type   = isGet ? Faye.NodeAdapter.TYPE_SCRIPT : Faye.NodeAdapter.TYPE_JSON,
+            server = this._server;
+        
+        if (isGet) {
+          // TODO
+        } else {
+          request.addListener('body', function(chunk) {
+            var params  = querystring.parse(chunk),
+                message = JSON.parse(params.message),
+                jsonp   = params.jsonp || Faye.JSONP_CALLBACK;
+            
+            server.process(message, false, function(replies) {
+              response.sendHeader(200, type);
+              response.sendBody(JSON.stringify(replies));
+              response.finish();
+            });
+          });
+        }
         return true;
         break;
       

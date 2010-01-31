@@ -14,6 +14,7 @@ packages:
   server:
     extends: core
     files:
+      - server
       - node_adapter
   client:
     extends: core
