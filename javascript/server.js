@@ -118,7 +118,38 @@ Faye.Server = Faye.Class({
   },
   
   disconnect:   function() { return {} },
-  subscribe:    function() { return {} },
+  
+  subscribe: function(message, local) {
+    var response     = { channel:   Faye.Channel.SUBSCRIBE,
+                         clientId:  message.clientId,
+                         id:        message.id };
+    
+    var clientId     = message.clientId,
+        client       = clientId ? this._clients[clientId] : null,
+        subscription = message.subscription;
+    
+    subscription = (subscription instanceof Array) ? subscription : [subscription];
+    
+    if (client === null)       response.error = Faye.Error.clientUnknown(clientId);
+    if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
+    if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
+    
+    response.subscription = subscription;
+    
+    Faye.each(subscription, function(channel) {
+      if (response.error) return;
+      if (!Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
+      if (!Faye.Channel.isValid(channel))        response.error = Faye.Error.channelInvalid(channel);
+      
+      if (response.error) return;
+      channel = this._channels.findOrCreate(channel);
+      client.subscribe(channel);
+    }, this);
+    
+    response.successful = !response.error;
+    return response;
+  },
+  
   unsubscribe:  function() { return {} }
 });
 

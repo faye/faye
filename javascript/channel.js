@@ -1,4 +1,12 @@
-Faye.Channel = {
+Faye.Channel = Faye.Class({
+  initialize: function(name) {
+    this.id = this._name = name;
+  }
+});
+
+Faye.extend(Faye.Channel.prototype, Faye.Observable);
+
+Faye.extend(Faye.Channel, {
   HANDSHAKE:    '<%= Faye::Channel::HANDSHAKE %>',
   CONNECT:      '<%= Faye::Channel::CONNECT %>',
   SUBSCRIBE:    '<%= Faye::Channel::SUBSCRIBE %>',
@@ -84,6 +92,14 @@ Faye.Channel = {
       return subtree.traverse(path.slice(1), createIfAbsent);
     },
     
+    findOrCreate: function(channel) {
+      var existing = this.get(channel);
+      if (existing) return existing;
+      existing = new Faye.Channel(channel);
+      this.set(channel, existing);
+      return existing;
+    },
+    
     glob: function(path) {
       if (typeof path === 'string') path = Faye.Channel.parse(path);
       
@@ -131,5 +147,5 @@ Faye.Channel = {
       console.log(glob.glob('/foo/bar/boo').sort());  // 5,8
     **/
   })
-};
+});
 

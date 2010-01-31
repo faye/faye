@@ -11,6 +11,7 @@ packages:
   core:
     - faye
     - util/class
+    - util/observable
     - channel
   server:
     extends: core

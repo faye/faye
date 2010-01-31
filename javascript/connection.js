@@ -7,9 +7,12 @@ Faye.Connection = Faye.Class({
     this._inbox     = new Faye.Set();
   },
   
-  on: function(eventType, block, scope) {
-    var list = this._observers[eventType] = this._observers[eventType] || [];
-    list.push([block, scope]);
+  subscribe: function(channel) {
+    if (!this._channels.add(channel)) return;
+    channel.on('message', function(event) {
+      this._inbox.add(event);
+      this._beginDeliveryTimeout();
+    }, this);
   },
   
   connect: function(callback) {
@@ -17,5 +20,6 @@ Faye.Connection = Faye.Class({
   }
 });
 
+Faye.extend(Faye.Connection.prototype, Faye.Observable);
 Faye.Connection.INTERVAL = <%= Faye::Connection::INTERVAL %>;
 

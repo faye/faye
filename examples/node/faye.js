@@ -151,7 +151,24 @@ Faye.Class = function(parent, methods) {
 };
 
 
-Faye.Channel = {
+Faye.Observable = {
+  on: function(eventType, block, scope) {
+    this._observers = this._observers || {};
+    var list = this._observers[eventType] = this._observers[eventType] || [];
+    list.push([block, scope]);
+  }
+};
+
+
+Faye.Channel = Faye.Class({
+  initialize: function(name) {
+    this.id = this._name = name;
+  }
+});
+
+Faye.extend(Faye.Channel.prototype, Faye.Observable);
+
+Faye.extend(Faye.Channel, {
   HANDSHAKE:    '/meta/handshake',
   CONNECT:      '/meta/connect',
   SUBSCRIBE:    '/meta/subscribe',
@@ -237,6 +254,14 @@ Faye.Channel = {
       return subtree.traverse(path.slice(1), createIfAbsent);
     },
     
+    findOrCreate: function(channel) {
+      var existing = this.get(channel);
+      if (existing) return existing;
+      existing = new Faye.Channel(channel);
+      this.set(channel, existing);
+      return existing;
+    },
+    
     glob: function(path) {
       if (typeof path === 'string') path = Faye.Channel.parse(path);
       
@@ -284,7 +309,7 @@ Faye.Channel = {
       console.log(glob.glob('/foo/bar/boo').sort());  // 5,8
     **/
   })
-};
+});
 
 
 Faye.Set = Faye.Class({
@@ -421,7 +446,38 @@ Faye.Server = Faye.Class({
   },
   
   disconnect:   function() { return {} },
-  subscribe:    function() { return {} },
+  
+  subscribe: function(message, local) {
+    var response     = { channel:   Faye.Channel.SUBSCRIBE,
+                         clientId:  message.clientId,
+                         id:        message.id };
+    
+    var clientId     = message.clientId,
+        client       = clientId ? this._clients[clientId] : null,
+        subscription = message.subscription;
+    
+    subscription = (subscription instanceof Array) ? subscription : [subscription];
+    
+    if (client === null)       response.error = Faye.Error.clientUnknown(clientId);
+    if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
+    if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
+    
+    response.subscription = subscription;
+    
+    Faye.each(subscription, function(channel) {
+      if (response.error) return;
+      if (!Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
+      if (!Faye.Channel.isValid(channel))        response.error = Faye.Error.channelInvalid(channel);
+      
+      if (response.error) return;
+      channel = this._channels.findOrCreate(channel);
+      client.subscribe(channel);
+    }, this);
+    
+    response.successful = !response.error;
+    return response;
+  },
+  
   unsubscribe:  function() { return {} }
 });
 
@@ -435,9 +491,12 @@ Faye.Connection = Faye.Class({
     this._inbox     = new Faye.Set();
   },
   
-  on: function(eventType, block, scope) {
-    var list = this._observers[eventType] = this._observers[eventType] || [];
-    list.push([block, scope]);
+  subscribe: function(channel) {
+    if (!this._channels.add(channel)) return;
+    channel.on('message', function(event) {
+      this._inbox.add(event);
+      this._beginDeliveryTimeout();
+    }, this);
   },
   
   connect: function(callback) {
@@ -445,6 +504,7 @@ Faye.Connection = Faye.Class({
   }
 });
 
+Faye.extend(Faye.Connection.prototype, Faye.Observable);
 Faye.Connection.INTERVAL = 1.0;
 
 
