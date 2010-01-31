@@ -20,6 +20,7 @@ packages:
       - util/set
       - server
       - connection
+      - error
       - node_adapter
   client:
     extends: core
