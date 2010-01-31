@@ -33,12 +33,13 @@ Faye.Server = Faye.Class({
   _connection: function(id) {
     if (this._clients.hasOwnProperty(id)) return this._clients[id];
     var client = new Faye.Connection(id, this._options);
-    client.on('stale', function() { this._destroyClient(client) }, this);
+    client.on('stale', this._destroyClient, this);
     return this._clients[id] = client;
   },
   
   _destroyClient: function(client) {
     client.disconnect();
+    client.stopObserving('stale', this._destroyClient, this);
     delete this._clients[client.id];
   },
   
@@ -178,6 +179,33 @@ Faye.Server = Faye.Class({
     return response;
   },
   
-  unsubscribe:  function() { return {} }
+  unsubscribe: function(message, local) {
+    var response     = { channel:   Faye.Channel.UNSUBSCRIBE,
+                         clientId:  message.clientId,
+                         id:        message.id };
+    
+    var clientId     = message.clientId,
+        client       = clientId ? this._clients[clientId] : null,
+        subscription = message.subscription;
+    
+    subscription = (subscription instanceof Array) ? subscription : [subscription];
+    
+    if (!client)               response.error = Faye.Error.clientUnknown(clientId);
+    if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
+    if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
+    
+    Faye.each(subscription, function(channel) {
+      if (response.error) return;
+      
+      if (!Faye.Channel.isValid(channel))
+        return response.error = Faye.Error.channelInvalid(channel);
+      
+      channel = this._channels.get(channel);
+      if (channel) client.unsubscribe(channel);
+    }, this);
+    
+    response.successful = !response.error;
+    return response;
+  }
 });
 
