@@ -67,6 +67,15 @@ Faye.Server = Faye.Class({
         callback([response].concat(events));
       });
     }
+    
+    if (!message.clientId || Faye.Channel.isService(channel))
+      return callback([]);
+    
+    this._channels.glob(channel).forEach(function(c) { c.push(message) });
+    
+    callback( { channel:      channel,
+                successful:   true,
+                id:           message.id  } );
   },
   
   handshake: function(message, local) {

@@ -1,6 +1,10 @@
 Faye.Channel = Faye.Class({
   initialize: function(name) {
     this.id = this._name = name;
+  },
+  
+  push: function(message) {
+    this.fire('message', message);
   }
 });
 

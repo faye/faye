@@ -156,6 +156,17 @@ Faye.Observable = {
     this._observers = this._observers || {};
     var list = this._observers[eventType] = this._observers[eventType] || [];
     list.push([block, scope]);
+  },
+  
+  fire: function() {
+    var args = Array.prototype.slice.call(arguments),
+        eventType = args.shift();
+    
+    if (!this._observers || !this._observers[eventType]) return;
+    
+    this._observers[eventType].forEach(function(listener) {
+      listener[0].apply(listener[1], args.slice());
+    });
   }
 };
 
@@ -163,6 +174,10 @@ Faye.Observable = {
 Faye.Channel = Faye.Class({
   initialize: function(name) {
     this.id = this._name = name;
+  },
+  
+  push: function(message) {
+    this.fire('message', message);
   }
 });
 
@@ -322,6 +337,21 @@ Faye.Set = Faye.Class({
     if (this._index.hasOwnProperty(key)) return false;
     this._index[key] = item;
     return true;
+  },
+  
+  isEmpty: function() {
+    for (var key in this._index) {
+      if (this._index.hasOwnProperty(key)) return false;
+    }
+    return true;
+  },
+  
+  toArray: function() {
+    var array = [];
+    for (var key in this._index) {
+      if (this._index.hasOwnProperty(key)) array.push(this._index[key]);
+    }
+    return array;
   }
 });
 
@@ -395,6 +425,15 @@ Faye.Server = Faye.Class({
         callback([response].concat(events));
       });
     }
+    
+    if (!message.clientId || Faye.Channel.isService(channel))
+      return callback([]);
+    
+    this._channels.glob(channel).forEach(function(c) { c.push(message) });
+    
+    callback( { channel:      channel,
+                successful:   true,
+                id:           message.id  } );
   },
   
   handshake: function(message, local) {
@@ -500,12 +539,58 @@ Faye.Connection = Faye.Class({
   },
   
   connect: function(callback) {
+    this.on('flush', callback);
+    if (this._connected) return;
+    
+    this._connected = true;
+    if (!this._inbox.isEmpty()) this._beginDeliveryTimeout();
+  },
   
+  flush: function() {
+    if (!this._connected) return;
+    this._releaseConnection();
+    
+    var events = this._inbox.toArray();
+    this._inbox = new Faye.Set();
+    
+    this.fire('flush', events);
+  },
+  
+  _beginDeliveryTimeout: function() {
+    if (  this._deliveryTimeout
+       || !this._connected
+       || this._inbox.isEmpty()
+       )
+      return;
+    
+    var self = this;
+    this._deliveryTimeout = setTimeout(function () { self.flush() },
+                                       Faye.Connection.MAX_DELAY);
+  },
+  
+  _releaseConnection: function() {
+    if (this._connectionTimeout) {
+      clearTimeout(this._connectionTimeout);
+      delete this._connectionTimeout;
+    }
+    
+    if (this._deliveryTimeout) {
+      clearTimeout(this._deliveryTimeout);
+      delete this._deliveryTimeout;
+    }
+    
+    this._connected = false;
+    // TODO mark for deletion
   }
 });
 
 Faye.extend(Faye.Connection.prototype, Faye.Observable);
-Faye.Connection.INTERVAL = 1.0;
+
+Faye.extend(Faye.Connection, {
+  MAX_DELAY:  0.1,
+  INTERVAL:   1.0,
+  TIMEOUT:    60.0
+});
 
 
 var path  = require('path'),
