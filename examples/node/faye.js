@@ -173,7 +173,7 @@ Faye.Observable = {
 
 Faye.Channel = Faye.Class({
   initialize: function(name) {
-    this.id = this._name = name;
+    this.__id = this._name = name;
   },
   
   push: function(message) {
@@ -333,7 +333,7 @@ Faye.Set = Faye.Class({
   },
   
   add: function(item) {
-    var key = (item.id !== undefined) ? item.id : item;
+    var key = (item.__id !== undefined) ? item.__id : item;
     if (this._index.hasOwnProperty(key)) return false;
     this._index[key] = item;
     return true;
@@ -422,6 +422,7 @@ Faye.Server = Faye.Class({
         return callback(response);
       
       return this._connection(response.clientId).connect(function(events) {
+        events.forEach(function(e) { delete e.__id });
         callback([response].concat(events));
       });
     }
@@ -429,6 +430,7 @@ Faye.Server = Faye.Class({
     if (!message.clientId || Faye.Channel.isService(channel))
       return callback([]);
     
+    message.__id = Faye.random();
     this._channels.glob(channel).forEach(function(c) { c.push(message) });
     
     callback( { channel:      channel,
