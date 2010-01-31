@@ -4,6 +4,7 @@ build_directory:    build
 builds:
   src:
     packer:         false
+    suffix:         false
   min:
     shrink_vars:    true
     private:        true
