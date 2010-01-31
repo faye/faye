@@ -1,19 +1,28 @@
 ---
-source_directory:   client
-build_directory:    lib
+source_directory:   javascript
+build_directory:    build
 builds:
+  src:
+    packer:         false
   min:
     shrink_vars:    true
     private:        true
 packages:
-  faye:
+  core:
     - faye
     - util/class
-    - util/event
-    - util/uri
-    - util/xhr
-    - channel
-    - transport
-    - client
-    - util/json
+  server:
+    extends: core
+    files:
+      - node_adapter
+  client:
+    extends: core
+    files:
+      - util/event
+      - util/uri
+      - util/xhr
+      - channel
+      - transport
+      - client
+      - util/json
 
