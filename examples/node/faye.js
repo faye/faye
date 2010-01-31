@@ -352,7 +352,6 @@ Faye.Server = Faye.Class({
     
     if (Faye.Channel.isMeta(channel)) {
       response = this[Faye.Channel.parse(channel)[1]](message, local);
-      sys.puts(response);
       
       clientId = clientId || response.clientId;
       response.advice = response.advice || {};
@@ -400,7 +399,30 @@ Faye.Server = Faye.Class({
     
     response.clientId = this._generateId();
     return response;
-  }
+  },
+  
+  connect: function(message, local) {
+    var response = { channel:   Faye.Channel.CONNECT,
+                     id:        message.id };
+    
+    var clientId = message.clientId,
+        client   = clientId ? this._clients[clientId] : null,
+        connectionType = message.connectionType;
+    
+    if (client === null) response.error = Faye.Error.clientUnknown(clientId);
+    if (!clientId)       response.error = Faye.Error.parameterMissing('clientId');
+    if (!connectionType) response.error = Faye.Error.parameterMissing('connectionType');
+    
+    response.successful = !response.error;
+    if (!response.successful) return response;
+    
+    response.clientId = client.id;
+    return response;
+  },
+  
+  disconnect:   function() { return {} },
+  subscribe:    function() { return {} },
+  unsubscribe:  function() { return {} }
 });
 
 
@@ -416,6 +438,10 @@ Faye.Connection = Faye.Class({
   on: function(eventType, block, scope) {
     var list = this._observers[eventType] = this._observers[eventType] || [];
     list.push([block, scope]);
+  },
+  
+  connect: function(callback) {
+  
   }
 });
 

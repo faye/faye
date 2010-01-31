@@ -10,6 +10,10 @@ Faye.Connection = Faye.Class({
   on: function(eventType, block, scope) {
     var list = this._observers[eventType] = this._observers[eventType] || [];
     list.push([block, scope]);
+  },
+  
+  connect: function(callback) {
+  
   }
 });
 
