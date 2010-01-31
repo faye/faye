@@ -10,6 +10,13 @@ Faye.Set = Faye.Class({
     return true;
   },
   
+  forEach: function(block, scope) {
+    for (var key in this._index) {
+      if (this._index.hasOwnProperty(key))
+        block.call(scope, this._index[key]);
+    }
+  },
+  
   isEmpty: function() {
     for (var key in this._index) {
       if (this._index.hasOwnProperty(key)) return false;
@@ -17,11 +24,21 @@ Faye.Set = Faye.Class({
     return true;
   },
   
+  member: function(item) {
+    for (var key in this._index) {
+      if (this._index[key] === item) return true;
+    }
+    return false;
+  },
+  
+  remove: function(item) {
+    var key = (item.__id !== undefined) ? item.__id : item;
+    delete this._index[key];
+  },
+  
   toArray: function() {
     var array = [];
-    for (var key in this._index) {
-      if (this._index.hasOwnProperty(key)) array.push(this._index[key]);
-    }
+    this.forEach(function(item) { array.push(item) });
     return array;
   }
 });

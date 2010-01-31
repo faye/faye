@@ -117,7 +117,7 @@ Faye.Server = Faye.Class({
         client   = clientId ? this._clients[clientId] : null,
         connectionType = message.connectionType;
     
-    if (client === null) response.error = Faye.Error.clientUnknown(clientId);
+    if (!client)         response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)       response.error = Faye.Error.parameterMissing('clientId');
     if (!connectionType) response.error = Faye.Error.parameterMissing('connectionType');
     
@@ -128,7 +128,24 @@ Faye.Server = Faye.Class({
     return response;
   },
   
-  disconnect:   function() { return {} },
+  disconnect: function(message, local) {
+    var response = { channel:   Faye.Channel.DISCONNECT,
+                     id:        message.id };
+    
+    var clientId = message.clientId,
+        client   = clientId ? this._clients[clientId] : null;
+    
+    if (!client)   response.error = Faye.Error.clientUnknown(clientId);
+    if (!clientId) response.error = Faye.Error.parameterMissing('clientId');
+    
+    response.successful = !response.error;
+    if (!response.successful) return response;
+    
+    this._destroyClient(client);
+    
+    response.clientId = clientId;
+    return response;
+  },
   
   subscribe: function(message, local) {
     var response     = { channel:   Faye.Channel.SUBSCRIBE,
@@ -141,7 +158,7 @@ Faye.Server = Faye.Class({
     
     subscription = (subscription instanceof Array) ? subscription : [subscription];
     
-    if (client === null)       response.error = Faye.Error.clientUnknown(clientId);
+    if (!client)               response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
     if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
     

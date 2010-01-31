@@ -339,6 +339,13 @@ Faye.Set = Faye.Class({
     return true;
   },
   
+  forEach: function(block, scope) {
+    for (var key in this._index) {
+      if (this._index.hasOwnProperty(key))
+        block.call(scope, this._index[key]);
+    }
+  },
+  
   isEmpty: function() {
     for (var key in this._index) {
       if (this._index.hasOwnProperty(key)) return false;
@@ -346,11 +353,21 @@ Faye.Set = Faye.Class({
     return true;
   },
   
+  member: function(item) {
+    for (var key in this._index) {
+      if (this._index[key] === item) return true;
+    }
+    return false;
+  },
+  
+  remove: function(item) {
+    var key = (item.__id !== undefined) ? item.__id : item;
+    delete this._index[key];
+  },
+  
   toArray: function() {
     var array = [];
-    for (var key in this._index) {
-      if (this._index.hasOwnProperty(key)) array.push(this._index[key]);
-    }
+    this.forEach(function(item) { array.push(item) });
     return array;
   }
 });
@@ -475,7 +492,7 @@ Faye.Server = Faye.Class({
         client   = clientId ? this._clients[clientId] : null,
         connectionType = message.connectionType;
     
-    if (client === null) response.error = Faye.Error.clientUnknown(clientId);
+    if (!client)         response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)       response.error = Faye.Error.parameterMissing('clientId');
     if (!connectionType) response.error = Faye.Error.parameterMissing('connectionType');
     
@@ -486,7 +503,24 @@ Faye.Server = Faye.Class({
     return response;
   },
   
-  disconnect:   function() { return {} },
+  disconnect: function(message, local) {
+    var response = { channel:   Faye.Channel.DISCONNECT,
+                     id:        message.id };
+    
+    var clientId = message.clientId,
+        client   = clientId ? this._clients[clientId] : null;
+    
+    if (!client)   response.error = Faye.Error.clientUnknown(clientId);
+    if (!clientId) response.error = Faye.Error.parameterMissing('clientId');
+    
+    response.successful = !response.error;
+    if (!response.successful) return response;
+    
+    this._destroyClient(client);
+    
+    response.clientId = clientId;
+    return response;
+  },
   
   subscribe: function(message, local) {
     var response     = { channel:   Faye.Channel.SUBSCRIBE,
@@ -499,7 +533,7 @@ Faye.Server = Faye.Class({
     
     subscription = (subscription instanceof Array) ? subscription : [subscription];
     
-    if (client === null)       response.error = Faye.Error.clientUnknown(clientId);
+    if (!client)               response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
     if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
     
@@ -540,6 +574,12 @@ Faye.Connection = Faye.Class({
     }, this);
   },
   
+  unsubscribe: function(channel) {
+    if (channel === 'all') return this._channels.forEach(this.unsubscribe, this);
+    if (!this._channels.member(channel)) return;
+    this._channels.remove(channel);
+  },
+  
   connect: function(callback) {
     this.on('flush', callback);
     if (this._connected) return;
@@ -556,6 +596,11 @@ Faye.Connection = Faye.Class({
     this._inbox = new Faye.Set();
     
     this.fire('flush', events);
+  },
+  
+  disconnect: function() {
+    this.unsubscribe('all');
+    this.flush();
   },
   
   _beginDeliveryTimeout: function() {

@@ -15,6 +15,12 @@ Faye.Connection = Faye.Class({
     }, this);
   },
   
+  unsubscribe: function(channel) {
+    if (channel === 'all') return this._channels.forEach(this.unsubscribe, this);
+    if (!this._channels.member(channel)) return;
+    this._channels.remove(channel);
+  },
+  
   connect: function(callback) {
     this.on('flush', callback);
     if (this._connected) return;
@@ -31,6 +37,11 @@ Faye.Connection = Faye.Class({
     this._inbox = new Faye.Set();
     
     this.fire('flush', events);
+  },
+  
+  disconnect: function() {
+    this.unsubscribe('all');
+    this.flush();
   },
   
   _beginDeliveryTimeout: function() {
