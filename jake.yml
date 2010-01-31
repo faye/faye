@@ -11,10 +11,13 @@ packages:
   core:
     - faye
     - util/class
+    - channel
   server:
     extends: core
     files:
+      - util/set
       - server
+      - connection
       - node_adapter
   client:
     extends: core
@@ -22,7 +25,6 @@ packages:
       - util/event
       - util/uri
       - util/xhr
-      - channel
       - transport
       - client
       - util/json

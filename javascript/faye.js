@@ -12,10 +12,13 @@ Faye.extend = function(dest, source, overwrite) {
 };
 
 Faye.extend(Faye, {
-  BAYEUX_VERSION: '<%= Faye::BAYEUX_VERSION %>',
-  VERSION:        '<%= Faye::VERSION %>',
-  JSONP_CALLBACK: '<%= Faye::JSONP_CALLBACK %>',
-  ENV:            this,
+  BAYEUX_VERSION:   '<%= Faye::BAYEUX_VERSION %>',
+  VERSION:          '<%= Faye::VERSION %>',
+  JSONP_CALLBACK:   '<%= Faye::JSONP_CALLBACK %>',
+  ID_LENGTH:        <%= Faye::ID_LENGTH %>,
+  CONNECTION_TYPES: <%= Faye::CONNECTION_TYPES.inspect %>,
+  
+  ENV:              this,
   
   Grammar: {
 <% %w[  LOWALPHA    UPALPHA     ALPHA     DIGIT
@@ -70,6 +73,11 @@ Faye.extend(Faye, {
     var size = 0;
     this.each(object, function() { size += 1 });
     return size;
+  },
+  
+  random: function() {
+    var field = Math.pow(2, this.ID_LENGTH);
+    return (Math.random() * field).toString(16).replace(/0*$/, '');
   },
   
   enumEqual: function(actual, expected) {
