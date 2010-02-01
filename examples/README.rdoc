@@ -1,0 +1,35 @@
+= Soapbox -- a Twitter-style chat app
+
+Soapbox is a chat app written using Faye and jQuery, with functionality
+modelled on that of Twitter. You can pick a username, type in some users
+to follow, and enter messages. You receive messages from anyone you're
+following, and any messages that mention you using the <tt>@username</tt>
+syntax.
+
+
+== Running the demo
+
+There are two backends that handle message routing; one for Node.js
+and one for Rack. To run the Node.js version:
+
+  node examples/node/app.js
+
+To run the Rack version you need a few gems first:
+
+  sudo gem install eventmachine rack json sinatra
+  rackup examples/rack/config.ru
+
+Note that Faye does not depend on Sinatra; the demo just uses it to
+provide a concrete app behind the Faye middleware.
+
+
+== Source code
+
+There is no server-side logic for this app; the Faye server simply
+handles message routing between clients and all subscriptions are set
+up on the client side. Since this is a simple demo of client-side
+messaging, your username and followees are not persisted across page
+reloads. The source code for the client is at:
+
+  shared/public/soapbox.js
+
