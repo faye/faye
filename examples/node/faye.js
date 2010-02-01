@@ -13,7 +13,7 @@ Faye.extend = function(dest, source, overwrite) {
 
 Faye.extend(Faye, {
   BAYEUX_VERSION:   '1.0',
-  VERSION:          '0.1.1',
+  VERSION:          '0.2.0',
   JSONP_CALLBACK:   'jsonpcallback',
   ID_LENGTH:        128,
   CONNECTION_TYPES: ["long-polling", "callback-polling"],
