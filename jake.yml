@@ -14,7 +14,7 @@ packages:
     - util/class
     - util/observable
     - channel
-  server:
+  faye:
     extends: core
     files:
       - util/set
@@ -22,7 +22,7 @@ packages:
       - connection
       - error
       - node_adapter
-  client:
+  faye-client:
     extends: core
     files:
       - util/event

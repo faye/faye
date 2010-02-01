@@ -8,7 +8,7 @@ module Faye
   VERSION = '0.2.0'
   
   ROOT = File.expand_path(File.dirname(__FILE__))
-  CLIENT_SCRIPT = File.join(ROOT, 'faye-min.js')
+  CLIENT_SCRIPT = File.join(ROOT, 'faye-client-min.js')
   
   BAYEUX_VERSION   = '1.0'
   ID_LENGTH        = 128
