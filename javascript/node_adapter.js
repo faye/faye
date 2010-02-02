@@ -1,6 +1,7 @@
 var path  = require('path'),
     posix = require('posix'),
     sys   = require('sys'),
+    url   = require('url'),
     querystring = require('querystring');
 
 Faye.NodeAdapter = Faye.Class({
@@ -12,28 +13,21 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   call: function(request, response) {
-    switch (request.url) {
+    var requestUrl = url.parse(request.url, true);
+    switch (requestUrl.pathname) {
       
       case this._endpoint:
-        var isGet  = (request.method === 'GET'),
-            type   = isGet ? Faye.NodeAdapter.TYPE_SCRIPT : Faye.NodeAdapter.TYPE_JSON,
-            server = this._server;
+        var isGet = (request.method === 'GET'),
+            self  = this;
         
-        if (isGet) {
-          // TODO
-        } else {
+        if (isGet)
+          this._callWithParams(request, response, requestUrl.query);
+        
+        else
           request.addListener('body', function(chunk) {
-            var params  = querystring.parse(chunk),
-                message = JSON.parse(params.message),
-                jsonp   = params.jsonp || Faye.JSONP_CALLBACK;
-            
-            server.process(message, false, function(replies) {
-              response.sendHeader(200, type);
-              response.sendBody(JSON.stringify(replies));
-              response.finish();
-            });
+            self._callWithParams(request, response, querystring.parse(chunk));
           });
-        }
+        
         return true;
         break;
       
@@ -48,6 +42,21 @@ Faye.NodeAdapter = Faye.Class({
       
       default: return false;
     }
+  },
+  
+  _callWithParams: function(request, response, params) {
+    var message = JSON.parse(params.message),
+        jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
+        isGet   = (request.method === 'GET'),
+        type    = isGet ? Faye.NodeAdapter.TYPE_SCRIPT : Faye.NodeAdapter.TYPE_JSON;
+    
+    this._server.process(message, false, function(replies) {
+      var body = JSON.stringify(replies);
+      if (isGet) body = jsonp + '(' + body + ');';
+      response.sendHeader(200, type);
+      response.sendBody(body);
+      response.finish();
+    });
   }
 });
 
