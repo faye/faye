@@ -65,7 +65,7 @@ Faye.Server = Faye.Class({
         return callback(response);
       
       return this._connection(response.clientId).connect(function(events) {
-        events.forEach(function(e) { delete e.__id });
+        Faye.each(events, function(e) { delete e.__id });
         callback([response].concat(events));
       });
     }
@@ -74,7 +74,7 @@ Faye.Server = Faye.Class({
       return callback([]);
     
     message.__id = Faye.random();
-    this._channels.glob(channel).forEach(function(c) { c.push(message) });
+    Faye.each(this._channels.glob(channel), function(c) { c.push(message) });
     
     callback( { channel:      channel,
                 successful:   true,

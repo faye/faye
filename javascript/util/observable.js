@@ -28,7 +28,7 @@ Faye.Observable = {
     
     if (!this._observers || !this._observers[eventType]) return;
     
-    this._observers[eventType].forEach(function(listener) {
+    Faye.each(this._observers[eventType], function(listener) {
       listener[0].apply(listener[1], args.slice());
     });
   }
