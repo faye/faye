@@ -27,16 +27,12 @@ module Faye
         message  = JSON.parse(request.params['message'])
         jsonp    = request.params['jsonp'] || JSONP_CALLBACK
         type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
-        response = nil
         
-        @server.process(message, false) do |replies|
+        on_response(message) do |replies|
           response = JSON.unparse(replies)
           response = "#{ jsonp }(#{ response });" if request.get?
+          [200, type, [response]]
         end
-        
-        # TODO support Thin's async responses
-        sleep(0.1) while response.nil?
-        [200, type, [response]]
       
       when @script then
         [200, TYPE_SCRIPT, File.new(CLIENT_SCRIPT)]
@@ -46,6 +42,19 @@ module Faye
         @app ? @app.call(env) :
                [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
       end
+    end
+    
+  private
+    
+    def on_response(message, &block)
+      response = nil
+      @server.process(message, false) do |replies|
+        response = block.call(replies)
+      end
+      
+      # TODO support Thin's async responses
+      sleep(0.1) while response.nil?
+      response
     end
     
   end
