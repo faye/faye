@@ -72,6 +72,11 @@ The backends provide a service for routing messages between clients; no
 server-side programming is needed to control them, just start them up
 and they'll sit there merrily chewing through requests.
 
+Faye uses async messaging internally so nothing blocks while waiting for
+new messages. If running under a Ruby web server (except Thin) the server
+will block while waiting for a response from Faye. Thin supports async
+responses and is a better choice for long-running concurrent connections.
+
 Usage examples and a demo app are in the +examples+ directory.
 
 
@@ -102,8 +107,14 @@ directory.
 
 === Rack backend
 
-Faye can be installed as middleware in front of any Rack application. For
-example, here's a <tt>config.ru</tt> for running it with Sinatra:
+Faye can be installed as middleware in front of any Rack application. The
+Rack backend uses EventMachine for asynchronous message distribution and
+timeouts. It can run under any web server, though Thin is best placed for
+handling long-running concurrent connections and supports async server
+responses. Under other servers the request thread will block while waiting
+for a response from Faye.
+
+Here's a <tt>config.ru</tt> for running it with Sinatra:
 
   require 'rubygems'
   require 'faye'
@@ -123,7 +134,6 @@ stack of Rack middlewares.
 == To-do
 
 * Provide support for user-defined <tt>/service/*</tt> channels
-* Support Thin's async response
 * Allow server to scale to multiple nodes
 * Provide a server-side client
 

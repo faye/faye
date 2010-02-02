@@ -4,6 +4,10 @@ require 'json'
 
 module Faye
   class RackAdapter
+    
+    # Only supported under Thin
+    ASYNC_RESPONSE = [-1, {}, []].freeze
+    
     DEFAULT_ENDPOINT  = '/bayeux'
     
     TYPE_JSON   = {'Content-Type' => 'text/json'}
@@ -26,12 +30,11 @@ module Faye
       when @endpoint then
         message  = JSON.parse(request.params['message'])
         jsonp    = request.params['jsonp'] || JSONP_CALLBACK
-        type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
         
-        on_response(message) do |replies|
+        on_response(env, message) do |replies|
           response = JSON.unparse(replies)
           response = "#{ jsonp }(#{ response });" if request.get?
-          [200, type, [response]]
+          response
         end
       
       when @script then
@@ -46,15 +49,29 @@ module Faye
     
   private
     
-    def on_response(message, &block)
-      response = nil
-      @server.process(message, false) do |replies|
-        response = block.call(replies)
+    def on_response(env, message, &block)
+      request  = Rack::Request.new(env)
+      type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
+      callback = env['async.callback']
+      
+      EM.run unless EM.reactor_running?
+      
+      if callback
+        body = DeferredBody.new
+        callback.call [200, type, body]
+        @server.process(message, false) { |r| body.succeed block.call(r) }
+        return ASYNC_RESPONSE
       end
       
-      # TODO support Thin's async responses
+      response = nil
+      @server.process(message, false) { |r| response = block.call(r) }
       sleep(0.1) while response.nil?
-      response
+      [200, type, [response]]
+    end
+    
+    class DeferredBody
+      include EventMachine::Deferrable
+      alias :each :callback
     end
     
   end

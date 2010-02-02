@@ -4,7 +4,6 @@ module Faye
       @options  = options
       @channels = Channel::Tree.new
       @clients  = {}
-      Thread.new { EventMachine.run } unless EventMachine.reactor_running?
     end
     
     # Notifies the server of stale connections that should be deleted
