@@ -5,7 +5,7 @@ var posix = require('posix'),
     faye  = require('./faye');
 
 var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
-    comet      = new faye.NodeAdapter({mount: '/comet'});
+    comet      = new faye.NodeAdapter({mount: '/comet', timeout: 45});
 
 http.createServer(function(request, response) {
   if (comet.call(request, response)) return;

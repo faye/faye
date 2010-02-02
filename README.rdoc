@@ -70,12 +70,26 @@ a simple object you can manually offload requests to.
 
 The backends provide a service for routing messages between clients; no
 server-side programming is needed to control them, just start them up
-and they'll sit there merrily chewing through requests.
+and they'll sit there merrily chewing through requests. They are both
+currently single-process since they hold all channel subscriptions in
+memory. This means, for example, that the Rack backend will not work
+under Passenger since that spawns multiple Ruby processes to serve your
+site.
 
 Faye uses async messaging internally so nothing blocks while waiting for
 new messages. If running under a Ruby web server (except Thin) the server
 will block while waiting for a response from Faye. Thin supports async
 responses and is a better choice for long-running concurrent connections.
+
+Both backends support the following initialization options:
+
+* +mount+ - the path at which the Comet service is accessible. e.g. if
+  set to <tt>/faye</tt>, the Comet endpoint will be at <tt>http://yoursite.com/faye</tt>
+  and the client script at <tt>http://yoursite.com/faye.js</tt>.
+* +timeout+ - the maximum time (seconds) to hold a long-running request
+  open before returning a response. This must be smaller than the timeout
+  on your frontend webserver to make sure Faye sends a response before
+  the server kills the connection.
 
 Usage examples and a demo app are in the +examples+ directory.
 
@@ -93,7 +107,7 @@ directory.
       http  = require('http')
       faye  = require('./faye');
   
-  var comet = new faye.NodeAdapter({mount: '/comet'});
+  var comet = new faye.NodeAdapter({mount: '/comet', timeout: 45});
   
   http.createServer(function(request, response) {
     if (comet.call(request, response)) return;
@@ -122,7 +136,7 @@ Here's a <tt>config.ru</tt> for running it with Sinatra:
   require 'path/to/sinatra/app'
   
   use Faye::RackAdapter, :mount   => '/comet',
-                         :timeout => 30
+                         :timeout => 25
   
   run Sinatra::Application
 
