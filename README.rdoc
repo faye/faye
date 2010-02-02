@@ -61,6 +61,25 @@ beginning with <tt>/meta/</tt> are reserved for use by the messaging protocol
 and may not be subscribed to.
 
 
+=== Transports
+
+The Bayeux spec defines several transport mechanisms for clients to establish
+low-latency connections with the server, the two required types being
+<tt>long-polling</tt> and <tt>callback-polling</tt>.
+
+<tt>long-polling</tt> is where the client makes an <tt>XMLHttpRequest</tt>
+to the server, and the server waits until it has new messages for that client
+before it returns a response. Faye's client and server backends all support
+this transport. Since it uses XHR, the Comet endpoint must be on the same
+domain as the client page.
+
+<tt>callback-polling</tt> involves the client using JSON-P to make the request.
+The server wraps its JSON responses in a JavaScript function call that the
+client then executes. This transport does not require the client and server
+to be on the same domain. Faye's server backends support it, but the client
+is currently a little buggy in some browsers.
+
+
 == Using the backend
 
 Both the Node.js and Rack backends have identical architectures and are
@@ -147,6 +166,7 @@ stack of Rack middlewares.
 
 == To-do
 
+* Fix <tt>callback-polling</tt> support in the client
 * Provide support for user-defined <tt>/service/*</tt> channels
 * Allow server to scale to multiple nodes
 * Provide a server-side client
