@@ -34,7 +34,7 @@ Faye.URI = Faye.extend(Faye.Class({
       });
     };
     consume('protocol', /^https?\:\/+/);
-    consume('hostname', /^[a-z0-9\-]+(\.[a-z0-9\-]+)*\.[a-z0-9\-]{2,6}/i);
+    consume('hostname', /^[^\/\:]+/);
     consume('port',     /^:[0-9]+/);
     
     Faye.extend(location, {

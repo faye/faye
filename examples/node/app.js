@@ -5,7 +5,11 @@ var posix = require('posix'),
     faye  = require('./faye');
 
 var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
-    comet      = new faye.NodeAdapter({mount: '/comet', timeout: 45});
+    comet      = new faye.NodeAdapter({mount: '/comet', timeout: 45}),
+    
+    port       = process.ARGV[2] || '8000';
+
+sys.puts('Listening on ' + port);
 
 http.createServer(function(request, response) {
   if (comet.call(request, response)) return;
@@ -17,5 +21,5 @@ http.createServer(function(request, response) {
     response.sendBody(content);
     response.finish();
   });
-}).listen(9292);
+}).listen(Number(port));
 
