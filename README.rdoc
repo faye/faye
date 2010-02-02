@@ -27,6 +27,16 @@ for far more concurrent connections per process than a typical Ruby server,
 and will get you more mileage from a single process.
 
 
+== Installation
+
+The JavaScript client and Node.js server are in the +build+ directory. Just
+copy them onto your machine and <tt>require('path/to/faye')</tt>.
+
+The Rack server is distributed as a Ruby gem:
+
+  sudo gem install faye
+
+
 == Using the client
 
 Both backends allow you to specify a 'mount point' that the Comet server

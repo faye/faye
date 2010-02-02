@@ -1,1 +1,18 @@
+=== 0.2.0 / 2010-02-02
+
+* Port server to JavaScript with an adapter for Node.js
+* Support Thin's async responses in the Ruby version for complete non-blocking
+* Fix some minor client-side bugs in transport choice
+
+
+=== 0.1.1 / 2009-07-26
+
+* Fix a broken client build
+
+
+=== 0.1.0 / 2009-06-15
+
+* Ruby Bayeux server and Rack adapter
+* Internally evented using EventMachine, web frontend blocks
+* JavaScript client with long-polling and callback-polling
 
