@@ -12,6 +12,7 @@ var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
 sys.puts('Listening on ' + port);
 
 http.createServer(function(request, response) {
+  sys.puts(request.method + ' ' + request.url);
   if (comet.call(request, response)) return;
   
   var path = (request.url === '/') ? '/index.html' : request.url;
