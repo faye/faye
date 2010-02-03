@@ -131,9 +131,7 @@ returns +true+ or +false+ to indicate whether it handled the request.
 You'll need <tt>faye.js</tt> and <tt>faye-client-min.js</tt> in the same
 directory.
 
-  var posix = require('posix'),
-      path  = require('path'),
-      http  = require('http')
+  var http  = require('http')
       faye  = require('./faye');
   
   var comet = new faye.NodeAdapter({mount: '/comet', timeout: 45});
@@ -180,11 +178,6 @@ stack of Rack middlewares.
 * Provide support for user-defined <tt>/service/*</tt> channels
 * Allow server to scale to multiple nodes
 * Provide a server-side client
-
-
-== Installation
-
-  sudo gem install hoe faye
 
 
 == License
