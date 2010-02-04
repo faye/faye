@@ -30,6 +30,13 @@ module Faye
       end
     end
     
+    def flush_connection(messages)
+      [messages].flatten.each do |message|
+        client = @clients[message['clientId']]
+        client.flush! if client
+      end
+    end
+    
   private
     
     def generate_id

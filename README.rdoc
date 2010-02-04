@@ -70,6 +70,13 @@ Channel names must be formatted as absolute path names as shown. Channels
 beginning with <tt>/meta/</tt> are reserved for use by the messaging protocol
 and may not be subscribed to.
 
+The client can also be used cross-domain if connecting to a backend that
+supports callback polling (see below under 'Transports'). Just pass in the
+full path to the endpoint including the domain. Faye figures out whether the
+server is on the same domain and uses an appropriate transport.
+
+  CometClient = new Faye.Client('http://example.com/comet');
+
 
 === Transports
 
@@ -86,8 +93,8 @@ domain as the client page.
 <tt>callback-polling</tt> involves the client using JSON-P to make the request.
 The server wraps its JSON responses in a JavaScript function call that the
 client then executes. This transport does not require the client and server
-to be on the same domain. Faye's server backends support it, but the client
-is currently a little buggy in some browsers.
+to be on the same domain. Faye's client supports this transport, as does the
+Node.js backend. The Rack backend supports it if running under Thin.
 
 
 == Using the backend
@@ -174,7 +181,6 @@ stack of Rack middlewares.
 
 == To-do
 
-* Fix <tt>callback-polling</tt> support in the client
 * Provide support for user-defined <tt>/service/*</tt> channels
 * Allow server to scale to multiple nodes
 * Provide a server-side client

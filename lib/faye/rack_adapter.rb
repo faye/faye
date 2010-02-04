@@ -31,6 +31,8 @@ module Faye
         message  = JSON.parse(request.params['message'])
         jsonp    = request.params['jsonp'] || JSONP_CALLBACK
         
+        @server.flush_connection(message) if request.get?
+        
         on_response(env, message) do |replies|
           response = JSON.unparse(replies)
           response = "#{ jsonp }(#{ response });" if request.get?

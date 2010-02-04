@@ -13,7 +13,7 @@ Faye.extend = function(dest, source, overwrite) {
 
 Faye.extend(Faye, {
   BAYEUX_VERSION:   '1.0',
-  VERSION:          '0.2.0',
+  VERSION:          '0.2.1',
   JSONP_CALLBACK:   'jsonpcallback',
   ID_LENGTH:        128,
   CONNECTION_TYPES: ["long-polling", "callback-polling"],
@@ -413,6 +413,14 @@ Faye.Server = Faye.Class({
         processed += 1;
         if (processed === messages.length) callback(responses);
       });
+    }, this);
+  },
+  
+  flushConnection: function(messages) {
+    messages = (messages instanceof Array) ? messages : [messages];
+    Faye.each(messages, function(message) {
+      var client = this._clients[message.clientId];
+      if (client) client.flush();
     }, this);
   },
   
@@ -829,6 +837,8 @@ Faye.NodeAdapter = Faye.Class({
         jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
         isGet   = (request.method === 'GET'),
         type    = isGet ? Faye.NodeAdapter.TYPE_SCRIPT : Faye.NodeAdapter.TYPE_JSON;
+    
+    if (isGet) this._server.flushConnection(message);
     
     this._server.process(message, false, function(replies) {
       var body = JSON.stringify(replies);

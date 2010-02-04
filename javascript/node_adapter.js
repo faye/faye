@@ -50,6 +50,8 @@ Faye.NodeAdapter = Faye.Class({
         isGet   = (request.method === 'GET'),
         type    = isGet ? Faye.NodeAdapter.TYPE_SCRIPT : Faye.NodeAdapter.TYPE_JSON;
     
+    if (isGet) this._server.flushConnection(message);
+    
     this._server.process(message, false, function(replies) {
       var body = JSON.stringify(replies);
       if (isGet) body = jsonp + '(' + body + ');';

@@ -24,6 +24,14 @@ Faye.Server = Faye.Class({
     }, this);
   },
   
+  flushConnection: function(messages) {
+    messages = (messages instanceof Array) ? messages : [messages];
+    Faye.each(messages, function(message) {
+      var client = this._clients[message.clientId];
+      if (client) client.flush();
+    }, this);
+  },
+  
   _generateId: function() {
     var id = Faye.random();
     while (this._clients.hasOwnProperty(id)) id = Faye.random();

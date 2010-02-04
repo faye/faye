@@ -1,3 +1,9 @@
+=== 0.2.1 / 2010-02-04
+
+* Fix server-side flushing of callback-polling connections
+* Backend can be used cross-domain if running on Node or Thin
+
+
 === 0.2.0 / 2010-02-02
 
 * Port server to JavaScript with an adapter for Node.js

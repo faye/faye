@@ -5,7 +5,7 @@ require 'rubygems'
 require 'eventmachine'
 
 module Faye
-  VERSION = '0.2.0'
+  VERSION = '0.2.1'
   
   ROOT = File.expand_path(File.dirname(__FILE__))
   CLIENT_SCRIPT = File.join(ROOT, 'faye-client-min.js')
