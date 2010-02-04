@@ -26,9 +26,11 @@ Faye.Transport = Faye.extend(Faye.Class({
     var endpoint = client._endpoint;
     if (connectionTypes === undefined) connectionTypes = this.supportedConnectionTypes();
     
-    var types = Faye.URI.parse(endpoint).isLocal()
-        ? ['long-polling', 'callback-polling']
-        : ['callback-polling'];
+    var types = (typeof process === 'object')
+        ? ['node-http']
+        : Faye.URI.parse(endpoint).isLocal()
+            ? ['long-polling', 'callback-polling']
+            : ['callback-polling'];
     
     var type = Faye.commonElement(types, connectionTypes);
     if (!type) throw 'Could not find a usable connection type for ' + endpoint;
@@ -88,4 +90,30 @@ Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
   }
 });
 Faye.Transport.register('callback-polling', Faye.JSONPTransport);
+
+// TODO move this into NodeAdapter, refactor transport choice system
+Faye.NodeTransport = Faye.Class(Faye.Transport, {
+  request: function(params, callback, scope) {
+    var uri     = url.parse(this._endpoint),
+        client  = http.createClient(uri.port, uri.hostname),
+        
+        request = client.request('POST', uri.pathname, {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                  });
+    
+    var pairs = [];
+    Faye.each(params, function(key, value) {
+      pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+    });
+    request.sendBody(pairs.join('&'));
+    
+    request.finish(function(response) {
+      if (!callback) return;
+      response.addListener('body', function(chunk) {
+        callback.call(scope, JSON.parse(chunk));
+      });
+    });
+  }
+});
+Faye.Transport.register('node-http', Faye.NodeTransport);
 

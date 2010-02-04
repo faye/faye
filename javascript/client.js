@@ -21,6 +21,7 @@ Faye.Client = Faye.Class({
     
     this._advice = {reconnect: this._RETRY, interval: this.INTERVAL};
     
+    if (!Faye.Event) return;
     Faye.Event.on(Faye.ENV, 'beforeunload', this.disconnect, this);
   },
   

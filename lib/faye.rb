@@ -13,7 +13,7 @@ module Faye
   BAYEUX_VERSION   = '1.0'
   ID_LENGTH        = 128
   JSONP_CALLBACK   = 'jsonpcallback'
-  CONNECTION_TYPES = %w[long-polling callback-polling]
+  CONNECTION_TYPES = %w[long-polling callback-polling node-http]
   
   %w[grammar server channel connection error].each do |lib|
     require File.join(ROOT, 'faye', lib)

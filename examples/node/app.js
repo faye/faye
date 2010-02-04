@@ -24,3 +24,28 @@ http.createServer(function(request, response) {
   });
 }).listen(Number(port));
 
+
+//================================================================
+var clientA = new faye.Client('http://0.0.0.0:' + port + '/comet');
+var clientB = new faye.Client('http://0.0.0.0:' + port + '/comet');
+
+sys.puts('Just kicking the tyres...');
+
+clientA.connect(function() {
+  clientB.connect(function() {
+    clientA.subscribe('/jobs/A', function(msg) {
+      sys.puts('Client A received: ' + msg.data);
+    });
+
+    clientB.subscribe('/jobs/B', function(msg) {
+      sys.puts('Client B received: ' + msg.data);
+    });
+
+    sys.puts('A sending to B ...');
+    clientA.publish('/jobs/B', {data: 56});
+
+    sys.puts('B sending to A ...');
+    clientB.publish('/jobs/A', {data: 34});
+  });
+});
+

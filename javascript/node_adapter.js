@@ -2,6 +2,7 @@ var path  = require('path'),
     posix = require('posix'),
     sys   = require('sys'),
     url   = require('url'),
+    http  = require('http'),
     querystring = require('querystring');
 
 Faye.NodeAdapter = Faye.Class({
@@ -72,4 +73,5 @@ Faye.extend(Faye.NodeAdapter, {
 });
 
 exports.NodeAdapter = Faye.NodeAdapter;
+exports.Client = Faye.Client;
 
