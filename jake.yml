@@ -23,6 +23,7 @@ packages:
       - server
       - connection
       - error
+      - transports/node
       - node_adapter
   faye-client:
     extends: core
@@ -31,4 +32,5 @@ packages:
       - util/uri
       - util/xhr
       - util/json
+      - transports/browser
 
