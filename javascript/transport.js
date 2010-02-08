@@ -5,8 +5,7 @@ Faye.Transport = Faye.extend(Faye.Class({
   },
   
   send: function(message, callback, scope) {
-    message = {message: JSON.stringify(message)};
-    return this.request(message, function(responses) {
+    this.request(message, function(responses) {
       if (!callback) return;
       Faye.each([].concat(responses), function(response) {
         

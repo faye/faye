@@ -1,7 +1,9 @@
 Faye.NodeTransport = Faye.Class(Faye.Transport, {
-  request: function(params, callback, scope) {
+  request: function(message, callback, scope) {
     var uri     = url.parse(this._endpoint),
         client  = http.createClient(uri.port, uri.hostname),
+        
+        params  = {message: JSON.stringify(message)},
         
         request = client.request('POST', uri.pathname, {
                   'Content-Type': 'application/x-www-form-urlencoded'
