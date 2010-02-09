@@ -62,6 +62,8 @@ module Faye
       client_id = message['clientId']
       channel   = message['channel']
       
+      @channels.glob(channel).each { |c| c << message }
+      
       if Channel.meta?(channel)
         response = __send__(Channel.parse(channel)[1], message, local)
         
@@ -82,8 +84,6 @@ module Faye
       
       return callback[[]] if message['clientId'].nil? or Channel.service?(channel)
       
-      @channels.glob(channel).each { |c| c << message }
-      
       callback[ { 'channel'     => channel,
                   'successful'  => true,
                   'id'          => message['id']  } ]
@@ -97,17 +97,20 @@ module Faye
     def handshake(message, local = false)
       response =  { 'channel' => Channel::HANDSHAKE,
                     'version' => BAYEUX_VERSION,
-                    'supportedConnectionTypes' => CONNECTION_TYPES,
                     'id'      => message['id'] }
       
       response['error'] = Error.parameter_missing('version') if message['version'].nil?
       
-      client_conns = message['supportedConnectionTypes']
-      if client_conns
-        common_conns = client_conns.select { |c| CONNECTION_TYPES.include?(c) }
-        response['error'] = Error.conntype_mismatch(*client_conns) if common_conns.empty?
-      else
-        response['error'] = Error.parameter_missing('supportedConnectionTypes')
+      unless local
+        response['supportedConnectionTypes'] = CONNECTION_TYPES
+        
+        client_conns = message['supportedConnectionTypes']
+        if client_conns
+          common_conns = client_conns.select { |c| CONNECTION_TYPES.include?(c) }
+          response['error'] = Error.conntype_mismatch(*client_conns) if common_conns.empty?
+        else
+          response['error'] = Error.parameter_missing('supportedConnectionTypes')
+        end
       end
       
       response['successful'] = response['error'].nil?
@@ -184,7 +187,7 @@ module Faye
       
       subscription.each do |channel|
         next if response['error']
-        response['error'] = Error.channel_forbidden(channel) unless Channel.subscribable?(channel)
+        response['error'] = Error.channel_forbidden(channel) unless local or Channel.subscribable?(channel)
         response['error'] = Error.channel_invalid(channel) unless Channel.valid?(channel)
         
         next if response['error']

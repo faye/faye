@@ -56,6 +56,9 @@ Faye.Server = Faye.Class({
         channel  = message.channel,
         response;
     
+    message.__id = Faye.random();
+    Faye.each(this._channels.glob(channel), function(c) { c.push(message) });
+    
     if (Faye.Channel.isMeta(channel)) {
       response = this[Faye.Channel.parse(channel)[1]](message, local);
       
@@ -81,9 +84,6 @@ Faye.Server = Faye.Class({
     if (!message.clientId || Faye.Channel.isService(channel))
       return callback([]);
     
-    message.__id = Faye.random();
-    Faye.each(this._channels.glob(channel), function(c) { c.push(message) });
-    
     callback( { channel:      channel,
                 successful:   true,
                 id:           message.id  } );
@@ -92,7 +92,6 @@ Faye.Server = Faye.Class({
   handshake: function(message, local) {
     var response = { channel:   Faye.Channel.HANDSHAKE,
                      version:   Faye.BAYEUX_VERSION,
-                     supportedConnectionTypes: Faye.CONNECTION_TYPES,
                      id:        message.id };
     
     if (!message.version)
@@ -101,14 +100,18 @@ Faye.Server = Faye.Class({
     var clientConns = message.supportedConnectionTypes,
         commonConns;
     
-    if (clientConns) {
-      commonConns = clientConns.filter(function(conn) {
-        return Faye.CONNECTION_TYPES.indexOf(conn) !== -1;
-      });
-      if (commonConns.length === 0)
-        response.error = Faye.Error.conntypeMismatch(clientConns);
-    } else {
-      response.error = Faye.Error.parameterMissing('supportedConnectionTypes');
+    if (!local) {
+      response.supportedConnectionTypes = Faye.CONNECTION_TYPES;
+      
+      if (clientConns) {
+        commonConns = clientConns.filter(function(conn) {
+          return Faye.CONNECTION_TYPES.indexOf(conn) !== -1;
+        });
+        if (commonConns.length === 0)
+          response.error = Faye.Error.conntypeMismatch(clientConns);
+      } else {
+        response.error = Faye.Error.parameterMissing('supportedConnectionTypes');
+      }
     }
     
     response.successful = !response.error;
@@ -175,8 +178,8 @@ Faye.Server = Faye.Class({
     
     Faye.each(subscription, function(channel) {
       if (response.error) return;
-      if (!Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
-      if (!Faye.Channel.isValid(channel))        response.error = Faye.Error.channelInvalid(channel);
+      if (!local && !Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
+      if (!Faye.Channel.isValid(channel))                  response.error = Faye.Error.channelInvalid(channel);
       
       if (response.error) return;
       channel = this._channels.findOrCreate(channel);

@@ -85,6 +85,16 @@ class TestServer < Test::Unit::TestCase
     # MAY
     assert_equal  %w[long-polling callback-polling],  @r['supportedConnectionTypes']
     assert_equal  'foo',                  @r['id']
+    
+    #================================================================
+    # local clients don't need to negotiate connection types
+    handshake({'version' => '1.0'}, true)
+    
+    assert_equal  '/meta/handshake',                  @r['channel']
+    assert_not_equal  nil,                            @r['version']
+    assert_equal  nil,                                @r['supportedConnectionTypes']
+    assert_match  /[a-z0-9]+/,                        @r['clientId']
+    assert_equal  true,                               @r['successful']
   end
   
   def test_connect
@@ -319,6 +329,22 @@ class TestServer < Test::Unit::TestCase
     assert_equal  "403:/service/foo:Forbidden channel", @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
+    
+    #================================================================
+    # local client may subscribe to meta channels
+    subscribe({ 'clientId'      => @id,
+                'subscription'  => '/meta/foo' }, true)
+    # MAY include ext, id
+    
+    # MUST
+    assert_equal  '/meta/subscribe',    @r['channel']
+    assert_equal  true,                 @r['successful']
+    assert_equal  @id,                  @r['clientId']
+    assert_equal  ['/meta/foo'],        @r['subscription']
+    # MAY
+    assert_equal  nil,                  @r['error']
+    assert_equal  nil,                  @r['id']
+    # MAY include advice, ext, timestamp
   end
   
   def test_unsubscribe
@@ -401,6 +427,22 @@ class TestServer < Test::Unit::TestCase
     assert_equal  "405:/not/**/valid:Invalid channel", @r['error']
     assert_equal  nil,                  @r['id']
     # MAY include advice, ext, timestamp
+    
+    #================================================================
+    # local client may unsubscribe from meta channels
+    unsubscribe({ 'clientId'      => @id,
+                  'subscription'  => '/meta/foo' }, true)
+    # MAY include ext, id
+    
+    # MUST
+    assert_equal  '/meta/unsubscribe',  @r['channel']
+    assert_equal  true,                 @r['successful']
+    assert_equal  @id,                  @r['clientId']
+    assert_equal  ['/meta/foo'],        @r['subscription']
+    # MAY
+    assert_equal  nil,                  @r['error']
+    assert_equal  nil,                  @r['id']
+    # MAY include error, advice, ext, timestamp
   end
   
   def test_advice
