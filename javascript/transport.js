@@ -27,7 +27,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     
     var candidateClass = null;
     Faye.each(this._transports, function(connType, klass) {
-      if (connectionTypes.indexOf(connType) < 0) return;
+      if (Faye.indexOf(connectionTypes, connType) < 0) return;
       if (candidateClass) return;
       if (klass.isUsable(endpoint)) candidateClass = klass;
     });
