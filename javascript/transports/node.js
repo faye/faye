@@ -1,4 +1,4 @@
-Faye.NodeTransport = Faye.Class(Faye.Transport, {
+Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
   request: function(message, callback, scope) {
     var params  = {message: JSON.stringify(message)},
         request = this.createRequest();
@@ -23,7 +23,23 @@ Faye.NodeTransport = Faye.Class(Faye.Transport, {
   }
 });
 
-Faye.NodeTransport.isUsable = function() { return true };
+Faye.NodeHttpTransport.isUsable = function(endpoint) {
+  return typeof endpoint === 'string';
+};
 
-Faye.Transport.register('long-polling', Faye.NodeTransport);
+Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
+
+Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
+  request: function(message, callback, scope) {
+    this._endpoint.process(message, true, function(response) {
+      callback.call(scope, response);
+    });
+  }
+});
+
+Faye.NodeLocalTransport.isUsable = function(endpoint) {
+  return endpoint instanceof Faye.Server;
+};
+
+Faye.Transport.register('in-process', Faye.NodeLocalTransport);
 

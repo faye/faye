@@ -26,7 +26,7 @@ http.createServer(function(request, response) {
 
 
 //================================================================
-var clientA = new faye.Client('http://0.0.0.0:' + port + '/comet');
+var clientA = comet.getClient();
 var clientB = new faye.Client('http://0.0.0.0:' + port + '/comet');
 
 sys.puts('Just kicking the tyres...');
