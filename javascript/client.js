@@ -18,6 +18,7 @@ Faye.Client = Faye.Class({
     this._state     = this._UNCONNECTED;
     this._outbox    = [];
     this._channels  = new Faye.Channel.Tree();
+    this._callbacks = [];
     
     this._advice = {reconnect: this._RETRY, interval: this.INTERVAL};
     
@@ -88,7 +89,17 @@ Faye.Client = Faye.Class({
     if (this._advice.reconnect === this._HANDSHAKE || this._state === this._UNCONNECTED)
       return this.handshake(function() { this.connect(callback, scope) }, this);
     
+    if (this._state === this._CONNECTING)
+      return this._callbacks.push([callback, scope]);
+    
     if (this._state !== this._CONNECTED) return;
+    
+    if (callback) callback.call(scope);
+    
+    Faye.each(this._callbacks, function(listener) {
+      listener[0].call(listener[1]);
+    });
+    this._callbacks = [];
     
     if (this._connectionId) return;
     this._connectionId = this.generateId();
@@ -109,8 +120,6 @@ Faye.Client = Faye.Class({
       else
         setTimeout(function() { self.connect() }, this._advice.interval);
     }, this);
-    
-    if (callback) callback.call(scope);
   },
   
   // Request                              Response

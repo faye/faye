@@ -23,6 +23,10 @@ module Faye
       @server   = Server.new(@options)
     end
     
+    def close
+      @server.close
+    end
+    
     def call(env)
       request = Rack::Request.new(env)
       case request.path_info
