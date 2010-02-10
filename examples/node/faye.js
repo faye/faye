@@ -13,7 +13,7 @@ Faye.extend = function(dest, source, overwrite) {
 
 Faye.extend(Faye, {
   BAYEUX_VERSION:   '1.0',
-  VERSION:          '0.2.1',
+  VERSION:          '0.2.2',
   JSONP_CALLBACK:   'jsonpcallback',
   ID_LENGTH:        128,
   CONNECTION_TYPES: ["long-polling", "callback-polling"],
@@ -833,20 +833,26 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   _callWithParams: function(request, response, params) {
-    var message = JSON.parse(params.message),
-        jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
-        isGet   = (request.method === 'GET'),
-        type    = isGet ? Faye.NodeAdapter.TYPE_SCRIPT : Faye.NodeAdapter.TYPE_JSON;
-    
-    if (isGet) this._server.flushConnection(message);
-    
-    this._server.process(message, false, function(replies) {
-      var body = JSON.stringify(replies);
-      if (isGet) body = jsonp + '(' + body + ');';
-      response.sendHeader(200, type);
-      response.sendBody(body);
+    try {
+      var message = JSON.parse(params.message),
+          jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
+          isGet   = (request.method === 'GET'),
+          type    = isGet ? Faye.NodeAdapter.TYPE_SCRIPT : Faye.NodeAdapter.TYPE_JSON;
+      
+      if (isGet) this._server.flushConnection(message);
+      
+      this._server.process(message, false, function(replies) {
+        var body = JSON.stringify(replies);
+        if (isGet) body = jsonp + '(' + body + ');';
+        response.sendHeader(200, type);
+        response.sendBody(body);
+        response.finish();
+      });
+    } catch (e) {
+      response.sendHeader(400, {'Content-Type': 'text/plain'});
+      response.sendBody('Bad request');
       response.finish();
-    });
+    }
   }
 });
 

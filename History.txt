@@ -1,3 +1,8 @@
+=== 0.2.2 / 2010-02-10
+
+* Kick out requests with malformed JSON as 400s
+
+
 === 0.2.1 / 2010-02-04
 
 * Fix server-side flushing of callback-polling connections

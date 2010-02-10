@@ -28,15 +28,19 @@ module Faye
       case request.path_info
       
       when @endpoint then
-        message  = JSON.parse(request.params['message'])
-        jsonp    = request.params['jsonp'] || JSONP_CALLBACK
-        
-        @server.flush_connection(message) if request.get?
-        
-        on_response(env, message) do |replies|
-          response = JSON.unparse(replies)
-          response = "#{ jsonp }(#{ response });" if request.get?
-          response
+        begin
+          message  = JSON.parse(request.params['message'])
+          jsonp    = request.params['jsonp'] || JSONP_CALLBACK
+          
+          @server.flush_connection(message) if request.get?
+          
+          on_response(env, message) do |replies|
+            response = JSON.unparse(replies)
+            response = "#{ jsonp }(#{ response });" if request.get?
+            response
+          end
+        rescue
+          [400, {'Content-Type' => 'text/plain'}, 'Bad request']
         end
       
       when @script then
