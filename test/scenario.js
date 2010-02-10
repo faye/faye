@@ -14,10 +14,13 @@ Scenario = Faye.Class({
   },
   
   run: function() {
+    sys.puts('\n' + this._name);
+    sys.puts('----------------------------------------------------------------');
     this._block.call(this);
   },
   
   server: function(port) {
+    sys.puts('Starting server on port ' + port);
     this._endpoint = 'http://0.0.0.0:' + port + '/comet';
     var comet = this._comet  = new faye.NodeAdapter({mount: '/comet', timeout: 30});
     this._server = http.createServer(function(request, response) {
@@ -30,6 +33,7 @@ Scenario = Faye.Class({
     var client = new faye.Client(this._endpoint);
     client.connect(function() {
       Faye.each(channels, function(channel) {
+        sys.puts('Client ' + name + ' subscribing to ' + channel);
         client.subscribe(channel, function(message) {
           this._inbox[name].push(message);
         }, this);
@@ -43,9 +47,12 @@ Scenario = Faye.Class({
   send: function(channel, message, route) {
     var self = this;
     self._withConnectedClients(function() {
+      var displayMessage = JSON.stringify(message);
+      sys.puts('Client ' + route.from + ' publishing ' + displayMessage + ' to ' + channel);
       this._clients[route.from].publish(channel, message);
       setTimeout(function() {
         self._checkInbox(route.to, message);
+        sys.puts('Shutting down server\n');
         self._comet.close();
         self._server.close();
       }, 500);
@@ -53,6 +60,7 @@ Scenario = Faye.Class({
   },
   
   _checkInbox: function(names, message) {
+    sys.puts(JSON.stringify(this._inbox));
     Faye.each(names, function(name) {
       assert.deepEqual(this._inbox[name], [message]);
     }, this);
