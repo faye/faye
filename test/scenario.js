@@ -35,35 +35,36 @@ Scenario = Faye.Class({
       Faye.each(channels, function(channel) {
         sys.puts('Client ' + name + ' subscribing to ' + channel);
         client.subscribe(channel, function(message) {
-          this._inbox[name].push(message);
+          var box = this._inbox[name];
+          box[channel] = box[channel] || [];
+          box[channel].push(message);
         }, this);
       }, this);
     }, this);
     this._clients[name] = client;
-    this._inbox[name]   = [];
+    this._inbox[name]   = {};
     this._pool         += 1;
   },
   
-  send: function(channel, message, route) {
+  send: function(from, channel, message, expectedInbox) {
     var self = this;
-    self._withConnectedClients(function() {
+    this._withConnectedClients(function() {
       var displayMessage = JSON.stringify(message);
-      sys.puts('Client ' + route.from + ' publishing ' + displayMessage + ' to ' + channel);
-      this._clients[route.from].publish(channel, message);
+      sys.puts('Client ' + from + ' publishing ' + displayMessage + ' to ' + channel);
+      this._clients[from].publish(channel, message);
       setTimeout(function() {
-        self._checkInbox(route.to, message);
+        self._checkInbox(expectedInbox);
         sys.puts('Shutting down server\n');
         self._comet.close();
         self._server.close();
+        Scenario.runNext();
       }, 500);
     });
   },
   
-  _checkInbox: function(names, message) {
+  _checkInbox: function(expectedInbox) {
     sys.puts(JSON.stringify(this._inbox));
-    Faye.each(names, function(name) {
-      assert.deepEqual(this._inbox[name], [message]);
-    }, this);
+    assert.deepEqual(this._inbox, expectedInbox);
   },
   
   _withConnectedClients: function(block) {
@@ -80,7 +81,23 @@ Scenario = Faye.Class({
   }
 });
 
+Faye.extend(Scenario, {
+  _queue: [],
+  
+  enqueue: function(name, block) {
+    this._queue.push(new this(name, block));
+  },
+  
+  runNext: function() {
+    this.running = true;
+    var scenario = this._queue.shift();
+    if (!scenario) return;
+    scenario.run();
+  }
+});
+
 exports.run = function(name, block) {
-  return new Scenario(name, block).run();
+  Scenario.enqueue(name, block);
+  if (!Scenario.running) Scenario.runNext();
 };
 
