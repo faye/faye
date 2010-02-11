@@ -46,20 +46,24 @@ Scenario = Faye.Class({
     this._pool         += 1;
   },
   
-  send: function(from, channel, message, expectedInbox) {
-    var self = this;
+  send: function(from, channel, message) {
     this._withConnectedClients(function() {
       var displayMessage = JSON.stringify(message);
       sys.puts('Client ' + from + ' publishing ' + displayMessage + ' to ' + channel);
       this._clients[from].publish(channel, message);
-      setTimeout(function() {
-        self._checkInbox(expectedInbox);
-        sys.puts('Shutting down server\n');
-        self._comet.close();
-        self._server.close();
-        Scenario.runNext();
-      }, 500);
+      
     });
+  },
+  
+  checkInbox: function(expectedInbox) {
+    var self = this;
+    setTimeout(function() {
+      self._checkInbox(expectedInbox);
+      sys.puts('Shutting down server\n');
+      self._comet.close();
+      self._server.close();
+      Scenario.runNext();
+    }, 500);
   },
   
   _checkInbox: function(expectedInbox) {
