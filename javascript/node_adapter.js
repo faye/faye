@@ -24,6 +24,13 @@ Faye.NodeAdapter = Faye.Class({
     return this._client = this._client || new Faye.Client(this._server);
   },
   
+  run: function(port) {
+    var self = this;
+    http.createServer(function(request, response) {
+      self.call(request, response);
+    }).listen(Number(port));
+  },
+  
   call: function(request, response) {
     var requestUrl = url.parse(request.url, true),
         self = this;

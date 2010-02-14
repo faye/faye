@@ -112,11 +112,7 @@ Faye.Client = Faye.Class({
       
     }, function(response) {
       delete this._connectionId;
-      
-      if (response.successful)
-        this.connect();
-      else
-        setTimeout(function() { self.connect() }, this._advice.interval);
+      setTimeout(function() { self.connect() }, this._advice.interval);
     }, this);
   },
   

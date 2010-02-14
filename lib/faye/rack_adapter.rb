@@ -23,6 +23,15 @@ module Faye
       @server   = Server.new(@options)
     end
     
+    def get_client
+      @client ||= Client.new(@server)
+    end
+    
+    def run(port)
+      handler = Rack::Handler.get('thin')
+      handler.run(self, :Port => port)
+    end
+    
     def call(env)
       request = Rack::Request.new(env)
       case request.path_info
