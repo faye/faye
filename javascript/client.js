@@ -16,6 +16,7 @@ Faye.Client = Faye.Class({
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
     this._transport = Faye.Transport.get(this);
     this._state     = this.UNCONNECTED;
+    this._namespace = new Faye.Namespace();
     this._outbox    = [];
     this._channels  = new Faye.Channel.Tree();
     this._callbacks = [];
@@ -50,16 +51,14 @@ Faye.Client = Faye.Class({
     if (this._state !== this.UNCONNECTED) return;
     
     this._state = this.CONNECTING;
-    var self = this, id = this.generateId();
+    var self = this;
     
     this._transport.send({
       channel:      Faye.Channel.HANDSHAKE,
       version:      Faye.BAYEUX_VERSION,
       supportedConnectionTypes: Faye.Transport.supportedConnectionTypes(),
-      id:           id
       
     }, function(response) {
-      if (response.id !== id) return;
       
       if (!response.successful) {
         setTimeout(function() { self.handshake(callback, scope) }, this._advice.interval);
@@ -102,7 +101,7 @@ Faye.Client = Faye.Class({
     this._callbacks = [];
     
     if (this._connectionId) return;
-    this._connectionId = this.generateId();
+    this._connectionId = this._namespace.generate();
     var self = this;
     
     this._transport.send({
@@ -112,7 +111,6 @@ Faye.Client = Faye.Class({
       id:             this._connectionId
       
     }, function(response) {
-      if (response.id !== this._connectionId) return;
       delete this._connectionId;
       
       if (response.successful)
@@ -157,16 +155,12 @@ Faye.Client = Faye.Class({
     channels = [].concat(channels);
     this._validateChannels(channels);
     
-    var id = this.generateId();
-    
     this._transport.send({
       channel:      Faye.Channel.SUBSCRIBE,
       clientId:     this._clientId,
       subscription: channels,
-      id:           id
       
     }, function(response) {
-      if (response.id !== id) return;
       if (!response.successful) return;
       
       channels = [].concat(response.subscription);
@@ -192,16 +186,12 @@ Faye.Client = Faye.Class({
     channels = [].concat(channels);
     this._validateChannels(channels);
     
-    var id = this.generateId();
-    
     this._transport.send({
       channel:      Faye.Channel.UNSUBSCRIBE,
       clientId:     this._clientId,
       subscription: channels,
-      id:           id
       
     }, function(response) {
-      if (response.id !== id) return;
       if (!response.successful) return;
       
       channels = [].concat(response.subscription);
@@ -234,11 +224,6 @@ Faye.Client = Faye.Class({
       delete self._timeout;
       self.flush();
     }, this.MAX_DELAY * 1000);
-  },
-  
-  generateId: function(bitdepth) {
-    bitdepth = bitdepth || 32;
-    return Math.floor(Math.pow(2,bitdepth) * Math.random()).toString(16);
   },
   
   enqueue: function(message) {

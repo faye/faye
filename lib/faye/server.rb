@@ -1,9 +1,10 @@
 module Faye
   class Server
     def initialize(options = {})
-      @options  = options
-      @channels = Channel::Tree.new
-      @clients  = {}
+      @options   = options
+      @channels  = Channel::Tree.new
+      @clients   = {}
+      @namespace = Namespace.new
     end
     
     # Notifies the server of stale connections that should be deleted
@@ -38,12 +39,6 @@ module Faye
     end
     
   private
-    
-    def generate_id
-      id = Faye.random
-      id = Faye.random while @clients.has_key?(id)
-      connection(id).id
-    end
     
     def connection(id)
       return @clients[id] if @clients.has_key?(id)
@@ -116,7 +111,8 @@ module Faye
       response['successful'] = response['error'].nil?
       return response unless response['successful']
       
-      response['clientId'] = generate_id
+      client_id = @namespace.generate
+      response['clientId'] = connection(client_id).id
       response
     end
     

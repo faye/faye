@@ -5,11 +5,15 @@ Faye.Transport = Faye.extend(Faye.Class({
   },
   
   send: function(message, callback, scope) {
+    if (!(message instanceof Array) && !message.id)
+      message.id = this._client._namespace.generate();
+    
     this.request(message, function(responses) {
       if (!callback) return;
       Faye.each([].concat(responses), function(response) {
         
-        callback.call(scope, response);
+        if (response.id === message.id)
+          callback.call(scope, response);
         
         if (response.advice)
           this._client._handleAdvice(response.advice);

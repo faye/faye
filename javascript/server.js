@@ -1,8 +1,9 @@
 Faye.Server = Faye.Class({
   initialize: function(options) {
-    this._options  = options || {};
-    this._channels = new Faye.Channel.Tree();
-    this._clients  = {};
+    this._options   = options || {};
+    this._channels  = new Faye.Channel.Tree();
+    this._clients   = {};
+    this._namespace = new Faye.Namespace();
   },
   
   clientIds: function() {
@@ -30,12 +31,6 @@ Faye.Server = Faye.Class({
       var client = this._clients[message.clientId];
       if (client) client.flush();
     }, this);
-  },
-  
-  _generateId: function() {
-    var id = Faye.random();
-    while (this._clients.hasOwnProperty(id)) id = Faye.random();
-    return this._connection(id).id;
   },
   
   _connection: function(id) {
@@ -117,7 +112,8 @@ Faye.Server = Faye.Class({
     response.successful = !response.error;
     if (!response.successful) return response;
     
-    response.clientId = this._generateId();
+    var clientId = this._namespace.generate();
+    response.clientId = this._connection(clientId).id;
     return response;
   },
   

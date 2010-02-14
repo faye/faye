@@ -24,6 +24,7 @@ lib/faye/channel.rb
 lib/faye/connection.rb
 lib/faye/error.rb
 lib/faye/grammar.rb
+lib/faye/namespace.rb
 lib/faye/rack_adapter.rb
 lib/faye/server.rb
 test/test_channel.rb
