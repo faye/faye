@@ -207,7 +207,7 @@ Faye.Client = Faye.Class({
     if (this._state !== this.CONNECTED) return;
     this._validateChannels([channel]);
     
-    this.enqueue({
+    this._enqueue({
       channel:      channel,
       data:         data,
       clientId:     this._clientId
@@ -218,15 +218,15 @@ Faye.Client = Faye.Class({
     
     this._timeout = setTimeout(function() {
       delete self._timeout;
-      self.flush();
+      self._flush();
     }, this.MAX_DELAY * 1000);
   },
   
-  enqueue: function(message) {
+  _enqueue: function(message) {
     this._outbox.push(message);
   },
   
-  flush: function() {
+  _flush: function() {
     this._transport.send(this._outbox);
     this._outbox = [];
   },

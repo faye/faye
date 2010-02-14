@@ -157,6 +157,58 @@ module Faye
       end
     end
     
+    # Request                              Response
+    # MUST include:  * channel             MUST include:  * channel
+    #                * clientId                           * successful
+    #                * subscription                       * clientId
+    # MAY include:   * ext                                * subscription
+    #                * id                  MAY include:   * error
+    #                                                     * advice
+    #                                                     * ext
+    #                                                     * id
+    #                                                     * timestamp
+    def unsubscribe(channels, &block)
+      return unless @state == CONNECTED
+      
+      channels = [channels].flatten
+      validate_channels(channels)
+      
+      @transport.send({
+        'channel'       => Channel::UNSUBSCRIBE,
+        'clientId'      => @client_id,
+        'subscription'  => channels
+        
+      }) do |response|
+        if response['successful']
+          channels = [response['subscription']].flatten
+          channels.each { |channel| @channels[channel] = nil }
+        end
+      end
+    end
+    
+    # Request                              Response
+    # MUST include:  * channel             MUST include:  * channel
+    #                * data                               * successful
+    # MAY include:   * clientId            MAY include:   * id
+    #                * id                                 * error
+    #                * ext                                * ext
+    def publish(channel, data)
+      return unless @state == CONNECTED
+      validate_channels([channel])
+      
+      enqueue({
+        'channel'   => channel,
+        'data'      => data,
+        'clientId'  => @client_id
+      })
+      
+      return if @timeout
+      @timeout = add_timer(Connection::MAX_DELAY) do
+        @timeout = nil
+        flush!
+      end
+    end
+    
     def handle_advice(advice)
       @advice.update(advice)
       @client_id = nil if @advice['reconnect'] == HANDSHAKE
@@ -169,27 +221,21 @@ module Faye
     
   private
     
+    def enqueue(message)
+      @outbox << message
+    end
+    
+    def flush!
+      @transport.send(@outbox)
+      @outbox = []
+    end
+    
     def validate_channels(channels)
       channels.each do |channel|
         raise "'#{ channel }' is not a valid channel name" unless Channel.valid?(channel)
         raise "Clients may not subscribe to channel '#{ channel }'" unless Channel.subscribable?(channel)
       end
     end
-  
-=begin
-  _handleAdvice: function(advice) {
-    Faye.extend(this._advice, advice);
-    if (this._advice.reconnect === this.HANDSHAKE) this._clientId = null;
-  },
-  
-  _sendToSubscribers: function(message) {
-    var channels = this._channels.glob(message.channel);
-    Faye.each(channels, function(callback) {
-      if (!callback) return;
-      callback[0].call(callback[1], message.data);
-    });
-  }
-=end
     
   end
 end
