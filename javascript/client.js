@@ -1,12 +1,12 @@
 Faye.Client = Faye.Class({
-  _UNCONNECTED:   {},
-  _CONNECTING:    {},
-  _CONNECTED:     {},
-  _DISCONNECTED:  {},
+  UNCONNECTED:   1,
+  CONNECTING:    2,
+  CONNECTED:     3,
+  DISCONNECTED:  4,
   
-  _HANDSHAKE:     'handshake',
-  _RETRY:         'retry',
-  _NONE:          'none',
+  HANDSHAKE:     'handshake',
+  RETRY:         'retry',
+  NONE:          'none',
   
   DEFAULT_ENDPOINT:   '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   MAX_DELAY:          <%= Faye::Connection::MAX_DELAY %>,
@@ -15,12 +15,15 @@ Faye.Client = Faye.Class({
   initialize: function(endpoint) {
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
     this._transport = Faye.Transport.get(this);
-    this._state     = this._UNCONNECTED;
+    this._state     = this.UNCONNECTED;
+    this._namespace = new Faye.Namespace();
     this._outbox    = [];
     this._channels  = new Faye.Channel.Tree();
+    this._callbacks = [];
     
-    this._advice = {reconnect: this._RETRY, interval: this.INTERVAL};
+    this._advice = {reconnect: this.RETRY, interval: this.INTERVAL};
     
+    if (!Faye.Event) return;
     Faye.Event.on(Faye.ENV, 'beforeunload', this.disconnect, this);
   },
   
@@ -44,27 +47,25 @@ Faye.Client = Faye.Class({
   //                * id                                         * id
   //                * authSuccessful
   handshake: function(callback, scope) {
-    if (this._advice.reconnect === this._NONE) return;
-    if (this._state !== this._UNCONNECTED) return;
+    if (this._advice.reconnect === this.NONE) return;
+    if (this._state !== this.UNCONNECTED) return;
     
-    this._state = this._CONNECTING;
-    var self = this, id = this.generateId();
+    this._state = this.CONNECTING;
+    var self = this;
     
     this._transport.send({
       channel:      Faye.Channel.HANDSHAKE,
       version:      Faye.BAYEUX_VERSION,
       supportedConnectionTypes: Faye.Transport.supportedConnectionTypes(),
-      id:           id
       
     }, function(response) {
-      if (response.id !== id) return;
       
       if (!response.successful) {
         setTimeout(function() { self.handshake(callback, scope) }, this._advice.interval);
-        return this._state = this._UNCONNECTED;
+        return this._state = this.UNCONNECTED;
       }
       
-      this._state     = this._CONNECTED;
+      this._state     = this.CONNECTED;
       this._clientId  = response.clientId;
       this._transport = Faye.Transport.get(this, response.supportedConnectionTypes);
       
@@ -82,15 +83,25 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   connect: function(callback, scope) {
-    if (this._advice.reconnect === this._NONE) return;
+    if (this._advice.reconnect === this.NONE) return;
     
-    if (this._advice.reconnect === this._HANDSHAKE || this._state === this._UNCONNECTED)
+    if (this._advice.reconnect === this.HANDSHAKE || this._state === this.UNCONNECTED)
       return this.handshake(function() { this.connect(callback, scope) }, this);
     
-    if (this._state !== this._CONNECTED) return;
+    if (this._state === this.CONNECTING)
+      return this._callbacks.push([callback, scope]);
+    
+    if (this._state !== this.CONNECTED) return;
+    
+    if (callback) callback.call(scope);
+    
+    Faye.each(this._callbacks, function(listener) {
+      listener[0].call(listener[1]);
+    });
+    this._callbacks = [];
     
     if (this._connectionId) return;
-    this._connectionId = this.generateId();
+    this._connectionId = this._namespace.generate();
     var self = this;
     
     this._transport.send({
@@ -100,16 +111,9 @@ Faye.Client = Faye.Class({
       id:             this._connectionId
       
     }, function(response) {
-      if (response.id !== this._connectionId) return;
       delete this._connectionId;
-      
-      if (response.successful)
-        this.connect();
-      else
-        setTimeout(function() { self.connect() }, this._advice.interval);
+      setTimeout(function() { self.connect() }, this._advice.interval);
     }, this);
-    
-    if (callback) callback.call(scope);
   },
   
   // Request                              Response
@@ -120,8 +124,8 @@ Faye.Client = Faye.Class({
   //                                                     * ext
   //                                                     * id
   disconnect: function() {
-    if (this._state !== this._CONNECTED) return;
-    this._state = this._DISCONNECTED;
+    if (this._state !== this.CONNECTED) return;
+    this._state = this.DISCONNECTED;
     
     this._transport.send({
       channel:      Faye.Channel.DISCONNECT,
@@ -142,21 +146,17 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   subscribe: function(channels, callback, scope) {
-    if (this._state !== this._CONNECTED) return;
+    if (this._state !== this.CONNECTED) return;
     
     channels = [].concat(channels);
     this._validateChannels(channels);
-    
-    var id = this.generateId();
     
     this._transport.send({
       channel:      Faye.Channel.SUBSCRIBE,
       clientId:     this._clientId,
       subscription: channels,
-      id:           id
       
     }, function(response) {
-      if (response.id !== id) return;
       if (!response.successful) return;
       
       channels = [].concat(response.subscription);
@@ -177,21 +177,17 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   unsubscribe: function(channels, callback, scope) {
-    if (this._state !== this._CONNECTED) return;
+    if (this._state !== this.CONNECTED) return;
     
     channels = [].concat(channels);
     this._validateChannels(channels);
-    
-    var id = this.generateId();
     
     this._transport.send({
       channel:      Faye.Channel.UNSUBSCRIBE,
       clientId:     this._clientId,
       subscription: channels,
-      id:           id
       
     }, function(response) {
-      if (response.id !== id) return;
       if (!response.successful) return;
       
       channels = [].concat(response.subscription);
@@ -208,10 +204,10 @@ Faye.Client = Faye.Class({
   //                * id                                 * error
   //                * ext                                * ext
   publish: function(channel, data) {
-    if (this._state !== this._CONNECTED) return;
+    if (this._state !== this.CONNECTED) return;
     this._validateChannels([channel]);
     
-    this.enqueue({
+    this._enqueue({
       channel:      channel,
       data:         data,
       clientId:     this._clientId
@@ -222,20 +218,15 @@ Faye.Client = Faye.Class({
     
     this._timeout = setTimeout(function() {
       delete self._timeout;
-      self.flush();
+      self._flush();
     }, this.MAX_DELAY * 1000);
   },
   
-  generateId: function(bitdepth) {
-    bitdepth = bitdepth || 32;
-    return Math.floor(Math.pow(2,bitdepth) * Math.random()).toString(16);
-  },
-  
-  enqueue: function(message) {
+  _enqueue: function(message) {
     this._outbox.push(message);
   },
   
-  flush: function() {
+  _flush: function() {
     this._transport.send(this._outbox);
     this._outbox = [];
   },
@@ -251,7 +242,7 @@ Faye.Client = Faye.Class({
   
   _handleAdvice: function(advice) {
     Faye.extend(this._advice, advice);
-    if (this._advice.reconnect === this._HANDSHAKE) this._clientId = null;
+    if (this._advice.reconnect === this.HANDSHAKE) this._clientId = null;
   },
   
   _sendToSubscribers: function(message) {

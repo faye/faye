@@ -5,12 +5,15 @@ Faye.Transport = Faye.extend(Faye.Class({
   },
   
   send: function(message, callback, scope) {
-    message = {message: JSON.stringify(message)};
-    return this.request(message, function(responses) {
+    if (!(message instanceof Array) && !message.id)
+      message.id = this._client._namespace.generate();
+    
+    this.request(message, function(responses) {
       if (!callback) return;
       Faye.each([].concat(responses), function(response) {
         
-        callback.call(scope, response);
+        if (response.id === message.id)
+          callback.call(scope, response);
         
         if (response.advice)
           this._client._handleAdvice(response.advice);
@@ -26,66 +29,29 @@ Faye.Transport = Faye.extend(Faye.Class({
     var endpoint = client._endpoint;
     if (connectionTypes === undefined) connectionTypes = this.supportedConnectionTypes();
     
-    var types = Faye.URI.parse(endpoint).isLocal()
-        ? ['long-polling', 'callback-polling']
-        : ['callback-polling'];
+    var candidateClass = null;
+    Faye.each(this._transports, function(connType, klass) {
+      if (Faye.indexOf(connectionTypes, connType) < 0) return;
+      if (candidateClass) return;
+      if (klass.isUsable(endpoint)) candidateClass = klass;
+    });
     
-    var type = Faye.commonElement(types, connectionTypes);
-    if (!type) throw 'Could not find a usable connection type for ' + endpoint;
+    if (!candidateClass) throw 'Could not find a usable connection type for ' + endpoint;
     
-    var klass = this._connectionTypes[type];
-    return new klass(client, endpoint);
+    return new candidateClass(client, endpoint);
   },
   
   register: function(type, klass) {
-    this._connectionTypes[type] = klass;
+    this._transports[type] = klass;
     klass.prototype.connectionType = type;
   },
   
-  _connectionTypes: {},
+  _transports: {},
   
   supportedConnectionTypes: function() {
     var list = [], key;
-    Faye.each(this._connectionTypes, function(key, type) { list.push(key) });
+    Faye.each(this._transports, function(key, type) { list.push(key) });
     return list;
   }
 });
-
-Faye.XHRTransport = Faye.Class(Faye.Transport, {
-  request: function(params, callback, scope) {
-    Faye.XHR.request('post', this._endpoint, params, function(response) {
-      if (callback) callback.call(scope, JSON.parse(response.text()));
-    });
-  }
-});
-Faye.Transport.register('long-polling', Faye.XHRTransport);
-
-Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
-  request: function(params, callback, scope) {
-    var head         = document.getElementsByTagName('head')[0],
-        script       = document.createElement('script'),
-        callbackName = Faye.JSONPTransport.getCallbackName(),
-        location     = Faye.URI.parse(this._endpoint, params);
-    
-    Faye.ENV[callbackName] = function(data) {
-      Faye.ENV[callbackName] = undefined;
-      try { delete Faye.ENV[callbackName] } catch (e) {}
-      head.removeChild(script);
-      if (callback) callback.call(scope, data);
-    };
-    
-    location.params.jsonp = callbackName;
-    script.type = 'text/javascript';
-    script.src  = location.toURL();
-    head.appendChild(script);
-  }
-}), {
-  _cbCount: 0,
-  
-  getCallbackName: function() {
-    this._cbCount += 1;
-    return '__jsonp' + this._cbCount + '__';
-  }
-});
-Faye.Transport.register('callback-polling', Faye.JSONPTransport);
 

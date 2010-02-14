@@ -1,8 +1,9 @@
 Faye.Server = Faye.Class({
   initialize: function(options) {
-    this._options  = options || {};
-    this._channels = new Faye.Channel.Tree();
-    this._clients  = {};
+    this._options   = options || {};
+    this._channels  = new Faye.Channel.Tree();
+    this._clients   = {};
+    this._namespace = new Faye.Namespace();
   },
   
   clientIds: function() {
@@ -12,7 +13,7 @@ Faye.Server = Faye.Class({
   },
   
   process: function(messages, local, callback) {
-    messages = (messages instanceof Array) ? messages : [messages];
+    messages = [].concat(messages);
     var processed = 0, responses = [];
     
     Faye.each(messages, function(message) {
@@ -25,17 +26,11 @@ Faye.Server = Faye.Class({
   },
   
   flushConnection: function(messages) {
-    messages = (messages instanceof Array) ? messages : [messages];
+    messages = [].concat(messages);
     Faye.each(messages, function(message) {
       var client = this._clients[message.clientId];
       if (client) client.flush();
     }, this);
-  },
-  
-  _generateId: function() {
-    var id = Faye.random();
-    while (this._clients.hasOwnProperty(id)) id = Faye.random();
-    return this._connection(id).id;
   },
   
   _connection: function(id) {
@@ -55,6 +50,9 @@ Faye.Server = Faye.Class({
     var clientId = message.clientId,
         channel  = message.channel,
         response;
+    
+    message.__id = Faye.random();
+    Faye.each(this._channels.glob(channel), function(c) { c.push(message) });
     
     if (Faye.Channel.isMeta(channel)) {
       response = this[Faye.Channel.parse(channel)[1]](message, local);
@@ -81,9 +79,6 @@ Faye.Server = Faye.Class({
     if (!message.clientId || Faye.Channel.isService(channel))
       return callback([]);
     
-    message.__id = Faye.random();
-    Faye.each(this._channels.glob(channel), function(c) { c.push(message) });
-    
     callback( { channel:      channel,
                 successful:   true,
                 id:           message.id  } );
@@ -92,7 +87,6 @@ Faye.Server = Faye.Class({
   handshake: function(message, local) {
     var response = { channel:   Faye.Channel.HANDSHAKE,
                      version:   Faye.BAYEUX_VERSION,
-                     supportedConnectionTypes: Faye.CONNECTION_TYPES,
                      id:        message.id };
     
     if (!message.version)
@@ -101,20 +95,25 @@ Faye.Server = Faye.Class({
     var clientConns = message.supportedConnectionTypes,
         commonConns;
     
-    if (clientConns) {
-      commonConns = clientConns.filter(function(conn) {
-        return Faye.CONNECTION_TYPES.indexOf(conn) !== -1;
-      });
-      if (commonConns.length === 0)
-        response.error = Faye.Error.conntypeMismatch(clientConns);
-    } else {
-      response.error = Faye.Error.parameterMissing('supportedConnectionTypes');
+    if (!local) {
+      response.supportedConnectionTypes = Faye.CONNECTION_TYPES;
+      
+      if (clientConns) {
+        commonConns = Faye.filter(clientConns, function(conn) {
+          return Faye.indexOf(Faye.CONNECTION_TYPES, conn) !== -1;
+        });
+        if (commonConns.length === 0)
+          response.error = Faye.Error.conntypeMismatch(clientConns);
+      } else {
+        response.error = Faye.Error.parameterMissing('supportedConnectionTypes');
+      }
     }
     
     response.successful = !response.error;
     if (!response.successful) return response;
     
-    response.clientId = this._generateId();
+    var clientId = this._namespace.generate();
+    response.clientId = this._connection(clientId).id;
     return response;
   },
   
@@ -165,7 +164,7 @@ Faye.Server = Faye.Class({
         client       = clientId ? this._clients[clientId] : null,
         subscription = message.subscription;
     
-    subscription = (subscription instanceof Array) ? subscription : [subscription];
+    subscription = [].concat(subscription);
     
     if (!client)               response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
@@ -175,8 +174,8 @@ Faye.Server = Faye.Class({
     
     Faye.each(subscription, function(channel) {
       if (response.error) return;
-      if (!Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
-      if (!Faye.Channel.isValid(channel))        response.error = Faye.Error.channelInvalid(channel);
+      if (!local && !Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
+      if (!Faye.Channel.isValid(channel))                  response.error = Faye.Error.channelInvalid(channel);
       
       if (response.error) return;
       channel = this._channels.findOrCreate(channel);
@@ -196,7 +195,7 @@ Faye.Server = Faye.Class({
         client       = clientId ? this._clients[clientId] : null,
         subscription = message.subscription;
     
-    subscription = (subscription instanceof Array) ? subscription : [subscription];
+    subscription = [].concat(subscription);
     
     if (!client)               response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
