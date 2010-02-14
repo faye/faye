@@ -154,3 +154,24 @@ function() { with(this) {
   });
 }});
 
+Scenario.run("Two local clients, one HTTP, double wildcard on sender and one subscription",
+function() { with(this) {
+  server(8000);
+  localClient('A', ['/channels/hello', '/channels/nested/hello']);
+  localClient('B', []);
+  httpClient('C', ['/channels/name', '/channels/foo/**']);
+  send('B', '/channels/**', {msg: 'hey'});
+  checkInbox({
+      A: {
+        '/channels/hello': [{msg: 'hey'}],
+        '/channels/nested/hello': [{msg: 'hey'}]
+      },
+      B: {},
+      C: {
+        '/channels/name': [{msg: 'hey'}],
+        '/channels/foo/**': [{msg: 'hey'}],
+        '/channels/name': [{msg: 'hey'}],
+      }
+  });
+}});
+
