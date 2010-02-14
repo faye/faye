@@ -1,3 +1,6 @@
+require 'em-http'
+require 'json'
+
 module Faye
   
   class Transport
@@ -40,8 +43,21 @@ module Faye
     
     class << self
       attr_accessor :connection_type
-      def get(client, connection_types = [])
-        LocalTransport.new(client, client.endpoint)
+      
+      def get(client, connection_types = nil)
+        endpoint = client.endpoint
+        connection_types ||= supported_connection_types
+        
+        candidate_class = @transports.find do |type, klass|
+          connection_types.include?(type) and
+          klass.usable?(endpoint)
+        end
+        
+        unless candidate_class
+          raise "Could not find a usable connection type for #{ endpoint }"
+        end
+        
+        candidate_class.last.new(client, endpoint)
       end
       
       def register(type, klass)
@@ -55,6 +71,21 @@ module Faye
     end
   end
   
+  class HttpTransport < Transport
+    def self.usable?(endpoint)
+      endpoint.is_a?(String)
+    end
+    
+    def request(message, &block)
+      params  = {:message => JSON.unparse(message)}
+      request = EventMachine::HttpRequest.new(@endpoint).post(:body => params, :timeout => -1)
+      request.callback do
+        block.call(JSON.parse(request.response))
+      end
+    end
+  end
+  Transport.register 'long-polling', HttpTransport
+  
   class LocalTransport < Transport
     def self.usable?(endpoint)
       endpoint.is_a?(Server)
@@ -66,7 +97,7 @@ module Faye
       end
     end
   end
-  Transport.register 'long-polling', LocalTransport
+  Transport.register 'in-process', LocalTransport
   
 end
 

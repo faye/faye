@@ -1,16 +1,21 @@
+# This script demonstrates a logger for the chat app. First, start
+# the chat server in one terminal then run this in another:
+# 
+#   $ rackup examples/rack/config.ru
+#   $ ruby examples/rack/client.rb
+# 
+# The client connects to the chat server and logs all messages
+# sent by all connected users.
+
 dir = File.dirname(__FILE__)
 require dir + '/../../lib/faye'
 
-app = Faye::RackAdapter.new(:mount => '/comet', :timeout => 25)
-
 EM.run do
-  client = app.get_client
+  client = Faye::Client.new('http://localhost:9292/comet')
   client.connect do
-    client.subscribe '/from/jcoglan' do |message|
-      p message['message']
+    client.subscribe '/from/*' do |message|
+      puts "[#{ message['user'] }]: #{ message['message'] }"
     end
   end
-  
-  app.run 8000
 end
 

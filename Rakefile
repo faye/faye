@@ -9,6 +9,7 @@ Hoe.spec('faye') do |p|
   p.developer('James Coglan', 'jcoglan@googlemail.com')
   p.extra_deps = [
     ['eventmachine', '>= 0.12'],
+    ['em-http-request', '>= 0.2'],
     ['rack', '>= 1.0'],
     ['json', '>= 1.0']
   ]

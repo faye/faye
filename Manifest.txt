@@ -17,6 +17,7 @@ examples/node/app.js
 examples/node/faye.js
 examples/node/faye-client-min.js
 examples/rack/app.rb
+examples/rack/client.rb
 examples/rack/config.ru
 lib/faye-client-min.js
 lib/faye.rb
