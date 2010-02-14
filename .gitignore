@@ -1,5 +1,4 @@
 *.rbc
-build
 examples/node/faye*
 lib/*.js
 README.txt
