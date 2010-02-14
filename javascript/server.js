@@ -84,6 +84,11 @@ Faye.Server = Faye.Class({
                 id:           message.id  } );
   },
   
+  // MUST contain  * version
+  //               * supportedConnectionTypes
+  // MAY contain   * minimumVersion
+  //               * ext
+  //               * id
   handshake: function(message, local) {
     var response = { channel:   Faye.Channel.HANDSHAKE,
                      version:   Faye.BAYEUX_VERSION,
@@ -117,6 +122,10 @@ Faye.Server = Faye.Class({
     return response;
   },
   
+  // MUST contain  * clientId
+  //               * connectionType
+  // MAY contain   * ext
+  //               * id
   connect: function(message, local) {
     var response = { channel:   Faye.Channel.CONNECT,
                      id:        message.id };
@@ -136,6 +145,9 @@ Faye.Server = Faye.Class({
     return response;
   },
   
+  // MUST contain  * clientId
+  // MAY contain   * ext
+  //               * id
   disconnect: function(message, local) {
     var response = { channel:   Faye.Channel.DISCONNECT,
                      id:        message.id };
@@ -155,6 +167,10 @@ Faye.Server = Faye.Class({
     return response;
   },
   
+  // MUST contain  * clientId
+  //               * subscription
+  // MAY contain   * ext
+  //               * id
   subscribe: function(message, local) {
     var response     = { channel:   Faye.Channel.SUBSCRIBE,
                          clientId:  message.clientId,
@@ -186,6 +202,10 @@ Faye.Server = Faye.Class({
     return response;
   },
   
+  // MUST contain  * clientId
+  //               * subscription
+  // MAY contain   * ext
+  //               * id
   unsubscribe: function(message, local) {
     var response     = { channel:   Faye.Channel.UNSUBSCRIBE,
                          clientId:  message.clientId,
