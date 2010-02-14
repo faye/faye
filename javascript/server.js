@@ -104,8 +104,8 @@ Faye.Server = Faye.Class({
       response.supportedConnectionTypes = Faye.CONNECTION_TYPES;
       
       if (clientConns) {
-        commonConns = clientConns.filter(function(conn) {
-          return Faye.CONNECTION_TYPES.indexOf(conn) !== -1;
+        commonConns = Faye.filter(clientConns, function(conn) {
+          return Faye.indexOf(Faye.CONNECTION_TYPES, conn) !== -1;
         });
         if (commonConns.length === 0)
           response.error = Faye.Error.conntypeMismatch(clientConns);

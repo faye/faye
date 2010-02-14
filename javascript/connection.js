@@ -1,4 +1,8 @@
 Faye.Connection = Faye.Class({
+  MAX_DELAY:  <%= Faye::Connection::MAX_DELAY %>,
+  INTERVAL:   <%= Faye::Connection::INTERVAL %>,
+  TIMEOUT:    <%= Faye::Connection::TIMEOUT %>,
+  
   initialize: function(id, options) {
     this.id         = id;
     this._options   = options;
@@ -8,7 +12,7 @@ Faye.Connection = Faye.Class({
   },
   
   timeout: function() {
-    return this._options.timeout || Faye.Connection.TIMEOUT;
+    return this._options.timeout || this.TIMEOUT;
   },
   
   _onMessage: function(event) {
@@ -61,7 +65,7 @@ Faye.Connection = Faye.Class({
     
     var self = this;
     this._deliveryTimeout = setTimeout(function () { self.flush() },
-                                       Faye.Connection.MAX_DELAY * 1000);
+                                       this.MAX_DELAY * 1000);
   },
   
   _beginConnectionTimeout: function() {
@@ -96,15 +100,9 @@ Faye.Connection = Faye.Class({
     setTimeout(function() {
       if (!self._markForDeletion) return;
       self.fire('stale', self);
-    }, 10000 * Faye.Connection.INTERVAL);
+    }, 10000 * this.INTERVAL);
   }
 });
 
 Faye.extend(Faye.Connection.prototype, Faye.Observable);
-
-Faye.extend(Faye.Connection, {
-  MAX_DELAY:  <%= Faye::Connection::MAX_DELAY %>,
-  INTERVAL:   <%= Faye::Connection::INTERVAL %>,
-  TIMEOUT:    <%= Faye::Connection::TIMEOUT %>
-});
 

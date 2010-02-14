@@ -3,10 +3,10 @@ if (!this.Faye) Faye = {};
 Faye.extend = function(dest, source, overwrite) {
   if (!source) return dest;
   for (var key in source) {
-    if (source.hasOwnProperty(key) && dest[key] !== source[key]) {
-      if (!dest.hasOwnProperty(key) || overwrite !== false)
-        dest[key] = source[key];
-    }
+    if (!source.hasOwnProperty(key)) continue;
+    if (dest.hasOwnProperty(key) && overwrite === false) continue;
+    if (dest[key] !== source[key])
+      dest[key] = source[key];
   }
   return dest;
 };
@@ -67,6 +67,15 @@ Faye.extend(Faye, {
           callback.call(scope || null, key, object[key]);
       }
     }
+  },
+  
+  filter: function(array, callback, scope) {
+    var result = [];
+    this.each(array, function() {
+      if (callback.apply(scope, arguments))
+        result.push(arguments[0]);
+    });
+    return result;
   },
   
   size: function(object) {
