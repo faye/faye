@@ -17,10 +17,6 @@ Faye.NodeAdapter = Faye.Class({
     return this._client = this._client || new Faye.Client(this._server);
   },
   
-  close: function() {
-    return this._server.close();
-  },
-  
   call: function(request, response) {
     var requestUrl = url.parse(request.url, true);
     switch (requestUrl.pathname) {

@@ -24,12 +24,6 @@ Faye.Server = Faye.Class({
     }, this);
   },
   
-  close: function() {
-    Faye.each(this._clients, function(id, client) {
-      client.flush();
-    });
-  },
-  
   flushConnection: function(messages) {
     messages = (messages instanceof Array) ? messages : [messages];
     Faye.each(messages, function(message) {

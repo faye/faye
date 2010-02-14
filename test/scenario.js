@@ -67,7 +67,7 @@ Scenario = Faye.Class({
     setTimeout(function() {
       self._checkInbox(expectedInbox);
       sys.puts('Shutting down server\n');
-      self._comet.close();
+      Faye.each(this._clients, function(name, client) { client.disconnect() });
       self._server.close();
       Scenario.runNext();
     }, 500);

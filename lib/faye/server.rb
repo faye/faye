@@ -30,10 +30,6 @@ module Faye
       end
     end
     
-    def close
-      @clients.each { |id, client| client.flush! }
-    end
-    
     def flush_connection(messages)
       [messages].flatten.each do |message|
         client = @clients[message['clientId']]
