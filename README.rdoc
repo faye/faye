@@ -2,29 +2,45 @@
 
 * http://github.com/jcoglan/faye
 
-Faye provides dirt-simple Comet messaging based on the Bayeux protocol.
-It ships with a self-contained client for use in the browser and two
-message-routing backends; one for Node.js and one for Rack.
+Faye is a set of tools for dirt-simple publish-subscribe messaging
+between web clients. It ships with easy-to-use message routing servers
+for Node.js and Rack applications, and clients that can be used on
+the server and in the browser.
 
 
 == Introduction
 
-Comet is an umbrella term for a collection of techniques that let web
-servers push data to clients, allowing for low-latency data transfer.
-Bayeux is a protocol designed to support publish/subscribe-style messaging
-between web clients and servers. Clients can subscribe to named channels
-and publish messages, each message being distributed to all clients
-subscribed to its target channel. See http://svn.cometd.com/trunk/bayeux/bayeux.html
+Faye is an implementation of the Bayeux prototcol (http://svn.cometd.com/trunk/bayeux/bayeux.html),
+a publish-subscribe messaging protocol designed primarily to allow
+client-side JavaScript programs to send messages to each other with
+low latency over HTTP. It also allows for server-side clients that let
+your backend applications push data to the client side.
+
+Bayeux works by letting clients publish and subscribe to named data
+channels. For example, one client may publish a message:
+
+  clientA.publish('/foo', {hello: 'world'});
+
+And another client can subscribe to that channel to receive messages
+that are published to it:
+
+  // alerts "world"
+  clientB.subscribe('/foo', function(message) {
+    alert(message.hello);
+  });
 
 Faye's messaging backend was originally developed in Ruby for a toy
 project of mine, but was not written to scale across multiple processes
-as required for scaling a Ruby server. It has since been ported to Node.js
-which should handle the required connection load more gracefully.
+as required for deployment under Passenger. It has since been ported to
+Node.js which is better designed for handling highly concurrent traffic.
+If you use the Ruby version, I recommend deploying it behind Thin, an
+event-driver Ruby web server.
 
 The two backends are architecturally identical, using evented messaging
-throughout and maintaining subscription data in memory. Node.js allows
-for far more concurrent connections per process than a typical Ruby server,
-and will get you more mileage from a single process.
+throughout and maintaining subscription data in memory. Neither is geared
+up yet for running multi-process servers, but their event-driven setup
+should let them handle more concurrent connections that a typical
+threaded server.
 
 
 == Installation
@@ -39,17 +55,16 @@ The Rack server is distributed as a Ruby gem:
 
 == Using the client
 
-Both backends allow you to specify a 'mount point' that the Comet server
-accepts requests on. Say you set this to <tt>/comet</tt>, the client script
-will be available from <tt>/comet.js</tt> and should connect to <tt>/comet</tt>.
+Both backends allow you to specify a 'mount point' that the message server
+accepts requests on. Say you set this to <tt>/faye</tt>, the client script
+will be available from <tt>/faye.js</tt> and should connect to <tt>/faye</tt>.
 
 You should set up the client as follows:
 
-  <script type="text/javascript" src="/comet.js"></script>
+  <script type="text/javascript" src="/faye.js"></script>
   
   <script type="text/javascript">
-    CometClient = new Faye.Client('/comet');
-    CometClient.connect();
+    fayeClient = new Faye.Client('/faye');
   </script>
 
 Take care only to have one instance of the client per page; since each one
@@ -58,11 +73,11 @@ and block all other Ajax calls if you use more than one client.
 
 This client object can be used to publish and subscribe to named channels:
 
-  CometClient.subscribe('/path/to/channel', function(message) {
+  fayeClient.subscribe('/path/to/channel', function(message) {
     // process received message object
   });
   
-  CometClient.publish('/some/other/channel', {foo: 'bar'});
+  fayeClient.publish('/some/other/channel', {foo: 'bar'});
 
 You can publish arbitrary JavaScript objects to a channel, and the object will
 be transmitted as the +message+ parameter to any subscribers to that channel.
@@ -75,7 +90,7 @@ supports callback polling (see below under 'Transports'). Just pass in the
 full path to the endpoint including the domain. Faye figures out whether the
 server is on the same domain and uses an appropriate transport.
 
-  CometClient = new Faye.Client('http://example.com/comet');
+  fayeClient = new Faye.Client('http://example.com/faye');
 
 
 === Transports
@@ -87,7 +102,7 @@ low-latency connections with the server, the two required types being
 <tt>long-polling</tt> is where the client makes an <tt>XMLHttpRequest</tt>
 to the server, and the server waits until it has new messages for that client
 before it returns a response. Faye's client and server backends all support
-this transport. Since it uses XHR, the Comet endpoint must be on the same
+this transport. Since it uses XHR, the server endpoint must be on the same
 domain as the client page.
 
 <tt>callback-polling</tt> involves the client using JSON-P to make the request.
@@ -95,6 +110,10 @@ The server wraps its JSON responses in a JavaScript function call that the
 client then executes. This transport does not require the client and server
 to be on the same domain. Faye's client supports this transport, as does the
 Node.js backend. The Rack backend supports it if running under Thin.
+
+Faye also supports an <tt>in-process</tt> transport, which is used when a
+server-side client has direct in-memory access to the server without going
+over HTTP.
 
 
 == Using the backend
@@ -119,8 +138,8 @@ responses and is a better choice for long-running concurrent connections.
 
 Both backends support the following initialization options:
 
-* +mount+ - the path at which the Comet service is accessible. e.g. if
-  set to <tt>/faye</tt>, the Comet endpoint will be at <tt>http://yoursite.com/faye</tt>
+* +mount+ - the path at which the Faye service is accessible. e.g. if
+  set to <tt>/faye</tt>, the Faye endpoint will be at <tt>http://yoursite.com/faye</tt>
   and the client script at <tt>http://yoursite.com/faye.js</tt>.
 * +timeout+ - the maximum time (seconds) to hold a long-running request
   open before returning a response. This must be smaller than the timeout
@@ -132,7 +151,7 @@ Usage examples and a demo app are in the +examples+ directory.
 
 === Node.js backend
 
-Here's a very simple Node web server that offloads requests to the Comet
+Here's a very simple Node web server that offloads requests to the messaging
 service to Faye and deals with all other requests itself. The Faye object
 returns +true+ or +false+ to indicate whether it handled the request.
 You'll need <tt>faye.js</tt> and <tt>faye-client-min.js</tt> in the same
@@ -141,16 +160,34 @@ directory.
   var http  = require('http')
       faye  = require('./faye');
   
-  var comet = new faye.NodeAdapter({mount: '/comet', timeout: 45});
+  var server = new faye.NodeAdapter({mount: '/faye', timeout: 45});
   
   http.createServer(function(request, response) {
-    if (comet.call(request, response)) return;
+    if (server.call(request, response)) return;
     
     response.sendHeader(200, {'Content-Type': 'text/plain'});
-    response.sendBody('Hello, non-Comet request!');
+    response.sendBody('Hello, non-Faye request!');
     response.finish();
     
   }).listen(9292);
+
+
+=== Node.js client
+
+Faye's JavaScript client can be used server-side under Node. There are
+two ways you can set a client up: either connect to as remote server
+over HTTP or connect directly to the <tt>NodeAdapter</tt>. Either way,
+the API for the client is exactly as it is in the browser.
+
+  // Remote client
+  client = new Faye.Client('http://example.com/faye');
+  
+  // Local client
+  server = new Faye.NodeAdapter(options);
+  client = server.getClient();
+
+Note <tt>getClient()</tt> returns the same client object every time you
+call it, so any subscriptions you make with it are retained.
 
 
 === Rack backend
@@ -169,21 +206,45 @@ Here's a <tt>config.ru</tt> for running it with Sinatra:
   require 'sinatra'
   require 'path/to/sinatra/app'
   
-  use Faye::RackAdapter, :mount   => '/comet',
+  use Faye::RackAdapter, :mount   => '/faye',
                          :timeout => 25
   
   run Sinatra::Application
 
-This functions much the same as the Node.js example; Faye catches Comet
+This functions much the same as the Node.js example; Faye catches messaging
 requests and deals with them, letting all other requests fall down the
 stack of Rack middlewares.
 
 
+=== Rack client
+
+Again mirroring the Node tools, Faye has a client-side Ruby client that
+cna be used under EventMachine. Setup is identical:
+
+  # Remote client
+  client = Faye::Client.new('http://example.com/faye')
+  
+  # Local client
+  server = Faye::RackAdapter.new(options)
+  client = server.get_client
+
+Both clients must be run inside EventMachine, and can publish and
+subscribe just like the JavaScript client:
+
+  EM.run {
+    client.subscribe('/from/*') do |message|
+      # do something with message hash
+    end
+    
+    client.publish('/from/jcoglan', 'hello' => 'world')
+  }
+
+
 == To-do
 
+* Investigate WebSockets as a possible message transport
 * Provide support for user-defined <tt>/service/*</tt> channels
 * Allow server to scale to multiple nodes
-* Provide a server-side client
 
 
 == License
