@@ -56,7 +56,7 @@ Faye.Client = Faye.Class({
     this._transport.send({
       channel:      Faye.Channel.HANDSHAKE,
       version:      Faye.BAYEUX_VERSION,
-      supportedConnectionTypes: Faye.Transport.supportedConnectionTypes(),
+      supportedConnectionTypes: Faye.Transport.supportedConnectionTypes()
       
     }, function(response) {
       
@@ -154,7 +154,7 @@ Faye.Client = Faye.Class({
     this._transport.send({
       channel:      Faye.Channel.SUBSCRIBE,
       clientId:     this._clientId,
-      subscription: channels,
+      subscription: channels
       
     }, function(response) {
       if (!response.successful) return;
@@ -185,7 +185,7 @@ Faye.Client = Faye.Class({
     this._transport.send({
       channel:      Faye.Channel.UNSUBSCRIBE,
       clientId:     this._clientId,
-      subscription: channels,
+      subscription: channels
       
     }, function(response) {
       if (!response.successful) return;
