@@ -39,6 +39,8 @@
   
   <script type="text/javascript">
     Comet = new Faye.Client('/comet');
+    Comet.connect();
+    
     Soapbox.init(Comet);
   </script>
 
