@@ -46,7 +46,7 @@ module Faye
       @mark_for_deletion  = false
       @connected          = true
       
-      begin_delivery_timeout! unless @inbox.empty?
+      begin_delivery_timeout!
       begin_connection_timeout!
     end
     

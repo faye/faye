@@ -12,7 +12,7 @@ Faye.Server = Faye.Class({
   },
   
   process: function(messages, local, callback) {
-    messages = (messages instanceof Array) ? messages : [messages];
+    messages = [].concat(messages);
     var processed = 0, responses = [];
     
     Faye.each(messages, function(message) {
@@ -25,7 +25,7 @@ Faye.Server = Faye.Class({
   },
   
   flushConnection: function(messages) {
-    messages = (messages instanceof Array) ? messages : [messages];
+    messages = [].concat(messages);
     Faye.each(messages, function(message) {
       var client = this._clients[message.clientId];
       if (client) client.flush();
@@ -168,7 +168,7 @@ Faye.Server = Faye.Class({
         client       = clientId ? this._clients[clientId] : null,
         subscription = message.subscription;
     
-    subscription = (subscription instanceof Array) ? subscription : [subscription];
+    subscription = [].concat(subscription);
     
     if (!client)               response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
@@ -199,7 +199,7 @@ Faye.Server = Faye.Class({
         client       = clientId ? this._clients[clientId] : null,
         subscription = message.subscription;
     
-    subscription = (subscription instanceof Array) ? subscription : [subscription];
+    subscription = [].concat(subscription);
     
     if (!client)               response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');

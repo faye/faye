@@ -6,12 +6,11 @@ Faye.Connection = Faye.Class({
   initialize: function(id, options) {
     this.id         = id;
     this._options   = options;
-    this._observers = {};
     this._channels  = new Faye.Set();
     this._inbox     = new Faye.Set();
   },
   
-  timeout: function() {
+  getTimeout: function() {
     return this._options.timeout || this.TIMEOUT;
   },
   
@@ -39,7 +38,7 @@ Faye.Connection = Faye.Class({
     this._markForDeletion = false;
     this._connected       = true;
     
-    if (!this._inbox.isEmpty()) this._beginDeliveryTimeout();
+    this._beginDeliveryTimeout();
     this._beginConnectionTimeout();
   },
   
@@ -74,7 +73,7 @@ Faye.Connection = Faye.Class({
     
     var self = this;
     this._connectionTimeout = setTimeout(function() { self.flush() },
-                                         this.timeout() * 1000);
+                                         this.getTimeout() * 1000);
   },
   
   _releaseConnection: function() {

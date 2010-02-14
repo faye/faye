@@ -1,5 +1,18 @@
 module Faye
   class Channel
+    
+    include Observable
+    attr_reader :name
+    
+    def initialize(name)
+      @name = name
+    end
+    
+    def <<(message)
+      changed(true)
+      notify_observers(message)
+    end
+    
     HANDSHAKE   = '/meta/handshake'
     CONNECT     = '/meta/connect'
     SUBSCRIBE   = '/meta/subscribe'
@@ -34,18 +47,6 @@ module Faye
         return nil unless valid?(name)
         not meta?(name) and not service?(name)
       end
-    end
-    
-    include Observable
-    attr_reader :name
-    
-    def initialize(name)
-      @name = name
-    end
-    
-    def <<(message)
-      changed(true)
-      notify_observers(message)
     end
     
     class Tree
