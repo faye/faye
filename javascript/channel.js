@@ -121,7 +121,7 @@ Faye.extend(Faye.Channel, {
       
       if (Faye.enumEqual(path, ['**'])) {
         list = this.map(function(key, value) { return value });
-        list.pop();
+        if (this._value !== undefined) list.pop();
         return list;
       }
       
@@ -134,22 +134,6 @@ Faye.extend(Faye.Channel, {
       if (this._children['**']) list.push(this._children['**']._value);
       return list;
     }
-    
-    /**
-      Tests
-      
-      glob = new Faye.Channel.Tree();
-      list = '/foo/bar /foo/boo /foo /foobar /foo/bar/boo /foobar/boo /foo/* /foo/**'.split(' ');
-
-      Faye.each(list, function(c, i) {
-          glob.set(c, i + 1);
-      });
-
-      console.log(glob.glob('/foo/*').sort());        // 1,2,7,8
-      console.log(glob.glob('/foo/bar').sort());      // 1,7,8
-      console.log(glob.glob('/foo/**').sort());       // 1,2,5,7,8
-      console.log(glob.glob('/foo/bar/boo').sort());  // 5,8
-    **/
   })
 });
 

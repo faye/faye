@@ -16,19 +16,25 @@ class TestChannel < Test::Unit::TestCase
   end
   
   def test_globbing
-    globber = Channel::Tree.new
-    globber['/foo/bar']     = 1
-    globber['/foo/boo']     = 2
-    globber['/foo']         = 3
-    globber['/foobar']      = 4
-    globber['/foo/bar/boo'] = 5
-    globber['/foobar/boo']  = 6
-    globber['/foo/*']       = 7
-    globber['/foo/**']      = 8
+    tree = Channel::Tree.new
+    tree['/foo/bar']     = 1
+    tree['/foo/boo']     = 2
+    tree['/foo']         = 3
+    tree['/foobar']      = 4
+    tree['/foo/bar/boo'] = 5
+    tree['/foobar/boo']  = 6
+    tree['/foo/*']       = 7
+    tree['/foo/**']      = 8
     
-    assert_equal  [1,2,7,8],    globber.glob('/foo/*').sort
-    assert_equal  [1,7,8],      globber.glob('/foo/bar').sort
-    assert_equal  [1,2,5,7,8],  globber.glob('/foo/**').sort
-    assert_equal  [5,8],        globber.glob('/foo/bar/boo').sort
+    assert_equal  [1,2,7,8],    tree.glob('/foo/*').sort
+    assert_equal  [1,7,8],      tree.glob('/foo/bar').sort
+    assert_equal  [1,2,5,7,8],  tree.glob('/foo/**').sort
+    assert_equal  [5,8],        tree.glob('/foo/bar/boo').sort
+    
+    tree['/channels/hello'] = 'A'
+    tree['/channels/name'] = 'B'
+    tree['/channels/nested/hello'] = 'C'
+    
+    assert_equal %w[A B C],     tree.glob('/channels/**').sort
   end
 end

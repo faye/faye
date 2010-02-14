@@ -30,7 +30,14 @@ Scenario = Faye.Class({
   },
   
   httpClient: function(name, channels) {
-    var client = new faye.Client(this._endpoint);
+    this._setupClient(new faye.Client(this._endpoint), name, channels);
+  },
+  
+  localClient: function(name, channels) {
+    this._setupClient(this._comet.getClient(), name, channels);
+  },
+  
+  _setupClient: function(client, name, channels) {
     client.connect(function() {
       Faye.each(channels, function(channel) {
         sys.puts('Client ' + name + ' subscribing to ' + channel);

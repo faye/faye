@@ -1,5 +1,24 @@
 var Scenario = require('./scenario'),
-    faye = require('../build/faye');
+    faye     = require('../build/faye'),
+    assert   = require('assert');
+
+(function() {
+  var tree = new Faye.Channel.Tree();
+  var list = '/foo/bar /foo/boo /foo /foobar /foo/bar/boo /foobar/boo /foo/* /foo/**'.split(' ');
+  
+  Faye.each(list, function(c, i) { tree.set(c, i + 1) });
+  
+  assert.deepEqual(tree.glob('/foo/*').sort(),        [1,2,7,8]);
+  assert.deepEqual(tree.glob('/foo/bar').sort(),      [1,7,8]);
+  assert.deepEqual(tree.glob('/foo/**').sort(),       [1,2,5,7,8]);
+  assert.deepEqual(tree.glob('/foo/bar/boo').sort(),  [5,8]);
+  
+  tree.set('/channels/hello', 'A');
+  tree.set('/channels/name', 'B');
+  tree.set('/channels/nested/hello', 'C');
+  
+  assert.deepEqual(tree.glob('/channels/**').sort(), ['A','B','C']);
+})();
 
 Scenario.run("Two HTTP clients, no messages delivered",
 function() { with(this) {
@@ -93,12 +112,13 @@ function() { with(this) {
 Scenario.run("Two HTTP clients, single wildcard on sender",
 function() { with(this) {
   server(8000);
-  httpClient('A', ['/channels/name']);
+  httpClient('A', ['/channels/name', '/channels/hello', '/channels/nested/hello']);
   httpClient('B', []);
   send('B', '/channels/*', {msg: 'hey'});
   checkInbox({
       A: {
-        '/channels/name': [{msg: 'hey'}]
+        '/channels/name': [{msg: 'hey'}],
+        '/channels/hello': [{msg: 'hey'}]
       },
       B: {}
   });
@@ -113,6 +133,22 @@ function() { with(this) {
   checkInbox({
       A: {
         '/channels/*': [{msg: 'hey'}]
+      },
+      B: {}
+  });
+}});
+
+Scenario.run("Two local clients, double wildcard on sender",
+function() { with(this) {
+  server(8000);
+  localClient('A', ['/channels/name', '/channels/hello', '/channels/nested/hello']);
+  localClient('B', []);
+  send('B', '/channels/**', {msg: 'hey'});
+  checkInbox({
+      A: {
+        '/channels/name': [{msg: 'hey'}],
+        '/channels/hello': [{msg: 'hey'}],
+        '/channels/nested/hello': [{msg: 'hey'}]
       },
       B: {}
   });

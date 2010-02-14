@@ -104,7 +104,7 @@ module Faye
         
         if path == [:**]
           list = map { |key, value| value }
-          list.pop
+          list.pop unless @value.nil?
           return list
         end
         
