@@ -65,7 +65,6 @@ You should set up the client as follows:
   
   <script type="text/javascript">
     fayeClient = new Faye.Client('/faye');
-    fayeClient.connect();
   </script>
 
 Take care only to have one instance of the client per page; since each one
@@ -233,13 +232,11 @@ Both clients must be run inside EventMachine, and can publish and
 subscribe just like the JavaScript client:
 
   EM.run {
-    client.connect do
-      client.subscribe('/from/*') do |message|
-        # do something with message hash
-      end
-      
-      client.publish('/from/jcoglan', 'hello' => 'world')
+    client.subscribe('/from/*') do |message|
+      # do something with message hash
     end
+    
+    client.publish('/from/jcoglan', 'hello' => 'world')
   }
 
 

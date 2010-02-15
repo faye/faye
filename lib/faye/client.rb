@@ -63,7 +63,7 @@ module Faye
           return @state = UNCONNECTED
         end
         
-        @state    = CONNECTED
+        @state     = CONNECTED
         @client_id = response['clientId']
         @transport = Transport.get(self, response['supportedConnectionTypes'])
         
@@ -81,7 +81,8 @@ module Faye
     #                                                     * id
     #                                                     * timestamp
     def connect(&block)
-      return if @advice['reconnect'] == NONE
+      return if @advice['reconnect'] == NONE or
+                @state == DISCONNECTED
       
       if @advice['reconnect'] == HANDSHAKE or @state == UNCONNECTED
         return handshake { connect(&block) }
@@ -90,9 +91,9 @@ module Faye
       return callback(&block) if @state == CONNECTING
       return unless @state == CONNECTED
       
-      block.call if block_given?
       set_deferred_status(:succeeded)
       set_deferred_status(:deferred)
+      block.call if block_given?
       
       return unless @connection_id.nil?
       @connection_id = @namespace.generate
@@ -139,22 +140,22 @@ module Faye
     #                                                     * id
     #                                                     * timestamp
     def subscribe(channels, &block)
-      return unless @state == CONNECTED
-      
-      channels = [channels].flatten
-      validate_channels(channels)
-      
-      @transport.send({
-        'channel'       => Channel::SUBSCRIBE,
-        'clientId'      => @client_id,
-        'subscription'  => channels
+      connect {
+        channels = [channels].flatten
+        validate_channels(channels)
         
-      }) do |response|
-        if response['successful']
-          channels = [response['subscription']].flatten
-          channels.each { |channel| @channels[channel] = block }
+        @transport.send({
+          'channel'       => Channel::SUBSCRIBE,
+          'clientId'      => @client_id,
+          'subscription'  => channels
+          
+        }) do |response|
+          if response['successful']
+            channels = [response['subscription']].flatten
+            channels.each { |channel| @channels[channel] = block }
+          end
         end
-      end
+      }
     end
     
     # Request                              Response
@@ -168,22 +169,22 @@ module Faye
     #                                                     * id
     #                                                     * timestamp
     def unsubscribe(channels, &block)
-      return unless @state == CONNECTED
-      
-      channels = [channels].flatten
-      validate_channels(channels)
-      
-      @transport.send({
-        'channel'       => Channel::UNSUBSCRIBE,
-        'clientId'      => @client_id,
-        'subscription'  => channels
+      connect {
+        channels = [channels].flatten
+        validate_channels(channels)
         
-      }) do |response|
-        if response['successful']
-          channels = [response['subscription']].flatten
-          channels.each { |channel| @channels[channel] = nil }
+        @transport.send({
+          'channel'       => Channel::UNSUBSCRIBE,
+          'clientId'      => @client_id,
+          'subscription'  => channels
+          
+        }) do |response|
+          if response['successful']
+            channels = [response['subscription']].flatten
+            channels.each { |channel| @channels[channel] = nil }
+          end
         end
-      end
+      }
     end
     
     # Request                              Response
@@ -193,20 +194,21 @@ module Faye
     #                * id                                 * error
     #                * ext                                * ext
     def publish(channel, data)
-      return unless @state == CONNECTED
-      validate_channels([channel])
-      
-      enqueue({
-        'channel'   => channel,
-        'data'      => data,
-        'clientId'  => @client_id
-      })
-      
-      return if @timeout
-      @timeout = add_timer(Connection::MAX_DELAY) do
-        @timeout = nil
-        flush!
-      end
+      connect {
+        validate_channels([channel])
+        
+        enqueue({
+          'channel'   => channel,
+          'data'      => data,
+          'clientId'  => @client_id
+        })
+        
+        return if @timeout
+        @timeout = add_timer(Connection::MAX_DELAY) do
+          @timeout = nil
+          flush!
+        end
+      }
     end
     
     def handle_advice(advice)

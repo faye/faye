@@ -12,15 +12,14 @@ require dir + '/../../lib/faye'
 
 EM.run do
   client = Faye::Client.new('http://localhost:9292/comet')
-  client.connect {
-    client.subscribe '/from/*' do |message|
-      user = message['user']
-      puts "[#{ user }]: #{ message['message'] }"
-      client.publish("/mentioning/#{ user }", {
-        "user" => "logger",
-        "message" => "Got your message, #{ user }!"
-      })
-    end
-  }
+  
+  client.subscribe '/from/*' do |message|
+    user = message['user']
+    puts "[#{ user }]: #{ message['message'] }"
+    client.publish("/mentioning/#{ user }", {
+      "user" => "logger",
+      "message" => "Got your message, #{ user }!"
+    })
+  end
 end
 

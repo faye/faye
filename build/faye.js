@@ -495,6 +495,7 @@ Faye.Client = Faye.Class({
   //                                                     * timestamp
   connect: function(callback, scope) {
     if (this._advice.reconnect === this.NONE) return;
+    if (this._state === this.DISCONNECTED) return;
     
     if (this._advice.reconnect === this.HANDSHAKE || this._state === this.UNCONNECTED)
       return this.handshake(function() { this.connect(callback, scope) }, this);
@@ -504,12 +505,9 @@ Faye.Client = Faye.Class({
     
     if (this._state !== this.CONNECTED) return;
     
-    if (callback) callback.call(scope);
-    
-    Faye.each(this._callbacks, function(listener) {
-      listener[0].call(listener[1]);
-    });
+    Faye.each(this._callbacks, function(listener) { listener[0].call(listener[1]) });
     this._callbacks = [];
+    if (callback) callback.call(scope);
     
     if (this._connectionId) return;
     this._connectionId = this._namespace.generate();
@@ -557,23 +555,25 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   subscribe: function(channels, callback, scope) {
-    if (this._state !== this.CONNECTED) return;
-    
-    channels = [].concat(channels);
-    this._validateChannels(channels);
-    
-    this._transport.send({
-      channel:      Faye.Channel.SUBSCRIBE,
-      clientId:     this._clientId,
-      subscription: channels
+    this.connect(function() {
       
-    }, function(response) {
-      if (!response.successful) return;
+      channels = [].concat(channels);
+      this._validateChannels(channels);
       
-      channels = [].concat(response.subscription);
-      Faye.each(channels, function(channel) {
-        this._channels.set(channel, [callback, scope]);
+      this._transport.send({
+        channel:      Faye.Channel.SUBSCRIBE,
+        clientId:     this._clientId,
+        subscription: channels
+        
+      }, function(response) {
+        if (!response.successful) return;
+        
+        channels = [].concat(response.subscription);
+        Faye.each(channels, function(channel) {
+          this._channels.set(channel, [callback, scope]);
+        }, this);
       }, this);
+      
     }, this);
   },
   
@@ -588,23 +588,25 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   unsubscribe: function(channels, callback, scope) {
-    if (this._state !== this.CONNECTED) return;
-    
-    channels = [].concat(channels);
-    this._validateChannels(channels);
-    
-    this._transport.send({
-      channel:      Faye.Channel.UNSUBSCRIBE,
-      clientId:     this._clientId,
-      subscription: channels
+    this.connect(function() {
       
-    }, function(response) {
-      if (!response.successful) return;
+      channels = [].concat(channels);
+      this._validateChannels(channels);
       
-      channels = [].concat(response.subscription);
-      Faye.each(channels, function(channel) {
-        this._channels.set(channel, null);
+      this._transport.send({
+        channel:      Faye.Channel.UNSUBSCRIBE,
+        clientId:     this._clientId,
+        subscription: channels
+        
+      }, function(response) {
+        if (!response.successful) return;
+        
+        channels = [].concat(response.subscription);
+        Faye.each(channels, function(channel) {
+          this._channels.set(channel, null);
+        }, this);
       }, this);
+      
     }, this);
   },
   
@@ -615,22 +617,25 @@ Faye.Client = Faye.Class({
   //                * id                                 * error
   //                * ext                                * ext
   publish: function(channel, data) {
-    if (this._state !== this.CONNECTED) return;
-    this._validateChannels([channel]);
-    
-    this._enqueue({
-      channel:      channel,
-      data:         data,
-      clientId:     this._clientId
-    });
-    
-    if (this._timeout) return;
-    var self = this;
-    
-    this._timeout = setTimeout(function() {
-      delete self._timeout;
-      self._flush();
-    }, this.MAX_DELAY * 1000);
+    this.connect(function() {
+      
+      this._validateChannels([channel]);
+      
+      this._enqueue({
+        channel:      channel,
+        data:         data,
+        clientId:     this._clientId
+      });
+      
+      if (this._timeout) return;
+      var self = this;
+      
+      this._timeout = setTimeout(function() {
+        delete self._timeout;
+        self._flush();
+      }, this.MAX_DELAY * 1000);
+      
+    }, this);
   },
   
   _enqueue: function(message) {

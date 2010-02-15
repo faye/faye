@@ -38,14 +38,12 @@ Scenario = Faye.Class({
   },
   
   _setupClient: function(client, name, channels) {
-    client.connect(function() {
-      Faye.each(channels, function(channel) {
-        sys.puts('Client ' + name + ' subscribing to ' + channel);
-        client.subscribe(channel, function(message) {
-          var box = this._inbox[name];
-          box[channel] = box[channel] || [];
-          box[channel].push(message);
-        }, this);
+    Faye.each(channels, function(channel) {
+      sys.puts('Client ' + name + ' subscribing to ' + channel);
+      client.subscribe(channel, function(message) {
+        var box = this._inbox[name];
+        box[channel] = box[channel] || [];
+        box[channel].push(message);
       }, this);
     }, this);
     this._clients[name] = client;
@@ -54,12 +52,12 @@ Scenario = Faye.Class({
   },
   
   send: function(from, channel, message) {
-    this._withConnectedClients(function() {
+    var self = this;
+    setTimeout(function() {
       var displayMessage = JSON.stringify(message);
       sys.puts('Client ' + from + ' publishing ' + displayMessage + ' to ' + channel);
-      this._clients[from].publish(channel, message);
-      
-    });
+      self._clients[from].publish(channel, message);
+    }, 500);
   },
   
   checkInbox: function(expectedInbox) {
@@ -70,25 +68,12 @@ Scenario = Faye.Class({
       Faye.each(this._clients, function(name, client) { client.disconnect() });
       self._server.close();
       Scenario.runNext();
-    }, 500);
+    }, 1000);
   },
   
   _checkInbox: function(expectedInbox) {
     sys.puts(JSON.stringify(this._inbox));
     assert.deepEqual(this._inbox, expectedInbox);
-  },
-  
-  _withConnectedClients: function(block) {
-    if (this._connected) return block.call(this);
-    var connected = 0;
-    Faye.each(this._clients, function(name, client) {
-      client.connect(function() {
-        connected += 1;
-        if (connected < this._pool) return;
-        this._connected = true;
-        block.call(this);
-      }, this);
-    }, this);
   }
 });
 
