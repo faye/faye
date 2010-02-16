@@ -17,7 +17,7 @@ EM.run do
     user = message['user']
     puts "[#{ user }]: #{ message['message'] }"
     client.publish("/mentioning/#{ user }", {
-      "user" => "logger",
+      "user"    => "ruby-logger",
       "message" => "Got your message, #{ user }!"
     })
   end
