@@ -240,6 +240,27 @@ subscribe just like the JavaScript client:
   }
 
 
+== Development
+
+If you want to hack on Faye, you'll need Node.js, Ruby and the following
+gems installed:
+
+  sudo gem install eventmachine em-http-request rack thin json jake
+
+DO NOT edit any JavaScript files outside the +javascript+ and +test+
+directories. They are generated using Jake, which you should run after
+editing the JavaScript source.
+
+  jake -f
+
+Ordinarily I would keep generated files out of the repo but I'm keeping
+some in here as it's currently the only place to download them.
+
+If you want to submit patches, they're far more likely to make it in
+if you update both the Ruby and JavaScript versions with equivalent
+changes where appropriate.
+
+
 == To-do
 
 * Investigate WebSockets as a possible message transport
