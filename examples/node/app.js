@@ -1,4 +1,4 @@
-var posix = require('posix'),
+var fs    = require('fs'),
     path  = require('path'),
     sys   = require('sys'), 
     http  = require('http')
@@ -17,10 +17,10 @@ http.createServer(function(request, response) {
   
   var path = (request.url === '/') ? '/index.html' : request.url;
   
-  posix.cat(PUBLIC_DIR + path).addCallback(function(content) {
+  fs.readFile(PUBLIC_DIR + path).addCallback(function(content) {
     response.sendHeader(200, {'Content-Type': 'text/html'});
-    response.sendBody(content);
-    response.finish();
+    response.write(content);
+    response.close();
   });
 }).listen(Number(port));
 

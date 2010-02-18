@@ -3,14 +3,15 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
     var params  = {message: JSON.stringify(message)},
         request = this.createRequest();
     
-    request.sendBody(querystring.stringify(params));
+    request.write(querystring.stringify(params));
     
-    request.finish(function(response) {
+    request.addListener('response', function(response) {
       if (!callback) return;
-      response.addListener('body', function(chunk) {
+      response.addListener('data', function(chunk) {
         callback.call(scope, JSON.parse(chunk));
       });
     });
+    request.close();
   },
   
   createRequest: function() {

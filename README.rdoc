@@ -166,8 +166,8 @@ directory.
     if (server.call(request, response)) return;
     
     response.sendHeader(200, {'Content-Type': 'text/plain'});
-    response.sendBody('Hello, non-Faye request!');
-    response.finish();
+    response.write('Hello, non-Faye request!');
+    response.close();
     
   }).listen(9292);
 
