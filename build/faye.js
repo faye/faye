@@ -1134,14 +1134,15 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
     var params  = {message: JSON.stringify(message)},
         request = this.createRequest();
     
-    request.sendBody(querystring.stringify(params));
+    request.write(querystring.stringify(params));
     
-    request.finish(function(response) {
+    request.addListener('response', function(response) {
       if (!callback) return;
-      response.addListener('body', function(chunk) {
+      response.addListener('data', function(chunk) {
         callback.call(scope, JSON.parse(chunk));
       });
     });
+    request.close();
   },
   
   createRequest: function() {
@@ -1176,7 +1177,7 @@ Faye.Transport.register('in-process', Faye.NodeLocalTransport);
 
 
 var path  = require('path'),
-    posix = require('posix'),
+    fs    = require('fs'),
     sys   = require('sys'),
     url   = require('url'),
     http  = require('http'),
@@ -1221,7 +1222,7 @@ Faye.NodeAdapter = Faye.Class({
           this._callWithParams(request, response, requestUrl.query);
         
         else
-          request.addListener('body', function(chunk) {
+          request.addListener('data', function(chunk) {
             self._callWithParams(request, response, querystring.parse(chunk));
           });
         
@@ -1229,10 +1230,10 @@ Faye.NodeAdapter = Faye.Class({
         break;
       
       case this._script:
-        posix.cat(this.SCRIPT_PATH).addCallback(function(content) {
+        fs.readFile(this.SCRIPT_PATH).addCallback(function(content) {
           response.sendHeader(200, self.TYPE_SCRIPT);
-          response.sendBody(content);
-          response.finish();
+          response.write(content);
+          response.close();
         });
         return true;
         break;
@@ -1254,13 +1255,13 @@ Faye.NodeAdapter = Faye.Class({
         var body = JSON.stringify(replies);
         if (isGet) body = jsonp + '(' + body + ');';
         response.sendHeader(200, type);
-        response.sendBody(body);
-        response.finish();
+        response.write(body);
+        response.close();
       });
     } catch (e) {
       response.sendHeader(400, {'Content-Type': 'text/plain'});
-      response.sendBody('Bad request');
-      response.finish();
+      response.write('Bad request');
+      response.close();
     }
   }
 });
