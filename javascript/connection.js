@@ -35,11 +35,11 @@ Faye.Connection = Faye.Class({
     this.on('flush', callback);
     if (this._connected) return;
     
-    this._connected       = true;
-    this._markForDeletion = false;
-    if (this._scheduleForDeletionTimeout) {
-      clearTimeout(this._scheduleForDeletionTimeout);
-      delete this._scheduleForDeletionTimeout;
+    this._connected = true;
+    
+    if (this._deletionTimeout) {
+      clearTimeout(this._deletionTimeout);
+      delete this._deletionTimeout;
     }
     
     this._beginDeliveryTimeout();
@@ -96,12 +96,10 @@ Faye.Connection = Faye.Class({
   },
   
   _scheduleForDeletion: function() {
-    if (this._markForDeletion) return;
-    this._markForDeletion = true;
+    if (this._deletionTimeout) return;
     var self = this;
     
-    this._scheduleForDeletionTimeout = setTimeout(function() {
-      if (!self._markForDeletion) return;
+    this._deletionTimeout = setTimeout(function() {
       self.fire('stale', self);
     }, 10000 * this.INTERVAL);
   }

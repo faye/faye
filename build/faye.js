@@ -993,8 +993,12 @@ Faye.Connection = Faye.Class({
     this.on('flush', callback);
     if (this._connected) return;
     
-    this._markForDeletion = false;
-    this._connected       = true;
+    this._connected = true;
+    
+    if (this._deletionTimeout) {
+      clearTimeout(this._deletionTimeout);
+      delete this._deletionTimeout;
+    }
     
     this._beginDeliveryTimeout();
     this._beginConnectionTimeout();
@@ -1050,12 +1054,10 @@ Faye.Connection = Faye.Class({
   },
   
   _scheduleForDeletion: function() {
-    if (this._markForDeletion) return;
-    this._markForDeletion = true;
+    if (this._deletionTimeout) return;
     var self = this;
     
-    setTimeout(function() {
-      if (!self._markForDeletion) return;
+    this._deletionTimeout = setTimeout(function() {
       self.fire('stale', self);
     }, 10000 * this.INTERVAL);
   }
@@ -1247,7 +1249,7 @@ Faye.NodeAdapter = Faye.Class({
       var message = JSON.parse(params.message),
           jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
-          type    = isGet ? Faye.NodeAdapter.TYPE_SCRIPT : Faye.NodeAdapter.TYPE_JSON;
+          type    = isGet ? this.TYPE_SCRIPT : this.TYPE_JSON;
       
       if (isGet) this._server.flushConnection(message);
       

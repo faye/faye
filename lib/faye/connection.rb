@@ -43,8 +43,12 @@ module Faye
       callback(&block)
       return if @connected
       
-      @mark_for_deletion  = false
-      @connected          = true
+      @connected = true
+      
+      if @deletion_timeout
+        cancel_timer(@deletion_timeout)
+        @deletion_timeout = nil
+      end
       
       begin_delivery_timeout!
       begin_connection_timeout!
@@ -94,14 +98,11 @@ module Faye
     end
     
     def schedule_for_deletion!
-      return if @mark_for_deletion
-      @mark_for_deletion = true
+      return if @deletion_timeout
       
-      add_timer(10 * INTERVAL) do
-        if @mark_for_deletion
-          changed(true)
-          notify_observers(:stale_client, self)
-        end
+      @deletion_timeout = add_timer(10 * INTERVAL) do
+        changed(true)
+        notify_observers(:stale_client, self)
       end
     end
     
