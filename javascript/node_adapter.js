@@ -69,7 +69,7 @@ Faye.NodeAdapter = Faye.Class({
       var message = JSON.parse(params.message),
           jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
-          type    = isGet ? Faye.NodeAdapter.TYPE_SCRIPT : Faye.NodeAdapter.TYPE_JSON;
+          type    = isGet ? this.TYPE_SCRIPT : this.TYPE_JSON;
       
       if (isGet) this._server.flushConnection(message);
       
