@@ -84,9 +84,16 @@ Faye.extend(Faye, {
     return size;
   },
   
-  random: function() {
-    var field = Math.pow(2, this.ID_LENGTH);
-    return (Math.random() * field).toString(16).replace(/0*$/, '');
+  random: function(bitlength) {
+    bitlength = bitlength || this.ID_LENGTH;
+    if (bitlength > 32) {
+      var parts  = Math.ceil(bitlength / 32),
+          string = '';
+      while (parts--) string += this.random(32);
+      return string;
+    }
+    var field = Math.pow(2, bitlength);
+    return Math.floor(Math.random() * field).toString(16);
   },
   
   enumEqual: function(actual, expected) {
