@@ -1268,7 +1268,7 @@ Faye.NodeAdapter = Faye.Class({
         response.close();
       });
     } catch (e) {
-      response.sendHeader(400, {'Content-Type': 'text/plain'});
+      response.sendHeader(400, this.TYPE_TEXT);
       response.write('Bad request');
       response.close();
     }

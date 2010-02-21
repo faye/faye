@@ -49,7 +49,7 @@ module Faye
             response
           end
         rescue
-          [400, {'Content-Type' => 'text/plain'}, 'Bad request']
+          [400, TYPE_TEXT, 'Bad request']
         end
       
       when @script then
