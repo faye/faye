@@ -23,6 +23,11 @@ module Faye
       @options[:timeout] || TIMEOUT
     end
     
+    def update(event)
+      @inbox.add(event)
+      begin_delivery_timeout! if @connected
+    end
+    
     def subscribe(channel)
       channel.add_observer(self) if @channels.add?(channel)
     end
@@ -32,11 +37,6 @@ module Faye
       return unless @channels.member?(channel)
       @channels.delete(channel)
       channel.delete_observer(self)
-    end
-    
-    def update(event)
-      @inbox.add(event)
-      begin_delivery_timeout! if @connected
     end
     
     def connect(&block)
@@ -73,12 +73,12 @@ module Faye
   private
     
     def begin_delivery_timeout!
-      return unless @connected and not @inbox.empty? and @delivery_timeout.nil?
+      return unless @delivery_timeout.nil? and @connected and not @inbox.empty?
       @delivery_timeout = add_timer(MAX_DELAY) { flush! }
     end
     
     def begin_connection_timeout!
-      return unless @connected and @connection_timeout.nil?
+      return unless @connection_timeout.nil? and @connected
       @connection_timeout = add_timer(timeout) { flush! }
     end
     

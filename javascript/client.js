@@ -1,12 +1,12 @@
 Faye.Client = Faye.Class({
-  UNCONNECTED:   1,
-  CONNECTING:    2,
-  CONNECTED:     3,
-  DISCONNECTED:  4,
+  UNCONNECTED:   <%= Faye::Client::UNCONNECTED %>,
+  CONNECTING:    <%= Faye::Client::CONNECTING %>,
+  CONNECTED:     <%= Faye::Client::CONNECTED %>,
+  DISCONNECTED:  <%= Faye::Client::DISCONNECTED %>,
   
-  HANDSHAKE:     'handshake',
-  RETRY:         'retry',
-  NONE:          'none',
+  HANDSHAKE:     '<%= Faye::Client::HANDSHAKE %>',
+  RETRY:         '<%= Faye::Client::RETRY %>',
+  NONE:          '<%= Faye::Client::NONE %>',
   
   DEFAULT_ENDPOINT:   '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   MAX_DELAY:          <%= Faye::Connection::MAX_DELAY %>,
@@ -126,8 +126,8 @@ Faye.Client = Faye.Class({
     this._state = this.DISCONNECTED;
     
     this._transport.send({
-      channel:      Faye.Channel.DISCONNECT,
-      clientId:     this._clientId
+      channel:    Faye.Channel.DISCONNECT,
+      clientId:   this._clientId
     });
     
     this._channels = new Faye.Channel.Tree();
@@ -227,6 +227,19 @@ Faye.Client = Faye.Class({
     }, this);
   },
   
+  handleAdvice: function(advice) {
+    Faye.extend(this._advice, advice);
+    if (this._advice.reconnect === this.HANDSHAKE) this._clientId = null;
+  },
+  
+  sendToSubscribers: function(message) {
+    var channels = this._channels.glob(message.channel);
+    Faye.each(channels, function(callback) {
+      if (!callback) return;
+      callback[0].call(callback[1], message.data);
+    });
+  },
+  
   _enqueue: function(message) {
     this._outbox.push(message);
   },
@@ -242,19 +255,6 @@ Faye.Client = Faye.Class({
         throw '"' + channel + '" is not a valid channel name';
       if (!Faye.Channel.isSubscribable(channel))
         throw 'Clients may not subscribe to channel "' + channel + '"';
-    });
-  },
-  
-  _handleAdvice: function(advice) {
-    Faye.extend(this._advice, advice);
-    if (this._advice.reconnect === this.HANDSHAKE) this._clientId = null;
-  },
-  
-  _sendToSubscribers: function(message) {
-    var channels = this._channels.glob(message.channel);
-    Faye.each(channels, function(callback) {
-      if (!callback) return;
-      callback[0].call(callback[1], message.data);
     });
   }
 });

@@ -9,6 +9,7 @@ module Faye
     ASYNC_RESPONSE = [-1, {}, []].freeze
     
     DEFAULT_ENDPOINT  = '/bayeux'
+    SCRIPT_PATH       = File.join(ROOT, 'faye-client-min.js')
     
     TYPE_JSON   = {'Content-Type' => 'text/json'}
     TYPE_SCRIPT = {'Content-Type' => 'text/javascript'}
@@ -53,7 +54,7 @@ module Faye
         end
       
       when @script then
-        [200, TYPE_SCRIPT, File.new(CLIENT_SCRIPT)]
+        [200, TYPE_SCRIPT, File.new(SCRIPT_PATH)]
       
       else
         env['faye.server'] = @server

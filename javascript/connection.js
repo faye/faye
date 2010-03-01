@@ -100,8 +100,8 @@ Faye.Connection = Faye.Class({
     var self = this;
     
     this._deletionTimeout = setTimeout(function() {
-      self.fire('stale', self);
-    }, 10000 * this.INTERVAL);
+      self.fire('staleClient', self);
+    }, 10 * 1000 * this.INTERVAL);
   }
 });
 

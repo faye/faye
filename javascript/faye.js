@@ -12,13 +12,26 @@ Faye.extend = function(dest, source, overwrite) {
 };
 
 Faye.extend(Faye, {
-  BAYEUX_VERSION:   '<%= Faye::BAYEUX_VERSION %>',
   VERSION:          '<%= Faye::VERSION %>',
-  JSONP_CALLBACK:   '<%= Faye::JSONP_CALLBACK %>',
+  
+  BAYEUX_VERSION:   '<%= Faye::BAYEUX_VERSION %>',
   ID_LENGTH:        <%= Faye::ID_LENGTH %>,
+  JSONP_CALLBACK:   '<%= Faye::JSONP_CALLBACK %>',
   CONNECTION_TYPES: <%= Faye::CONNECTION_TYPES.inspect %>,
   
   ENV:              this,
+  
+  random: function(bitlength) {
+    bitlength = bitlength || this.ID_LENGTH;
+    if (bitlength > 32) {
+      var parts  = Math.ceil(bitlength / 32),
+          string = '';
+      while (parts--) string += this.random(32);
+      return string;
+    }
+    var field = Math.pow(2, bitlength);
+    return Math.floor(Math.random() * field).toString(16);
+  },
   
   Grammar: {
 <% %w[  LOWALPHA    UPALPHA     ALPHA     DIGIT
@@ -82,18 +95,6 @@ Faye.extend(Faye, {
     var size = 0;
     this.each(object, function() { size += 1 });
     return size;
-  },
-  
-  random: function(bitlength) {
-    bitlength = bitlength || this.ID_LENGTH;
-    if (bitlength > 32) {
-      var parts  = Math.ceil(bitlength / 32),
-          string = '';
-      while (parts--) string += this.random(32);
-      return string;
-    }
-    var field = Math.pow(2, bitlength);
-    return Math.floor(Math.random() * field).toString(16);
   },
   
   enumEqual: function(actual, expected) {

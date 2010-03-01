@@ -36,13 +36,13 @@ Faye.Server = Faye.Class({
   _connection: function(id) {
     if (this._clients.hasOwnProperty(id)) return this._clients[id];
     var client = new Faye.Connection(id, this._options);
-    client.on('stale', this._destroyClient, this);
+    client.on('staleClient', this._destroyClient, this);
     return this._clients[id] = client;
   },
   
   _destroyClient: function(client) {
     client.disconnect();
-    client.stopObserving('stale', this._destroyClient, this);
+    client.stopObserving('staleClient', this._destroyClient, this);
     delete this._clients[client.id];
   },
   

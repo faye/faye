@@ -16,10 +16,10 @@ Faye.Transport = Faye.extend(Faye.Class({
           callback.call(scope, response);
         
         if (response.advice)
-          this._client._handleAdvice(response.advice);
+          this._client.handleAdvice(response.advice);
         
         if (response.data && response.channel)
-          this._client._sendToSubscribers(response);
+          this._client.sendToSubscribers(response);
         
       }, this);
     }, this);

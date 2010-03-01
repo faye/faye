@@ -58,8 +58,9 @@ module Faye
         'supportedConnectionTypes' => Transport.supported_connection_types
         
       }) do |response|
+        
         unless response['successful']
-          add_timer(@advice['interval'] / 1000) { handshake(&block) }
+          add_timer(@advice['interval'] / 1000.0) { handshake(&block) }
           return @state = UNCONNECTED
         end
         
@@ -106,7 +107,7 @@ module Faye
         
       }) do |response|
         @connection_id = nil
-        add_timer(@advice['interval'] / 1000) { connect }
+        add_timer(@advice['interval'] / 1000.0) { connect }
       end
     end
     
@@ -204,6 +205,7 @@ module Faye
         })
         
         return if @timeout
+        
         @timeout = add_timer(Connection::MAX_DELAY) do
           @timeout = nil
           flush!

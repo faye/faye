@@ -12,13 +12,26 @@ Faye.extend = function(dest, source, overwrite) {
 };
 
 Faye.extend(Faye, {
-  BAYEUX_VERSION:   '1.0',
   VERSION:          '0.3.0',
-  JSONP_CALLBACK:   'jsonpcallback',
+  
+  BAYEUX_VERSION:   '1.0',
   ID_LENGTH:        128,
+  JSONP_CALLBACK:   'jsonpcallback',
   CONNECTION_TYPES: ["long-polling", "callback-polling"],
   
   ENV:              this,
+  
+  random: function(bitlength) {
+    bitlength = bitlength || this.ID_LENGTH;
+    if (bitlength > 32) {
+      var parts  = Math.ceil(bitlength / 32),
+          string = '';
+      while (parts--) string += this.random(32);
+      return string;
+    }
+    var field = Math.pow(2, bitlength);
+    return Math.floor(Math.random() * field).toString(16);
+  },
   
   Grammar: {
 
@@ -110,18 +123,6 @@ Faye.extend(Faye, {
     var size = 0;
     this.each(object, function() { size += 1 });
     return size;
-  },
-  
-  random: function(bitlength) {
-    bitlength = bitlength || this.ID_LENGTH;
-    if (bitlength > 32) {
-      var parts  = Math.ceil(bitlength / 32),
-          string = '';
-      while (parts--) string += this.random(32);
-      return string;
-    }
-    var field = Math.pow(2, bitlength);
-    return Math.floor(Math.random() * field).toString(16);
   },
   
   enumEqual: function(actual, expected) {
@@ -376,10 +377,10 @@ Faye.Transport = Faye.extend(Faye.Class({
           callback.call(scope, response);
         
         if (response.advice)
-          this._client._handleAdvice(response.advice);
+          this._client.handleAdvice(response.advice);
         
         if (response.data && response.channel)
-          this._client._sendToSubscribers(response);
+          this._client.sendToSubscribers(response);
         
       }, this);
     }, this);
@@ -544,8 +545,8 @@ Faye.Client = Faye.Class({
     this._state = this.DISCONNECTED;
     
     this._transport.send({
-      channel:      Faye.Channel.DISCONNECT,
-      clientId:     this._clientId
+      channel:    Faye.Channel.DISCONNECT,
+      clientId:   this._clientId
     });
     
     this._channels = new Faye.Channel.Tree();
@@ -645,6 +646,19 @@ Faye.Client = Faye.Class({
     }, this);
   },
   
+  handleAdvice: function(advice) {
+    Faye.extend(this._advice, advice);
+    if (this._advice.reconnect === this.HANDSHAKE) this._clientId = null;
+  },
+  
+  sendToSubscribers: function(message) {
+    var channels = this._channels.glob(message.channel);
+    Faye.each(channels, function(callback) {
+      if (!callback) return;
+      callback[0].call(callback[1], message.data);
+    });
+  },
+  
   _enqueue: function(message) {
     this._outbox.push(message);
   },
@@ -660,19 +674,6 @@ Faye.Client = Faye.Class({
         throw '"' + channel + '" is not a valid channel name';
       if (!Faye.Channel.isSubscribable(channel))
         throw 'Clients may not subscribe to channel "' + channel + '"';
-    });
-  },
-  
-  _handleAdvice: function(advice) {
-    Faye.extend(this._advice, advice);
-    if (this._advice.reconnect === this.HANDSHAKE) this._clientId = null;
-  },
-  
-  _sendToSubscribers: function(message) {
-    var channels = this._channels.glob(message.channel);
-    Faye.each(channels, function(callback) {
-      if (!callback) return;
-      callback[0].call(callback[1], message.data);
     });
   }
 });
@@ -762,13 +763,13 @@ Faye.Server = Faye.Class({
   _connection: function(id) {
     if (this._clients.hasOwnProperty(id)) return this._clients[id];
     var client = new Faye.Connection(id, this._options);
-    client.on('stale', this._destroyClient, this);
+    client.on('staleClient', this._destroyClient, this);
     return this._clients[id] = client;
   },
   
   _destroyClient: function(client) {
     client.disconnect();
-    client.stopObserving('stale', this._destroyClient, this);
+    client.stopObserving('staleClient', this._destroyClient, this);
     delete this._clients[client.id];
   },
   
@@ -1065,8 +1066,8 @@ Faye.Connection = Faye.Class({
     var self = this;
     
     this._deletionTimeout = setTimeout(function() {
-      self.fire('stale', self);
-    }, 10000 * this.INTERVAL);
+      self.fire('staleClient', self);
+    }, 10 * 1000 * this.INTERVAL);
   }
 });
 
