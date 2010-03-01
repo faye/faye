@@ -52,7 +52,7 @@ Faye.NodeAdapter = Faye.Class({
         break;
       
       case this._script:
-        fs.readFile(this.SCRIPT_PATH).addCallback(function(content) {
+        fs.readFile(this.SCRIPT_PATH, function(err, content) {
           response.sendHeader(200, self.TYPE_SCRIPT);
           response.write(content);
           response.close();

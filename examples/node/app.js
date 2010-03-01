@@ -17,7 +17,7 @@ http.createServer(function(request, response) {
   
   var path = (request.url === '/') ? '/index.html' : request.url;
   
-  fs.readFile(PUBLIC_DIR + path).addCallback(function(content) {
+  fs.readFile(PUBLIC_DIR + path, function(err, content) {
     response.sendHeader(200, {'Content-Type': 'text/html'});
     response.write(content);
     response.close();
