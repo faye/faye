@@ -1,3 +1,14 @@
+=== 0.3.0 / 2010-03-01
+
+* Add server-side clients for Node.js and Ruby environments
+* Clients support both HTTP and in-process transports
+* Fix ID generation in JavaScript version to 128-bit IDs
+* Fix bug in interpretation of ** channel wildcard
+* Users don't have to call #connect() on clients any more
+* Fix timeout race conditions that were killing active connections
+* Support new Node APIs from 0.1.29.
+
+
 === 0.2.2 / 2010-02-10
 
 * Kick out requests with malformed JSON as 400s

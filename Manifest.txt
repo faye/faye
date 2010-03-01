@@ -14,6 +14,7 @@ examples/shared/public/robots.txt
 examples/shared/public/soapbox.js
 examples/shared/public/style.css
 examples/node/app.js
+examples/node/client.js
 examples/node/faye.js
 examples/node/faye-client-min.js
 examples/rack/app.rb
@@ -30,6 +31,8 @@ lib/faye/namespace.rb
 lib/faye/rack_adapter.rb
 lib/faye/server.rb
 lib/faye/transport.rb
+test/scenario.js
 test/test_channel.rb
+test/test_clients.js
 test/test_grammar.rb
 test/test_server.rb
