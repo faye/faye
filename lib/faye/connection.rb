@@ -23,7 +23,8 @@ module Faye
       @options[:timeout] || TIMEOUT
     end
     
-    def update(event)
+    def update(message, event)
+      return unless message == :message
       @inbox.add(event)
       begin_delivery_timeout! if @connected
     end

@@ -32,7 +32,7 @@ Faye.Connection = Faye.Class({
   },
   
   connect: function(callback) {
-    this.on('flush', callback);
+    this.callback(callback);
     if (this._connected) return;
     
     this._connected = true;
@@ -53,8 +53,8 @@ Faye.Connection = Faye.Class({
     var events = this._inbox.toArray();
     this._inbox = new Faye.Set();
     
-    this.fire('flush', events);
-    this.stopObserving('flush');
+    this.setDeferredStatus('succeeded', events);
+    this.setDeferredStatus('deferred');
   },
   
   disconnect: function() {
@@ -105,5 +105,6 @@ Faye.Connection = Faye.Class({
   }
 });
 
+Faye.extend(Faye.Connection.prototype, Faye.Deferrable);
 Faye.extend(Faye.Connection.prototype, Faye.Observable);
 

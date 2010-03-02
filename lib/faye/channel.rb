@@ -10,7 +10,7 @@ module Faye
     
     def <<(message)
       changed(true)
-      notify_observers(message)
+      notify_observers(:message, message)
     end
     
     HANDSHAKE   = '/meta/handshake'

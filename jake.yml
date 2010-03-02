@@ -12,6 +12,7 @@ packages:
   core:
     - faye
     - util/class
+    - util/deferrable
     - util/observable
     - channel
     - namespace

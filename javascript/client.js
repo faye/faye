@@ -90,12 +90,12 @@ Faye.Client = Faye.Class({
       return this.handshake(function() { this.connect(callback, scope) }, this);
     
     if (this._state === this.CONNECTING)
-      return this._callbacks.push([callback, scope]);
+      return this.callback(callback, scope);
     
     if (this._state !== this.CONNECTED) return;
     
-    Faye.each(this._callbacks, function(listener) { listener[0].call(listener[1]) });
-    this._callbacks = [];
+    this.setDeferredStatus('succeeded');
+    this.setDeferredStatus('deferred');
     if (callback) callback.call(scope);
     
     if (this._connectionId) return;
@@ -258,4 +258,6 @@ Faye.Client = Faye.Class({
     });
   }
 });
+
+Faye.extend(Faye.Client.prototype, Faye.Deferrable);
 

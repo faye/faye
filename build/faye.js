@@ -168,6 +168,34 @@ Faye.Class = function(parent, methods) {
 };
 
 
+Faye.Deferrable = {
+  callback: function(callback, scope) {
+    if (this._deferredStatus === 'succeeded')
+      return callback.apply(scope, this._deferredArgs);
+    
+    this._waiters = this._waiters || [];
+    this._waiters.push([callback, scope]);
+  },
+  
+  setDeferredStatus: function() {
+    var args = Array.prototype.slice.call(arguments),
+        status = args.shift();
+    
+    this._deferredStatus = status;
+    this._deferredArgs = args;
+    
+    if (status !== 'succeeded') return;
+    if (!this._waiters) return;
+    
+    Faye.each(this._waiters, function(callback) {
+      callback[0].apply(callback[1], this._deferredArgs);
+    }, this);
+    
+    this._waiters = [];
+  }
+};
+
+
 Faye.Observable = {
   on: function(eventType, block, scope) {
     this._observers = this._observers || {};
@@ -509,12 +537,12 @@ Faye.Client = Faye.Class({
       return this.handshake(function() { this.connect(callback, scope) }, this);
     
     if (this._state === this.CONNECTING)
-      return this._callbacks.push([callback, scope]);
+      return this.callback(callback, scope);
     
     if (this._state !== this.CONNECTED) return;
     
-    Faye.each(this._callbacks, function(listener) { listener[0].call(listener[1]) });
-    this._callbacks = [];
+    this.setDeferredStatus('succeeded');
+    this.setDeferredStatus('deferred');
     if (callback) callback.call(scope);
     
     if (this._connectionId) return;
@@ -677,6 +705,8 @@ Faye.Client = Faye.Class({
     });
   }
 });
+
+Faye.extend(Faye.Client.prototype, Faye.Deferrable);
 
 
 Faye.Set = Faye.Class({
@@ -998,7 +1028,7 @@ Faye.Connection = Faye.Class({
   },
   
   connect: function(callback) {
-    this.on('flush', callback);
+    this.callback(callback);
     if (this._connected) return;
     
     this._connected = true;
@@ -1019,8 +1049,8 @@ Faye.Connection = Faye.Class({
     var events = this._inbox.toArray();
     this._inbox = new Faye.Set();
     
-    this.fire('flush', events);
-    this.stopObserving('flush');
+    this.setDeferredStatus('succeeded', events);
+    this.setDeferredStatus('deferred');
   },
   
   disconnect: function() {
@@ -1071,6 +1101,7 @@ Faye.Connection = Faye.Class({
   }
 });
 
+Faye.extend(Faye.Connection.prototype, Faye.Deferrable);
 Faye.extend(Faye.Connection.prototype, Faye.Observable);
 
 
