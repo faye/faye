@@ -228,7 +228,7 @@ cna be used under EventMachine. Setup is identical:
   server = Faye::RackAdapter.new(options)
   client = server.get_client
 
-Both clients must be run inside EventMachine, and can publish and
+Both types of client must be run inside EventMachine, and can publish and
 subscribe just like the JavaScript client:
 
   EM.run {
@@ -238,6 +238,18 @@ subscribe just like the JavaScript client:
     
     client.publish('/from/jcoglan', 'hello' => 'world')
   }
+
+If you're using the <tt>RackAdapter</tt> as middleware and running your app
+using Thin, applications further down the chain can get a client for it from
+the Rack environment, for example in a Sinatra application:
+
+  get '/post' do
+    env['faye.client'].publish('/mentioning/*', {
+      'user' => 'sinatra',
+      'message' => params[:message]
+    })
+    params[:message]
+  end
 
 
 == Development

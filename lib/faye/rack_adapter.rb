@@ -57,7 +57,7 @@ module Faye
         [200, TYPE_SCRIPT, File.new(SCRIPT_PATH)]
       
       else
-        env['faye.server'] = @server
+        env['faye.client'] = get_client
         @app ? @app.call(env) :
                [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
       end
