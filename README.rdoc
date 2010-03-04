@@ -39,7 +39,7 @@ event-driver Ruby web server.
 The two backends are architecturally identical, using evented messaging
 throughout and maintaining subscription data in memory. Neither is geared
 up yet for running multi-process servers, but their event-driven setup
-should let them handle more concurrent connections that a typical
+should let them handle more concurrent connections than a typical
 threaded server.
 
 
@@ -219,7 +219,7 @@ stack of Rack middlewares.
 === Rack client
 
 Again mirroring the Node tools, Faye has a client-side Ruby client that
-cna be used under EventMachine. Setup is identical:
+can be used under EventMachine. Setup is identical:
 
   # Remote client
   client = Faye::Client.new('http://example.com/faye')
