@@ -1,3 +1,9 @@
+=== 0.3.1 / 2010-03-09
+
+* Pass client down through Rack stack as env['faye.client']
+* Refactor some JavaScript internals to mirror Ruby codebase
+
+
 === 0.3.0 / 2010-03-01
 
 * Add server-side clients for Node.js and Ruby environments
