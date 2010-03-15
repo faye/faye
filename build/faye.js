@@ -836,7 +836,7 @@ Faye.Server = Faye.Class({
       response.advice = response.advice || {};
       Faye.extend(response.advice, {
         reconnect:  this._clients.hasOwnProperty(clientId) ? 'retry' : 'handshake',
-        interval:   Faye.Connection.INTERVAL * 1000
+        interval:   Faye.Connection.prototype.INTERVAL * 1000
       }, false);
       
       response.id = message.id;
