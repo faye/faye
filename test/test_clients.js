@@ -2,6 +2,8 @@ var Scenario = require('./scenario'),
     faye     = require('../build/faye'),
     assert   = require('assert');
 
+Faye.Client.prototype.CONNECTION_TIMEOUT = 5;
+
 (function() {
   var tree = new Faye.Channel.Tree();
   var list = '/foo/bar /foo/boo /foo /foobar /foo/bar/boo /foobar/boo /foo/* /foo/**'.split(' ');
@@ -19,6 +21,23 @@ var Scenario = require('./scenario'),
   
   assert.deepEqual(tree.glob('/channels/**').sort(), ['A','B','C']);
 })();
+
+Scenario.run("Server goes away, subscriptions should be revived",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', []);
+  killServer();
+  server(8000);
+  wait(6);
+  send('B', '/channels/a', {hello: 'world'});
+  checkInbox({
+      A: {
+        '/channels/a': [{hello: 'world'}]
+      },
+      B: {}
+  });
+}});
 
 Scenario.run("Two HTTP clients, no messages delivered",
 function() { with(this) {

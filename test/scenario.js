@@ -12,6 +12,10 @@ AsyncScenario = Faye.Class({
     this._pool    = 0;
   },
   
+  wait: function(time, Continue) {
+    setTimeout(Continue, 1000 * time);
+  },
+  
   server: function(port, Continue) {
     sys.puts('Starting server on port ' + port);
     this._endpoint = 'http://0.0.0.0:' + port + '/comet';
@@ -20,6 +24,12 @@ AsyncScenario = Faye.Class({
       comet.call(request, response);
     });
     this._server.listen(port);
+    Continue();
+  },
+  
+  killServer: function(Continue) {
+    if (this._server) this._server.close();
+    this._server = undefined;
     Continue();
   },
   
@@ -100,7 +110,8 @@ SyncScenario = Faye.Class({
   }
 });
 
-['server', 'httpClient', 'localClient', 'send', 'checkInbox'].forEach(function(method) {
+['wait', 'server', 'killServer', 'httpClient', 'localClient', 'send', 'checkInbox'].
+forEach(function(method) {
   SyncScenario.prototype[method] = function() {
     this._commands.push([method, arguments]);
   }

@@ -14,6 +14,8 @@ module Faye
     RETRY          = 'retry'
     NONE           = 'none'
     
+    CONNECTION_TIMEOUT = 60.0
+    
     attr_reader :endpoint, :namespace
     
     def initialize(endpoint = nil)

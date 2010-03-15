@@ -1,16 +1,18 @@
 Faye.Client = Faye.Class({
-  UNCONNECTED:   <%= Faye::Client::UNCONNECTED %>,
-  CONNECTING:    <%= Faye::Client::CONNECTING %>,
-  CONNECTED:     <%= Faye::Client::CONNECTED %>,
-  DISCONNECTED:  <%= Faye::Client::DISCONNECTED %>,
+  UNCONNECTED:          <%= Faye::Client::UNCONNECTED %>,
+  CONNECTING:           <%= Faye::Client::CONNECTING %>,
+  CONNECTED:            <%= Faye::Client::CONNECTED %>,
+  DISCONNECTED:         <%= Faye::Client::DISCONNECTED %>,
   
-  HANDSHAKE:     '<%= Faye::Client::HANDSHAKE %>',
-  RETRY:         '<%= Faye::Client::RETRY %>',
-  NONE:          '<%= Faye::Client::NONE %>',
+  HANDSHAKE:            '<%= Faye::Client::HANDSHAKE %>',
+  RETRY:                '<%= Faye::Client::RETRY %>',
+  NONE:                 '<%= Faye::Client::NONE %>',
   
-  DEFAULT_ENDPOINT:   '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
-  MAX_DELAY:          <%= Faye::Connection::MAX_DELAY %>,
-  INTERVAL:           <%= Faye::Connection::INTERVAL * 1000 %>,
+  CONNECTION_TIMEOUT:   <%= Faye::Client::CONNECTION_TIMEOUT %>,
+  
+  DEFAULT_ENDPOINT:     '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
+  MAX_DELAY:            <%= Faye::Connection::MAX_DELAY %>,
+  INTERVAL:             <%= Faye::Connection::INTERVAL * 1000 %>,
   
   initialize: function(endpoint) {
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
@@ -100,7 +102,7 @@ Faye.Client = Faye.Class({
     
     if (this._connectionId) return;
     this._connectionId = this._namespace.generate();
-    var self = this;
+    var self = this, hasResponse = false;
     
     this._transport.send({
       channel:        Faye.Channel.CONNECT,
@@ -109,9 +111,21 @@ Faye.Client = Faye.Class({
       id:             this._connectionId
       
     }, function(response) {
+      if (hasResponse) return;
+      hasResponse = true;
       delete this._connectionId;
       setTimeout(function() { self.connect() }, this._advice.interval);
     }, this);
+    
+    setTimeout(function() {
+      if (hasResponse) return;
+      hasResponse = true;
+      delete self._connectionId;
+      delete self._clientId;
+      self._state = self.UNCONNECTED;
+      self._resendSubscriptions();
+      
+    }, 1000 * this.CONNECTION_TIMEOUT);
   },
   
   // Request                              Response
@@ -155,7 +169,7 @@ Faye.Client = Faye.Class({
         subscription: channels
         
       }, function(response) {
-        if (!response.successful) return;
+        if (!response.successful || !callback) return;
         
         channels = [].concat(response.subscription);
         Faye.each(channels, function(channel) {
@@ -238,6 +252,10 @@ Faye.Client = Faye.Class({
       if (!callback) return;
       callback[0].call(callback[1], message.data);
     });
+  },
+  
+  _resendSubscriptions: function() {
+    this.subscribe(this._channels.getKeys());
   },
   
   _enqueue: function(message) {
