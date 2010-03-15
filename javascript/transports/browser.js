@@ -1,6 +1,13 @@
+// http://assanka.net/content/tech/2009/09/02/json2-js-vs-prototype/
+Faye.Transport.toJSON = function(key, value) {
+  return (this[key] instanceof Array)
+      ? this[key]
+      : value;
+};
+
 Faye.XHRTransport = Faye.Class(Faye.Transport, {
   request: function(message, callback, scope) {
-    var params = {message: JSON.stringify(message)};
+    var params = {message: JSON.stringify(message, Faye.Transport.toJSON)};
     Faye.XHR.request('post', this._endpoint, params, function(response) {
       if (callback) callback.call(scope, JSON.parse(response.text()));
     });
@@ -16,7 +23,7 @@ Faye.Transport.register('long-polling', Faye.XHRTransport);
 
 Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, callback, scope) {
-    var params       = {message: JSON.stringify(message)},
+    var params       = {message: JSON.stringify(message, Faye.Transport.toJSON)},
         head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = Faye.JSONPTransport.getCallbackName(),
