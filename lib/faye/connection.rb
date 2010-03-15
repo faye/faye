@@ -13,10 +13,11 @@ module Faye
     attr_reader :id   
     
     def initialize(id, options = {})
-      @id       = id
-      @options  = options
-      @channels = Set.new
-      @inbox    = Set.new
+      @id        = id
+      @options   = options
+      @channels  = Set.new
+      @inbox     = Set.new
+      @connected = false
     end
     
     def timeout

@@ -8,6 +8,7 @@ Faye.Connection = Faye.Class({
     this._options   = options;
     this._channels  = new Faye.Set();
     this._inbox     = new Faye.Set();
+    this._connected = false
   },
   
   getTimeout: function() {

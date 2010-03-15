@@ -30,7 +30,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  '/meta/handshake',                  @r['channel']
     assert_not_equal  nil,                            @r['version']
     assert_equal  %w[long-polling callback-polling],  @r['supportedConnectionTypes']
-    assert_match  /[a-z0-9]+/,                        @r['clientId']
+    assert_match( /[a-z0-9]+/,                        @r['clientId'] )
     assert_equal  true,                               @r['successful']
     # MAY
     assert_equal  nil,                                @r['id']
@@ -93,7 +93,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  '/meta/handshake',                  @r['channel']
     assert_not_equal  nil,                            @r['version']
     assert_equal  nil,                                @r['supportedConnectionTypes']
-    assert_match  /[a-z0-9]+/,                        @r['clientId']
+    assert_match( /[a-z0-9]+/,                        @r['clientId'] )
     assert_equal  true,                               @r['successful']
   end
   
