@@ -67,6 +67,10 @@ module Faye
         yield(prefix, @value) unless @value.nil?
       end
       
+      def keys
+        map { |key, value| '/' + key * '/' }
+      end
+      
       def [](name)
         subtree = traverse(name)
         subtree ? subtree.value : nil

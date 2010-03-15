@@ -15,6 +15,12 @@ class TestChannel < Test::Unit::TestCase
     assert_equal 3,   tree['/va()$$lid/name']
   end
   
+  def test_keys
+    tree = Channel::Tree.new
+    tree['/foo'] = tree['/bar'] = tree['/foo/bar'] = true
+    assert_equal %w[/bar /foo /foo/bar], tree.keys.sort
+  end
+  
   def test_globbing
     tree = Channel::Tree.new
     tree['/foo/bar']     = 1

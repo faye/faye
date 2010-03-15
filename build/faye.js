@@ -301,11 +301,7 @@ Faye.extend(Faye.Channel, {
     },
     
     getKeys: function() {
-      var keys = [];
-      this.each([], function(key, subtree) {
-        keys.push('/' + key.join('/'));
-      });
-      return keys;
+      return this.map(function(key, value) { return '/' + key.join('/') });
     },
     
     map: function(block, context) {
@@ -578,7 +574,7 @@ Faye.Client = Faye.Class({
       delete self._connectionId;
       delete self._clientId;
       self._state = self.UNCONNECTED;
-      self._resendSubscriptions();
+      self.subscribe(self._channels.getKeys());
       
     }, 1000 * this.CONNECTION_TIMEOUT);
   },
@@ -707,10 +703,6 @@ Faye.Client = Faye.Class({
       if (!callback) return;
       callback[0].call(callback[1], message.data);
     });
-  },
-  
-  _resendSubscriptions: function() {
-    this.subscribe(this._channels.getKeys());
   },
   
   _enqueue: function(message) {

@@ -66,11 +66,7 @@ Faye.extend(Faye.Channel, {
     },
     
     getKeys: function() {
-      var keys = [];
-      this.each([], function(key, subtree) {
-        keys.push('/' + key.join('/'));
-      });
-      return keys;
+      return this.map(function(key, value) { return '/' + key.join('/') });
     },
     
     map: function(block, context) {

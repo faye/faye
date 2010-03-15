@@ -123,7 +123,7 @@ Faye.Client = Faye.Class({
       delete self._connectionId;
       delete self._clientId;
       self._state = self.UNCONNECTED;
-      self._resendSubscriptions();
+      self.subscribe(self._channels.getKeys());
       
     }, 1000 * this.CONNECTION_TIMEOUT);
   },
@@ -252,10 +252,6 @@ Faye.Client = Faye.Class({
       if (!callback) return;
       callback[0].call(callback[1], message.data);
     });
-  },
-  
-  _resendSubscriptions: function() {
-    this.subscribe(this._channels.getKeys());
   },
   
   _enqueue: function(message) {

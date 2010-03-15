@@ -5,16 +5,16 @@ module Faye
     extend  Forwardable
     def_delegators :EventMachine, :add_timer, :cancel_timer
     
-    UNCONNECTED    = 1
-    CONNECTING     = 2
-    CONNECTED      = 3
-    DISCONNECTED   = 4
+    UNCONNECTED         = 1
+    CONNECTING          = 2
+    CONNECTED           = 3
+    DISCONNECTED        = 4
     
-    HANDSHAKE      = 'handshake'
-    RETRY          = 'retry'
-    NONE           = 'none'
+    HANDSHAKE           = 'handshake'
+    RETRY               = 'retry'
+    NONE                = 'none'
     
-    CONNECTION_TIMEOUT = 60.0
+    CONNECTION_TIMEOUT  = 60.0
     
     attr_reader :endpoint, :namespace
     
@@ -100,6 +100,7 @@ module Faye
       
       return unless @connection_id.nil?
       @connection_id = @namespace.generate
+      has_response = false
       
       @transport.send({
         'channel'         => Channel::CONNECT,
@@ -108,8 +109,21 @@ module Faye
         'id'              => @connection_id
         
       }) do |response|
-        @connection_id = nil
-        add_timer(@advice['interval'] / 1000.0) { connect }
+        unless has_response
+          has_response = true
+          @connection_id = nil
+          add_timer(@advice['interval'] / 1000.0) { connect }
+        end
+      end
+      
+      add_timer(CONNECTION_TIMEOUT) do
+        unless has_response
+          has_response = true
+          @connection_id = nil
+          @client_id = nil
+          @state = UNCONNECTED
+          subscribe(@channels.keys)
+        end
       end
     end
     
@@ -153,7 +167,7 @@ module Faye
           'subscription'  => channels
           
         }) do |response|
-          if response['successful']
+          if response['successful'] and block
             channels = [response['subscription']].flatten
             channels.each { |channel| @channels[channel] = block }
           end
