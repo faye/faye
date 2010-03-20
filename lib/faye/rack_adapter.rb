@@ -34,6 +34,7 @@ module Faye
     end
     
     def call(env)
+      ensure_reactor_running!
       request = Rack::Request.new(env)
       case request.path_info
       
@@ -70,8 +71,6 @@ module Faye
       type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
       callback = env['async.callback']
       
-      EM.run unless EM.reactor_running?
-      
       if callback
         body = DeferredBody.new
         callback.call [200, type, body]
@@ -83,6 +82,11 @@ module Faye
       @server.process(message, false) { |r| response = block.call(r) }
       sleep(0.1) while response.nil?
       [200, type, [response]]
+    end
+    
+    def ensure_reactor_running!
+      Thread.new { EM.run } unless EM.reactor_running?
+      while not EM.reactor_running?; end
     end
     
     class DeferredBody
