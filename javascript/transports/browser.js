@@ -7,7 +7,7 @@ Faye.Transport.toJSON = function(key, value) {
 
 Faye.XHRTransport = Faye.Class(Faye.Transport, {
   request: function(message, callback, scope) {
-    var params = {message: JSON.stringify(message, Faye.Transport.toJSON)};
+    var params = {message: Faye.stringify(message, Faye.Transport.toJSON)};
     Faye.XHR.request('post', this._endpoint, params, function(response) {
       if (callback) callback.call(scope, JSON.parse(response.text()));
     });
@@ -23,7 +23,7 @@ Faye.Transport.register('long-polling', Faye.XHRTransport);
 
 Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, callback, scope) {
-    var params       = {message: JSON.stringify(message, Faye.Transport.toJSON)},
+    var params       = {message: Faye.stringify(message, Faye.Transport.toJSON)},
         head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = Faye.JSONPTransport.getCallbackName(),
