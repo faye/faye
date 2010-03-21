@@ -25,8 +25,8 @@ packages:
       - server
       - connection
       - error
-      - transports/node
       - node_adapter
+      - transports/node
   faye-client:
     extends: core
     files:

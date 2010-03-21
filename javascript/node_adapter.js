@@ -5,6 +5,14 @@ var path  = require('path'),
     http  = require('http'),
     querystring = require('querystring');
 
+Faye.withDataFor = function(transport, callback, scope) {
+  var data = '';
+  transport.addListener('data', function(chunk) { data += chunk });
+  transport.addListener('end', function() {
+    callback.call(scope, data);
+  });
+};
+
 Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   SCRIPT_PATH:      path.dirname(__filename) + '/faye-client-min.js',
@@ -33,7 +41,7 @@ Faye.NodeAdapter = Faye.Class({
   
   call: function(request, response) {
     var requestUrl = url.parse(request.url, true),
-        self = this;
+        self = this, data;
     
     switch (requestUrl.pathname) {
       
@@ -44,8 +52,8 @@ Faye.NodeAdapter = Faye.Class({
           this._callWithParams(request, response, requestUrl.query);
         
         else
-          request.addListener('data', function(chunk) {
-            self._callWithParams(request, response, querystring.parse(chunk));
+          Faye.withDataFor(request, function(data) {
+            self._callWithParams(request, response, querystring.parse(data));
           });
         
         return true;

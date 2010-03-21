@@ -1189,59 +1189,20 @@ Faye.Error.serverError = function() {
 
 
 
-Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
-  request: function(message, callback, scope) {
-    var params  = {message: JSON.stringify(message)},
-        request = this.createRequest();
-    
-    request.write(querystring.stringify(params));
-    
-    request.addListener('response', function(response) {
-      if (!callback) return;
-      response.addListener('data', function(chunk) {
-        callback.call(scope, JSON.parse(chunk));
-      });
-    });
-    request.close();
-  },
-  
-  createRequest: function() {
-    var uri    = url.parse(this._endpoint),
-        client = http.createClient(uri.port, uri.hostname);
-        
-    return client.request('POST', uri.pathname, {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    });
-  }
-});
-
-Faye.NodeHttpTransport.isUsable = function(endpoint) {
-  return typeof endpoint === 'string';
-};
-
-Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
-
-Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
-  request: function(message, callback, scope) {
-    this._endpoint.process(message, true, function(response) {
-      callback.call(scope, response);
-    });
-  }
-});
-
-Faye.NodeLocalTransport.isUsable = function(endpoint) {
-  return endpoint instanceof Faye.Server;
-};
-
-Faye.Transport.register('in-process', Faye.NodeLocalTransport);
-
-
 var path  = require('path'),
     fs    = require('fs'),
     sys   = require('sys'),
     url   = require('url'),
     http  = require('http'),
     querystring = require('querystring');
+
+Faye.withDataFor = function(transport, callback, scope) {
+  var data = '';
+  transport.addListener('data', function(chunk) { data += chunk });
+  transport.addListener('end', function() {
+    callback.call(scope, data);
+  });
+};
 
 Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '/bayeux',
@@ -1271,7 +1232,7 @@ Faye.NodeAdapter = Faye.Class({
   
   call: function(request, response) {
     var requestUrl = url.parse(request.url, true),
-        self = this;
+        self = this, data;
     
     switch (requestUrl.pathname) {
       
@@ -1282,8 +1243,8 @@ Faye.NodeAdapter = Faye.Class({
           this._callWithParams(request, response, requestUrl.query);
         
         else
-          request.addListener('data', function(chunk) {
-            self._callWithParams(request, response, querystring.parse(chunk));
+          Faye.withDataFor(request, function(data) {
+            self._callWithParams(request, response, querystring.parse(data));
           });
         
         return true;
@@ -1328,3 +1289,50 @@ Faye.NodeAdapter = Faye.Class({
 
 exports.NodeAdapter = Faye.NodeAdapter;
 exports.Client = Faye.Client;
+
+
+Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
+  request: function(message, callback, scope) {
+    var params  = {message: JSON.stringify(message)},
+        request = this.createRequest();
+    
+    request.write(querystring.stringify(params));
+    
+    request.addListener('response', function(response) {
+      if (!callback) return;
+      Faye.withDataFor(response, function(data) {
+        callback.call(scope, JSON.parse(data));
+      });
+    });
+    request.close();
+  },
+  
+  createRequest: function() {
+    var uri    = url.parse(this._endpoint),
+        client = http.createClient(uri.port, uri.hostname);
+        
+    return client.request('POST', uri.pathname, {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+  }
+});
+
+Faye.NodeHttpTransport.isUsable = function(endpoint) {
+  return typeof endpoint === 'string';
+};
+
+Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
+
+Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
+  request: function(message, callback, scope) {
+    this._endpoint.process(message, true, function(response) {
+      callback.call(scope, response);
+    });
+  }
+});
+
+Faye.NodeLocalTransport.isUsable = function(endpoint) {
+  return endpoint instanceof Faye.Server;
+};
+
+Faye.Transport.register('in-process', Faye.NodeLocalTransport);
