@@ -5,6 +5,10 @@ var path  = require('path'),
     http  = require('http'),
     querystring = require('querystring');
 
+Faye.logger = function(message) {
+  sys.puts(message);
+};
+
 Faye.withDataFor = function(transport, callback, scope) {
   var data = '';
   transport.addListener('data', function(chunk) { data += chunk });

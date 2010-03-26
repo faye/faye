@@ -115,6 +115,35 @@ Faye.extend(Faye, {
       });
       return result;
     }
+  },
+  
+  // http://assanka.net/content/tech/2009/09/02/json2-js-vs-prototype/
+  toJSON: function(object) {
+    if (this.stringify)
+      return this.stringify(object, function(key, value) {
+        return (this[key] instanceof Array)
+            ? this[key]
+            : value;
+      });
+    
+    return JSON.stringify(object);
+  },
+  
+  timestamp: function() {
+    var date   = new Date(),
+        year   = date.getFullYear(),
+        month  = date.getMonth() + 1,
+        day    = date.getDate(),
+        hour   = date.getHours(),
+        minute = date.getMinutes(),
+        second = date.getSeconds();
+    
+    var pad = function(n) {
+      return n < 10 ? '0' + n : String(n);
+    };
+    
+    return pad(year) + '-' + pad(month) + '-' + pad(day) + ' ' +
+           pad(hour) + ':' + pad(minute) + ':' + pad(second);
   }
 });
 
