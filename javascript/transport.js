@@ -19,18 +19,24 @@ Faye.Transport = Faye.extend(Faye.Class({
                  Faye.toJSON(responses));
       
       if (!callback) return;
+      
+      var messages = [], deliverable = true;
       Faye.each([].concat(responses), function(response) {
     
-        if (response.id === message.id)
-          callback.call(scope, response);
+        if (response.id === message.id && callback) {
+          if (callback.call(scope, response) === false)
+            deliverable = false;
+        }
         
         if (response.advice)
           this._client.handleAdvice(response.advice);
         
         if (response.data && response.channel)
-          this._client.sendToSubscribers(response);
+          messages.push(response);
         
       }, this);
+      
+      if (deliverable) this._client.deliverMessages(messages);
     }, this);
   }
 }), {

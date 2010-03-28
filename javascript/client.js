@@ -119,9 +119,12 @@ Faye.Client = Faye.Class({
       id:             this._connectionId
       
     }, function(response) {
+      if (response.clientId !== this._clientId) return false;
+      
       if (hasResponse) return;
       hasResponse = true;
-      self.info('Close connection for ' + this._clientId);
+      
+      this.info('Close connection for ' + this._clientId);
       delete this._connectionId;
       setTimeout(function() { self.connect() }, this._advice.interval);
     }, this);
@@ -188,6 +191,7 @@ Faye.Client = Faye.Class({
         subscription: channels
         
       }, function(response) {
+        if (response.clientId !== this._clientId) return false;
         if (!response.successful || !callback) return;
         
         this.info('Subscription acknowledged for ' + this._clientId + ' to [' +
@@ -227,6 +231,7 @@ Faye.Client = Faye.Class({
         subscription: channels
         
       }, function(response) {
+        if (response.clientId !== this._clientId) return false;
         if (!response.successful) return;
         
         this.info('Unsubscription acknowledged for ' + this._clientId + ' from [' +
@@ -277,15 +282,17 @@ Faye.Client = Faye.Class({
     if (this._advice.reconnect === this.HANDSHAKE) this._clientId = null;
   },
   
-  sendToSubscribers: function(message) {
-    this.info('Client ' + this._clientId + ' calling listeners for ' +
-              message.channel + ' with ' + Faye.toJSON(message.data));
-    
-    var channels = this._channels.glob(message.channel);
-    Faye.each(channels, function(callback) {
-      if (!callback) return;
-      callback[0].call(callback[1], message.data);
-    });
+  deliverMessages: function(messages) {
+    Faye.each(messages, function(message) {
+      this.info('Client ' + this._clientId + ' calling listeners for ' +
+                message.channel + ' with ' + Faye.toJSON(message.data));
+      
+      var channels = this._channels.glob(message.channel);
+      Faye.each(channels, function(callback) {
+        if (!callback) return;
+        callback[0].call(callback[1], message.data);
+      });
+    }, this);
   },
   
   _enqueue: function(message) {
