@@ -20,10 +20,11 @@ module Faye
       
       request(message) { |responses|
         if block_given?
+          messages, deliverable = [], true
           [responses].flatten.each do |response|
             
             if message.is_a?(Hash) and response['id'] == message['id']
-              block.call(response) 
+              deliverable = false if block.call(response) == false
             end
             
             if response['advice']
@@ -31,10 +32,12 @@ module Faye
             end
             
             if response['data'] and response['channel']
-              @client.send_to_subscribers(response)
+              messages << response
             end
             
           end
+          
+          @client.deliver_messages(messages) if deliverable
         end
       }
     end

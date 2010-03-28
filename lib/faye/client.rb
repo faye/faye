@@ -108,13 +108,13 @@ module Faye
         'connectionType'  => @transport.connection_type,
         'id'              => @connection_id
         
-      }) do |response|
+      }, &verify_client_id { |response|
         unless has_response
           has_response = true
           @connection_id = nil
           add_timer(@advice['interval'] / 1000.0) { connect }
         end
-      end
+      })
       
       add_timer(CONNECTION_TIMEOUT) do
         unless has_response
@@ -166,12 +166,12 @@ module Faye
           'clientId'      => @client_id,
           'subscription'  => channels
           
-        }) do |response|
+        }, &verify_client_id { |response|
           if response['successful'] and block
             channels = [response['subscription']].flatten
             channels.each { |channel| @channels[channel] = block }
           end
-        end
+        })
       }
     end
     
@@ -195,12 +195,12 @@ module Faye
           'clientId'      => @client_id,
           'subscription'  => channels
           
-        }) do |response|
+        }, &verify_client_id { |response|
           if response['successful']
             channels = [response['subscription']].flatten
             channels.each { |channel| @channels[channel] = nil }
           end
-        end
+        })
       }
     end
     
@@ -234,9 +234,11 @@ module Faye
       @client_id = nil if @advice['reconnect'] == HANDSHAKE
     end
     
-    def send_to_subscribers(message)
-      channels = @channels.glob(message['channel'])
-      channels.each { |callback| callback.call(message['data']) }
+    def deliver_messages(messages)
+      messages.each do |message|
+        channels = @channels.glob(message['channel'])
+        channels.each { |callback| callback.call(message['data']) }
+      end
     end
     
   private
@@ -254,6 +256,17 @@ module Faye
       channels.each do |channel|
         raise "'#{ channel }' is not a valid channel name" unless Channel.valid?(channel)
         raise "Clients may not subscribe to channel '#{ channel }'" unless Channel.subscribable?(channel)
+      end
+    end
+    
+    def verify_client_id(&block)
+      lambda do |response|
+        if response['clientId'] != @client_id
+          false
+        else
+          block.call(response)
+          true
+        end
       end
     end
     
