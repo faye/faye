@@ -118,16 +118,14 @@ Faye.Client = Faye.Class({
       connectionType: this._transport.connectionType,
       id:             this._connectionId
       
-    }, function(response) {
-      if (response.clientId !== this._clientId) return false;
-      
+    }, this._verifyClientId(function(response) {
       if (hasResponse) return;
       hasResponse = true;
       
       this.info('Close connection for ' + this._clientId);
       delete this._connectionId;
       setTimeout(function() { self.connect() }, this._advice.interval);
-    }, this);
+    }));
     
     setTimeout(function() {
       if (hasResponse) return;
@@ -190,8 +188,7 @@ Faye.Client = Faye.Class({
         clientId:     this._clientId,
         subscription: channels
         
-      }, function(response) {
-        if (response.clientId !== this._clientId) return false;
+      }, this._verifyClientId(function(response) {
         if (!response.successful || !callback) return;
         
         this.info('Subscription acknowledged for ' + this._clientId + ' to [' +
@@ -201,7 +198,7 @@ Faye.Client = Faye.Class({
         Faye.each(channels, function(channel) {
           this._channels.set(channel, [callback, scope]);
         }, this);
-      }, this);
+      }));
       
     }, this);
   },
@@ -230,8 +227,7 @@ Faye.Client = Faye.Class({
         clientId:     this._clientId,
         subscription: channels
         
-      }, function(response) {
-        if (response.clientId !== this._clientId) return false;
+      }, this._verifyClientId(function(response) {
         if (!response.successful) return;
         
         this.info('Unsubscription acknowledged for ' + this._clientId + ' from [' +
@@ -241,7 +237,7 @@ Faye.Client = Faye.Class({
         Faye.each(channels, function(channel) {
           this._channels.set(channel, null);
         }, this);
-      }, this);
+      }));
       
     }, this);
   },
@@ -311,6 +307,15 @@ Faye.Client = Faye.Class({
       if (!Faye.Channel.isSubscribable(channel))
         throw 'Clients may not subscribe to channel "' + channel + '"';
     });
+  },
+  
+  _verifyClientId: function(callback) {
+    var self = this;
+    return function(response) {
+      if (response.clientId !== self._clientId) return false;
+      callback.call(self, response);
+      return true;
+    };
   }
 });
 

@@ -23,7 +23,7 @@ Faye.Transport = Faye.extend(Faye.Class({
       var messages = [], deliverable = true;
       Faye.each([].concat(responses), function(response) {
     
-        if (response.id === message.id && callback) {
+        if (response.id === message.id) {
           if (callback.call(scope, response) === false)
             deliverable = false;
         }
