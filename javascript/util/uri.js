@@ -58,7 +58,7 @@ Faye.URI = Faye.extend(Faye.Class({
       parts = pairs[n].split('=');
       data[decodeURIComponent(parts[0] || '')] = decodeURIComponent(parts[1] || '');
     }
-    Faye.extend(data, params);
+    if (typeof params === 'object') Faye.extend(data, params);
     
     location.pathname = path;
     location.params = data;

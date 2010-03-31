@@ -57,7 +57,7 @@ Faye.NodeAdapter = Faye.Class({
         
         else
           Faye.withDataFor(request, function(data) {
-            self._callWithParams(request, response, querystring.parse(data));
+            self._callWithParams(request, response, {message: data});
           });
         
         return true;

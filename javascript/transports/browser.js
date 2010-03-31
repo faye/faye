@@ -1,7 +1,6 @@
 Faye.XHRTransport = Faye.Class(Faye.Transport, {
   request: function(message, callback, scope) {
-    var params = {message: Faye.toJSON(message)};
-    Faye.XHR.request('post', this._endpoint, params, function(response) {
+    Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), function(response) {
       if (callback) callback.call(scope, JSON.parse(response.text()));
     });
   }

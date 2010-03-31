@@ -1406,7 +1406,7 @@ Faye.NodeAdapter = Faye.Class({
         
         else
           Faye.withDataFor(request, function(data) {
-            self._callWithParams(request, response, querystring.parse(data));
+            self._callWithParams(request, response, {message: data});
           });
         
         return true;
@@ -1455,10 +1455,8 @@ exports.Client = Faye.Client;
 
 Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
   request: function(message, callback, scope) {
-    var params  = {message: JSON.stringify(message)},
-        request = this.createRequest();
-    
-    request.write(querystring.stringify(params));
+    var request = this.createRequest();
+    request.write(JSON.stringify(message));
     
     request.addListener('response', function(response) {
       if (!callback) return;
