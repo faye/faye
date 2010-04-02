@@ -80,7 +80,11 @@ module Faye
     end
     
     def request(message, &block)
-      params = {:body => JSON.unparse(message), :timeout => -1}
+      params = {
+        :head    => {'Content-Type' => 'application/x-www-form-urlencoded'},
+        :body    => JSON.unparse(message),
+        :timeout => -1
+      }
       request = EventMachine::HttpRequest.new(@endpoint).post(params)
       request.callback do
         block.call(JSON.parse(request.response))
