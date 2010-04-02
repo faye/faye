@@ -56,9 +56,7 @@ AsyncScenario = Faye.Class({
     setTimeout(Continue, 500 * channels.length);
   },
   
-  send: function(from, channel, message, Continue) {
-    var self = this;
-    var displayMessage = JSON.stringify(message);
+  publish: function(from, channel, message, Continue) {
     this._clients[from].publish(channel, message);
     setTimeout(Continue, 500);
   },
@@ -108,7 +106,7 @@ SyncScenario = Faye.Class({
   }
 });
 
-['wait', 'server', 'killServer', 'httpClient', 'localClient', 'send', 'checkInbox'].
+['wait', 'server', 'killServer', 'httpClient', 'localClient', 'publish', 'checkInbox'].
 forEach(function(method) {
   SyncScenario.prototype[method] = function() {
     this._commands.push([method, arguments]);

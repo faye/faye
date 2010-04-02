@@ -30,7 +30,7 @@ function() { with(this) {
   killServer();
   server(8000);
   wait(12);
-  send('B', '/channels/a', {hello: 'world'});
+  publish('B', '/channels/a', {hello: 'world'});
   checkInbox({
       A: {
         '/channels/a': [{hello: 'world'}]
@@ -44,7 +44,7 @@ function() { with(this) {
   server(8000);
   httpClient('A', ['/channels/a']);
   httpClient('B', []);
-  send('B', '/channels/b', {hello: 'world'});
+  publish('B', '/channels/b', {hello: 'world'});
   checkInbox({
       A: {},
       B: {}
@@ -56,7 +56,7 @@ function() { with(this) {
   server(8000);
   httpClient('A', ['/channels/a']);
   httpClient('B', []);
-  send('B', '/channels/a', {hello: 'world'});
+  publish('B', '/channels/a', {hello: 'world'});
   checkInbox({
       A: {
         '/channels/a': [{hello: 'world'}]
@@ -70,7 +70,7 @@ function() { with(this) {
   server(8000);
   httpClient('A', ['/channels/a', '/channels/*']);
   httpClient('B', []);
-  send('B', '/channels/a', {hello: 'world'});
+  publish('B', '/channels/a', {hello: 'world'});
   checkInbox({
       A: {
         '/channels/a': [{hello: 'world'}],
@@ -86,7 +86,7 @@ function() { with(this) {
   httpClient('A', ['/channels/a']);
   httpClient('B', []);
   httpClient('C', ['/channels/c']);
-  send('B', '/channels/a', {chunky: 'bacon'});
+  publish('B', '/channels/a', {chunky: 'bacon'});
   checkInbox({
       A: {
         '/channels/a': [{chunky: 'bacon'}]
@@ -102,7 +102,7 @@ function() { with(this) {
   httpClient('A', ['/channels/shared']);
   httpClient('B', []);
   httpClient('C', ['/channels/shared']);
-  send('B', '/channels/shared', {chunky: 'bacon'});
+  publish('B', '/channels/shared', {chunky: 'bacon'});
   checkInbox({
       A: {
         '/channels/shared': [{chunky: 'bacon'}]
@@ -119,7 +119,7 @@ function() { with(this) {
   server(8000);
   httpClient('A', ['/channels/*']);
   httpClient('B', []);
-  send('B', '/channels/anything', {msg: 'hey'});
+  publish('B', '/channels/anything', {msg: 'hey'});
   checkInbox({
       A: {
         '/channels/*': [{msg: 'hey'}]
@@ -133,7 +133,7 @@ function() { with(this) {
   server(8000);
   httpClient('A', ['/channels/name', '/channels/hello', '/channels/nested/hello']);
   httpClient('B', []);
-  send('B', '/channels/*', {msg: 'hey'});
+  publish('B', '/channels/*', {msg: 'hey'});
   checkInbox({
       A: {
         '/channels/name': [{msg: 'hey'}],
@@ -148,7 +148,7 @@ function() { with(this) {
   server(8000);
   httpClient('A', ['/channels/*']);
   httpClient('B', []);
-  send('B', '/channels/*', {msg: 'hey'});
+  publish('B', '/channels/*', {msg: 'hey'});
   checkInbox({
       A: {
         '/channels/*': [{msg: 'hey'}]
@@ -162,7 +162,7 @@ function() { with(this) {
   server(8000);
   localClient('A', ['/channels/name', '/channels/hello', '/channels/nested/hello']);
   localClient('B', []);
-  send('B', '/channels/**', {msg: 'hey'});
+  publish('B', '/channels/**', {msg: 'hey'});
   checkInbox({
       A: {
         '/channels/name': [{msg: 'hey'}],
@@ -179,7 +179,7 @@ function() { with(this) {
   localClient('A', ['/channels/hello', '/channels/nested/hello']);
   localClient('B', []);
   httpClient('C', ['/channels/name', '/channels/foo/**']);
-  send('B', '/channels/**', {msg: 'hey'});
+  publish('B', '/channels/**', {msg: 'hey'});
   checkInbox({
       A: {
         '/channels/hello': [{msg: 'hey'}],
