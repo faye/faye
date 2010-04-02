@@ -1,23 +1,32 @@
 Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
   request: function(message, callback, scope) {
-    var request = this.createRequest();
-    request.write(JSON.stringify(message));
+    var params  = {message: JSON.stringify(message)};
+    var content = querystring.stringify(params)
+    var request = this.createRequestForContent(content);
+    
+    request.write(content);
     
     request.addListener('response', function(response) {
       if (!callback) return;
-      Faye.withDataFor(response, function(data) {
-        callback.call(scope, JSON.parse(data));
+      response.addListener('data', function(chunk) {
+        callback.call(scope, JSON.parse(chunk));
       });
     });
     request.close();
   },
   
-  createRequest: function() {
+  createRequestForContent: function(content) {
     var uri    = url.parse(this._endpoint),
         client = http.createClient(uri.port, uri.hostname);
-        
+
+    if (parseInt(uri.port) == 443) {
+        client.setSecure("x509_PEM");
+    }
+    
     return client.request('POST', uri.pathname, {
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'host': uri.hostname,
+      'Content-Length': content.length
     });
   }
 });
