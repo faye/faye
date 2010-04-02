@@ -1375,10 +1375,10 @@ Faye.NodeAdapter = Faye.Class({
   TYPE_TEXT:    {'Content-Type': 'text/plain'},
   
   initialize: function(options) {
-    this._options  = options || {};
-    this._endpoint = this._options.mount || this.DEFAULT_ENDPOINT;
-    this._script   = this._endpoint + '.js';
-    this._server   = new Faye.Server(this._options);
+    this._options    = options || {};
+    this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
+    this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]+)*(\\.js)?$');
+    this._server     = new Faye.Server(this._options);
   },
   
   getClient: function() {
@@ -1396,33 +1396,28 @@ Faye.NodeAdapter = Faye.Class({
     var requestUrl = url.parse(request.url, true),
         self = this, data;
     
-    switch (requestUrl.pathname) {
+    if (!this._endpointRe.test(requestUrl.pathname))
+      return false;
+    
+    if (/\.js$/.test(requestUrl.pathname)) {
+      fs.readFile(this.SCRIPT_PATH, function(err, content) {
+        response.sendHeader(200, self.TYPE_SCRIPT);
+        response.write(content);
+        response.close();
+      });
       
-      case this._endpoint:
-        var isGet = (request.method === 'GET');
-        
-        if (isGet)
-          this._callWithParams(request, response, requestUrl.query);
-        
-        else
-          Faye.withDataFor(request, function(data) {
-            self._callWithParams(request, response, {message: data});
-          });
-        
-        return true;
-        break;
+    } else {
+      var isGet = (request.method === 'GET');
       
-      case this._script:
-        fs.readFile(this.SCRIPT_PATH, function(err, content) {
-          response.sendHeader(200, self.TYPE_SCRIPT);
-          response.write(content);
-          response.close();
+      if (isGet)
+        this._callWithParams(request, response, requestUrl.query);
+      
+      else
+        Faye.withDataFor(request, function(data) {
+          self._callWithParams(request, response, {message: data});
         });
-        return true;
-        break;
-      
-      default: return false;
     }
+    return true;
   },
   
   _callWithParams: function(request, response, params) {

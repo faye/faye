@@ -19,9 +19,9 @@ module Faye
       @app      = app if app.respond_to?(:call)
       @options  = [app, options].grep(Hash).first || {}
       
-      @endpoint = @options[:mount] || DEFAULT_ENDPOINT
-      @script   = @endpoint + '.js'
-      @server   = Server.new(@options)
+      @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
+      @endpoint_re = Regexp.new('^' + @endpoint + '(/[^/]+)*(\\.js)?$')
+      @server      = Server.new(@options)
     end
     
     def get_client
@@ -36,32 +36,31 @@ module Faye
     def call(env)
       ensure_reactor_running!
       request = Rack::Request.new(env)
-      case request.path_info
       
-      when @endpoint then
-        begin
-          json_msg = request.post? ? request.body.read : request.params['message']
-          message  = JSON.parse(json_msg)
-          jsonp    = request.params['jsonp'] || JSONP_CALLBACK
-          
-          @server.flush_connection(message) if request.get?
-          
-          on_response(env, message) do |replies|
-            response = JSON.unparse(replies)
-            response = "#{ jsonp }(#{ response });" if request.get?
-            response
-          end
-        rescue
-          [400, TYPE_TEXT, 'Bad request']
-        end
-      
-      when @script then
-        [200, TYPE_SCRIPT, File.new(SCRIPT_PATH)]
-      
-      else
+      unless request.path_info =~ @endpoint_re
         env['faye.client'] = get_client
-        @app ? @app.call(env) :
-               [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
+        return @app ? @app.call(env) :
+                      [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
+      end
+      
+      if request.path_info =~ /\.js$/
+        return [200, TYPE_SCRIPT, File.new(SCRIPT_PATH)]
+      end
+      
+      begin
+        json_msg = request.post? ? request.body.read : request.params['message']
+        message  = JSON.parse(json_msg)
+        jsonp    = request.params['jsonp'] || JSONP_CALLBACK
+        
+        @server.flush_connection(message) if request.get?
+        
+        on_response(env, message) do |replies|
+          response = JSON.unparse(replies)
+          response = "#{ jsonp }(#{ response });" if request.get?
+          response
+        end
+      rescue
+        [400, TYPE_TEXT, 'Bad request']
       end
     end
     
