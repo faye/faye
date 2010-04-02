@@ -34,7 +34,7 @@ Faye.XHR = {
       this._xhr.open(this._method, path, true);
       
       if (this._method === 'POST')
-        this._xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        this._xhr.setRequestHeader('Content-Type', 'application/json');
       
       var self = this, handleState = function() {
         if (self._xhr.readyState !== 4) return;

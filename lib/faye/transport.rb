@@ -81,7 +81,7 @@ module Faye
     
     def request(message, &block)
       params = {
-        :head    => {'Content-Type' => 'application/x-www-form-urlencoded'},
+        :head    => {'Content-Type' => 'application/json'},
         :body    => JSON.unparse(message),
         :timeout => -1
       }

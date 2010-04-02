@@ -1370,7 +1370,7 @@ Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '/bayeux',
   SCRIPT_PATH:      path.dirname(__filename) + '/faye-client-min.js',
   
-  TYPE_JSON:    {'Content-Type': 'text/json'},
+  TYPE_JSON:    {'Content-Type': 'application/json'},
   TYPE_SCRIPT:  {'Content-Type': 'text/javascript'},
   TYPE_TEXT:    {'Content-Type': 'text/plain'},
   
@@ -1472,7 +1472,7 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
         client = http.createClient(uri.port, uri.hostname);
         
     return client.request('POST', uri.pathname, {
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/json'
     });
   }
 });

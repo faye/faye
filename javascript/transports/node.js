@@ -17,7 +17,7 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
         client = http.createClient(uri.port, uri.hostname);
         
     return client.request('POST', uri.pathname, {
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/json'
     });
   }
 });

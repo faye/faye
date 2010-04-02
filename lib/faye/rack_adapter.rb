@@ -11,7 +11,7 @@ module Faye
     DEFAULT_ENDPOINT  = '/bayeux'
     SCRIPT_PATH       = File.join(ROOT, 'faye-client-min.js')
     
-    TYPE_JSON   = {'Content-Type' => 'text/json'}
+    TYPE_JSON   = {'Content-Type' => 'application/json'}
     TYPE_SCRIPT = {'Content-Type' => 'text/javascript'}
     TYPE_TEXT   = {'Content-Type' => 'text/plain'}
     
