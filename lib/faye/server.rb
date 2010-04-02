@@ -54,20 +54,16 @@ module Faye
     end
     
     def handle(message, local = false, &callback)
-      client_id = message['clientId']
-      channel   = message['channel']
-      
+      channel = message['channel']
       @channels.glob(channel).each { |c| c << message }
       
       if Channel.meta?(channel)
         response = __send__(Channel.parse(channel)[1], message, local)
         
-        client_id ||= response['clientId']
+        client_id = response['clientId']
         response['advice'] ||= {}
         response['advice']['reconnect'] ||= @clients.has_key?(client_id) ? 'retry' : 'handshake'
         response['advice']['interval']  ||= Connection::INTERVAL * 1000
-        
-        response['id'] = message['id']
         
         return callback[response] unless response['channel'] == Channel::CONNECT and
                                          response['successful'] == true
@@ -79,9 +75,19 @@ module Faye
       
       return callback[[]] if message['clientId'].nil? or Channel.service?(channel)
       
-      callback[ { 'channel'     => channel,
-                  'successful'  => true,
-                  'id'          => message['id']  } ]
+      response = make_response(message)
+      response['successful'] = true
+      callback[response]
+    end
+    
+    def make_response(message)
+      response = {}
+      %w[id clientId channel].each do |field|
+        if message[field]
+          response[field] = message[field]
+        end
+      end
+      response
     end
     
     # MUST contain  * version
@@ -90,9 +96,8 @@ module Faye
     #               * ext
     #               * id
     def handshake(message, local = false)
-      response =  { 'channel' => Channel::HANDSHAKE,
-                    'version' => BAYEUX_VERSION,
-                    'id'      => message['id'] }
+      response = make_response(message)
+      response['version'] = BAYEUX_VERSION
       
       response['error'] = Error.parameter_missing('version') if message['version'].nil?
       
@@ -121,8 +126,7 @@ module Faye
     # MAY contain   * ext
     #               * id
     def connect(message, local = false)
-      response  = { 'channel' => Channel::CONNECT,
-                    'id'      => message['id'] }
+      response  = make_response(message)
       
       client_id = message['clientId']
       client    = client_id ? @clients[client_id] : nil
@@ -132,6 +136,7 @@ module Faye
       response['error'] = Error.parameter_missing('connectionType') if message['connectionType'].nil?
       
       response['successful'] = response['error'].nil?
+      response.delete('clientId') unless response['successful']
       return response unless response['successful']
       
       response['clientId'] = client.id
@@ -142,8 +147,7 @@ module Faye
     # MAY contain   * ext
     #               * id
     def disconnect(message, local = false)
-      response  = { 'channel' => Channel::DISCONNECT,
-                    'id'      => message['id'] }
+      response  = make_response(message)
       
       client_id = message['clientId']
       client    = client_id ? @clients[client_id] : nil
@@ -152,6 +156,7 @@ module Faye
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       
       response['successful'] = response['error'].nil?
+      response.delete('clientId') unless response['successful']
       return response unless response['successful']
       
       destroy_client(client)
@@ -165,9 +170,7 @@ module Faye
     # MAY contain   * ext
     #               * id
     def subscribe(message, local = false)
-      response      = { 'channel'   => Channel::SUBSCRIBE,
-                        'clientId'  => message['clientId'],
-                        'id'        => message['id'] }
+      response      = make_response(message)
       
       client_id     = message['clientId']
       client        = client_id ? @clients[client_id] : nil
@@ -200,9 +203,7 @@ module Faye
     # MAY contain   * ext
     #               * id
     def unsubscribe(message, local = false)
-      response      = { 'channel'   => Channel::UNSUBSCRIBE,
-                        'clientId'  => message['clientId'],
-                        'id'        => message['id'] }
+      response      = make_response(message)
       
       client_id     = message['clientId']
       client        = client_id ? @clients[client_id] : nil

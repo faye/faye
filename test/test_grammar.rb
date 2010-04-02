@@ -1,5 +1,5 @@
 require "test/unit"
-require "faye"
+require File.dirname(__FILE__) + "/../lib/faye"
 
 class TestGrammar < Test::Unit::TestCase
   include Faye::Grammar

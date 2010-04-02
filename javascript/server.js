@@ -51,8 +51,7 @@ Faye.Server = Faye.Class({
   },
   
   _handle: function(message, local, callback, scope) {
-    var clientId = message.clientId,
-        channel  = message.channel,
+    var channel = message.channel,
         response;
     
     message.__id = Faye.random();
@@ -65,14 +64,12 @@ Faye.Server = Faye.Class({
     if (Faye.Channel.isMeta(channel)) {
       response = this[Faye.Channel.parse(channel)[1]](message, local);
       
-      clientId = clientId || response.clientId;
+      var clientId = response.clientId;
       response.advice = response.advice || {};
       Faye.extend(response.advice, {
         reconnect:  this._clients.hasOwnProperty(clientId) ? 'retry' : 'handshake',
         interval:   Faye.Connection.prototype.INTERVAL * 1000
       }, false);
-      
-      response.id = message.id;
       
       if (response.channel !== Faye.Channel.CONNECT ||
           response.successful !== true)
@@ -90,9 +87,17 @@ Faye.Server = Faye.Class({
     if (!message.clientId || Faye.Channel.isService(channel))
       return callback([]);
     
-    callback( { channel:      channel,
-                successful:   true,
-                id:           message.id  } );
+    response = this._makeResponse(message);
+    response.successful = true;
+    callback(response);
+  },
+  
+  _makeResponse: function(message) {
+    var response = {};
+    Faye.each(['id', 'clientId', 'channel'], function(field) {
+      if (message[field]) response[field] = message[field];
+    });
+    return response;
   },
   
   // MUST contain  * version
@@ -101,9 +106,8 @@ Faye.Server = Faye.Class({
   //               * ext
   //               * id
   handshake: function(message, local) {
-    var response = { channel:   Faye.Channel.HANDSHAKE,
-                     version:   Faye.BAYEUX_VERSION,
-                     id:        message.id };
+    var response = this._makeResponse(message);
+    response.version = Faye.BAYEUX_VERSION;
     
     if (!message.version)
       response.error = Faye.Error.parameterMissing('version');
@@ -139,8 +143,7 @@ Faye.Server = Faye.Class({
   // MAY contain   * ext
   //               * id
   connect: function(message, local) {
-    var response = { channel:   Faye.Channel.CONNECT,
-                     id:        message.id };
+    var response = this._makeResponse(message);
     
     var clientId = message.clientId,
         client   = clientId ? this._clients[clientId] : null,
@@ -151,6 +154,7 @@ Faye.Server = Faye.Class({
     if (!connectionType) response.error = Faye.Error.parameterMissing('connectionType');
     
     response.successful = !response.error;
+    if (!response.successful) delete response.clientId;
     if (!response.successful) return response;
     
     response.clientId = client.id;
@@ -161,8 +165,7 @@ Faye.Server = Faye.Class({
   // MAY contain   * ext
   //               * id
   disconnect: function(message, local) {
-    var response = { channel:   Faye.Channel.DISCONNECT,
-                     id:        message.id };
+    var response = this._makeResponse(message);
     
     var clientId = message.clientId,
         client   = clientId ? this._clients[clientId] : null;
@@ -171,6 +174,7 @@ Faye.Server = Faye.Class({
     if (!clientId) response.error = Faye.Error.parameterMissing('clientId');
     
     response.successful = !response.error;
+    if (!response.successful) delete response.clientId;
     if (!response.successful) return response;
     
     this._destroyClient(client);
@@ -185,9 +189,7 @@ Faye.Server = Faye.Class({
   // MAY contain   * ext
   //               * id
   subscribe: function(message, local) {
-    var response     = { channel:   Faye.Channel.SUBSCRIBE,
-                         clientId:  message.clientId,
-                         id:        message.id };
+    var response = this._makeResponse(message);
     
     var clientId     = message.clientId,
         client       = clientId ? this._clients[clientId] : null,
@@ -222,9 +224,7 @@ Faye.Server = Faye.Class({
   // MAY contain   * ext
   //               * id
   unsubscribe: function(message, local) {
-    var response     = { channel:   Faye.Channel.UNSUBSCRIBE,
-                         clientId:  message.clientId,
-                         id:        message.id };
+    var response = this._makeResponse(message);
     
     var clientId     = message.clientId,
         client       = clientId ? this._clients[clientId] : null,

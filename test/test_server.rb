@@ -1,5 +1,5 @@
 require "test/unit"
-require "faye"
+require File.dirname(__FILE__) + "/../lib/faye"
 
 class TestServer < Test::Unit::TestCase
   include Faye
@@ -14,8 +14,9 @@ class TestServer < Test::Unit::TestCase
     @r['clientId']
   end
   
-  def method_missing(*args, &block)
-    @r = @server.__send__(*args, &block)
+  def method_missing(channel, message, *args, &block)
+    message['channel'] = "/meta/#{channel}"
+    @r = @server.__send__(channel, message, *args, &block)
   end
   
   def test_handshake
@@ -446,14 +447,14 @@ class TestServer < Test::Unit::TestCase
   end
   
   def test_advice
-    handle( 'channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => 'fake' ) do |r|
+    @server.send :handle, 'channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => 'fake' do |r|
       assert_equal  '401:fake:Unknown client', r['error']
       assert_equal  'handshake',      r['advice']['reconnect']
       assert_equal  1000,             r['advice']['interval']
     end
     
     id = get_client_id
-    handle( 'channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => id ) do |r|
+    @server.send :handle, 'channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => id do |r|
       assert_equal  true,             r['successful']
       assert_equal  'retry',          r['advice']['reconnect']
       assert_equal  1000,             r['advice']['interval']

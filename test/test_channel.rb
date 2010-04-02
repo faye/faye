@@ -1,5 +1,5 @@
 require "test/unit"
-require "faye"
+require File.dirname(__FILE__) + "/../lib/faye"
 
 class TestChannel < Test::Unit::TestCase
   include Faye

@@ -1,5 +1,5 @@
 require "test/unit"
-require "faye"
+require File.dirname(__FILE__) + "/../lib/faye"
 require "test/scenario"
 
 class TestClients < Test::Unit::TestCase
