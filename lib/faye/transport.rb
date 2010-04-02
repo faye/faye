@@ -80,8 +80,8 @@ module Faye
     end
     
     def request(message, &block)
-      params  = {:message => JSON.unparse(message)}
-      request = EventMachine::HttpRequest.new(@endpoint).post(:body => params, :timeout => -1)
+      params = {:body => JSON.unparse(message), :timeout => -1}
+      request = EventMachine::HttpRequest.new(@endpoint).post(params)
       request.callback do
         block.call(JSON.parse(request.response))
       end

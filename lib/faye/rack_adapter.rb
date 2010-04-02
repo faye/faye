@@ -40,7 +40,8 @@ module Faye
       
       when @endpoint then
         begin
-          message  = JSON.parse(request.params['message'])
+          json_msg = request.post? ? request.body.read : request.params['message']
+          message  = JSON.parse(json_msg)
           jsonp    = request.params['jsonp'] || JSONP_CALLBACK
           
           @server.flush_connection(message) if request.get?
