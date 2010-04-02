@@ -143,6 +143,35 @@ Faye.extend(Faye, {
       });
       return result;
     }
+  },
+  
+  // http://assanka.net/content/tech/2009/09/02/json2-js-vs-prototype/
+  toJSON: function(object) {
+    if (this.stringify)
+      return this.stringify(object, function(key, value) {
+        return (this[key] instanceof Array)
+            ? this[key]
+            : value;
+      });
+    
+    return JSON.stringify(object);
+  },
+  
+  timestamp: function() {
+    var date   = new Date(),
+        year   = date.getFullYear(),
+        month  = date.getMonth() + 1,
+        day    = date.getDate(),
+        hour   = date.getHours(),
+        minute = date.getMinutes(),
+        second = date.getSeconds();
+    
+    var pad = function(n) {
+      return n < 10 ? '0' + n : String(n);
+    };
+    
+    return pad(year) + '-' + pad(month) + '-' + pad(day) + ' ' +
+           pad(hour) + ':' + pad(minute) + ':' + pad(second);
   }
 });
 
@@ -229,6 +258,51 @@ Faye.Observable = {
     Faye.each(this._observers[eventType], function(listener) {
       listener[0].apply(listener[1], args.slice());
     });
+  }
+};
+
+
+Faye.Logging = {
+  LOG_LEVELS: {
+    error:  3,
+    warn:   2,
+    info:   1,
+    debug:  0
+  },
+  
+  logLevel: 'error',
+  
+  log: function(message, level) {
+    if (!Faye.logger) return;
+    
+    var levels = Faye.Logging.LOG_LEVELS;
+    if (levels[Faye.Logging.logLevel] > levels[level]) return;
+    
+    var banner = '[' + level.toUpperCase() + '] [Faye',
+        klass  = null;
+    
+    for (var key in Faye) {
+      if (klass) continue;
+      if (typeof Faye[key] !== 'function') continue;
+      if (this instanceof Faye[key]) klass = key;
+    }
+    if (klass) banner += '.' + klass;
+    banner += '] ';
+    
+    Faye.logger(Faye.timestamp() + ' ' + banner + message);
+  },
+  
+  error: function(message) {
+    this.log(message, 'error');
+  },
+  warn: function(message) {
+    this.log(message, 'warn');
+  },
+  info: function(message) {
+    this.log(message, 'info');
+  },
+  debug: function(message) {
+    this.log(message, 'debug');
   }
 };
 
@@ -393,6 +467,7 @@ Faye.Namespace = Faye.Class({
 
 Faye.Transport = Faye.extend(Faye.Class({
   initialize: function(client, endpoint) {
+    this.debug('Created new transport for ' + endpoint);
     this._client   = client;
     this._endpoint = endpoint;
   },
@@ -401,20 +476,34 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (!(message instanceof Array) && !message.id)
       message.id = this._client._namespace.generate();
     
+    this.debug('Client ' + this._client._clientId +
+               ' sending message to ' + this._endpoint + ': ' +
+               Faye.toJSON(message));
+    
     this.request(message, function(responses) {
+      this.debug('Client ' + this._client._clientId +
+                 ' received from ' + this._endpoint + ': ' +
+                 Faye.toJSON(responses));
+      
       if (!callback) return;
+      
+      var messages = [], deliverable = true;
       Faye.each([].concat(responses), function(response) {
-        
-        if (response.id === message.id)
-          callback.call(scope, response);
+    
+        if (response.id === message.id) {
+          if (callback.call(scope, response) === false)
+            deliverable = false;
+        }
         
         if (response.advice)
           this._client.handleAdvice(response.advice);
         
         if (response.data && response.channel)
-          this._client.sendToSubscribers(response);
+          messages.push(response);
         
       }, this);
+      
+      if (deliverable) this._client.deliverMessages(messages);
     }, this);
   }
 }), {
@@ -448,6 +537,8 @@ Faye.Transport = Faye.extend(Faye.Class({
   }
 });
 
+Faye.extend(Faye.Transport.prototype, Faye.Logging);
+
 
 Faye.Client = Faye.Class({
   UNCONNECTED:          1,
@@ -466,6 +557,8 @@ Faye.Client = Faye.Class({
   INTERVAL:             1000.0,
   
   initialize: function(endpoint) {
+    this.info('New client created for ' + endpoint);
+    
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
     this._transport = Faye.Transport.get(this);
     this._state     = this.UNCONNECTED;
@@ -506,6 +599,8 @@ Faye.Client = Faye.Class({
     this._state = this.CONNECTING;
     var self = this;
     
+    this.info('Initiating handshake with ' + this._endpoint);
+    
     this._transport.send({
       channel:      Faye.Channel.HANDSHAKE,
       version:      Faye.BAYEUX_VERSION,
@@ -514,6 +609,7 @@ Faye.Client = Faye.Class({
     }, function(response) {
       
       if (!response.successful) {
+        this.info('Handshake unsuccessful');
         setTimeout(function() { self.handshake(callback, scope) }, this._advice.interval);
         return this._state = this.UNCONNECTED;
       }
@@ -522,6 +618,7 @@ Faye.Client = Faye.Class({
       this._clientId  = response.clientId;
       this._transport = Faye.Transport.get(this, response.supportedConnectionTypes);
       
+      this.info('Handshake successful: ' + this._clientId);
       if (callback) callback.call(scope);
     }, this);
   },
@@ -547,6 +644,7 @@ Faye.Client = Faye.Class({
     
     if (this._state !== this.CONNECTED) return;
     
+    this.info('Calling deferred actions for ' + this._clientId);
     this.setDeferredStatus('succeeded');
     this.setDeferredStatus('deferred');
     if (callback) callback.call(scope);
@@ -554,6 +652,7 @@ Faye.Client = Faye.Class({
     if (this._connectionId) return;
     this._connectionId = this._namespace.generate();
     var self = this, hasResponse = false;
+    this.info('Initiating connection for ' + this._clientId);
     
     this._transport.send({
       channel:        Faye.Channel.CONNECT,
@@ -561,16 +660,22 @@ Faye.Client = Faye.Class({
       connectionType: this._transport.connectionType,
       id:             this._connectionId
       
-    }, function(response) {
+    }, this._verifyClientId(function(response) {
       if (hasResponse) return;
       hasResponse = true;
+      
+      this.info('Close connection for ' + this._clientId);
       delete this._connectionId;
       setTimeout(function() { self.connect() }, this._advice.interval);
-    }, this);
+    }));
     
     setTimeout(function() {
       if (hasResponse) return;
       hasResponse = true;
+      
+      self.info('Server took >' + self.CONNECTION_TIMEOUT + 's to reply to connection for ' +
+                self._clientId + ': attempting to reconnect');
+      
       delete self._connectionId;
       delete self._clientId;
       self._state = self.UNCONNECTED;
@@ -590,11 +695,14 @@ Faye.Client = Faye.Class({
     if (this._state !== this.CONNECTED) return;
     this._state = this.DISCONNECTED;
     
+    this.info('Disconnecting ' + this._clientId);
+    
     this._transport.send({
       channel:    Faye.Channel.DISCONNECT,
       clientId:   this._clientId
     });
     
+    this.info('Clearing channel listeners for ' + this._clientId);
     this._channels = new Faye.Channel.Tree();
   },
   
@@ -614,19 +722,25 @@ Faye.Client = Faye.Class({
       channels = [].concat(channels);
       this._validateChannels(channels);
       
+      this.info('Client ' + this._clientId + ' attempting to subscribe to [' +
+                channels.join(', ') + ']');
+      
       this._transport.send({
         channel:      Faye.Channel.SUBSCRIBE,
         clientId:     this._clientId,
         subscription: channels
         
-      }, function(response) {
+      }, this._verifyClientId(function(response) {
         if (!response.successful || !callback) return;
         
+        this.info('Subscription acknowledged for ' + this._clientId + ' to [' +
+                  channels.join(', ') + ']');
+      
         channels = [].concat(response.subscription);
         Faye.each(channels, function(channel) {
           this._channels.set(channel, [callback, scope]);
         }, this);
-      }, this);
+      }));
       
     }, this);
   },
@@ -647,19 +761,25 @@ Faye.Client = Faye.Class({
       channels = [].concat(channels);
       this._validateChannels(channels);
       
+      this.info('Client ' + this._clientId + ' attempting to unsubscribe from [' +
+                channels.join(', ') + ']');
+      
       this._transport.send({
         channel:      Faye.Channel.UNSUBSCRIBE,
         clientId:     this._clientId,
         subscription: channels
         
-      }, function(response) {
+      }, this._verifyClientId(function(response) {
         if (!response.successful) return;
         
+        this.info('Unsubscription acknowledged for ' + this._clientId + ' from [' +
+                  channels.join(', ') + ']');
+      
         channels = [].concat(response.subscription);
         Faye.each(channels, function(channel) {
           this._channels.set(channel, null);
         }, this);
-      }, this);
+      }));
       
     }, this);
   },
@@ -674,6 +794,9 @@ Faye.Client = Faye.Class({
     this.connect(function() {
       
       this._validateChannels([channel]);
+      
+      this.info('Client ' + this._clientId + ' queueing published message to ' +
+                channel + ': ' + Faye.toJSON(data));
       
       this._enqueue({
         channel:      channel,
@@ -697,12 +820,17 @@ Faye.Client = Faye.Class({
     if (this._advice.reconnect === this.HANDSHAKE) this._clientId = null;
   },
   
-  sendToSubscribers: function(message) {
-    var channels = this._channels.glob(message.channel);
-    Faye.each(channels, function(callback) {
-      if (!callback) return;
-      callback[0].call(callback[1], message.data);
-    });
+  deliverMessages: function(messages) {
+    Faye.each(messages, function(message) {
+      this.info('Client ' + this._clientId + ' calling listeners for ' +
+                message.channel + ' with ' + Faye.toJSON(message.data));
+      
+      var channels = this._channels.glob(message.channel);
+      Faye.each(channels, function(callback) {
+        if (!callback) return;
+        callback[0].call(callback[1], message.data);
+      });
+    }, this);
   },
   
   _enqueue: function(message) {
@@ -721,10 +849,20 @@ Faye.Client = Faye.Class({
       if (!Faye.Channel.isSubscribable(channel))
         throw 'Clients may not subscribe to channel "' + channel + '"';
     });
+  },
+  
+  _verifyClientId: function(callback) {
+    var self = this;
+    return function(response) {
+      if (response.clientId !== self._clientId) return false;
+      callback.call(self, response);
+      return true;
+    };
   }
 });
 
 Faye.extend(Faye.Client.prototype, Faye.Deferrable);
+Faye.extend(Faye.Client.prototype, Faye.Logging);
 
 
 Faye.Set = Faye.Class({
@@ -775,6 +913,7 @@ Faye.Set = Faye.Class({
 
 Faye.Server = Faye.Class({
   initialize: function(options) {
+    this.info('New server created');
     this._options   = options || {};
     this._channels  = new Faye.Channel.Tree();
     this._clients   = {};
@@ -788,6 +927,8 @@ Faye.Server = Faye.Class({
   },
   
   process: function(messages, local, callback) {
+    this.debug('Processing messages from ' + (local ? 'LOCAL' : 'REMOTE') + ' client');
+    
     messages = [].concat(messages);
     var processed = 0, responses = [];
     
@@ -795,8 +936,9 @@ Faye.Server = Faye.Class({
       this._handle(message, local, function(reply) {
         responses = responses.concat(reply);
         processed += 1;
-        if (processed === messages.length) callback(responses);
-      });
+        if (processed < messages.length) return;
+        callback(responses);
+      }, this);
     }, this);
   },
   
@@ -821,13 +963,17 @@ Faye.Server = Faye.Class({
     delete this._clients[client.id];
   },
   
-  _handle: function(message, local, callback) {
+  _handle: function(message, local, callback, scope) {
     var clientId = message.clientId,
         channel  = message.channel,
         response;
     
     message.__id = Faye.random();
-    Faye.each(this._channels.glob(channel), function(c) { c.push(message) });
+    Faye.each(this._channels.glob(channel), function(c) {
+      c.push(message);
+      this.info('Publishing message ' + Faye.toJSON(message.data) +
+                ' from client ' + clientId + ' to ' + c.name);
+    }, this);
     
     if (Faye.Channel.isMeta(channel)) {
       response = this[Faye.Channel.parse(channel)[1]](message, local);
@@ -843,12 +989,15 @@ Faye.Server = Faye.Class({
       
       if (response.channel !== Faye.Channel.CONNECT ||
           response.successful !== true)
-        return callback(response);
+        return callback.call(scope, response);
       
+      this.info('Accepting connection from ' + response.clientId);
       return this._connection(response.clientId).connect(function(events) {
+        this.info('Sending event messages to ' + response.clientId);
+        this.debug('Events for ' + response.clientId + ': ' + Faye.toJSON(events));
         Faye.each(events, function(e) { delete e.__id });
-        callback([response].concat(events));
-      });
+        callback.call(scope, [response].concat(events));
+      }, this);
     }
     
     if (!message.clientId || Faye.Channel.isService(channel))
@@ -894,6 +1043,7 @@ Faye.Server = Faye.Class({
     
     var clientId = this._namespace.generate();
     response.clientId = this._connection(clientId).id;
+    this.info('Accepting handshake from client ' + response.clientId);
     return response;
   },
   
@@ -938,6 +1088,7 @@ Faye.Server = Faye.Class({
     
     this._destroyClient(client);
     
+    this.info('Disconnected client: ' + clientId);
     response.clientId = clientId;
     return response;
   },
@@ -970,6 +1121,8 @@ Faye.Server = Faye.Class({
       
       if (response.error) return;
       channel = this._channels.findOrCreate(channel);
+      
+      this.info('Subscribing client ' + clientId + ' to ' + channel.name);
       client.subscribe(channel);
     }, this);
     
@@ -1003,13 +1156,18 @@ Faye.Server = Faye.Class({
         return response.error = Faye.Error.channelInvalid(channel);
       
       channel = this._channels.get(channel);
-      if (channel) client.unsubscribe(channel);
+      if (!channel) return;
+      
+      this.info('Unsubscribing client ' + clientId + ' from ' + channel.name);
+      client.unsubscribe(channel);
     }, this);
     
     response.successful = !response.error;
     return response;
   }
 });
+
+Faye.extend(Faye.Server.prototype, Faye.Logging);
 
 
 Faye.Connection = Faye.Class({
@@ -1046,8 +1204,8 @@ Faye.Connection = Faye.Class({
     channel.stopObserving('message', this._onMessage, this);
   },
   
-  connect: function(callback) {
-    this.callback(callback);
+  connect: function(callback, scope) {
+    this.callback(callback, scope);
     if (this._connected) return;
     
     this._connected = true;
@@ -1189,59 +1347,24 @@ Faye.Error.serverError = function() {
 
 
 
-Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
-  request: function(message, callback, scope) {
-    var params  = {message: JSON.stringify(message)},
-        request = this.createRequest();
-    
-    request.write(querystring.stringify(params));
-    
-    request.addListener('response', function(response) {
-      if (!callback) return;
-      response.addListener('data', function(chunk) {
-        callback.call(scope, JSON.parse(chunk));
-      });
-    });
-    request.close();
-  },
-  
-  createRequest: function() {
-    var uri    = url.parse(this._endpoint),
-        client = http.createClient(uri.port, uri.hostname);
-        
-    return client.request('POST', uri.pathname, {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    });
-  }
-});
-
-Faye.NodeHttpTransport.isUsable = function(endpoint) {
-  return typeof endpoint === 'string';
-};
-
-Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
-
-Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
-  request: function(message, callback, scope) {
-    this._endpoint.process(message, true, function(response) {
-      callback.call(scope, response);
-    });
-  }
-});
-
-Faye.NodeLocalTransport.isUsable = function(endpoint) {
-  return endpoint instanceof Faye.Server;
-};
-
-Faye.Transport.register('in-process', Faye.NodeLocalTransport);
-
-
 var path  = require('path'),
     fs    = require('fs'),
     sys   = require('sys'),
     url   = require('url'),
     http  = require('http'),
     querystring = require('querystring');
+
+Faye.logger = function(message) {
+  sys.puts(message);
+};
+
+Faye.withDataFor = function(transport, callback, scope) {
+  var data = '';
+  transport.addListener('data', function(chunk) { data += chunk });
+  transport.addListener('end', function() {
+    callback.call(scope, data);
+  });
+};
 
 Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '/bayeux',
@@ -1271,7 +1394,7 @@ Faye.NodeAdapter = Faye.Class({
   
   call: function(request, response) {
     var requestUrl = url.parse(request.url, true),
-        self = this;
+        self = this, data;
     
     switch (requestUrl.pathname) {
       
@@ -1282,8 +1405,8 @@ Faye.NodeAdapter = Faye.Class({
           this._callWithParams(request, response, requestUrl.query);
         
         else
-          request.addListener('data', function(chunk) {
-            self._callWithParams(request, response, querystring.parse(chunk));
+          Faye.withDataFor(request, function(data) {
+            self._callWithParams(request, response, {message: data});
           });
         
         return true;
@@ -1328,3 +1451,48 @@ Faye.NodeAdapter = Faye.Class({
 
 exports.NodeAdapter = Faye.NodeAdapter;
 exports.Client = Faye.Client;
+
+
+Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
+  request: function(message, callback, scope) {
+    var request = this.createRequest();
+    request.write(JSON.stringify(message));
+    
+    request.addListener('response', function(response) {
+      if (!callback) return;
+      Faye.withDataFor(response, function(data) {
+        callback.call(scope, JSON.parse(data));
+      });
+    });
+    request.close();
+  },
+  
+  createRequest: function() {
+    var uri    = url.parse(this._endpoint),
+        client = http.createClient(uri.port, uri.hostname);
+        
+    return client.request('POST', uri.pathname, {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+  }
+});
+
+Faye.NodeHttpTransport.isUsable = function(endpoint) {
+  return typeof endpoint === 'string';
+};
+
+Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
+
+Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
+  request: function(message, callback, scope) {
+    this._endpoint.process(message, true, function(response) {
+      callback.call(scope, response);
+    });
+  }
+});
+
+Faye.NodeLocalTransport.isUsable = function(endpoint) {
+  return endpoint instanceof Faye.Server;
+};
+
+Faye.Transport.register('in-process', Faye.NodeLocalTransport);

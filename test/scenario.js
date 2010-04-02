@@ -4,6 +4,8 @@ var sys    = require('sys'),
     assert = require('assert'),
     faye   = require('../build/faye');
 
+Faye.Logging.logLevel = 'info';
+
 AsyncScenario = Faye.Class({
   initialize: function(name) {
     this._name    = name;
@@ -17,7 +19,6 @@ AsyncScenario = Faye.Class({
   },
   
   server: function(port, Continue) {
-    sys.puts('Starting server on port ' + port);
     this._endpoint = 'http://0.0.0.0:' + port + '/comet';
     var comet = this._comet  = new faye.NodeAdapter({mount: '/comet', timeout: 30});
     this._server = http.createServer(function(request, response) {
@@ -30,7 +31,7 @@ AsyncScenario = Faye.Class({
   killServer: function(Continue) {
     if (this._server) this._server.close();
     this._server = undefined;
-    Continue();
+    setTimeout(Continue, 500);
   },
   
   httpClient: function(name, channels, Continue) {
@@ -43,7 +44,6 @@ AsyncScenario = Faye.Class({
   
   _setupClient: function(client, name, channels, Continue) {
     Faye.each(channels, function(channel) {
-      sys.puts('Client ' + name + ' subscribing to ' + channel);
       client.subscribe(channel, function(message) {
         var box = this._inbox[name];
         box[channel] = box[channel] || [];
@@ -53,19 +53,17 @@ AsyncScenario = Faye.Class({
     this._clients[name] = client;
     this._inbox[name]   = {};
     this._pool         += 1;
-    setTimeout(Continue, 100 * channels.length);
+    setTimeout(Continue, 500 * channels.length);
   },
   
   send: function(from, channel, message, Continue) {
     var self = this;
     var displayMessage = JSON.stringify(message);
-    sys.puts('Client ' + from + ' publishing ' + displayMessage + ' to ' + channel);
     this._clients[from].publish(channel, message);
     setTimeout(Continue, 500);
   },
   
   checkInbox: function(expectedInbox, Continue) {
-    sys.puts(JSON.stringify(this._inbox));
     assert.deepEqual(this._inbox, expectedInbox);
     Continue();
   },
@@ -105,7 +103,7 @@ SyncScenario = Faye.Class({
   },
   
   _finish: function() {
-    sys.puts('Shutting down server\n');
+    sys.puts('No errors; Shutting down server\n');
     this._scenario.finish(function() { SyncScenario.runNext() });
   }
 });

@@ -1,5 +1,6 @@
 Faye.Transport = Faye.extend(Faye.Class({
   initialize: function(client, endpoint) {
+    this.debug('Created new transport for ' + endpoint);
     this._client   = client;
     this._endpoint = endpoint;
   },
@@ -8,20 +9,34 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (!(message instanceof Array) && !message.id)
       message.id = this._client._namespace.generate();
     
+    this.debug('Client ' + this._client._clientId +
+               ' sending message to ' + this._endpoint + ': ' +
+               Faye.toJSON(message));
+    
     this.request(message, function(responses) {
+      this.debug('Client ' + this._client._clientId +
+                 ' received from ' + this._endpoint + ': ' +
+                 Faye.toJSON(responses));
+      
       if (!callback) return;
+      
+      var messages = [], deliverable = true;
       Faye.each([].concat(responses), function(response) {
-        
-        if (response.id === message.id)
-          callback.call(scope, response);
+    
+        if (response.id === message.id) {
+          if (callback.call(scope, response) === false)
+            deliverable = false;
+        }
         
         if (response.advice)
           this._client.handleAdvice(response.advice);
         
         if (response.data && response.channel)
-          this._client.sendToSubscribers(response);
+          messages.push(response);
         
       }, this);
+      
+      if (deliverable) this._client.deliverMessages(messages);
     }, this);
   }
 }), {
@@ -54,4 +69,6 @@ Faye.Transport = Faye.extend(Faye.Class({
     return list;
   }
 });
+
+Faye.extend(Faye.Transport.prototype, Faye.Logging);
 

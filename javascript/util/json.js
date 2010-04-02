@@ -349,8 +349,10 @@ if (!this.JSON) {
 
 // If the JSON object does not yet have a stringify method, give it one.
 
-    if (typeof JSON.stringify !== 'function') {
-        JSON.stringify = function (value, replacer, space) {
+// NOTE we've hacked this to expose this method to Faye. We need to use this
+// to avoid problems with buggy Firefox version and bad #toJSON implementations
+
+        Faye.stringify = function (value, replacer, space) {
 
 // The stringify method takes a value and an optional replacer, and an optional
 // space parameter, and returns a JSON text. The replacer can be a function
@@ -391,6 +393,9 @@ if (!this.JSON) {
 
             return str('', {'': value});
         };
+
+    if (typeof JSON.stringify !== 'function') {
+        JSON.stringify = Faye.stringify;
     }
 
 

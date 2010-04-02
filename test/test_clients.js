@@ -29,7 +29,7 @@ function() { with(this) {
   httpClient('B', []);
   killServer();
   server(8000);
-  wait(6);
+  wait(12);
   send('B', '/channels/a', {hello: 'world'});
   checkInbox({
       A: {

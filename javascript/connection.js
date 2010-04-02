@@ -32,8 +32,8 @@ Faye.Connection = Faye.Class({
     channel.stopObserving('message', this._onMessage, this);
   },
   
-  connect: function(callback) {
-    this.callback(callback);
+  connect: function(callback, scope) {
+    this.callback(callback, scope);
     if (this._connected) return;
     
     this._connected = true;

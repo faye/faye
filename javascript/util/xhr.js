@@ -15,6 +15,7 @@ Faye.XHR = {
     initialize: function(method, url, params, callbacks, scope) {
       this._method    = method.toUpperCase();
       this._endpoint  = Faye.URI.parse(url, params);
+      this._postBody  = (typeof params === 'string') ? params : null;
       this._callbacks = (typeof callbacks === 'function') ? {success: callbacks} : callbacks;
       this._scope     = scope || null;
       this._xhr       = null;
@@ -26,7 +27,7 @@ Faye.XHR = {
       var path = this._endpoint.pathname, qs = this._endpoint.queryString();
       if (this._method === 'GET') path += '?' + qs;
       
-      var body = this._method === 'POST' ? qs : '';
+      var body = (this._method === 'POST') ? (this._postBody || qs) : '';
       
       this._waiting = true;
       this._xhr = Faye.XHR.getXhrObject();
