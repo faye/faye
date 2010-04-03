@@ -63,7 +63,7 @@ module Faye
         client_id = response['clientId']
         response['advice'] ||= {}
         response['advice']['reconnect'] ||= @clients.has_key?(client_id) ? 'retry' : 'handshake'
-        response['advice']['interval']  ||= Connection::INTERVAL * 1000
+        response['advice']['interval']  ||= (Connection::INTERVAL * 1000).floor
         
         return callback[response] unless response['channel'] == Channel::CONNECT and
                                          response['successful'] == true
