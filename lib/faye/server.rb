@@ -104,7 +104,7 @@ module Faye
       unless local
         response['supportedConnectionTypes'] = CONNECTION_TYPES
         
-        client_conns = message['supportedConnectionTypes']
+        client_conns = message['supportedConnectionTypes'] || ['long-polling']
         if client_conns
           common_conns = client_conns.select { |c| CONNECTION_TYPES.include?(c) }
           response['error'] = Error.conntype_mismatch(*client_conns) if common_conns.empty?

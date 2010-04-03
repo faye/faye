@@ -1025,7 +1025,7 @@ Faye.Server = Faye.Class({
     if (!message.version)
       response.error = Faye.Error.parameterMissing('version');
     
-    var clientConns = message.supportedConnectionTypes,
+    var clientConns = message.supportedConnectionTypes || ['long-polling'],
         commonConns;
     
     if (!local) {

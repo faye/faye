@@ -5,7 +5,7 @@ var fs    = require('fs'),
     faye  = require('./faye');
 
 var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
-    comet      = new faye.NodeAdapter({mount: '/comet', timeout: 45}),
+    comet      = new faye.NodeAdapter({mount: '/cometd', timeout: 5}),
     
     port       = process.ARGV[2] || '8000';
 
