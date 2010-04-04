@@ -12,7 +12,7 @@ Faye.extend = function(dest, source, overwrite) {
 };
 
 Faye.extend(Faye, {
-  VERSION:          '0.3.1',
+  VERSION:          '0.3.2',
   
   BAYEUX_VERSION:   '1.0',
   ID_LENGTH:        128,

@@ -5,7 +5,7 @@ require 'rubygems'
 require 'eventmachine'
 
 module Faye
-  VERSION = '0.3.1'
+  VERSION = '0.3.2'
   
   ROOT = File.expand_path(File.dirname(__FILE__))
   
