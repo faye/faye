@@ -28,8 +28,9 @@ function() { with(this) {
   httpClient('A', ['/channels/a']);
   httpClient('B', []);
   killServer();
+  wait(6);
   server(8000);
-  wait(12);
+  wait(22);
   publish('B', '/channels/a', {hello: 'world'});
   checkInbox({
       A: {

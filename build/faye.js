@@ -311,7 +311,9 @@ Faye.Timeouts = {
   addTimeout: function(name, delay, callback, scope) {
     this._timeouts = this._timeouts || {};
     if (this._timeouts.hasOwnProperty(name)) return;
+    var self = this;
     this._timeouts[name] = setTimeout(function() {
+      delete self._timeouts[name];
       callback.call(scope);
     }, 1000 * delay);
   },
@@ -655,8 +657,10 @@ Faye.Client = Faye.Class({
     if (this._advice.reconnect === this.NONE) return;
     if (this._state === this.DISCONNECTED) return;
     
-    if (this._advice.reconnect === this.HANDSHAKE || this._state === this.UNCONNECTED)
+    if (this._advice.reconnect === this.HANDSHAKE || this._state === this.UNCONNECTED) {
+      this._beginReconnectTimeout();
       return this.handshake(function() { this.connect(callback, scope) }, this);
+    }
     
     if (this._state === this.CONNECTING)
       return this.callback(callback, scope);
@@ -687,16 +691,7 @@ Faye.Client = Faye.Class({
       setTimeout(function() { self.connect() }, this._advice.interval);
     }));
     
-    this.addTimeout('reconnect', this.CONNECTION_TIMEOUT, function() {
-      delete this._connectionId;
-      delete this._clientId;
-      this._state = this.UNCONNECTED;
-      
-      this.info('Server took >' + this.CONNECTION_TIMEOUT + 's to reply to connection for ' +
-                this._clientId + ': attempting to reconnect');
-      
-      this.subscribe(this._channels.getKeys());
-    }, this);
+    this._beginReconnectTimeout();
   },
   
   // Request                              Response
@@ -845,6 +840,19 @@ Faye.Client = Faye.Class({
         if (!callback) return;
         callback[0].call(callback[1], message.data);
       });
+    }, this);
+  },
+  
+  _beginReconnectTimeout: function() {
+    this.addTimeout('reconnect', this.CONNECTION_TIMEOUT, function() {
+      delete this._connectionId;
+      delete this._clientId;
+      this._state = this.UNCONNECTED;
+      
+      this.info('Server took >' + this.CONNECTION_TIMEOUT + 's to reply to connection for ' +
+                this._clientId + ': attempting to reconnect');
+      
+      this.subscribe(this._channels.getKeys());
     }, this);
   },
   

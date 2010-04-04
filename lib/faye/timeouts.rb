@@ -3,7 +3,10 @@ module Faye
     def add_timeout(name, delay, &block)
       @timeouts ||= {}
       return if @timeouts.has_key?(name)
-      @timeouts[name] = EventMachine.add_timer(delay, &block)
+      @timeouts[name] = EventMachine.add_timer(delay) do
+        @timeouts.delete(name)
+        block.call
+      end
     end
     
     def remove_timeout(name)

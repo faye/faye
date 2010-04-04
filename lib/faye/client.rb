@@ -86,6 +86,7 @@ module Faye
                 @state == DISCONNECTED
       
       if @advice['reconnect'] == HANDSHAKE or @state == UNCONNECTED
+        begin_reconnect_timeout
         return handshake { connect(&block) }
       end
       
@@ -111,12 +112,7 @@ module Faye
         EventMachine.add_timer(@advice['interval'] / 1000.0) { connect }
       })
       
-      add_timeout(:reconnect, CONNECTION_TIMEOUT) do
-        @connection_id = nil
-        @client_id = nil
-        @state = UNCONNECTED
-        subscribe(@channels.keys)
-      end
+      begin_reconnect_timeout
     end
     
     # Request                              Response
@@ -234,6 +230,15 @@ module Faye
     end
     
   private
+    
+    def begin_reconnect_timeout
+      add_timeout(:reconnect, CONNECTION_TIMEOUT) do
+        @connection_id = nil
+        @client_id = nil
+        @state = UNCONNECTED
+        subscribe(@channels.keys)
+      end
+    end
     
     def enqueue(message)
       @outbox << message
