@@ -71,8 +71,10 @@ The client (and the Node.js and Rack server-side clients) accepts the following
 options in its constructor:
 
 * +timeout+ - the maximum time (seconds) to wait for a connection response
-  from the server before attempting to reconnect. This timeout is used
-  to handle network failures, server restarts etc. When the client reconnects,
+  from the server before attempting to reconnect. This should be greater than
+  the timeout set up on the server side, the idea being that if the server
+  doesn't send a connection response within this time then there has probably
+  been a network failure and we should reconnect. When the client reconnects,
   any existing channel subscriptions are re-established automatically.
 
 Take care only to have one instance of the client per page; since each one
