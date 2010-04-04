@@ -16,8 +16,11 @@ module Faye
     
     attr_reader :endpoint, :namespace
     
-    def initialize(endpoint = nil)
-      @endpoint = endpoint || RackAdapter::DEFAULT_ENDPOINT
+    def initialize(endpoint = nil, options = {})
+      @endpoint  = endpoint || RackAdapter::DEFAULT_ENDPOINT
+      @options   = options
+      @timeout   = @options[:timeout] || CONNECTION_TIMEOUT
+      
       @transport = Transport.get(self)
       @state     = UNCONNECTED
       @namespace = Namespace.new
@@ -208,12 +211,7 @@ module Faye
           'clientId'  => @client_id
         })
         
-        return if @timeout
-        
-        @timeout = EventMachine.add_timer(Connection::MAX_DELAY) do
-          @timeout = nil
-          flush!
-        end
+        add_timeout(:publish, Connection::MAX_DELAY) { flush! }
       }
     end
     
@@ -232,7 +230,7 @@ module Faye
   private
     
     def begin_reconnect_timeout
-      add_timeout(:reconnect, CONNECTION_TIMEOUT) do
+      add_timeout(:reconnect, @timeout) do
         @connection_id = nil
         @client_id = nil
         @state = UNCONNECTED

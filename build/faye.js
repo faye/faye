@@ -577,10 +577,13 @@ Faye.Client = Faye.Class({
   MAX_DELAY:            0.1,
   INTERVAL:             1000.0,
   
-  initialize: function(endpoint) {
+  initialize: function(endpoint, options) {
     this.info('New client created for ' + endpoint);
     
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
+    this._options   = options || {};
+    this._timeout   = this._options.timeout || this.CONNECTION_TIMEOUT;
+    
     this._transport = Faye.Transport.get(this);
     this._state     = this.UNCONNECTED;
     this._namespace = new Faye.Namespace();
@@ -814,13 +817,7 @@ Faye.Client = Faye.Class({
         clientId:     this._clientId
       });
       
-      if (this._timeout) return;
-      var self = this;
-      
-      this._timeout = setTimeout(function() {
-        delete self._timeout;
-        self._flush();
-      }, this.MAX_DELAY * 1000);
+      this.addTimeout('publish', this.MAX_DELAY, this._flush, this);
       
     }, this);
   },
@@ -844,12 +841,12 @@ Faye.Client = Faye.Class({
   },
   
   _beginReconnectTimeout: function() {
-    this.addTimeout('reconnect', this.CONNECTION_TIMEOUT, function() {
+    this.addTimeout('reconnect', this._timeout, function() {
       delete this._connectionId;
       delete this._clientId;
       this._state = this.UNCONNECTED;
       
-      this.info('Server took >' + this.CONNECTION_TIMEOUT + 's to reply to connection for ' +
+      this.info('Server took >' + this._timeout + 's to reply to connection for ' +
                 this._clientId + ': attempting to reconnect');
       
       this.subscribe(this._channels.getKeys());
@@ -1202,13 +1199,10 @@ Faye.Connection = Faye.Class({
   initialize: function(id, options) {
     this.id         = id;
     this._options   = options;
+    this._timeout   = this._options.timeout || this.TIMEOUT;
     this._channels  = new Faye.Set();
     this._inbox     = new Faye.Set();
     this._connected = false
-  },
-  
-  getTimeout: function() {
-    return this._options.timeout || this.TIMEOUT;
   },
   
   _onMessage: function(event) {
@@ -1262,7 +1256,7 @@ Faye.Connection = Faye.Class({
   
   _beginConnectionTimeout: function() {
     if (!this._connected) return;
-    this.addTimeout('connection', this.getTimeout(), this.flush, this);
+    this.addTimeout('connection', this._timeout, this.flush, this);
   },
   
   _releaseConnection: function() {

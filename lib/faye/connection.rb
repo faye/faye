@@ -13,13 +13,10 @@ module Faye
     def initialize(id, options = {})
       @id        = id
       @options   = options
+      @timeout   = @options[:timeout] || TIMEOUT
       @channels  = Set.new
       @inbox     = Set.new
       @connected = false
-    end
-    
-    def timeout
-      @options[:timeout] || TIMEOUT
     end
     
     def update(message, event)
@@ -75,7 +72,7 @@ module Faye
     
     def begin_connection_timeout!
       return unless @connected
-      add_timeout(:connection, timeout) { flush! }
+      add_timeout(:connection, @timeout) { flush! }
     end
     
     def release_connection!

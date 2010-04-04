@@ -2,8 +2,6 @@ var Scenario = require('./scenario'),
     faye     = require('../build/faye'),
     assert   = require('assert');
 
-Faye.Client.prototype.CONNECTION_TIMEOUT = 5;
-
 (function() {
   var tree = new Faye.Channel.Tree();
   var list = '/foo/bar /foo/boo /foo /foobar /foo/bar/boo /foobar/boo /foo/* /foo/**'.split(' ');

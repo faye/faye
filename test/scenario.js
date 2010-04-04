@@ -35,7 +35,7 @@ AsyncScenario = Faye.Class({
   },
   
   httpClient: function(name, channels, Continue) {
-    this._setupClient(new faye.Client(this._endpoint), name, channels, Continue);
+    this._setupClient(new faye.Client(this._endpoint, {timeout: 5}), name, channels, Continue);
   },
   
   localClient: function(name, channels, Continue) {

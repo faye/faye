@@ -14,10 +14,13 @@ Faye.Client = Faye.Class({
   MAX_DELAY:            <%= Faye::Connection::MAX_DELAY %>,
   INTERVAL:             <%= Faye::Connection::INTERVAL * 1000 %>,
   
-  initialize: function(endpoint) {
+  initialize: function(endpoint, options) {
     this.info('New client created for ' + endpoint);
     
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
+    this._options   = options || {};
+    this._timeout   = this._options.timeout || this.CONNECTION_TIMEOUT;
+    
     this._transport = Faye.Transport.get(this);
     this._state     = this.UNCONNECTED;
     this._namespace = new Faye.Namespace();
@@ -251,13 +254,7 @@ Faye.Client = Faye.Class({
         clientId:     this._clientId
       });
       
-      if (this._timeout) return;
-      var self = this;
-      
-      this._timeout = setTimeout(function() {
-        delete self._timeout;
-        self._flush();
-      }, this.MAX_DELAY * 1000);
+      this.addTimeout('publish', this.MAX_DELAY, this._flush, this);
       
     }, this);
   },
@@ -281,12 +278,12 @@ Faye.Client = Faye.Class({
   },
   
   _beginReconnectTimeout: function() {
-    this.addTimeout('reconnect', this.CONNECTION_TIMEOUT, function() {
+    this.addTimeout('reconnect', this._timeout, function() {
       delete this._connectionId;
       delete this._clientId;
       this._state = this.UNCONNECTED;
       
-      this.info('Server took >' + this.CONNECTION_TIMEOUT + 's to reply to connection for ' +
+      this.info('Server took >' + this._timeout + 's to reply to connection for ' +
                 this._clientId + ': attempting to reconnect');
       
       this.subscribe(this._channels.getKeys());
