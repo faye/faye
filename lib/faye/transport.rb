@@ -1,5 +1,6 @@
 require 'em-http'
 require 'json'
+require 'uri'
 
 module Faye
   
@@ -80,9 +81,14 @@ module Faye
     end
     
     def request(message, &block)
+      content = JSON.unparse(message)
       params = {
-        :head    => {'Content-Type' => 'application/json'},
-        :body    => JSON.unparse(message),
+        :head => {
+          'Content-Type'    => 'application/json',
+          'host'            => URI.parse(@endpoint).host,
+          'Content-Length'  => content.length
+        },
+        :body    => content,
         :timeout => -1
       }
       request = EventMachine::HttpRequest.new(@endpoint).post(params)
