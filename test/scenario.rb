@@ -96,7 +96,7 @@ module Scenario
     
     def publish(from, channel, message, &block)
       @clients[from].publish(channel, message)
-      EM.add_timer(0.5, &block)
+      EM.add_timer(2, &block)
     end
   end
   
