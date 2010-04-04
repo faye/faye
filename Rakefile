@@ -11,6 +11,7 @@ Hoe.spec('faye') do |p|
     ['eventmachine', '>= 0.12'],
     ['em-http-request', '>= 0.2'],
     ['rack', '>= 1.0'],
+    ['thin', '>= 1.2'],
     ['json', '>= 1.0']
   ]
 end
