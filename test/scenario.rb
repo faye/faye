@@ -23,6 +23,11 @@ module Scenario
     while EM.reactor_running?; end
   end
   
+  def run(runner)
+    @runner = runner
+    super
+  end
+  
   def method_missing(sym, *args)
     @commands << [sym, args]
     EM.next_tick { run_next_command unless @started }
@@ -36,8 +41,10 @@ module Scenario
       @scenario.__send__(command.first, *command.last) do
         run_next_command
       end
-    rescue Test::Unit::AssertionFailedError => e
+    rescue Object => e
+      @passed = false
       add_failure(e.message, e.backtrace)
+      @runner.puke(self.class, self.name, e) if @runner.respond_to?(:puke)
       block.call
     end
   end
