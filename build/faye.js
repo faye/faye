@@ -307,6 +307,25 @@ Faye.Logging = {
 };
 
 
+Faye.Timeouts = {
+  addTimeout: function(name, delay, callback, scope) {
+    this._timeouts = this._timeouts || {};
+    if (this._timeouts.hasOwnProperty(name)) return;
+    this._timeouts[name] = setTimeout(function() {
+      callback.call(scope);
+    }, 1000 * delay);
+  },
+  
+  removeTimeout: function(name) {
+    this._timeouts = this._timeouts || {};
+    var timeout = this._timeouts[name];
+    if (!timeout) return;
+    clearTimeout(timeout);
+    delete this._timeouts[name];
+  }
+};
+
+
 Faye.Channel = Faye.Class({
   initialize: function(name) {
     this.__id = this.name = name;
@@ -651,7 +670,7 @@ Faye.Client = Faye.Class({
     
     if (this._connectionId) return;
     this._connectionId = this._namespace.generate();
-    var self = this, hasResponse = false;
+    var self = this;
     this.info('Initiating connection for ' + this._clientId);
     
     this._transport.send({
@@ -661,27 +680,23 @@ Faye.Client = Faye.Class({
       id:             this._connectionId
       
     }, this._verifyClientId(function(response) {
-      if (hasResponse) return;
-      hasResponse = true;
-      
-      this.info('Close connection for ' + this._clientId);
       delete this._connectionId;
+      this.removeTimeout('reconnect');
+      
+      this.info('Closed connection for ' + this._clientId);
       setTimeout(function() { self.connect() }, this._advice.interval);
     }));
     
-    setTimeout(function() {
-      if (hasResponse) return;
-      hasResponse = true;
+    this.addTimeout('reconnect', this.CONNECTION_TIMEOUT, function() {
+      delete this._connectionId;
+      delete this._clientId;
+      this._state = this.UNCONNECTED;
       
-      self.info('Server took >' + self.CONNECTION_TIMEOUT + 's to reply to connection for ' +
-                self._clientId + ': attempting to reconnect');
+      this.info('Server took >' + this.CONNECTION_TIMEOUT + 's to reply to connection for ' +
+                this._clientId + ': attempting to reconnect');
       
-      delete self._connectionId;
-      delete self._clientId;
-      self._state = self.UNCONNECTED;
-      self.subscribe(self._channels.getKeys());
-      
-    }, 1000 * this.CONNECTION_TIMEOUT);
+      this.subscribe(this._channels.getKeys());
+    }, this);
   },
   
   // Request                              Response
@@ -862,6 +877,7 @@ Faye.Client = Faye.Class({
 });
 
 Faye.extend(Faye.Client.prototype, Faye.Deferrable);
+Faye.extend(Faye.Client.prototype, Faye.Timeouts);
 Faye.extend(Faye.Client.prototype, Faye.Logging);
 
 
@@ -1209,11 +1225,7 @@ Faye.Connection = Faye.Class({
     if (this._connected) return;
     
     this._connected = true;
-    
-    if (this._deletionTimeout) {
-      clearTimeout(this._deletionTimeout);
-      delete this._deletionTimeout;
-    }
+    this.removeTimeout('deletion');
     
     this._beginDeliveryTimeout();
     this._beginConnectionTimeout();
@@ -1236,50 +1248,29 @@ Faye.Connection = Faye.Class({
   },
   
   _beginDeliveryTimeout: function() {
-    if (this._deliveryTimeout || !this._connected || this._inbox.isEmpty())
-      return;
-    
-    var self = this;
-    this._deliveryTimeout = setTimeout(function () { self.flush() },
-                                       this.MAX_DELAY * 1000);
+    if (!this._connected || this._inbox.isEmpty()) return;
+    this.addTimeout('delivery', this.MAX_DELAY, this.flush, this);
   },
   
   _beginConnectionTimeout: function() {
-    if (this._connectionTimeout || !this._connected)
-      return;
-    
-    var self = this;
-    this._connectionTimeout = setTimeout(function() { self.flush() },
-                                         this.getTimeout() * 1000);
+    if (!this._connected) return;
+    this.addTimeout('connection', this.getTimeout(), this.flush, this);
   },
   
   _releaseConnection: function() {
-    if (this._connectionTimeout) {
-      clearTimeout(this._connectionTimeout);
-      delete this._connectionTimeout;
-    }
-    
-    if (this._deliveryTimeout) {
-      clearTimeout(this._deliveryTimeout);
-      delete this._deliveryTimeout;
-    }
-    
+    this.removeTimeout('connection');
+    this.removeTimeout('delivery');
     this._connected = false;
-    this._scheduleForDeletion();
-  },
-  
-  _scheduleForDeletion: function() {
-    if (this._deletionTimeout) return;
-    var self = this;
     
-    this._deletionTimeout = setTimeout(function() {
-      self.fire('staleClient', self);
-    }, 10 * 1000 * this.INTERVAL);
+    this.addTimeout('deletion', 10 * this.INTERVAL, function() {
+      this.fire('staleClient', this);
+    }, this);
   }
 });
 
 Faye.extend(Faye.Connection.prototype, Faye.Deferrable);
 Faye.extend(Faye.Connection.prototype, Faye.Observable);
+Faye.extend(Faye.Connection.prototype, Faye.Timeouts);
 
 
 Faye.Error = Faye.Class({

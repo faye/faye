@@ -109,7 +109,7 @@ Faye.Client = Faye.Class({
     
     if (this._connectionId) return;
     this._connectionId = this._namespace.generate();
-    var self = this, hasResponse = false;
+    var self = this;
     this.info('Initiating connection for ' + this._clientId);
     
     this._transport.send({
@@ -119,27 +119,23 @@ Faye.Client = Faye.Class({
       id:             this._connectionId
       
     }, this._verifyClientId(function(response) {
-      if (hasResponse) return;
-      hasResponse = true;
-      
-      this.info('Close connection for ' + this._clientId);
       delete this._connectionId;
+      this.removeTimeout('reconnect');
+      
+      this.info('Closed connection for ' + this._clientId);
       setTimeout(function() { self.connect() }, this._advice.interval);
     }));
     
-    setTimeout(function() {
-      if (hasResponse) return;
-      hasResponse = true;
+    this.addTimeout('reconnect', this.CONNECTION_TIMEOUT, function() {
+      delete this._connectionId;
+      delete this._clientId;
+      this._state = this.UNCONNECTED;
       
-      self.info('Server took >' + self.CONNECTION_TIMEOUT + 's to reply to connection for ' +
-                self._clientId + ': attempting to reconnect');
+      this.info('Server took >' + this.CONNECTION_TIMEOUT + 's to reply to connection for ' +
+                this._clientId + ': attempting to reconnect');
       
-      delete self._connectionId;
-      delete self._clientId;
-      self._state = self.UNCONNECTED;
-      self.subscribe(self._channels.getKeys());
-      
-    }, 1000 * this.CONNECTION_TIMEOUT);
+      this.subscribe(this._channels.getKeys());
+    }, this);
   },
   
   // Request                              Response
@@ -320,5 +316,6 @@ Faye.Client = Faye.Class({
 });
 
 Faye.extend(Faye.Client.prototype, Faye.Deferrable);
+Faye.extend(Faye.Client.prototype, Faye.Timeouts);
 Faye.extend(Faye.Client.prototype, Faye.Logging);
 

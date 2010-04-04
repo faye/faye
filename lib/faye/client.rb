@@ -1,9 +1,7 @@
 module Faye
   class Client
     include EventMachine::Deferrable
-    
-    extend  Forwardable
-    def_delegators :EventMachine, :add_timer, :cancel_timer
+    include Timeouts
     
     UNCONNECTED         = 1
     CONNECTING          = 2
@@ -62,7 +60,7 @@ module Faye
       }) do |response|
         
         unless response['successful']
-          add_timer(@advice['interval'] / 1000.0) { handshake(&block) }
+          EventMachine.add_timer(@advice['interval'] / 1000.0) { handshake(&block) }
           return @state = UNCONNECTED
         end
         
@@ -100,7 +98,6 @@ module Faye
       
       return unless @connection_id.nil?
       @connection_id = @namespace.generate
-      has_response = false
       
       @transport.send({
         'channel'         => Channel::CONNECT,
@@ -109,21 +106,16 @@ module Faye
         'id'              => @connection_id
         
       }, &verify_client_id { |response|
-        unless has_response
-          has_response = true
-          @connection_id = nil
-          add_timer(@advice['interval'] / 1000.0) { connect }
-        end
+        @connection_id = nil
+        remove_timeout(:reconnect)
+        EventMachine.add_timer(@advice['interval'] / 1000.0) { connect }
       })
       
-      add_timer(CONNECTION_TIMEOUT) do
-        unless has_response
-          has_response = true
-          @connection_id = nil
-          @client_id = nil
-          @state = UNCONNECTED
-          subscribe(@channels.keys)
-        end
+      add_timeout(:reconnect, CONNECTION_TIMEOUT) do
+        @connection_id = nil
+        @client_id = nil
+        @state = UNCONNECTED
+        subscribe(@channels.keys)
       end
     end
     
@@ -222,7 +214,7 @@ module Faye
         
         return if @timeout
         
-        @timeout = add_timer(Connection::MAX_DELAY) do
+        @timeout = EventMachine.add_timer(Connection::MAX_DELAY) do
           @timeout = nil
           flush!
         end

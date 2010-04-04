@@ -2,9 +2,7 @@ module Faye
   class Connection
     include EventMachine::Deferrable
     include Observable
-    
-    extend  Forwardable
-    def_delegators :EventMachine, :add_timer, :cancel_timer
+    include Timeouts
     
     MAX_DELAY = 0.1
     INTERVAL  = 1.0
@@ -27,7 +25,7 @@ module Faye
     def update(message, event)
       return unless message == :message
       @inbox.add(event)
-      begin_delivery_timeout! if @connected
+      begin_delivery_timeout!
     end
     
     def subscribe(channel)
@@ -46,11 +44,7 @@ module Faye
       return if @connected
       
       @connected = true
-      
-      if @deletion_timeout
-        cancel_timer(@deletion_timeout)
-        @deletion_timeout = nil
-      end
+      remove_timeout(:deletion)
       
       begin_delivery_timeout!
       begin_connection_timeout!
@@ -75,34 +69,21 @@ module Faye
   private
     
     def begin_delivery_timeout!
-      return unless @delivery_timeout.nil? and @connected and not @inbox.empty?
-      @delivery_timeout = add_timer(MAX_DELAY) { flush! }
+      return unless @connected and not @inbox.empty?
+      add_timeout(:delivery, MAX_DELAY) { flush! }
     end
     
     def begin_connection_timeout!
-      return unless @connection_timeout.nil? and @connected
-      @connection_timeout = add_timer(timeout) { flush! }
+      return unless @connected
+      add_timeout(:connection, timeout) { flush! }
     end
     
     def release_connection!
-      if @connection_timeout
-        cancel_timer(@connection_timeout)
-        @connection_timeout = nil
-      end
-      
-      if @delivery_timeout
-        cancel_timer(@delivery_timeout)
-        @delivery_timeout = nil
-      end
-      
+      remove_timeout(:connection)
+      remove_timeout(:delivery)
       @connected = false
-      schedule_for_deletion!
-    end
-    
-    def schedule_for_deletion!
-      return if @deletion_timeout
       
-      @deletion_timeout = add_timer(10 * INTERVAL) do
+      add_timeout(:deletion, 10 * INTERVAL) do
         changed(true)
         notify_observers(:stale_client, self)
       end

@@ -30,6 +30,7 @@ lib/faye/grammar.rb
 lib/faye/namespace.rb
 lib/faye/rack_adapter.rb
 lib/faye/server.rb
+lib/faye/timeouts.rb
 lib/faye/transport.rb
 test/scenario.js
 test/test_channel.rb

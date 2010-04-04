@@ -15,6 +15,7 @@ packages:
     - util/deferrable
     - util/observable
     - util/logging
+    - timeouts
     - channel
     - namespace
     - transport

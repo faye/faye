@@ -14,7 +14,10 @@ module Faye
   JSONP_CALLBACK   = 'jsonpcallback'
   CONNECTION_TYPES = %w[long-polling callback-polling]
   
-  %w[grammar namespace server channel connection error client transport].each do |lib|
+  %w[ timeouts grammar namespace
+      server channel connection
+      error client transport
+  ].each do |lib|
     require File.join(ROOT, 'faye', lib)
   end
   
