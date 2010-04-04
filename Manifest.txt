@@ -10,6 +10,8 @@ examples/README.rdoc
 examples/shared/public/index.html
 examples/shared/public/favicon.ico
 examples/shared/public/jquery.js
+examples/shared/public/mootools.js
+examples/shared/public/prototype.js
 examples/shared/public/robots.txt
 examples/shared/public/soapbox.js
 examples/shared/public/style.css
@@ -33,7 +35,9 @@ lib/faye/server.rb
 lib/faye/timeouts.rb
 lib/faye/transport.rb
 test/scenario.js
+test/scenario.rb
 test/test_channel.rb
 test/test_clients.js
+test/test_clients.rb
 test/test_grammar.rb
 test/test_server.rb

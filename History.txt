@@ -1,3 +1,15 @@
+=== 0.3.2 / 2010-04-04
+
+* Fix problems with JSON serialization when Prototype, MooTools present
+* Make the client reconnect if it doesn't hear from the server after a timeout
+* Stop JavaScript server returning NaN for advice.interval
+* Make Ruby server return an integer for advice.interval
+* Ensure EventMachine is running before handling messages
+* Handle 'data' and 'end' events properly in Node HTTP API
+* Switch to application/json for content types and stop using querystring format in POST bodies
+* Respond to any URL path under the mount point, not just the exact match
+
+
 === 0.3.1 / 2010-03-09
 
 * Pass client down through Rack stack as env['faye.client']

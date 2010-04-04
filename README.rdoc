@@ -34,7 +34,7 @@ project of mine, but was not written to scale across multiple processes
 as required for deployment under Passenger. It has since been ported to
 Node.js which is better designed for handling highly concurrent traffic.
 If you use the Ruby version, I recommend deploying it behind Thin, an
-event-driver Ruby web server.
+event-driven Ruby web server.
 
 The two backends are architecturally identical, using evented messaging
 throughout and maintaining subscription data in memory. Neither is geared
@@ -64,8 +64,16 @@ You should set up the client as follows:
   <script type="text/javascript" src="/faye.js"></script>
   
   <script type="text/javascript">
-    fayeClient = new Faye.Client('/faye');
+    fayeClient = new Faye.Client('/faye', {timeout: 120});
   </script>
+
+The client (and the Node.js and Rack server-side clients) accepts the following
+options in its constructor:
+
+* +timeout+ - the maximum time (seconds) to wait for a connection response
+  from the server before attempting to reconnect. This timeout is used
+  to handle network failures, server restarts etc. When the client reconnects,
+  any existing channel subscriptions are re-established automatically.
 
 Take care only to have one instance of the client per page; since each one
 opens a long-running request you will hit the two-requests-per-host limit
@@ -146,6 +154,12 @@ Both backends support the following initialization options:
   on your frontend webserver to make sure Faye sends a response before
   the server kills the connection.
 
+Regarding the +mount+ parameter: Faye will respond to any path under the
+mount point, so <tt>/faye</tt>, <tt>/faye.js</tt> and <tt>/faye/some/subpath</tt>
+will all be handled by Faye rather than your application. This is so that
+Faye can interoperate with clients that use different URLs for different
+message types.
+
 Usage examples and a demo app are in the +examples+ directory.
 
 
@@ -180,10 +194,10 @@ over HTTP or connect directly to the <tt>NodeAdapter</tt>. Either way,
 the API for the client is exactly as it is in the browser.
 
   // Remote client
-  client = new Faye.Client('http://example.com/faye');
+  client = new faye.Client('http://example.com/faye', {timeout: 120});
   
   // Local client
-  server = new Faye.NodeAdapter(options);
+  server = new faye.NodeAdapter(options);
   client = server.getClient();
 
 Note <tt>getClient()</tt> returns the same client object every time you
@@ -218,11 +232,11 @@ stack of Rack middlewares.
 
 === Rack client
 
-Again mirroring the Node tools, Faye has a client-side Ruby client that
+Again mirroring the Node tools, Faye has a server-side Ruby client that
 can be used under EventMachine. Setup is identical:
 
   # Remote client
-  client = Faye::Client.new('http://example.com/faye')
+  client = Faye::Client.new('http://example.com/faye', :timeout => 120)
   
   # Local client
   server = Faye::RackAdapter.new(options)
@@ -257,7 +271,7 @@ the Rack environment, for example in a Sinatra application:
 If you want to hack on Faye, you'll need Node.js, Ruby and the following
 gems installed:
 
-  sudo gem install eventmachine em-http-request rack thin json jake
+  sudo gem install eventmachine em-http-request rack thin json jake hoe
 
 DO NOT edit any JavaScript files outside the +javascript+ and +test+
 directories. They are generated using Jake, which you should run after
@@ -276,6 +290,8 @@ changes where appropriate.
 == To-do
 
 * Investigate WebSockets as a possible message transport
+* Support Bayeux extensions for authentication
+* Let local server-side clients listen to <tt>/meta/*</tt> channels
 * Provide support for user-defined <tt>/service/*</tt> channels
 * Allow server to scale to multiple nodes
 
