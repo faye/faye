@@ -717,6 +717,7 @@ Faye.Client = Faye.Class({
     
     this.info('Clearing channel listeners for ' + this._clientId);
     this._channels = new Faye.Channel.Tree();
+    this.removeTimeout('reconnect');
   },
   
   // Request                              Response

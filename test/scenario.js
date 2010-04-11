@@ -68,8 +68,11 @@ AsyncScenario = Faye.Class({
   
   finish: function(Continue) {
     Faye.each(this._clients, function(name, client) { client.disconnect() });
-    this._server.close();
-    Continue();
+    var server = this._server;
+    setTimeout(function() {
+      server.close();
+      Continue();
+    }, 1000);
   },
 });
 

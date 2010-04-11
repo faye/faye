@@ -36,7 +36,7 @@ module Scenario
   def run_next_command
     @started = true
     command = @commands.shift
-    return EM.stop if command.nil?
+    return finish if command.nil?
     begin
       @scenario.__send__(command.first, *command.last) do
         run_next_command
@@ -47,6 +47,10 @@ module Scenario
       @runner.puke(self.class, self.name, e) if @runner.respond_to?(:puke)
       block.call
     end
+  end
+  
+  def finish
+    @scenario.finish { EM.stop }
   end
   
   class AsyncScenario
@@ -97,6 +101,14 @@ module Scenario
     def publish(from, channel, message, &block)
       @clients[from].publish(channel, message)
       EM.add_timer(2, &block)
+    end
+    
+    def finish(&block)
+      @clients.each { |id,c| c.disconnect }
+      EM.add_timer(1) do
+        @server.stop!
+        block.call
+      end
     end
   end
   

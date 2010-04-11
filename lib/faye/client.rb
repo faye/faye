@@ -127,7 +127,7 @@ module Faye
     #                                                     * id
     def disconnect
       return unless @state == CONNECTED
-      @state = DISCONNECT
+      @state = DISCONNECTED
       
       @transport.send({
         'channel'   => Channel::DISCONNECT,
@@ -135,6 +135,7 @@ module Faye
       })
       
       @channels = Channel::Tree.new
+      remove_timeout(:reconnect)
     end
     
     # Request                              Response
