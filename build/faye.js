@@ -1396,7 +1396,7 @@ Faye.NodeAdapter = Faye.Class({
       fs.readFile(this.SCRIPT_PATH, function(err, content) {
         response.sendHeader(200, self.TYPE_SCRIPT);
         response.write(content);
-        response.close();
+        response.end();
       });
       
     } else {
@@ -1427,12 +1427,12 @@ Faye.NodeAdapter = Faye.Class({
         if (isGet) body = jsonp + '(' + body + ');';
         response.sendHeader(200, type);
         response.write(body);
-        response.close();
+        response.end();
       });
     } catch (e) {
       response.sendHeader(400, this.TYPE_TEXT);
       response.write('Bad request');
-      response.close();
+      response.end();
     }
   }
 });
@@ -1451,7 +1451,7 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
         callback.call(scope, JSON.parse(data));
       });
     });
-    request.close();
+    request.end();
   },
   
   createRequestForMessage: function(message) {

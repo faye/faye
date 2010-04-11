@@ -8,7 +8,7 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
         callback.call(scope, JSON.parse(data));
       });
     });
-    request.close();
+    request.end();
   },
   
   createRequestForMessage: function(message) {
