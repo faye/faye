@@ -1460,6 +1460,8 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
         uri     = url.parse(this._endpoint),
         client  = http.createClient(uri.port, uri.hostname);
     
+    client.addListener('error', function() { /* catch ECONNREFUSED */ });
+    
     if (parseInt(uri.port) === 443) client.setSecure('X509_PEM');
     
     var request = client.request('POST', uri.pathname, {
