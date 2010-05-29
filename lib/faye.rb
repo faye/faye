@@ -3,6 +3,7 @@ require 'observer'
 require 'set'
 require 'rubygems'
 require 'eventmachine'
+require 'json'
 
 module Faye
   VERSION = '0.3.2'
@@ -14,9 +15,8 @@ module Faye
   JSONP_CALLBACK   = 'jsonpcallback'
   CONNECTION_TYPES = %w[long-polling callback-polling]
   
-  %w[ timeouts grammar namespace
-      server channel connection
-      error client transport
+  %w[ logging timeouts grammar namespace server
+      channel connection error client transport
   ].each do |lib|
     require File.join(ROOT, 'faye', lib)
   end
@@ -27,6 +27,14 @@ module Faye
     field  = 2 ** bitlength
     strlen = bitlength / 4
     ("%0#{strlen}s" % rand(field).to_s(16)).gsub(' ', '0')
+  end
+  
+  def self.to_json(value)
+    case value
+      when Hash, Array then JSON.unparse(value)
+      when String, NilClass then value.inspect
+      else value.to_s
+    end
   end
 end
 

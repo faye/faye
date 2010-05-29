@@ -29,6 +29,7 @@ lib/faye/client.rb
 lib/faye/connection.rb
 lib/faye/error.rb
 lib/faye/grammar.rb
+lib/faye/logging.rb
 lib/faye/namespace.rb
 lib/faye/rack_adapter.rb
 lib/faye/server.rb

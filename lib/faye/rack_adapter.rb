@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'rack'
 require 'thin'
-require 'json'
 
 module Faye
   class RackAdapter

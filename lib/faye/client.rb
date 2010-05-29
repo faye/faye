@@ -1,7 +1,9 @@
 module Faye
   class Client
+    
     include EventMachine::Deferrable
     include Timeouts
+    include Logging
     
     UNCONNECTED         = 1
     CONNECTING          = 2
@@ -14,9 +16,11 @@ module Faye
     
     CONNECTION_TIMEOUT  = 60.0
     
-    attr_reader :endpoint, :namespace
+    attr_reader :endpoint, :client_id, :namespace
     
     def initialize(endpoint = nil, options = {})
+      info('New client created for ?', endpoint)
+      
       @endpoint  = endpoint || RackAdapter::DEFAULT_ENDPOINT
       @options   = options
       @timeout   = @options[:timeout] || CONNECTION_TIMEOUT
@@ -55,6 +59,8 @@ module Faye
       
       @state = CONNECTING
       
+      info('Initiating handshake with ?', @endpoint)
+      
       @transport.send({
         'channel'     => Channel::HANDSHAKE,
         'version'     => BAYEUX_VERSION,
@@ -62,16 +68,19 @@ module Faye
         
       }) do |response|
         
-        unless response['successful']
+        if response['successful']
+          @state     = CONNECTED
+          @client_id = response['clientId']
+          @transport = Transport.get(self, response['supportedConnectionTypes'])
+          
+          info('Handshake successful: ?', @client_id)
+          block.call if block_given?
+          
+        else
+          info('Handshake unsuccessful')
           EventMachine.add_timer(@advice['interval'] / 1000.0) { handshake(&block) }
-          return @state = UNCONNECTED
+          @state = UNCONNECTED
         end
-        
-        @state     = CONNECTED
-        @client_id = response['clientId']
-        @transport = Transport.get(self, response['supportedConnectionTypes'])
-        
-        block.call if block_given?
       end
     end
     
@@ -96,12 +105,14 @@ module Faye
       return callback(&block) if @state == CONNECTING
       return unless @state == CONNECTED
       
+      info('Calling deferred actions for ?', @client_id)
       set_deferred_status(:succeeded)
       set_deferred_status(:deferred)
       block.call if block_given?
       
       return unless @connection_id.nil?
       @connection_id = @namespace.generate
+      info('Initiating connection for ?', @client_id)
       
       @transport.send({
         'channel'         => Channel::CONNECT,
@@ -112,6 +123,8 @@ module Faye
       }, &verify_client_id { |response|
         @connection_id = nil
         remove_timeout(:reconnect)
+        
+        info('Closed connection for ?', @client_id)
         EventMachine.add_timer(@advice['interval'] / 1000.0) { connect }
       })
       
@@ -129,11 +142,14 @@ module Faye
       return unless @state == CONNECTED
       @state = DISCONNECTED
       
+      info('Disconnecting ?', @client_id)
+      
       @transport.send({
         'channel'   => Channel::DISCONNECT,
         'clientId'  => @client_id
       })
       
+      info('Clearing channel listeners for ?', @client_id)
       @channels = Channel::Tree.new
       remove_timeout(:reconnect)
     end
@@ -153,6 +169,8 @@ module Faye
         channels = [channels].flatten
         validate_channels(channels)
         
+        info('Client ? attempting to subscribe to ?', @client_id, channels)
+        
         @transport.send({
           'channel'       => Channel::SUBSCRIBE,
           'clientId'      => @client_id,
@@ -160,6 +178,9 @@ module Faye
           
         }, &verify_client_id { |response|
           if response['successful'] and block
+            
+            info('Subscription acknowledged for ? to ?', @client_id, channels)
+            
             channels = [response['subscription']].flatten
             channels.each { |channel| @channels[channel] = block }
           end
@@ -182,6 +203,8 @@ module Faye
         channels = [channels].flatten
         validate_channels(channels)
         
+        info('Client ? attempting to unsubscribe from ?', @client_id, channels)
+        
         @transport.send({
           'channel'       => Channel::UNSUBSCRIBE,
           'clientId'      => @client_id,
@@ -189,6 +212,9 @@ module Faye
           
         }, &verify_client_id { |response|
           if response['successful']
+            
+            info('Unsubscription acknowledged for ? from ?', @client_id, channels)
+            
             channels = [response['subscription']].flatten
             channels.each { |channel| @channels[channel] = nil }
           end
@@ -205,6 +231,8 @@ module Faye
     def publish(channel, data)
       connect {
         validate_channels([channel])
+        
+        info('Client ? queueing published message to ?: ?', @client_id, channel, data)
         
         enqueue({
           'channel'   => channel,
@@ -223,6 +251,8 @@ module Faye
     
     def deliver_messages(messages)
       messages.each do |message|
+        info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
+        
         channels = @channels.glob(message['channel'])
         channels.each { |callback| callback.call(message['data']) }
       end
@@ -235,6 +265,10 @@ module Faye
         @connection_id = nil
         @client_id = nil
         @state = UNCONNECTED
+        
+        info('Server took >?s to reply to connection for ?: attempting to reconnect',
+             @timeout, @client_id)
+        
         subscribe(@channels.keys)
       end
     end

@@ -3,9 +3,12 @@ require 'json'
 require 'uri'
 
 module Faye
-  
   class Transport
+    
+    include Logging
+    
     def initialize(client, endpoint)
+      debug('Created new transport for ?', endpoint)
       @client   = client
       @endpoint = endpoint
     end
@@ -19,7 +22,11 @@ module Faye
         message['id'] = @client.namespace.generate
       end
       
+      debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, message)
+      
       request(message) { |responses|
+        debug('Client ? received from ?: ?', @client.client_id, @endpoint, responses)
+        
         if block_given?
           messages, deliverable = [], true
           [responses].flatten.each do |response|
