@@ -249,7 +249,7 @@ Faye.Observable = {
     }
   },
   
-  fire: function() {
+  trigger: function() {
     var args = Array.prototype.slice.call(arguments),
         eventType = args.shift();
     
@@ -334,7 +334,7 @@ Faye.Channel = Faye.Class({
   },
   
   push: function(message) {
-    this.fire('message', message);
+    this.trigger('message', message);
   }
 });
 
@@ -1266,7 +1266,7 @@ Faye.Connection = Faye.Class({
     this._connected = false;
     
     this.addTimeout('deletion', 10 * this.INTERVAL, function() {
-      this.fire('staleClient', this);
+      this.trigger('staleClient', this);
     }, this);
   }
 });

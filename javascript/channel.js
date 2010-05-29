@@ -4,7 +4,7 @@ Faye.Channel = Faye.Class({
   },
   
   push: function(message) {
-    this.fire('message', message);
+    this.trigger('message', message);
   }
 });
 
