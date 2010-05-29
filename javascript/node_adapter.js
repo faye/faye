@@ -52,7 +52,7 @@ Faye.NodeAdapter = Faye.Class({
     
     if (/\.js$/.test(requestUrl.pathname)) {
       fs.readFile(this.SCRIPT_PATH, function(err, content) {
-        response.sendHeader(200, self.TYPE_SCRIPT);
+        response.writeHead(200, self.TYPE_SCRIPT);
         response.write(content);
         response.end();
       });
@@ -83,12 +83,12 @@ Faye.NodeAdapter = Faye.Class({
       this._server.process(message, false, function(replies) {
         var body = JSON.stringify(replies);
         if (isGet) body = jsonp + '(' + body + ');';
-        response.sendHeader(200, type);
+        response.writeHead(200, type);
         response.write(body);
         response.end();
       });
     } catch (e) {
-      response.sendHeader(400, this.TYPE_TEXT);
+      response.writeHead(400, this.TYPE_TEXT);
       response.write('Bad request');
       response.end();
     }
