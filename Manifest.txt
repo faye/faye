@@ -31,6 +31,7 @@ lib/faye/error.rb
 lib/faye/grammar.rb
 lib/faye/logging.rb
 lib/faye/namespace.rb
+lib/faye/publisher.rb
 lib/faye/rack_adapter.rb
 lib/faye/server.rb
 lib/faye/timeouts.rb

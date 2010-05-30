@@ -1,7 +1,7 @@
 module Faye
   class Channel
     
-    include Observable
+    include Publisher
     attr_reader :name
     
     def initialize(name)
@@ -9,8 +9,7 @@ module Faye
     end
     
     def <<(message)
-      changed(true)
-      notify_observers(:message, message)
+      publish_event(:message, message)
     end
     
     HANDSHAKE   = '/meta/handshake'

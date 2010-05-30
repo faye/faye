@@ -11,12 +11,6 @@ module Faye
       @namespace   = Namespace.new
     end
     
-    # Notifies the server of stale connections that should be deleted
-    def update(message, connection)
-      return unless message == :stale_connection
-      destroy_connection(connection)
-    end
-    
     def client_ids
       @connections.keys
     end
@@ -49,13 +43,13 @@ module Faye
     def connection(id)
       return @connections[id] if @connections.has_key?(id)
       connection = Connection.new(id, @options)
-      connection.add_observer(self)
+      connection.add_subscriber(:stale_connection, method(:destroy_connection))
       @connections[id] = connection
     end
     
     def destroy_connection(connection)
       connection.disconnect!
-      connection.delete_observer(self)
+      connection.remove_subscriber(:stale_connection, method(:destroy_connection))
       @connections.delete(connection.id)
     end
     
