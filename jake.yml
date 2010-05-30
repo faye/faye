@@ -13,7 +13,7 @@ packages:
     - faye
     - util/class
     - util/deferrable
-    - util/observable
+    - util/publisher
     - logging
     - timeouts
     - channel

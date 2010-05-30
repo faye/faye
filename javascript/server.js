@@ -40,13 +40,13 @@ Faye.Server = Faye.Class({
   _connection: function(id) {
     if (this._connections.hasOwnProperty(id)) return this._connections[id];
     var connection = new Faye.Connection(id, this._options);
-    connection.on('staleConnection', this._destroyConnection, this);
+    connection.addSubscriber('staleConnection', this._destroyConnection, this);
     return this._connections[id] = connection;
   },
   
   _destroyConnection: function(connection) {
     connection.disconnect();
-    connection.stopObserving('staleConnection', this._destroyConnection, this);
+    connection.removeSubscriber('staleConnection', this._destroyConnection, this);
     delete this._connections[connection.id];
   },
   

@@ -4,11 +4,11 @@ Faye.Channel = Faye.Class({
   },
   
   push: function(message) {
-    this.trigger('message', message);
+    this.publishEvent('message', message);
   }
 });
 
-Faye.extend(Faye.Channel.prototype, Faye.Observable);
+Faye.extend(Faye.Channel.prototype, Faye.Publisher);
 
 Faye.extend(Faye.Channel, {
   HANDSHAKE:    '<%= Faye::Channel::HANDSHAKE %>',
@@ -143,7 +143,7 @@ Faye.extend(Faye.Channel, {
       if (!callback) return;
       Faye.each(names, function(name) {
         var channel = this.findOrCreate(name);
-        channel.on('message', callback, scope);
+        channel.addSubscriber('message', callback, scope);
       }, this);
     },
     
@@ -153,8 +153,8 @@ Faye.extend(Faye.Channel, {
       Faye.each(names, function(name) {
         var channel = this.get(name);
         if (!channel) return;
-        channel.stopObserving('message', callback, scope);
-        if (channel.countObservers('message') === 0) deadChannels.push(name);
+        channel.removeSubscriber('message', callback, scope);
+        if (channel.countSubscribers('message') === 0) deadChannels.push(name);
       }, this);
       
       return deadChannels;
@@ -162,7 +162,7 @@ Faye.extend(Faye.Channel, {
     
     distributeMessage: function(message) {
       var channels = this.glob(message.channel);
-      Faye.each(channels, function(channel) { channel.trigger('message', message.data) });
+      Faye.each(channels, function(channel) { channel.publishEvent('message', message.data) });
     }
   })
 });

@@ -225,42 +225,38 @@ Faye.Deferrable = {
 };
 
 
-Faye.Observable = {
-  countObservers: function(eventType) {
-    if (!this._observers || !this._observers[eventType]) return 0;
-    return this._observers[eventType].length;
+Faye.Publisher = {
+  countSubscribers: function(eventType) {
+    if (!this._subscribers || !this._subscribers[eventType]) return 0;
+    return this._subscribers[eventType].length;
   },
   
-  on: function(eventType, block, scope) {
-    this._observers = this._observers || {};
-    var list = this._observers[eventType] = this._observers[eventType] || [];
-    list.push([block, scope]);
+  addSubscriber: function(eventType, listener, context) {
+    this._subscribers = this._subscribers || {};
+    var list = this._subscribers[eventType] = this._subscribers[eventType] || [];
+    list.push([listener, context]);
   },
   
-  stopObserving: function(eventType, block, scope) {
-    if (!this._observers || !this._observers[eventType]) return;
+  removeSubscriber: function(eventType, listener, context) {
+    if (!this._subscribers || !this._subscribers[eventType]) return;
     
-    if (!block) {
-      delete this._observers[eventType];
-      return;
-    }
-    var list = this._observers[eventType],
+    var list = this._subscribers[eventType],
         i    = list.length;
     
     while (i--) {
-      if (block && list[i][0] !== block) continue;
-      if (scope && list[i][1] !== scope) continue;
+      if (listener && list[i][0] !== listener) continue;
+      if (context && list[i][1] !== context) continue;
       list.splice(i,1);
     }
   },
   
-  trigger: function() {
+  publishEvent: function() {
     var args = Array.prototype.slice.call(arguments),
         eventType = args.shift();
     
-    if (!this._observers || !this._observers[eventType]) return;
+    if (!this._subscribers || !this._subscribers[eventType]) return;
     
-    Faye.each(this._observers[eventType], function(listener) {
+    Faye.each(this._subscribers[eventType], function(listener) {
       listener[0].apply(listener[1], args.slice());
     });
   }
@@ -337,11 +333,11 @@ Faye.Channel = Faye.Class({
   },
   
   push: function(message) {
-    this.trigger('message', message);
+    this.publishEvent('message', message);
   }
 });
 
-Faye.extend(Faye.Channel.prototype, Faye.Observable);
+Faye.extend(Faye.Channel.prototype, Faye.Publisher);
 
 Faye.extend(Faye.Channel, {
   HANDSHAKE:    '/meta/handshake',
@@ -476,7 +472,7 @@ Faye.extend(Faye.Channel, {
       if (!callback) return;
       Faye.each(names, function(name) {
         var channel = this.findOrCreate(name);
-        channel.on('message', callback, scope);
+        channel.addSubscriber('message', callback, scope);
       }, this);
     },
     
@@ -486,8 +482,8 @@ Faye.extend(Faye.Channel, {
       Faye.each(names, function(name) {
         var channel = this.get(name);
         if (!channel) return;
-        channel.stopObserving('message', callback, scope);
-        if (channel.countObservers('message') === 0) deadChannels.push(name);
+        channel.removeSubscriber('message', callback, scope);
+        if (channel.countSubscribers('message') === 0) deadChannels.push(name);
       }, this);
       
       return deadChannels;
@@ -495,7 +491,7 @@ Faye.extend(Faye.Channel, {
     
     distributeMessage: function(message) {
       var channels = this.glob(message.channel);
-      Faye.each(channels, function(channel) { channel.trigger('message', message.data) });
+      Faye.each(channels, function(channel) { channel.publishEvent('message', message.data) });
     }
   })
 });
@@ -984,13 +980,13 @@ Faye.Server = Faye.Class({
   _connection: function(id) {
     if (this._connections.hasOwnProperty(id)) return this._connections[id];
     var connection = new Faye.Connection(id, this._options);
-    connection.on('staleConnection', this._destroyConnection, this);
+    connection.addSubscriber('staleConnection', this._destroyConnection, this);
     return this._connections[id] = connection;
   },
   
   _destroyConnection: function(connection) {
     connection.disconnect();
-    connection.stopObserving('staleConnection', this._destroyConnection, this);
+    connection.removeSubscriber('staleConnection', this._destroyConnection, this);
     delete this._connections[connection.id];
   },
   
@@ -1224,14 +1220,14 @@ Faye.Connection = Faye.Class({
   
   subscribe: function(channel) {
     if (!this._channels.add(channel)) return;
-    channel.on('message', this._onMessage, this);
+    channel.addSubscriber('message', this._onMessage, this);
   },
   
   unsubscribe: function(channel) {
     if (channel === 'all') return this._channels.forEach(this.unsubscribe, this);
     if (!this._channels.member(channel)) return;
     this._channels.remove(channel);
-    channel.stopObserving('message', this._onMessage, this);
+    channel.removeSubscriber('message', this._onMessage, this);
   },
   
   connect: function(callback, scope) {
@@ -1277,13 +1273,13 @@ Faye.Connection = Faye.Class({
     this._connected = false;
     
     this.addTimeout('deletion', 10 * this.INTERVAL, function() {
-      this.trigger('staleConnection', this);
+      this.publishEvent('staleConnection', this);
     }, this);
   }
 });
 
 Faye.extend(Faye.Connection.prototype, Faye.Deferrable);
-Faye.extend(Faye.Connection.prototype, Faye.Observable);
+Faye.extend(Faye.Connection.prototype, Faye.Publisher);
 Faye.extend(Faye.Connection.prototype, Faye.Timeouts);
 
 

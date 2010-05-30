@@ -19,14 +19,14 @@ Faye.Connection = Faye.Class({
   
   subscribe: function(channel) {
     if (!this._channels.add(channel)) return;
-    channel.on('message', this._onMessage, this);
+    channel.addSubscriber('message', this._onMessage, this);
   },
   
   unsubscribe: function(channel) {
     if (channel === 'all') return this._channels.forEach(this.unsubscribe, this);
     if (!this._channels.member(channel)) return;
     this._channels.remove(channel);
-    channel.stopObserving('message', this._onMessage, this);
+    channel.removeSubscriber('message', this._onMessage, this);
   },
   
   connect: function(callback, scope) {
@@ -72,12 +72,12 @@ Faye.Connection = Faye.Class({
     this._connected = false;
     
     this.addTimeout('deletion', 10 * this.INTERVAL, function() {
-      this.trigger('staleConnection', this);
+      this.publishEvent('staleConnection', this);
     }, this);
   }
 });
 
 Faye.extend(Faye.Connection.prototype, Faye.Deferrable);
-Faye.extend(Faye.Connection.prototype, Faye.Observable);
+Faye.extend(Faye.Connection.prototype, Faye.Publisher);
 Faye.extend(Faye.Connection.prototype, Faye.Timeouts);
 
