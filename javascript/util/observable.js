@@ -1,4 +1,9 @@
 Faye.Observable = {
+  countObservers: function(eventType) {
+    if (!this._observers || !this._observers[eventType]) return 0;
+    return this._observers[eventType].length;
+  },
+  
   on: function(eventType, block, scope) {
     this._observers = this._observers || {};
     var list = this._observers[eventType] = this._observers[eventType] || [];
