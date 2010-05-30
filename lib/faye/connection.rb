@@ -82,7 +82,7 @@ module Faye
       
       add_timeout(:deletion, 10 * INTERVAL) do
         changed(true)
-        notify_observers(:stale_client, self)
+        notify_observers(:stale_connection, self)
       end
     end
     

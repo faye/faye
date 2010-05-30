@@ -5,20 +5,20 @@ module Faye
     
     def initialize(options = {})
       info('New server created')
-      @options   = options
-      @channels  = Channel::Tree.new
-      @clients   = {}
-      @namespace = Namespace.new
+      @options     = options
+      @channels    = Channel::Tree.new
+      @connections = {}
+      @namespace   = Namespace.new
     end
     
     # Notifies the server of stale connections that should be deleted
-    def update(message, client)
-      return unless message == :stale_client
-      destroy_client(client)
+    def update(message, connection)
+      return unless message == :stale_connection
+      destroy_connection(connection)
     end
     
     def client_ids
-      @clients.keys
+      @connections.keys
     end
     
     def process(messages, local = false, &callback)
@@ -39,24 +39,24 @@ module Faye
     
     def flush_connection(messages)
       [messages].flatten.each do |message|
-        client = @clients[message['clientId']]
-        client.flush! if client
+        connection = @connections[message['clientId']]
+        connection.flush! if connection
       end
     end
     
   private
     
     def connection(id)
-      return @clients[id] if @clients.has_key?(id)
-      client = Connection.new(id, @options)
-      client.add_observer(self)
-      @clients[id] = client
+      return @connections[id] if @connections.has_key?(id)
+      connection = Connection.new(id, @options)
+      connection.add_observer(self)
+      @connections[id] = connection
     end
     
-    def destroy_client(client)
-      client.disconnect!
-      client.delete_observer(self)
-      @clients.delete(client.id)
+    def destroy_connection(connection)
+      connection.disconnect!
+      connection.delete_observer(self)
+      @connections.delete(connection.id)
     end
     
     def handle(message, local = false, &callback)
@@ -72,7 +72,7 @@ module Faye
         
         client_id = response['clientId']
         response['advice'] ||= {}
-        response['advice']['reconnect'] ||= @clients.has_key?(client_id) ? 'retry' : 'handshake'
+        response['advice']['reconnect'] ||= @connections.has_key?(client_id) ? 'retry' : 'handshake'
         response['advice']['interval']  ||= (Connection::INTERVAL * 1000).floor
         
         return callback.call(response) unless response['channel'] == Channel::CONNECT and
@@ -144,11 +144,11 @@ module Faye
     def connect(message, local = false)
       response  = make_response(message)
       
-      client_id = message['clientId']
-      client    = client_id ? @clients[client_id] : nil
+      client_id  = message['clientId']
+      connection = client_id ? @connections[client_id] : nil
       connection_type = message['connectionType']
       
-      response['error'] = Error.client_unknown(client_id) if client.nil?
+      response['error'] = Error.client_unknown(client_id) if connection.nil?
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       response['error'] = Error.parameter_missing('connectionType') if connection_type.nil?
       
@@ -156,7 +156,7 @@ module Faye
       response.delete('clientId') unless response['successful']
       return response unless response['successful']
       
-      response['clientId'] = client.id
+      response['clientId'] = connection.id
       response
     end
     
@@ -166,17 +166,17 @@ module Faye
     def disconnect(message, local = false)
       response  = make_response(message)
       
-      client_id = message['clientId']
-      client    = client_id ? @clients[client_id] : nil
+      client_id  = message['clientId']
+      connection = client_id ? @connections[client_id] : nil
       
-      response['error'] = Error.client_unknown(client_id) if client.nil?
+      response['error'] = Error.client_unknown(client_id) if connection.nil?
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       
       response['successful'] = response['error'].nil?
       response.delete('clientId') unless response['successful']
       return response unless response['successful']
       
-      destroy_client(client)
+      destroy_connection(connection)
       
       info('Disconnected client: ?', client_id)
       response['clientId'] = client_id
@@ -191,12 +191,12 @@ module Faye
       response      = make_response(message)
       
       client_id     = message['clientId']
-      client        = client_id ? @clients[client_id] : nil
+      connection    = client_id ? @connections[client_id] : nil
       
       subscription  = message['subscription']
       subscription  = [subscription].flatten
       
-      response['error'] = Error.client_unknown(client_id) if client.nil?
+      response['error'] = Error.client_unknown(client_id) if connection.nil?
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
       
@@ -211,7 +211,7 @@ module Faye
         channel = @channels[channel] ||= Channel.new(channel)
         
         info('Subscribing client ? to ?', client_id, channel.name)
-        client.subscribe(channel)
+        connection.subscribe(channel)
       end
       
       response['successful'] = response['error'].nil?
@@ -226,12 +226,12 @@ module Faye
       response      = make_response(message)
       
       client_id     = message['clientId']
-      client        = client_id ? @clients[client_id] : nil
+      connection    = client_id ? @connections[client_id] : nil
       
       subscription  = message['subscription']
       subscription  = [subscription].flatten
       
-      response['error'] = Error.client_unknown(client_id) if client.nil?
+      response['error'] = Error.client_unknown(client_id) if connection.nil?
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
       
@@ -249,7 +249,7 @@ module Faye
         next unless channel
         
         info('Unsubscribing client ? from ?', client_id, channel.name)
-        client.unsubscribe(channel)
+        connection.unsubscribe(channel)
       end
       
       response['successful'] = response['error'].nil?

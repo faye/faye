@@ -925,15 +925,15 @@ Faye.Set = Faye.Class({
 Faye.Server = Faye.Class({
   initialize: function(options) {
     this.info('New server created');
-    this._options   = options || {};
-    this._channels  = new Faye.Channel.Tree();
-    this._clients   = {};
-    this._namespace = new Faye.Namespace();
+    this._options     = options || {};
+    this._channels    = new Faye.Channel.Tree();
+    this._connections = {};
+    this._namespace   = new Faye.Namespace();
   },
   
   clientIds: function() {
     var ids = [];
-    Faye.each(this._clients, function(key, value) { ids.push(key) });
+    Faye.each(this._connections, function(key, value) { ids.push(key) });
     return ids;
   },
   
@@ -956,22 +956,22 @@ Faye.Server = Faye.Class({
   flushConnection: function(messages) {
     messages = [].concat(messages);
     Faye.each(messages, function(message) {
-      var client = this._clients[message.clientId];
-      if (client) client.flush();
+      var connection = this._connections[message.clientId];
+      if (connection) connection.flush();
     }, this);
   },
   
   _connection: function(id) {
-    if (this._clients.hasOwnProperty(id)) return this._clients[id];
-    var client = new Faye.Connection(id, this._options);
-    client.on('staleClient', this._destroyClient, this);
-    return this._clients[id] = client;
+    if (this._connections.hasOwnProperty(id)) return this._connections[id];
+    var connection = new Faye.Connection(id, this._options);
+    connection.on('staleConnection', this._destroyConnection, this);
+    return this._connections[id] = connection;
   },
   
-  _destroyClient: function(client) {
-    client.disconnect();
-    client.stopObserving('staleClient', this._destroyClient, this);
-    delete this._clients[client.id];
+  _destroyConnection: function(connection) {
+    connection.disconnect();
+    connection.stopObserving('staleConnection', this._destroyConnection, this);
+    delete this._connections[connection.id];
   },
   
   _handle: function(message, local, callback, scope) {
@@ -990,7 +990,7 @@ Faye.Server = Faye.Class({
       var clientId = response.clientId;
       response.advice = response.advice || {};
       Faye.extend(response.advice, {
-        reconnect:  this._clients.hasOwnProperty(clientId) ? 'retry' : 'handshake',
+        reconnect:  this._connections.hasOwnProperty(clientId) ? 'retry' : 'handshake',
         interval:   Math.floor(Faye.Connection.prototype.INTERVAL * 1000)
       }, false);
       
@@ -1069,11 +1069,11 @@ Faye.Server = Faye.Class({
   connect: function(message, local) {
     var response = this._makeResponse(message);
     
-    var clientId = message.clientId,
-        client   = clientId ? this._clients[clientId] : null,
+    var clientId   = message.clientId,
+        connection = clientId ? this._connections[clientId] : null,
         connectionType = message.connectionType;
     
-    if (!client)         response.error = Faye.Error.clientUnknown(clientId);
+    if (!connection)     response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)       response.error = Faye.Error.parameterMissing('clientId');
     if (!connectionType) response.error = Faye.Error.parameterMissing('connectionType');
     
@@ -1081,7 +1081,7 @@ Faye.Server = Faye.Class({
     if (!response.successful) delete response.clientId;
     if (!response.successful) return response;
     
-    response.clientId = client.id;
+    response.clientId = connection.id;
     return response;
   },
   
@@ -1091,17 +1091,17 @@ Faye.Server = Faye.Class({
   disconnect: function(message, local) {
     var response = this._makeResponse(message);
     
-    var clientId = message.clientId,
-        client   = clientId ? this._clients[clientId] : null;
+    var clientId   = message.clientId,
+        connection = clientId ? this._connections[clientId] : null;
     
-    if (!client)   response.error = Faye.Error.clientUnknown(clientId);
-    if (!clientId) response.error = Faye.Error.parameterMissing('clientId');
+    if (!connection) response.error = Faye.Error.clientUnknown(clientId);
+    if (!clientId)   response.error = Faye.Error.parameterMissing('clientId');
     
     response.successful = !response.error;
     if (!response.successful) delete response.clientId;
     if (!response.successful) return response;
     
-    this._destroyClient(client);
+    this._destroyConnection(connection);
     
     this.info('Disconnected client: ?', clientId);
     response.clientId = clientId;
@@ -1116,12 +1116,12 @@ Faye.Server = Faye.Class({
     var response = this._makeResponse(message);
     
     var clientId     = message.clientId,
-        client       = clientId ? this._clients[clientId] : null,
+        connection   = clientId ? this._connections[clientId] : null,
         subscription = message.subscription;
     
     subscription = [].concat(subscription);
     
-    if (!client)               response.error = Faye.Error.clientUnknown(clientId);
+    if (!connection)           response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
     if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
     
@@ -1136,7 +1136,7 @@ Faye.Server = Faye.Class({
       channel = this._channels.findOrCreate(channel);
       
       this.info('Subscribing client ? to ?', clientId, channel.name);
-      client.subscribe(channel);
+      connection.subscribe(channel);
     }, this);
     
     response.successful = !response.error;
@@ -1151,12 +1151,12 @@ Faye.Server = Faye.Class({
     var response = this._makeResponse(message);
     
     var clientId     = message.clientId,
-        client       = clientId ? this._clients[clientId] : null,
+        connection   = clientId ? this._connections[clientId] : null,
         subscription = message.subscription;
     
     subscription = [].concat(subscription);
     
-    if (!client)               response.error = Faye.Error.clientUnknown(clientId);
+    if (!connection)           response.error = Faye.Error.clientUnknown(clientId);
     if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
     if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
     
@@ -1172,7 +1172,7 @@ Faye.Server = Faye.Class({
       if (!channel) return;
       
       this.info('Unsubscribing client ? from ?', clientId, channel.name);
-      client.unsubscribe(channel);
+      connection.unsubscribe(channel);
     }, this);
     
     response.successful = !response.error;
@@ -1257,7 +1257,7 @@ Faye.Connection = Faye.Class({
     this._connected = false;
     
     this.addTimeout('deletion', 10 * this.INTERVAL, function() {
-      this.trigger('staleClient', this);
+      this.trigger('staleConnection', this);
     }, this);
   }
 });

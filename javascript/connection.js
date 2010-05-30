@@ -72,7 +72,7 @@ Faye.Connection = Faye.Class({
     this._connected = false;
     
     this.addTimeout('deletion', 10 * this.INTERVAL, function() {
-      this.trigger('staleClient', this);
+      this.trigger('staleConnection', this);
     }, this);
   }
 });
