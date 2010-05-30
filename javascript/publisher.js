@@ -30,7 +30,7 @@ Faye.Publisher = {
     if (!this._subscribers || !this._subscribers[eventType]) return;
     
     Faye.each(this._subscribers[eventType], function(listener) {
-      listener[0].apply(listener[1], args.slice());
+      listener[0].apply(listener[1], args);
     });
   }
 };

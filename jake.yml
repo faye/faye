@@ -13,9 +13,9 @@ packages:
     - faye
     - util/class
     - util/deferrable
-    - util/publisher
-    - logging
+    - publisher
     - timeouts
+    - logging
     - channel
     - namespace
     - transport

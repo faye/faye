@@ -257,8 +257,29 @@ Faye.Publisher = {
     if (!this._subscribers || !this._subscribers[eventType]) return;
     
     Faye.each(this._subscribers[eventType], function(listener) {
-      listener[0].apply(listener[1], args.slice());
+      listener[0].apply(listener[1], args);
     });
+  }
+};
+
+
+Faye.Timeouts = {
+  addTimeout: function(name, delay, callback, scope) {
+    this._timeouts = this._timeouts || {};
+    if (this._timeouts.hasOwnProperty(name)) return;
+    var self = this;
+    this._timeouts[name] = setTimeout(function() {
+      delete self._timeouts[name];
+      callback.call(scope);
+    }, 1000 * delay);
+  },
+  
+  removeTimeout: function(name) {
+    this._timeouts = this._timeouts || {};
+    var timeout = this._timeouts[name];
+    if (!timeout) return;
+    clearTimeout(timeout);
+    delete this._timeouts[name];
   }
 };
 
@@ -304,27 +325,6 @@ Faye.each(Faye.Logging.LOG_LEVELS, function(level, value) {
     this.log(arguments, level);
   };
 });
-
-
-Faye.Timeouts = {
-  addTimeout: function(name, delay, callback, scope) {
-    this._timeouts = this._timeouts || {};
-    if (this._timeouts.hasOwnProperty(name)) return;
-    var self = this;
-    this._timeouts[name] = setTimeout(function() {
-      delete self._timeouts[name];
-      callback.call(scope);
-    }, 1000 * delay);
-  },
-  
-  removeTimeout: function(name) {
-    this._timeouts = this._timeouts || {};
-    var timeout = this._timeouts[name];
-    if (!timeout) return;
-    clearTimeout(timeout);
-    delete this._timeouts[name];
-  }
-};
 
 
 Faye.Channel = Faye.Class({
