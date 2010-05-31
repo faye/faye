@@ -188,6 +188,8 @@ Faye.Client = Faye.Class({
       }));
       
     }, this);
+    
+    return new Faye.Subscription(this, channels, callback, scope);
   },
   
   // Request                              Response

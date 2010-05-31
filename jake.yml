@@ -17,6 +17,7 @@ packages:
     - timeouts
     - logging
     - channel
+    - subscription
     - namespace
     - transport
     - client

@@ -55,24 +55,19 @@ AsyncScenario = Faye.Class({
   },
   
   subscribe: function(name, channel, Continue) {
-    var client = this._clients[name], scope = this;
+    var client = this._clients[name];
     
-    var callback = function(message) {
+    this._lastSub = client.subscribe(channel, function(message) {
       var box = this._inbox[name];
       box[channel] = box[channel] || [];
       box[channel].push(message);
-    };
+    }, this);
     
-    this._lastSub = [name, channel, callback, scope];
-    client.subscribe(channel, callback, scope);
     setTimeout(Continue, 500);
   },
   
   cancelLastSubscription: function(Continue) {
-    var lastSub = this._lastSub,
-        client  = this._clients[lastSub[0]];
-    
-    client.unsubscribe(lastSub[1], lastSub[2], lastSub[3]);
+    this._lastSub.cancel();
     setTimeout(Continue, 500);
   },
   
