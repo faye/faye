@@ -34,6 +34,7 @@ lib/faye/namespace.rb
 lib/faye/publisher.rb
 lib/faye/rack_adapter.rb
 lib/faye/server.rb
+lib/faye/subscription.rb
 lib/faye/timeouts.rb
 lib/faye/transport.rb
 test/scenario.js

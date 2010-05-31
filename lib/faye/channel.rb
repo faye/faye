@@ -119,6 +119,33 @@ module Faye
         list << @children[:**].value if @children[:**]
         list.flatten
       end
+      
+      def subscribe(names, callback)
+        return unless callback
+        names.each do |name|
+          channel = self[name] ||= Channel.new(name)
+          channel.add_subscriber(:message, callback)
+        end
+      end
+      
+      def unsubscribe(names, callback)
+        dead_channels = []
+        
+        names.each do |name|
+          channel = self[name]
+          next unless channel
+          channel.remove_subscriber(:message, callback)
+          dead_channels.push(name) if channel.count_subscribers(:message).zero?
+        end
+        
+        dead_channels
+      end
+      
+      def distribute_message(message)
+        glob(message['channel']).each do |channel|
+          channel.publish_event(:message, message['data'])
+        end
+      end
     end
     
   end

@@ -165,10 +165,10 @@ module Faye
     #                                                     * id
     #                                                     * timestamp
     def subscribe(channels, &block)
+      channels = [channels].flatten
+      validate_channels(channels)
+      
       connect {
-        channels = [channels].flatten
-        validate_channels(channels)
-        
         info('Client ? attempting to subscribe to ?', @client_id, channels)
         
         @transport.send({
@@ -177,15 +177,15 @@ module Faye
           'subscription'  => channels
           
         }, &verify_client_id { |response|
-          if response['successful'] and block
-            
-            info('Subscription acknowledged for ? to ?', @client_id, channels)
+          if response['successful']
             
             channels = [response['subscription']].flatten
-            channels.each { |channel| @channels[channel] = block }
+            info('Subscription acknowledged for ? to ?', @client_id, channels)
+            @channels.subscribe(channels, block)
           end
         })
       }
+      Subscription.new(self, channels, block)
     end
     
     # Request                              Response
@@ -199,24 +199,24 @@ module Faye
     #                                                     * id
     #                                                     * timestamp
     def unsubscribe(channels, &block)
+      channels = [channels].flatten
+      validate_channels(channels)
+      
+      dead_channels = @channels.unsubscribe(channels, block)
+      
       connect {
-        channels = [channels].flatten
-        validate_channels(channels)
-        
-        info('Client ? attempting to unsubscribe from ?', @client_id, channels)
+        info('Client ? attempting to unsubscribe from ?', @client_id, dead_channels)
         
         @transport.send({
           'channel'       => Channel::UNSUBSCRIBE,
           'clientId'      => @client_id,
-          'subscription'  => channels
+          'subscription'  => dead_channels
           
         }, &verify_client_id { |response|
           if response['successful']
             
-            info('Unsubscription acknowledged for ? from ?', @client_id, channels)
-            
             channels = [response['subscription']].flatten
-            channels.each { |channel| @channels[channel] = nil }
+            info('Unsubscription acknowledged for ? from ?', @client_id, channels)
           end
         })
       }
@@ -252,9 +252,7 @@ module Faye
     def deliver_messages(messages)
       messages.each do |message|
         info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
-        
-        channels = @channels.glob(message['channel'])
-        channels.each { |callback| callback.call(message['data']) }
+        @channels.distribute_message(message)
       end
     end
     

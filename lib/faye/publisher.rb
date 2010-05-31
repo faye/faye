@@ -1,6 +1,11 @@
 module Faye
   module Publisher
     
+    def count_subscribers(event_type)
+      return 0 unless @subscribers and @subscribers[event_type]
+      @subscribers[event_type].size
+    end
+    
     def add_subscriber(event_type, listener)
       @subscribers ||= {}
       list = @subscribers[event_type] ||= []

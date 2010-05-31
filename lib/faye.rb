@@ -15,8 +15,8 @@ module Faye
   CONNECTION_TYPES = %w[long-polling callback-polling]
   
   %w[ publisher timeouts logging grammar
-      namespace server channel connection
-      error client transport
+      namespace server channel subscription
+      connection error client transport
       
   ].each do |lib|
     require File.join(ROOT, 'faye', lib)

@@ -44,6 +44,35 @@ class TestClients < Test::Unit::TestCase
     )
   end
 
+  scenario "Two HTTP clients, two subscriptions on the same channel" do
+    server 8000
+    http_client :A, ['/channels/a']
+    http_client :B, []
+    subscribe :A, '/channels/a'
+    publish :B, '/channels/a', 'hello' => 'world'
+    check_inbox(
+        :A => {
+          '/channels/a' => [{'hello' => 'world'}, {'hello' => 'world'}]
+        },
+        :B => {}
+    )
+  end
+
+  scenario "Two HTTP clients, two subscriptions and one unsubscription" do
+    server 8000
+    http_client :A, ['/channels/a']
+    http_client :B, []
+    subscribe :A, '/channels/a'
+    cancel_last_subscription
+    publish :B, '/channels/a', 'another' => 'message'
+    check_inbox(
+        :A => {
+          '/channels/a' => [{'another' => 'message'}]
+        },
+        :B => {}
+    )
+  end
+
   scenario "Three HTTP clients, single receiver" do
     server 8000
     http_client :A, ['/channels/a']
