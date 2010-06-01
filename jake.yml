@@ -16,6 +16,7 @@ packages:
     - util/observable
     - logging
     - timeouts
+    - extensible
     - channel
     - namespace
     - transport

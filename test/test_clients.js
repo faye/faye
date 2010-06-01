@@ -20,6 +20,65 @@ var Scenario = require('./scenario'),
   assert.deepEqual(tree.glob('/channels/**').sort(), ['A','B','C']);
 })();
 
+Scenario.run("Client modifies incoming messages",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', ['/channels/b']);
+  
+  extendClient('A', 'incoming', function(message, callback) {
+    message.data.modified = 'hi';
+    callback(message);
+  });
+  
+  publish('B', '/channels/a', {welcome: 'message'});
+  checkInbox({
+      A: {
+        '/channels/a': [{welcome: 'message', modified: 'hi'}]
+      },
+      B: {}
+  });
+}});
+
+Scenario.run("Client blocks incoming messages",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', ['/channels/b']);
+  
+  extendClient('A', 'incoming', function(message, callback) {});
+  
+  publish('B', '/channels/a', {welcome: 'message'});
+  checkInbox({ A: {}, B: {} });
+}});
+
+Scenario.run("Server requires authentication",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', ['/channels/b']);
+  
+  extendServer('incoming', function(message, callback) {
+    if (message.ext && message.ext.password) callback(message);
+  });
+  
+  extendClient('B', 'outgoing', function(message, callback) {
+    message.ext = {password: true};
+    callback(message);
+  });
+  
+  publish('A', '/channels/b', {messageFor: 'B'});
+  checkInbox({ A: {}, B: {} });
+  
+  publish('B', '/channels/a', {messageFor: 'A'});
+  checkInbox({
+      A: {
+        '/channels/a': [{messageFor: 'A'}]
+      },
+      B: {}
+  });
+}});
+
 Scenario.run("Server goes away, subscriptions should be revived",
 function() { with(this) {
   server(8000);

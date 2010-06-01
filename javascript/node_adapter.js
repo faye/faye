@@ -32,6 +32,14 @@ Faye.NodeAdapter = Faye.Class({
     this._server     = new Faye.Server(this._options);
   },
   
+  addExtension: function(extension) {
+    return this._server.addExtension(extension);
+  },
+  
+  removeExtension: function(extension) {
+    return this._server.removeExtension(extension);
+  },
+  
   getClient: function() {
     return this._client = this._client || new Faye.Client(this._server);
   },
@@ -72,7 +80,6 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   _callWithParams: function(request, response, params) {
-    try {
       var message = JSON.parse(params.message),
           jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
@@ -87,11 +94,6 @@ Faye.NodeAdapter = Faye.Class({
         response.write(body);
         response.end();
       });
-    } catch (e) {
-      response.writeHead(400, this.TYPE_TEXT);
-      response.write('Bad request');
-      response.end();
-    }
   }
 });
 

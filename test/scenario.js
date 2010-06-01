@@ -42,6 +42,20 @@ AsyncScenario = Faye.Class({
     this._setupClient(this._comet.getClient(), name, channels, Continue);
   },
   
+  extendServer: function(stage, extension, Continue) {
+    var object = {};
+    object[stage] = extension;
+    this._comet.addExtension(object);
+    Continue();
+  },
+  
+  extendClient: function(name, stage, extension, Continue) {
+    var object = {};
+    object[stage] = extension;
+    this._clients[name].addExtension(object);
+    Continue();
+  },
+  
   _setupClient: function(client, name, channels, Continue) {
     Faye.each(channels, function(channel) {
       client.subscribe(channel, function(message) {
@@ -109,7 +123,8 @@ SyncScenario = Faye.Class({
   }
 });
 
-['wait', 'server', 'killServer', 'httpClient', 'localClient', 'publish', 'checkInbox'].
+['wait', 'server', 'killServer', 'httpClient', 'localClient', 'publish', 'checkInbox',
+ 'extendServer', 'extendClient'].
 forEach(function(method) {
   SyncScenario.prototype[method] = function() {
     this._commands.push([method, arguments]);
