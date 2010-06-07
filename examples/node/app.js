@@ -1,7 +1,7 @@
 var fs    = require('fs'),
     path  = require('path'),
     sys   = require('sys'), 
-    http  = require('http')
+    http  = require('http'),
     faye  = require('./faye');
 
 var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
@@ -18,9 +18,9 @@ http.createServer(function(request, response) {
   var path = (request.url === '/') ? '/index.html' : request.url;
   
   fs.readFile(PUBLIC_DIR + path, function(err, content) {
-    response.sendHeader(200, {'Content-Type': 'text/html'});
+    response.writeHead(200, {'Content-Type': 'text/html'});
     response.write(content);
-    response.close();
+    response.end();
   });
 }).listen(Number(port));
 
