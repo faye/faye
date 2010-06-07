@@ -975,17 +975,17 @@ Faye.Server = Faye.Class({
   },
   
   _handle: function(message, local, callback, scope) {
-    var channel = message.channel,
+    var channelName = message.channel,
         response;
     
     message.__id = Faye.random();
-    Faye.each(this._channels.glob(channel), function(channel) {
+    Faye.each(this._channels.glob(channelName), function(channel) {
       channel.push(message);
       this.info('Publishing message ? from client ? to ?', message.data, message.clientId, channel.name);
     }, this);
     
-    if (Faye.Channel.isMeta(channel)) {
-      response = this[Faye.Channel.parse(channel)[1]](message, local);
+    if (Faye.Channel.isMeta(channelName)) {
+      response = this[Faye.Channel.parse(channelName)[1]](message, local);
       
       var clientId = response.clientId;
       response.advice = response.advice || {};
@@ -1008,7 +1008,7 @@ Faye.Server = Faye.Class({
       }, this);
     }
     
-    if (!message.clientId || Faye.Channel.isService(channel))
+    if (!message.clientId || Faye.Channel.isService(channelName))
       return callback([]);
     
     response = this._makeResponse(message);

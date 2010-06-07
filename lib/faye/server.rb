@@ -60,15 +60,15 @@ module Faye
     end
     
     def handle(message, local = false, &callback)
-      channel = message['channel']
+      channel_name = message['channel']
       
-      @channels.glob(channel).each do |channel|
+      @channels.glob(channel_name).each do |channel|
         channel << message
         info('Publishing message ? from client ? to ?', message['data'], message['clientId'], channel.name)
       end
       
-      if Channel.meta?(channel)
-        response = __send__(Channel.parse(channel)[1], message, local)
+      if Channel.meta?(channel_name)
+        response = __send__(Channel.parse(channel_name)[1], message, local)
         
         client_id = response['clientId']
         response['advice'] ||= {}
@@ -87,7 +87,7 @@ module Faye
         end
       end
       
-      return callback.call([]) if message['clientId'].nil? or Channel.service?(channel)
+      return callback.call([]) if message['clientId'].nil? or Channel.service?(channel_name)
       
       response = make_response(message)
       response['successful'] = true
