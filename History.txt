@@ -1,3 +1,10 @@
+=== 0.3.3 / 2010-06-07
+
+* Bring Node APIs up to date with 0.1.97
+* Catch ECONNREFUSED errors in Node clients to withstand server outages
+* Refactor the Server internals
+
+
 === 0.3.2 / 2010-04-04
 
 * Fix problems with JSON serialization when Prototype, MooTools present
