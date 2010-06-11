@@ -225,39 +225,61 @@ Faye.Deferrable = {
 };
 
 
-Faye.Observable = {
-  on: function(eventType, block, scope) {
-    this._observers = this._observers || {};
-    var list = this._observers[eventType] = this._observers[eventType] || [];
-    list.push([block, scope]);
+Faye.Publisher = {
+  countSubscribers: function(eventType) {
+    if (!this._subscribers || !this._subscribers[eventType]) return 0;
+    return this._subscribers[eventType].length;
   },
   
-  stopObserving: function(eventType, block, scope) {
-    if (!this._observers || !this._observers[eventType]) return;
+  addSubscriber: function(eventType, listener, context) {
+    this._subscribers = this._subscribers || {};
+    var list = this._subscribers[eventType] = this._subscribers[eventType] || [];
+    list.push([listener, context]);
+  },
+  
+  removeSubscriber: function(eventType, listener, context) {
+    if (!this._subscribers || !this._subscribers[eventType]) return;
     
-    if (!block) {
-      delete this._observers[eventType];
-      return;
-    }
-    var list = this._observers[eventType],
+    var list = this._subscribers[eventType],
         i    = list.length;
     
     while (i--) {
-      if (block && list[i][0] !== block) continue;
-      if (scope && list[i][1] !== scope) continue;
+      if (listener && list[i][0] !== listener) continue;
+      if (context && list[i][1] !== context) continue;
       list.splice(i,1);
     }
   },
   
-  trigger: function() {
+  publishEvent: function() {
     var args = Array.prototype.slice.call(arguments),
         eventType = args.shift();
     
-    if (!this._observers || !this._observers[eventType]) return;
+    if (!this._subscribers || !this._subscribers[eventType]) return;
     
-    Faye.each(this._observers[eventType], function(listener) {
-      listener[0].apply(listener[1], args.slice());
+    Faye.each(this._subscribers[eventType], function(listener) {
+      listener[0].apply(listener[1], args);
     });
+  }
+};
+
+
+Faye.Timeouts = {
+  addTimeout: function(name, delay, callback, scope) {
+    this._timeouts = this._timeouts || {};
+    if (this._timeouts.hasOwnProperty(name)) return;
+    var self = this;
+    this._timeouts[name] = setTimeout(function() {
+      delete self._timeouts[name];
+      callback.call(scope);
+    }, 1000 * delay);
+  },
+  
+  removeTimeout: function(name) {
+    this._timeouts = this._timeouts || {};
+    var timeout = this._timeouts[name];
+    if (!timeout) return;
+    clearTimeout(timeout);
+    delete this._timeouts[name];
   }
 };
 
@@ -305,38 +327,17 @@ Faye.each(Faye.Logging.LOG_LEVELS, function(level, value) {
 });
 
 
-Faye.Timeouts = {
-  addTimeout: function(name, delay, callback, scope) {
-    this._timeouts = this._timeouts || {};
-    if (this._timeouts.hasOwnProperty(name)) return;
-    var self = this;
-    this._timeouts[name] = setTimeout(function() {
-      delete self._timeouts[name];
-      callback.call(scope);
-    }, 1000 * delay);
-  },
-  
-  removeTimeout: function(name) {
-    this._timeouts = this._timeouts || {};
-    var timeout = this._timeouts[name];
-    if (!timeout) return;
-    clearTimeout(timeout);
-    delete this._timeouts[name];
-  }
-};
-
-
 Faye.Channel = Faye.Class({
   initialize: function(name) {
     this.__id = this.name = name;
   },
   
   push: function(message) {
-    this.trigger('message', message);
+    this.publishEvent('message', message);
   }
 });
 
-Faye.extend(Faye.Channel.prototype, Faye.Observable);
+Faye.extend(Faye.Channel.prototype, Faye.Publisher);
 
 Faye.extend(Faye.Channel, {
   HANDSHAKE:    '/meta/handshake',
@@ -465,8 +466,55 @@ Faye.extend(Faye.Channel, {
       
       if (this._children['**']) list.push(this._children['**']._value);
       return list;
+    },
+    
+    subscribe: function(names, callback, scope) {
+      if (!callback) return;
+      Faye.each(names, function(name) {
+        var channel = this.findOrCreate(name);
+        channel.addSubscriber('message', callback, scope);
+      }, this);
+    },
+    
+    unsubscribe: function(names, callback, scope) {
+      var deadChannels = [];
+      
+      Faye.each(names, function(name) {
+        var channel = this.get(name);
+        if (!channel) return;
+        channel.removeSubscriber('message', callback, scope);
+        if (channel.countSubscribers('message') === 0) deadChannels.push(name);
+      }, this);
+      
+      return deadChannels;
+    },
+    
+    distributeMessage: function(message) {
+      var channels = this.glob(message.channel);
+      Faye.each(channels, function(channel) { channel.publishEvent('message', message.data) });
     }
   })
+});
+
+
+Faye.Subscription = Faye.Class({
+  initialize: function(client, channels, callback, scope) {
+    this._client    = client;
+    this._channels  = channels;
+    this._callback  = callback;
+    this._scope     = scope;
+    this._cancelled = false;
+  },
+  
+  cancel: function() {
+    if (this._cancelled) return;
+    this._client.unsubscribe(this._channels, this._callback, this._scope);
+    this._cancelled = true;
+  },
+  
+  unsubscribe: function() {
+    this.cancel();
+  }
 });
 
 
@@ -727,11 +775,10 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   subscribe: function(channels, callback, scope) {
+    channels = [].concat(channels);
+    this._validateChannels(channels);
+    
     this.connect(function() {
-      
-      channels = [].concat(channels);
-      this._validateChannels(channels);
-      
       this.info('Client ? attempting to subscribe to ?', this._clientId, channels);
       
       this._transport.send({
@@ -740,17 +787,16 @@ Faye.Client = Faye.Class({
         subscription: channels
         
       }, this._verifyClientId(function(response) {
-        if (!response.successful || !callback) return;
+        if (!response.successful) return;
         
+        var channels = [].concat(response.subscription);
         this.info('Subscription acknowledged for ? to ?', this._clientId, channels);
-      
-        channels = [].concat(response.subscription);
-        Faye.each(channels, function(channel) {
-          this._channels.set(channel, [callback, scope]);
-        }, this);
+        this._channels.subscribe(channels, callback, scope);
       }));
       
     }, this);
+    
+    return new Faye.Subscription(this, channels, callback, scope);
   },
   
   // Request                              Response
@@ -764,27 +810,24 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   unsubscribe: function(channels, callback, scope) {
+    channels = [].concat(channels);
+    this._validateChannels(channels);
+    
+    var deadChannels = this._channels.unsubscribe(channels, callback, scope);
+    
     this.connect(function() {
-      
-      channels = [].concat(channels);
-      this._validateChannels(channels);
-      
-      this.info('Client ? attempting to unsubscribe from ?', this._clientId, channels);
+      this.info('Client ? attempting to unsubscribe from ?', this._clientId, deadChannels);
       
       this._transport.send({
         channel:      Faye.Channel.UNSUBSCRIBE,
         clientId:     this._clientId,
-        subscription: channels
+        subscription: deadChannels
         
       }, this._verifyClientId(function(response) {
         if (!response.successful) return;
         
+        var channels = [].concat(response.subscription);
         this.info('Unsubscription acknowledged for ? from ?', this._clientId, channels);
-        
-        channels = [].concat(response.subscription);
-        Faye.each(channels, function(channel) {
-          this._channels.set(channel, undefined);
-        }, this);
       }));
       
     }, this);
@@ -822,11 +865,7 @@ Faye.Client = Faye.Class({
   deliverMessages: function(messages) {
     Faye.each(messages, function(message) {
       this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
-      
-      var channels = this._channels.glob(message.channel);
-      Faye.each(channels, function(callback) {
-        callback[0].call(callback[1], message.data);
-      });
+      this._channels.distributeMessage(message);
     }, this);
   },
   
@@ -964,13 +1003,13 @@ Faye.Server = Faye.Class({
   _connection: function(id) {
     if (this._connections.hasOwnProperty(id)) return this._connections[id];
     var connection = new Faye.Connection(id, this._options);
-    connection.on('staleConnection', this._destroyConnection, this);
+    connection.addSubscriber('staleConnection', this._destroyConnection, this);
     return this._connections[id] = connection;
   },
   
   _destroyConnection: function(connection) {
     connection.disconnect();
-    connection.stopObserving('staleConnection', this._destroyConnection, this);
+    connection.removeSubscriber('staleConnection', this._destroyConnection, this);
     delete this._connections[connection.id];
   },
   
@@ -1204,14 +1243,14 @@ Faye.Connection = Faye.Class({
   
   subscribe: function(channel) {
     if (!this._channels.add(channel)) return;
-    channel.on('message', this._onMessage, this);
+    channel.addSubscriber('message', this._onMessage, this);
   },
   
   unsubscribe: function(channel) {
     if (channel === 'all') return this._channels.forEach(this.unsubscribe, this);
     if (!this._channels.member(channel)) return;
     this._channels.remove(channel);
-    channel.stopObserving('message', this._onMessage, this);
+    channel.removeSubscriber('message', this._onMessage, this);
   },
   
   connect: function(callback, scope) {
@@ -1257,13 +1296,13 @@ Faye.Connection = Faye.Class({
     this._connected = false;
     
     this.addTimeout('deletion', 10 * this.INTERVAL, function() {
-      this.trigger('staleConnection', this);
+      this.publishEvent('staleConnection', this);
     }, this);
   }
 });
 
 Faye.extend(Faye.Connection.prototype, Faye.Deferrable);
-Faye.extend(Faye.Connection.prototype, Faye.Observable);
+Faye.extend(Faye.Connection.prototype, Faye.Publisher);
 Faye.extend(Faye.Connection.prototype, Faye.Timeouts);
 
 

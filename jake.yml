@@ -13,10 +13,11 @@ packages:
     - faye
     - util/class
     - util/deferrable
-    - util/observable
-    - logging
+    - publisher
     - timeouts
+    - logging
     - channel
+    - subscription
     - namespace
     - transport
     - client

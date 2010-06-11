@@ -85,17 +85,29 @@ module Scenario
     end
     
     def setup_client(client, name, channels, &block)
-      channels.each do |channel|
-        client.subscribe(channel) do |message|
-          box = @inbox[name]
-          box[channel] ||= []
-          box[channel] << message
-        end
-      end
       @clients[name] = client
       @inbox[name]   = {}
       @pool         += 1
+      
+      channels.each { |channel| subscribe(name, channel) }
       EM.add_timer(0.5 * channels.size, &block)
+    end
+    
+    def subscribe(name, channel, &block)
+      client = @clients[name]
+      
+      @last_sub = client.subscribe(channel) do |message|
+        box = @inbox[name]
+        box[channel] ||= []
+        box[channel] << message
+      end
+      
+      EM.add_timer(0.5, &block)
+    end
+    
+    def cancel_last_subscription(&block)
+      @last_sub.cancel
+      EM.add_timer(0.5, &block)
     end
     
     def publish(from, channel, message, &block)

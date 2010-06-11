@@ -168,11 +168,10 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   subscribe: function(channels, callback, scope) {
+    channels = [].concat(channels);
+    this._validateChannels(channels);
+    
     this.connect(function() {
-      
-      channels = [].concat(channels);
-      this._validateChannels(channels);
-      
       this.info('Client ? attempting to subscribe to ?', this._clientId, channels);
       
       this._transport.send({
@@ -181,17 +180,16 @@ Faye.Client = Faye.Class({
         subscription: channels
         
       }, this._verifyClientId(function(response) {
-        if (!response.successful || !callback) return;
+        if (!response.successful) return;
         
+        var channels = [].concat(response.subscription);
         this.info('Subscription acknowledged for ? to ?', this._clientId, channels);
-      
-        channels = [].concat(response.subscription);
-        Faye.each(channels, function(channel) {
-          this._channels.set(channel, [callback, scope]);
-        }, this);
+        this._channels.subscribe(channels, callback, scope);
       }));
       
     }, this);
+    
+    return new Faye.Subscription(this, channels, callback, scope);
   },
   
   // Request                              Response
@@ -205,27 +203,24 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   unsubscribe: function(channels, callback, scope) {
+    channels = [].concat(channels);
+    this._validateChannels(channels);
+    
+    var deadChannels = this._channels.unsubscribe(channels, callback, scope);
+    
     this.connect(function() {
-      
-      channels = [].concat(channels);
-      this._validateChannels(channels);
-      
-      this.info('Client ? attempting to unsubscribe from ?', this._clientId, channels);
+      this.info('Client ? attempting to unsubscribe from ?', this._clientId, deadChannels);
       
       this._transport.send({
         channel:      Faye.Channel.UNSUBSCRIBE,
         clientId:     this._clientId,
-        subscription: channels
+        subscription: deadChannels
         
       }, this._verifyClientId(function(response) {
         if (!response.successful) return;
         
+        var channels = [].concat(response.subscription);
         this.info('Unsubscription acknowledged for ? from ?', this._clientId, channels);
-        
-        channels = [].concat(response.subscription);
-        Faye.each(channels, function(channel) {
-          this._channels.set(channel, undefined);
-        }, this);
       }));
       
     }, this);
@@ -263,11 +258,7 @@ Faye.Client = Faye.Class({
   deliverMessages: function(messages) {
     Faye.each(messages, function(message) {
       this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
-      
-      var channels = this._channels.glob(message.channel);
-      Faye.each(channels, function(callback) {
-        callback[0].call(callback[1], message.data);
-      });
+      this._channels.distributeMessage(message);
     }, this);
   },
   

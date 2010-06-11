@@ -1,5 +1,4 @@
 require 'forwardable'
-require 'observer'
 require 'set'
 require 'rubygems'
 require 'eventmachine'
@@ -15,8 +14,10 @@ module Faye
   JSONP_CALLBACK   = 'jsonpcallback'
   CONNECTION_TYPES = %w[long-polling callback-polling]
   
-  %w[ logging timeouts grammar namespace server
-      channel connection error client transport
+  %w[ publisher timeouts logging grammar
+      namespace server channel subscription
+      connection error client transport
+      
   ].each do |lib|
     require File.join(ROOT, 'faye', lib)
   end

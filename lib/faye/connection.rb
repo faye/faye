@@ -1,7 +1,7 @@
 module Faye
   class Connection
     include EventMachine::Deferrable
-    include Observable
+    include Publisher
     include Timeouts
     
     MAX_DELAY = 0.1
@@ -19,21 +19,21 @@ module Faye
       @connected = false
     end
     
-    def update(message, event)
-      return unless message == :message
+    def on_message(event)
       @inbox.add(event)
       begin_delivery_timeout!
     end
     
     def subscribe(channel)
-      channel.add_observer(self) if @channels.add?(channel)
+      return unless @channels.add?(channel)
+      channel.add_subscriber(:message, method(:on_message))
     end
     
     def unsubscribe(channel)
       return @channels.each(&method(:unsubscribe)) if channel == :all
       return unless @channels.member?(channel)
       @channels.delete(channel)
-      channel.delete_observer(self)
+      channel.remove_subscriber(:message, method(:on_message))
     end
     
     def connect(&block)
@@ -81,8 +81,7 @@ module Faye
       @connected = false
       
       add_timeout(:deletion, 10 * INTERVAL) do
-        changed(true)
-        notify_observers(:stale_connection, self)
+        publish_event(:stale_connection, self)
       end
     end
     

@@ -79,6 +79,37 @@ function() { with(this) {
   });
 }});
 
+Scenario.run("Two HTTP clients, two subscriptions on the same channel",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', []);
+  subscribe('A', '/channels/a');
+  publish('B', '/channels/a', {hello: 'world'});
+  checkInbox({
+      A: {
+        '/channels/a': [{hello: 'world'}, {hello: 'world'}]
+      },
+      B: {}
+  });
+}});
+
+Scenario.run("Two HTTP clients, two subscriptions and one unsubscription",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', []);
+  subscribe('A', '/channels/a');
+  cancelLastSubscription();
+  publish('B', '/channels/a', {another: 'message'});
+  checkInbox({
+      A: {
+        '/channels/a': [{another: 'message'}]
+      },
+      B: {}
+  });
+}});
+
 Scenario.run("Three HTTP clients, single receiver",
 function() { with(this) {
   server(8000);

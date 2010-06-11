@@ -43,17 +43,32 @@ AsyncScenario = Faye.Class({
   },
   
   _setupClient: function(client, name, channels, Continue) {
-    Faye.each(channels, function(channel) {
-      client.subscribe(channel, function(message) {
-        var box = this._inbox[name];
-        box[channel] = box[channel] || [];
-        box[channel].push(message);
-      }, this);
-    }, this);
     this._clients[name] = client;
     this._inbox[name]   = {};
     this._pool         += 1;
+    
+    Faye.each(channels, function(channel) {
+      this.subscribe(name, channel);
+    }, this);
+    
     setTimeout(Continue, 500 * channels.length);
+  },
+  
+  subscribe: function(name, channel, Continue) {
+    var client = this._clients[name];
+    
+    this._lastSub = client.subscribe(channel, function(message) {
+      var box = this._inbox[name];
+      box[channel] = box[channel] || [];
+      box[channel].push(message);
+    }, this);
+    
+    setTimeout(Continue, 500);
+  },
+  
+  cancelLastSubscription: function(Continue) {
+    this._lastSub.cancel();
+    setTimeout(Continue, 500);
   },
   
   publish: function(from, channel, message, Continue) {
@@ -109,7 +124,8 @@ SyncScenario = Faye.Class({
   }
 });
 
-['wait', 'server', 'killServer', 'httpClient', 'localClient', 'publish', 'checkInbox'].
+['wait', 'server', 'killServer', 'httpClient', 'localClient',
+ 'subscribe', 'cancelLastSubscription', 'publish', 'checkInbox'].
 forEach(function(method) {
   SyncScenario.prototype[method] = function() {
     this._commands.push([method, arguments]);

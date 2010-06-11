@@ -4,11 +4,11 @@ Faye.Channel = Faye.Class({
   },
   
   push: function(message) {
-    this.trigger('message', message);
+    this.publishEvent('message', message);
   }
 });
 
-Faye.extend(Faye.Channel.prototype, Faye.Observable);
+Faye.extend(Faye.Channel.prototype, Faye.Publisher);
 
 Faye.extend(Faye.Channel, {
   HANDSHAKE:    '<%= Faye::Channel::HANDSHAKE %>',
@@ -137,6 +137,32 @@ Faye.extend(Faye.Channel, {
       
       if (this._children['**']) list.push(this._children['**']._value);
       return list;
+    },
+    
+    subscribe: function(names, callback, scope) {
+      if (!callback) return;
+      Faye.each(names, function(name) {
+        var channel = this.findOrCreate(name);
+        channel.addSubscriber('message', callback, scope);
+      }, this);
+    },
+    
+    unsubscribe: function(names, callback, scope) {
+      var deadChannels = [];
+      
+      Faye.each(names, function(name) {
+        var channel = this.get(name);
+        if (!channel) return;
+        channel.removeSubscriber('message', callback, scope);
+        if (channel.countSubscribers('message') === 0) deadChannels.push(name);
+      }, this);
+      
+      return deadChannels;
+    },
+    
+    distributeMessage: function(message) {
+      var channels = this.glob(message.channel);
+      Faye.each(channels, function(channel) { channel.publishEvent('message', message.data) });
     }
   })
 });
