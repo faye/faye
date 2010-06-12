@@ -75,7 +75,9 @@ module Faye
     
     def handle(message, local = false, &callback)
       pipe_through_extensions(:incoming, message) do |message|
-        if message
+        if !message
+          callback.call([])
+        else
           channel = message['channel']
           
           @channels.glob(channel).each do |channel|
