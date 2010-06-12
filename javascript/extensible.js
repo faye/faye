@@ -18,7 +18,7 @@ Faye.Extensible = {
     var extensions = this._extensions.slice();
     
     var pipe = function(message) {
-      if (!message) return;
+      if (!message) return callback.call(scope, message);
       
       var extension = extensions.shift();
       if (!extension) return callback.call(scope, message);

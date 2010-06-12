@@ -46,7 +46,9 @@ function() { with(this) {
   httpClient('A', ['/channels/a']);
   httpClient('B', ['/channels/b']);
   
-  extendClient('A', 'incoming', function(message, callback) {});
+  extendClient('A', 'incoming', function(message, callback) {
+    callback(null);
+  });
   
   publish('B', '/channels/a', {welcome: 'message'});
   checkInbox({ A: {}, B: {} });
@@ -76,6 +78,48 @@ function() { with(this) {
         '/channels/a': [{messageFor: 'A'}]
       },
       B: {}
+  });
+}});
+
+Scenario.run("Server modifies outgoing message",
+function() { with(this) {
+  server(8000);
+  httpClient('A', []);
+  httpClient('B', ['/channels/b']);
+  
+  extendServer('outgoing', function(message, callback) {
+    if (message.data) message.data.addition = 56;
+    callback(message);
+  });
+  
+  publish('A', '/channels/b', {messageFor: 'B'});
+  checkInbox({
+      A: {},
+      B: {
+          '/channels/b': [{messageFor: 'B', addition: 56}]
+      }
+  });
+}});
+
+Scenario.run("Server blocks outgoing message",
+function() { with(this) {
+  server(8000);
+  httpClient('A', []);
+  httpClient('B', ['/channels/b']);
+  
+  extendServer('outgoing', function(message, callback) {
+    if (!message.data) return callback(message);
+    if (message.data.deliver === 'yes') return callback(message);
+    callback(null);
+  });
+  
+  publish('A', '/channels/b', [{deliver: 'no'}, {deliver: 'yes'}]);
+  
+  checkInbox({
+      A: {},
+      B: {
+          '/channels/b': [{deliver: 'yes'}]
+      }
   });
 }});
 

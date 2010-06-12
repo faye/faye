@@ -71,7 +71,13 @@ AsyncScenario = Faye.Class({
   },
   
   publish: function(from, channel, message, Continue) {
-    this._clients[from].publish(channel, message);
+    if (message instanceof Array)
+      Faye.each(message, function(msg) {
+        this._clients[from].publish(channel, msg);
+      }, this);
+    else
+      this._clients[from].publish(channel, message);
+    
     setTimeout(Continue, 500);
   },
   

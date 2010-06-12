@@ -19,13 +19,32 @@ Faye.Server = Faye.Class({
     messages = [].concat(messages);
     var processed = 0, responses = [];
     
-    Faye.each(messages, function(message) {
-      this._handle(message, local, function(reply) {
-        responses = responses.concat(reply);
-        processed += 1;
-        if (processed < messages.length) return;
-        callback(responses);
+    var handleReply = function(replies) {
+      var extended = 0, expected = replies.length;
+      
+      Faye.each(replies, function(reply, i) {
+        this.pipeThroughExtensions('outgoing', reply, function(message) {
+          replies[i] = message;
+          
+          extended += 1;
+          if (extended < expected) return;
+          
+          responses = responses.concat(replies);
+          processed += 1;
+          if (processed < messages.length) return;
+          
+          var n = responses.length;
+          while (n--) {
+            if (!responses[n]) responses.splice(n,1);
+          }
+          callback(responses);
+          
+        }, this);
       }, this);
+    };
+    
+    Faye.each(messages, function(message) {
+      this._handle(message, local, handleReply, this);
     }, this);
   },
   
@@ -52,6 +71,8 @@ Faye.Server = Faye.Class({
   
   _handle: function(message, local, callback, scope) {
     this.pipeThroughExtensions('incoming', message, function(message) {
+      if (!message) return callback.call(scope, []);
+      
       var channel = message.channel,
           response;
       

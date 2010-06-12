@@ -346,7 +346,7 @@ Faye.Extensible = {
     var extensions = this._extensions.slice();
     
     var pipe = function(message) {
-      if (!message) return;
+      if (!message) return callback.call(scope, message);
       
       var extension = extensions.shift();
       if (!extension) return callback.call(scope, message);
@@ -855,6 +855,8 @@ Faye.Client = Faye.Class({
   deliverMessages: function(messages) {
     Faye.each(messages, function(message) {
       this.pipeThroughExtensions('incoming', message, function(message) {
+        if (!message) return;
+        
         this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
         
         var channels = this._channels.glob(message.channel);
@@ -880,12 +882,14 @@ Faye.Client = Faye.Class({
   
   _send: function(message, callback, scope) {
     this.pipeThroughExtensions('outgoing', message, function(message) {
+      if (!message) return;
       this._transport.send(message, callback, scope);
     }, this);
   },
   
   _enqueue: function(message, callback) {
     this.pipeThroughExtensions('outgoing', message, function(message) {
+      if (!message) return;
       this._outbox.push(message);
       callback.call(this);
     }, this);
@@ -988,13 +992,32 @@ Faye.Server = Faye.Class({
     messages = [].concat(messages);
     var processed = 0, responses = [];
     
-    Faye.each(messages, function(message) {
-      this._handle(message, local, function(reply) {
-        responses = responses.concat(reply);
-        processed += 1;
-        if (processed < messages.length) return;
-        callback(responses);
+    var handleReply = function(replies) {
+      var extended = 0, expected = replies.length;
+      
+      Faye.each(replies, function(reply, i) {
+        this.pipeThroughExtensions('outgoing', reply, function(message) {
+          replies[i] = message;
+          
+          extended += 1;
+          if (extended < expected) return;
+          
+          responses = responses.concat(replies);
+          processed += 1;
+          if (processed < messages.length) return;
+          
+          var n = responses.length;
+          while (n--) {
+            if (!responses[n]) responses.splice(n,1);
+          }
+          callback(responses);
+          
+        }, this);
       }, this);
+    };
+    
+    Faye.each(messages, function(message) {
+      this._handle(message, local, handleReply, this);
     }, this);
   },
   
@@ -1021,6 +1044,8 @@ Faye.Server = Faye.Class({
   
   _handle: function(message, local, callback, scope) {
     this.pipeThroughExtensions('incoming', message, function(message) {
+      if (!message) return callback.call(scope, []);
+      
       var channel = message.channel,
           response;
       

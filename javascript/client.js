@@ -263,6 +263,8 @@ Faye.Client = Faye.Class({
   deliverMessages: function(messages) {
     Faye.each(messages, function(message) {
       this.pipeThroughExtensions('incoming', message, function(message) {
+        if (!message) return;
+        
         this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
         
         var channels = this._channels.glob(message.channel);
@@ -288,12 +290,14 @@ Faye.Client = Faye.Class({
   
   _send: function(message, callback, scope) {
     this.pipeThroughExtensions('outgoing', message, function(message) {
+      if (!message) return;
       this._transport.send(message, callback, scope);
     }, this);
   },
   
   _enqueue: function(message, callback) {
     this.pipeThroughExtensions('outgoing', message, function(message) {
+      if (!message) return;
       this._outbox.push(message);
       callback.call(this);
     }, this);
