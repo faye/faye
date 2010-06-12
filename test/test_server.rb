@@ -448,16 +448,16 @@ class TestServer < Test::Unit::TestCase
   
   def test_advice
     @server.send :handle, 'channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => 'fake' do |r|
-      assert_equal  '401:fake:Unknown client', r['error']
-      assert_equal  'handshake',      r['advice']['reconnect']
-      assert_equal  1000,             r['advice']['interval']
+      assert_equal  '401:fake:Unknown client', r.first['error']
+      assert_equal  'handshake',      r.first['advice']['reconnect']
+      assert_equal  1000,             r.first['advice']['interval']
     end
     
     id = get_client_id
     @server.send :handle, 'channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => id do |r|
-      assert_equal  true,             r['successful']
-      assert_equal  'retry',          r['advice']['reconnect']
-      assert_equal  1000,             r['advice']['interval']
+      assert_equal  true,             r.first['successful']
+      assert_equal  'retry',          r.first['advice']['reconnect']
+      assert_equal  1000,             r.first['advice']['interval']
     end
   end
 end

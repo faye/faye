@@ -14,7 +14,7 @@ module Faye
   JSONP_CALLBACK   = 'jsonpcallback'
   CONNECTION_TYPES = %w[long-polling callback-polling]
   
-  %w[ publisher timeouts logging grammar
+  %w[ publisher timeouts logging grammar extensible
       namespace server channel subscription
       connection error client transport
       

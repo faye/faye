@@ -19,13 +19,32 @@ Faye.Server = Faye.Class({
     messages = [].concat(messages);
     var processed = 0, responses = [];
     
-    Faye.each(messages, function(message) {
-      this._handle(message, local, function(reply) {
-        responses = responses.concat(reply);
-        processed += 1;
-        if (processed < messages.length) return;
-        callback(responses);
+    var handleReply = function(replies) {
+      var extended = 0, expected = replies.length;
+      
+      Faye.each(replies, function(reply, i) {
+        this.pipeThroughExtensions('outgoing', reply, function(message) {
+          replies[i] = message;
+          
+          extended += 1;
+          if (extended < expected) return;
+          
+          responses = responses.concat(replies);
+          processed += 1;
+          if (processed < messages.length) return;
+          
+          var n = responses.length;
+          while (n--) {
+            if (!responses[n]) responses.splice(n,1);
+          }
+          callback(responses);
+          
+        }, this);
       }, this);
+    };
+    
+    Faye.each(messages, function(message) {
+      this._handle(message, local, handleReply, this);
     }, this);
   },
   
@@ -51,45 +70,48 @@ Faye.Server = Faye.Class({
   },
   
   _handle: function(message, local, callback, scope) {
-    var channelName = message.channel,
-        response;
-    
-    message.__id = Faye.random();
-    Faye.each(this._channels.glob(channelName), function(channel) {
-      channel.push(message);
-      this.info('Publishing message ? from client ? to ?', message.data, message.clientId, channel.name);
-    }, this);
-    
-    if (Faye.Channel.isMeta(channelName)) {
-      response = this[Faye.Channel.parse(channelName)[1]](message, local);
+    this.pipeThroughExtensions('incoming', message, function(message) {
+      if (!message) return callback.call(scope, []);
       
-      var clientId = response.clientId;
-      response.advice = response.advice || {};
-      Faye.extend(response.advice, {
-        reconnect:  this._connections.hasOwnProperty(clientId) ? 'retry' : 'handshake',
-        interval:   Math.floor(Faye.Connection.prototype.INTERVAL * 1000)
-      }, false);
+      var channelName = message.channel, response;
       
-      if (response.channel !== Faye.Channel.CONNECT ||
-          response.successful !== true)
-        return callback.call(scope, response);
-      
-      this.info('Accepting connection from ?', response.clientId);
-      
-      return this._connection(response.clientId).connect(function(events) {
-        this.info('Sending event messages to ?', response.clientId);
-        this.debug('Events for ?: ?', response.clientId, events);
-        Faye.each(events, function(e) { delete e.__id });
-        callback.call(scope, [response].concat(events));
+      message.__id = Faye.random();
+      Faye.each(this._channels.glob(channelName), function(channel) {
+        channel.push(message);
+        this.info('Publishing message ? from client ? to ?', message.data, message.clientId, channel.name);
       }, this);
-    }
-    
-    if (!message.clientId || Faye.Channel.isService(channelName))
-      return callback([]);
-    
-    response = this._makeResponse(message);
-    response.successful = true;
-    callback(response);
+      
+      if (Faye.Channel.isMeta(channelName)) {
+        response = this[Faye.Channel.parse(channelName)[1]](message, local);
+        
+        var clientId = response.clientId;
+        response.advice = response.advice || {};
+        Faye.extend(response.advice, {
+          reconnect:  this._connections.hasOwnProperty(clientId) ? 'retry' : 'handshake',
+          interval:   Math.floor(Faye.Connection.prototype.INTERVAL * 1000)
+        }, false);
+        
+        if (response.channel !== Faye.Channel.CONNECT ||
+            response.successful !== true)
+          return callback.call(scope, [response]);
+        
+        this.info('Accepting connection from ?', response.clientId);
+        
+        return this._connection(response.clientId).connect(function(events) {
+          this.info('Sending event messages to ?', response.clientId);
+          this.debug('Events for ?: ?', response.clientId, events);
+          Faye.each(events, function(e) { delete e.__id });
+          callback.call(scope, [response].concat(events));
+        }, this);
+      }
+      
+      if (!message.clientId || Faye.Channel.isService(channelName))
+        return callback.call(scope, []);
+      
+      response = this._makeResponse(message);
+      response.successful = true;
+      callback.call(scope, [response]);
+    }, this);
   },
   
   _makeResponse: function(message) {
@@ -257,4 +279,5 @@ Faye.Server = Faye.Class({
 });
 
 Faye.extend(Faye.Server.prototype, Faye.Logging);
+Faye.extend(Faye.Server.prototype, Faye.Extensible);
 

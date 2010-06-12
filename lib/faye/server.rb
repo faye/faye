@@ -2,6 +2,7 @@ module Faye
   class Server
     
     include Logging
+    include Extensible
     
     def initialize(options = {})
       info('New server created')
@@ -21,13 +22,26 @@ module Faye
       messages = [messages].flatten
       processed, responses = 0, []
       
-      messages.each do |message|
-        handle(message, local) do |reply|
-          reply = [reply].flatten
-          responses.concat(reply)
-          processed += 1
-          callback[responses] if processed == messages.size
+      handle_reply = lambda do |replies|
+        extended, expected = 0, replies.size
+        
+        replies.each_with_index do |reply, i|
+          pipe_through_extensions(:outgoing, reply) do |message|
+            replies[i] = message
+            
+            extended += 1
+            if extended == expected
+              
+              responses.concat(replies)
+              processed += 1
+              callback.call(responses.compact) if processed == messages.size
+            end
+          end
         end
+      end
+      
+      messages.each do |message|
+        handle(message, local, &handle_reply)
       end
     end
     
@@ -54,38 +68,44 @@ module Faye
     end
     
     def handle(message, local = false, &callback)
-      channel_name = message['channel']
-      
-      @channels.glob(channel_name).each do |channel|
-        channel << message
-        info('Publishing message ? from client ? to ?', message['data'], message['clientId'], channel.name)
-      end
-      
-      if Channel.meta?(channel_name)
-        response = __send__(Channel.parse(channel_name)[1], message, local)
-        
-        client_id = response['clientId']
-        response['advice'] ||= {}
-        response['advice']['reconnect'] ||= @connections.has_key?(client_id) ? 'retry' : 'handshake'
-        response['advice']['interval']  ||= (Connection::INTERVAL * 1000).floor
-        
-        return callback.call(response) unless response['channel'] == Channel::CONNECT and
-                                              response['successful'] == true
-        
-        info('Accepting connection from ?', response['clientId'])
-        
-        return connection(response['clientId']).connect do |events|
-          info('Sending event messages to ?', response['clientId'])
-          debug('Events for ?: ?', response['clientId'], events)
-          callback.call([response] + events)
+      pipe_through_extensions(:incoming, message) do |message|
+        if !message
+          callback.call([])
+        else
+          channel_name = message['channel']
+          
+          @channels.glob(channel_name).each do |channel|
+            channel << message
+            info('Publishing message ? from client ? to ?', message['data'], message['clientId'], channel.name)
+          end
+          
+          if Channel.meta?(channel_name)
+            response = __send__(Channel.parse(channel_name)[1], message, local)
+            
+            client_id = response['clientId']
+            response['advice'] ||= {}
+            response['advice']['reconnect'] ||= @connections.has_key?(client_id) ? 'retry' : 'handshake'
+            response['advice']['interval']  ||= (Connection::INTERVAL * 1000).floor
+            
+            return callback.call([response]) unless response['channel'] == Channel::CONNECT and
+                                                    response['successful'] == true
+            
+            info('Accepting connection from ?', response['clientId'])
+            
+            return connection(response['clientId']).connect do |events|
+              info('Sending event messages to ?', response['clientId'])
+              debug('Events for ?: ?', response['clientId'], events)
+              callback.call([response] + events)
+            end
+          end
+          
+          return callback.call([]) if message['clientId'].nil? or Channel.service?(channel_name)
+          
+          response = make_response(message)
+          response['successful'] = true
+          callback.call([response])
         end
       end
-      
-      return callback.call([]) if message['clientId'].nil? or Channel.service?(channel_name)
-      
-      response = make_response(message)
-      response['successful'] = true
-      callback.call(response)
     end
     
     def make_response(message)

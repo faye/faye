@@ -20,6 +20,109 @@ var Scenario = require('./scenario'),
   assert.deepEqual(tree.glob('/channels/**').sort(), ['A','B','C']);
 })();
 
+Scenario.run("Client modifies incoming messages",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', ['/channels/b']);
+  
+  extendClient('A', 'incoming', function(message, callback) {
+    message.data.modified = 'hi';
+    callback(message);
+  });
+  
+  publish('B', '/channels/a', {welcome: 'message'});
+  checkInbox({
+      A: {
+        '/channels/a': [{welcome: 'message', modified: 'hi'}]
+      },
+      B: {}
+  });
+}});
+
+Scenario.run("Client blocks incoming messages",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', ['/channels/b']);
+  
+  extendClient('A', 'incoming', function(message, callback) {
+    callback(null);
+  });
+  
+  publish('B', '/channels/a', {welcome: 'message'});
+  checkInbox({ A: {}, B: {} });
+}});
+
+Scenario.run("Server requires authentication",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', ['/channels/b']);
+  
+  extendServer('incoming', function(message, callback) {
+    if (message.ext && message.ext.password) callback(message);
+  });
+  
+  extendClient('B', 'outgoing', function(message, callback) {
+    message.ext = {password: true};
+    callback(message);
+  });
+  
+  publish('A', '/channels/b', {messageFor: 'B'});
+  checkInbox({ A: {}, B: {} });
+  
+  publish('B', '/channels/a', {messageFor: 'A'});
+  checkInbox({
+      A: {
+        '/channels/a': [{messageFor: 'A'}]
+      },
+      B: {}
+  });
+}});
+
+Scenario.run("Server modifies outgoing message",
+function() { with(this) {
+  server(8000);
+  httpClient('A', []);
+  httpClient('B', ['/channels/b']);
+  
+  extendServer('outgoing', function(message, callback) {
+    if (message.data) message.data.addition = 56;
+    callback(message);
+  });
+  
+  publish('A', '/channels/b', {messageFor: 'B'});
+  checkInbox({
+      A: {},
+      B: {
+          '/channels/b': [{messageFor: 'B', addition: 56}]
+      }
+  });
+}});
+
+Scenario.run("Server blocks outgoing message",
+function() { with(this) {
+  server(8000);
+  httpClient('A', []);
+  httpClient('B', ['/channels/b']);
+  
+  extendServer('outgoing', function(message, callback) {
+    if (!message.data) return callback(message);
+    if (message.data.deliver === 'yes') return callback(message);
+    callback(null);
+  });
+  
+  publish('A', '/channels/b', [{deliver: 'no'}, {deliver: 'yes'}]);
+  
+  checkInbox({
+      A: {},
+      B: {
+          '/channels/b': [{deliver: 'yes'}]
+      }
+  });
+}});
+
 Scenario.run("Server goes away, subscriptions should be revived",
 function() { with(this) {
   server(8000);

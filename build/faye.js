@@ -327,6 +327,39 @@ Faye.each(Faye.Logging.LOG_LEVELS, function(level, value) {
 });
 
 
+Faye.Extensible = {
+  addExtension: function(extension) {
+    this._extensions = this._extensions || [];
+    this._extensions.push(extension);
+  },
+  
+  removeExtension: function(extension) {
+    if (!this._extensions) return;
+    var i = this._extensions.length;
+    while (i--) {
+      if (this._extensions[i] === extension)
+        this._extensions.splice(i,1);
+    }
+  },
+  
+  pipeThroughExtensions: function(stage, message, callback, scope) {
+    if (!this._extensions) return callback.call(scope, message);
+    var extensions = this._extensions.slice();
+    
+    var pipe = function(message) {
+      if (!message) return callback.call(scope, message);
+      
+      var extension = extensions.shift();
+      if (!extension) return callback.call(scope, message);
+      
+      if (extension[stage]) extension[stage](message, pipe);
+      else pipe(message);
+    };
+    pipe(message);
+  }
+};
+
+
 Faye.Channel = Faye.Class({
   initialize: function(name) {
     this.__id = this.name = name;
@@ -668,7 +701,7 @@ Faye.Client = Faye.Class({
     
     this.info('Initiating handshake with ?', this._endpoint);
     
-    this._transport.send({
+    this._send({
       channel:      Faye.Channel.HANDSHAKE,
       version:      Faye.BAYEUX_VERSION,
       supportedConnectionTypes: Faye.Transport.supportedConnectionTypes()
@@ -724,7 +757,7 @@ Faye.Client = Faye.Class({
     var self = this;
     this.info('Initiating connection for ?', this._clientId);
     
-    this._transport.send({
+    this._send({
       channel:        Faye.Channel.CONNECT,
       clientId:       this._clientId,
       connectionType: this._transport.connectionType,
@@ -754,7 +787,7 @@ Faye.Client = Faye.Class({
     
     this.info('Disconnecting ?', this._clientId);
     
-    this._transport.send({
+    this._send({
       channel:    Faye.Channel.DISCONNECT,
       clientId:   this._clientId
     });
@@ -781,7 +814,7 @@ Faye.Client = Faye.Class({
     this.connect(function() {
       this.info('Client ? attempting to subscribe to ?', this._clientId, channels);
       
-      this._transport.send({
+      this._send({
         channel:      Faye.Channel.SUBSCRIBE,
         clientId:     this._clientId,
         subscription: channels
@@ -818,7 +851,7 @@ Faye.Client = Faye.Class({
     this.connect(function() {
       this.info('Client ? attempting to unsubscribe from ?', this._clientId, deadChannels);
       
-      this._transport.send({
+      this._send({
         channel:      Faye.Channel.UNSUBSCRIBE,
         clientId:     this._clientId,
         subscription: deadChannels
@@ -850,10 +883,10 @@ Faye.Client = Faye.Class({
         channel:      channel,
         data:         data,
         clientId:     this._clientId
+        
+      }, function() {
+        this.addTimeout('publish', this.MAX_DELAY, this._flush, this);
       });
-      
-      this.addTimeout('publish', this.MAX_DELAY, this._flush, this);
-      
     }, this);
   },
   
@@ -864,8 +897,12 @@ Faye.Client = Faye.Class({
   
   deliverMessages: function(messages) {
     Faye.each(messages, function(message) {
-      this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
-      this._channels.distributeMessage(message);
+      this.pipeThroughExtensions('incoming', message, function(message) {
+        if (!message) return;
+        
+        this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
+        this._channels.distributeMessage(message);
+      }, this);
     }, this);
   },
   
@@ -882,8 +919,19 @@ Faye.Client = Faye.Class({
     }, this);
   },
   
-  _enqueue: function(message) {
-    this._outbox.push(message);
+  _send: function(message, callback, scope) {
+    this.pipeThroughExtensions('outgoing', message, function(message) {
+      if (!message) return;
+      this._transport.send(message, callback, scope);
+    }, this);
+  },
+  
+  _enqueue: function(message, callback) {
+    this.pipeThroughExtensions('outgoing', message, function(message) {
+      if (!message) return;
+      this._outbox.push(message);
+      callback.call(this);
+    }, this);
   },
   
   _flush: function() {
@@ -913,6 +961,7 @@ Faye.Client = Faye.Class({
 Faye.extend(Faye.Client.prototype, Faye.Deferrable);
 Faye.extend(Faye.Client.prototype, Faye.Timeouts);
 Faye.extend(Faye.Client.prototype, Faye.Logging);
+Faye.extend(Faye.Client.prototype, Faye.Extensible);
 
 
 Faye.Set = Faye.Class({
@@ -982,13 +1031,32 @@ Faye.Server = Faye.Class({
     messages = [].concat(messages);
     var processed = 0, responses = [];
     
-    Faye.each(messages, function(message) {
-      this._handle(message, local, function(reply) {
-        responses = responses.concat(reply);
-        processed += 1;
-        if (processed < messages.length) return;
-        callback(responses);
+    var handleReply = function(replies) {
+      var extended = 0, expected = replies.length;
+      
+      Faye.each(replies, function(reply, i) {
+        this.pipeThroughExtensions('outgoing', reply, function(message) {
+          replies[i] = message;
+          
+          extended += 1;
+          if (extended < expected) return;
+          
+          responses = responses.concat(replies);
+          processed += 1;
+          if (processed < messages.length) return;
+          
+          var n = responses.length;
+          while (n--) {
+            if (!responses[n]) responses.splice(n,1);
+          }
+          callback(responses);
+          
+        }, this);
       }, this);
+    };
+    
+    Faye.each(messages, function(message) {
+      this._handle(message, local, handleReply, this);
     }, this);
   },
   
@@ -1014,45 +1082,48 @@ Faye.Server = Faye.Class({
   },
   
   _handle: function(message, local, callback, scope) {
-    var channelName = message.channel,
-        response;
-    
-    message.__id = Faye.random();
-    Faye.each(this._channels.glob(channelName), function(channel) {
-      channel.push(message);
-      this.info('Publishing message ? from client ? to ?', message.data, message.clientId, channel.name);
-    }, this);
-    
-    if (Faye.Channel.isMeta(channelName)) {
-      response = this[Faye.Channel.parse(channelName)[1]](message, local);
+    this.pipeThroughExtensions('incoming', message, function(message) {
+      if (!message) return callback.call(scope, []);
       
-      var clientId = response.clientId;
-      response.advice = response.advice || {};
-      Faye.extend(response.advice, {
-        reconnect:  this._connections.hasOwnProperty(clientId) ? 'retry' : 'handshake',
-        interval:   Math.floor(Faye.Connection.prototype.INTERVAL * 1000)
-      }, false);
+      var channelName = message.channel, response;
       
-      if (response.channel !== Faye.Channel.CONNECT ||
-          response.successful !== true)
-        return callback.call(scope, response);
-      
-      this.info('Accepting connection from ?', response.clientId);
-      
-      return this._connection(response.clientId).connect(function(events) {
-        this.info('Sending event messages to ?', response.clientId);
-        this.debug('Events for ?: ?', response.clientId, events);
-        Faye.each(events, function(e) { delete e.__id });
-        callback.call(scope, [response].concat(events));
+      message.__id = Faye.random();
+      Faye.each(this._channels.glob(channelName), function(channel) {
+        channel.push(message);
+        this.info('Publishing message ? from client ? to ?', message.data, message.clientId, channel.name);
       }, this);
-    }
-    
-    if (!message.clientId || Faye.Channel.isService(channelName))
-      return callback([]);
-    
-    response = this._makeResponse(message);
-    response.successful = true;
-    callback(response);
+      
+      if (Faye.Channel.isMeta(channelName)) {
+        response = this[Faye.Channel.parse(channelName)[1]](message, local);
+        
+        var clientId = response.clientId;
+        response.advice = response.advice || {};
+        Faye.extend(response.advice, {
+          reconnect:  this._connections.hasOwnProperty(clientId) ? 'retry' : 'handshake',
+          interval:   Math.floor(Faye.Connection.prototype.INTERVAL * 1000)
+        }, false);
+        
+        if (response.channel !== Faye.Channel.CONNECT ||
+            response.successful !== true)
+          return callback.call(scope, [response]);
+        
+        this.info('Accepting connection from ?', response.clientId);
+        
+        return this._connection(response.clientId).connect(function(events) {
+          this.info('Sending event messages to ?', response.clientId);
+          this.debug('Events for ?: ?', response.clientId, events);
+          Faye.each(events, function(e) { delete e.__id });
+          callback.call(scope, [response].concat(events));
+        }, this);
+      }
+      
+      if (!message.clientId || Faye.Channel.isService(channelName))
+        return callback.call(scope, []);
+      
+      response = this._makeResponse(message);
+      response.successful = true;
+      callback.call(scope, [response]);
+    }, this);
   },
   
   _makeResponse: function(message) {
@@ -1220,6 +1291,7 @@ Faye.Server = Faye.Class({
 });
 
 Faye.extend(Faye.Server.prototype, Faye.Logging);
+Faye.extend(Faye.Server.prototype, Faye.Extensible);
 
 
 Faye.Connection = Faye.Class({
@@ -1403,6 +1475,14 @@ Faye.NodeAdapter = Faye.Class({
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
     this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]+)*(\\.js)?$');
     this._server     = new Faye.Server(this._options);
+  },
+  
+  addExtension: function(extension) {
+    return this._server.addExtension(extension);
+  },
+  
+  removeExtension: function(extension) {
+    return this._server.removeExtension(extension);
   },
   
   getClient: function() {

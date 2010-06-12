@@ -16,6 +16,7 @@ packages:
     - publisher
     - timeouts
     - logging
+    - extensible
     - channel
     - subscription
     - namespace
