@@ -6,6 +6,108 @@ class TestClients < Test::Unit::TestCase
   include Faye
   include Scenario
   
+  scenario "Client modifies incoming messages" do
+    server 8000
+    http_client :A, ['/channels/a']
+    http_client :B, ['/channels/b']
+    
+    extend_client :A, :incoming, lambda { |message, callback|
+      message['data']['modified'] = 'hi'
+      callback.call(message)
+    }
+    
+    publish :B, '/channels/a', 'welcome' => 'message'
+    check_inbox(
+        :A => {
+          '/channels/a' => ['welcome' => 'message', 'modified' => 'hi']
+        },
+        :B => {}
+    )
+  end
+  
+  scenario "Client blocks incoming messages" do
+    server 8000
+    http_client :A, ['/channels/a']
+    http_client :B, ['/channels/b']
+    
+    extend_client :A, :incoming, lambda { |message, callback|
+      callback.call(nil)
+    }
+    
+    publish :B, '/channels/a', 'welcome' => 'message'
+    check_inbox( :A => {}, :B => {} )
+  end
+  
+  scenario "Server requires authentication" do
+    server 8000
+    http_client :A, ['/channels/a']
+    http_client :B, ['/channels/b']
+    
+    extend_server :incoming, lambda { |message, callback|
+      if message['ext'] and message['ext']['password']
+        callback.call(message)
+      end
+    }
+    
+    extend_client :B, :outgoing, lambda { |message, callback|
+      message['ext'] = {'password' => true}
+      callback.call(message)
+    }
+    
+    publish :A, '/channels/b', 'message_for' => 'B'
+    check_inbox( :A => {}, :B => {} )
+    
+    publish :B, '/channels/a', 'message_for' => 'A'
+    check_inbox(
+        :A => {
+          '/channels/a' => ['message_for' => 'A']
+        },
+        :B => {}
+    )
+  end
+  
+  scenario "Server modifies outgoing message" do
+    server 8000
+    http_client :A, []
+    http_client :B, ['/channels/b']
+    
+    extend_server :outgoing, lambda { |message, callback|
+      message['data']['addition'] = 56 if message['data']
+      callback.call(message)
+    }
+    
+    publish :A, '/channels/b', 'message_for' => 'B'
+    check_inbox(
+        :A => {},
+        :B => {
+          '/channels/b' => ['message_for' => 'B', 'addition' => 56]
+        }
+    )
+  end
+  
+  scenario "Server blocks outgoing message" do
+    server 8000
+    http_client :A, []
+    http_client :B, ['/channels/b']
+    
+    extend_server :outgoing, lambda { |message, callback|
+      if !message['data'] or message['data']['deliver'] == 'yes'
+        callback.call(message)
+      else
+        callback.call(nil)
+      end
+    }
+    
+    publish :A, '/channels/b', [{'deliver' => 'no'}, {'deliver' => 'yes'}]
+    
+    check_inbox(
+        :A => {},
+        :B => {
+          '/channels/b' => ['deliver' => 'yes']
+        }
+    )
+  end
+  
   scenario "Two HTTP clients, no messages delivered" do
     server 8000
     http_client :A, ['/channels/a']

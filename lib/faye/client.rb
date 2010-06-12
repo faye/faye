@@ -4,6 +4,7 @@ module Faye
     include EventMachine::Deferrable
     include Timeouts
     include Logging
+    include Extensible
     
     UNCONNECTED         = 1
     CONNECTING          = 2
@@ -61,7 +62,7 @@ module Faye
       
       info('Initiating handshake with ?', @endpoint)
       
-      @transport.send({
+      send({
         'channel'     => Channel::HANDSHAKE,
         'version'     => BAYEUX_VERSION,
         'supportedConnectionTypes' => Transport.supported_connection_types
@@ -114,7 +115,7 @@ module Faye
       @connection_id = @namespace.generate
       info('Initiating connection for ?', @client_id)
       
-      @transport.send({
+      send({
         'channel'         => Channel::CONNECT,
         'clientId'        => @client_id,
         'connectionType'  => @transport.connection_type,
@@ -144,7 +145,7 @@ module Faye
       
       info('Disconnecting ?', @client_id)
       
-      @transport.send({
+      send({
         'channel'   => Channel::DISCONNECT,
         'clientId'  => @client_id
       })
@@ -171,7 +172,7 @@ module Faye
         
         info('Client ? attempting to subscribe to ?', @client_id, channels)
         
-        @transport.send({
+        send({
           'channel'       => Channel::SUBSCRIBE,
           'clientId'      => @client_id,
           'subscription'  => channels
@@ -205,7 +206,7 @@ module Faye
         
         info('Client ? attempting to unsubscribe from ?', @client_id, channels)
         
-        @transport.send({
+        send({
           'channel'       => Channel::UNSUBSCRIBE,
           'clientId'      => @client_id,
           'subscription'  => channels
@@ -238,9 +239,10 @@ module Faye
           'channel'   => channel,
           'data'      => data,
           'clientId'  => @client_id
-        })
-        
-        add_timeout(:publish, Connection::MAX_DELAY) { flush! }
+          
+        }) do
+          add_timeout(:publish, Connection::MAX_DELAY) { flush! }
+        end
       }
     end
     
@@ -251,10 +253,14 @@ module Faye
     
     def deliver_messages(messages)
       messages.each do |message|
-        info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
-        
-        channels = @channels.glob(message['channel'])
-        channels.each { |callback| callback.call(message['data']) }
+        pipe_through_extensions(:incoming, message) do |message|
+          if message
+            info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
+            
+            channels = @channels.glob(message['channel'])
+            channels.each { |callback| callback.call(message['data']) }
+          end
+        end
       end
     end
     
@@ -273,8 +279,21 @@ module Faye
       end
     end
     
-    def enqueue(message)
-      @outbox << message
+    def send(message, &callback)
+      pipe_through_extensions(:outgoing, message) do |message|
+        if message
+          @transport.send(message, &callback)
+        end
+      end
+    end
+    
+    def enqueue(message, &callback)
+      pipe_through_extensions(:outgoing, message) do |message|
+        if message
+          @outbox << message
+          callback.call()
+        end
+      end
     end
     
     def flush!

@@ -84,6 +84,20 @@ module Scenario
       setup_client(@comet.get_client, name, channels, &block)
     end
     
+    def extend_server(stage, extension, &block)
+      object = Object.new
+      (class << object; self; end).send(:define_method, stage, &extension)
+      @comet.add_extension(object)
+      block.call
+    end
+    
+    def extend_client(name, stage, extension, &block)
+      object = Object.new
+      (class << object; self; end).send(:define_method, stage, &extension)
+      @clients[name].add_extension(object)
+      block.call
+    end
+    
     def setup_client(client, name, channels, &block)
       channels.each do |channel|
         client.subscribe(channel) do |message|
@@ -99,7 +113,11 @@ module Scenario
     end
     
     def publish(from, channel, message, &block)
-      @clients[from].publish(channel, message)
+      if Array === message
+        message.each { |msg| @clients[from].publish(channel, msg) }
+      else
+        @clients[from].publish(channel, message)
+      end
       EM.add_timer(2, &block)
     end
     
