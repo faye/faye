@@ -1487,6 +1487,7 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   _callWithParams: function(request, response, params) {
+    try {
       var message = JSON.parse(params.message),
           jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
@@ -1501,6 +1502,11 @@ Faye.NodeAdapter = Faye.Class({
         response.write(body);
         response.end();
       });
+    } catch (e) {
+      response.writeHead(400, this.TYPE_TEXT);
+      response.write('Bad request');
+      response.end();
+    }
   }
 });
 
