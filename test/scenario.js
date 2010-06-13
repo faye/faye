@@ -2,7 +2,7 @@ var sys    = require('sys'),
     path   = require('path'),
     http   = require('http'),
     assert = require('assert'),
-    faye   = require('../build/faye');
+    faye   = require('../build/faye-node');
 
 Faye.Logging.logLevel = 'info';
 

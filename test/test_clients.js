@@ -1,5 +1,5 @@
 var Scenario = require('./scenario'),
-    faye     = require('../build/faye'),
+    faye     = require('../build/faye-node'),
     assert   = require('assert');
 
 (function() {

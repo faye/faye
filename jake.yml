@@ -22,7 +22,7 @@ packages:
     - namespace
     - transport
     - client
-  faye:
+  faye-node:
     extends: core
     files:
       - util/set
@@ -31,7 +31,7 @@ packages:
       - error
       - node_adapter
       - transports/node
-  faye-client:
+  faye-browser:
     extends: core
     files:
       - util/event

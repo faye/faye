@@ -9,7 +9,7 @@ module Faye
     ASYNC_RESPONSE = [-1, {}, []].freeze
     
     DEFAULT_ENDPOINT  = '/bayeux'
-    SCRIPT_PATH       = File.join(ROOT, 'faye-client-min.js')
+    SCRIPT_PATH       = File.join(ROOT, 'faye-browser-min.js')
     
     TYPE_JSON   = {'Content-Type' => 'application/json'}
     TYPE_SCRIPT = {'Content-Type' => 'text/javascript'}

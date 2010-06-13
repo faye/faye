@@ -2,7 +2,7 @@ var fs    = require('fs'),
     path  = require('path'),
     sys   = require('sys'), 
     http  = require('http'),
-    faye  = require('./faye');
+    faye  = require('./faye-node');
 
 var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
     comet      = new faye.NodeAdapter({mount: '/comet', timeout: 45}),

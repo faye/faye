@@ -19,7 +19,7 @@ Faye.withDataFor = function(transport, callback, scope) {
 
 Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
-  SCRIPT_PATH:      path.dirname(__filename) + '/faye-client-min.js',
+  SCRIPT_PATH:      path.dirname(__filename) + '/faye-browser-min.js',
   
   TYPE_JSON:    {'Content-Type': 'application/json'},
   TYPE_SCRIPT:  {'Content-Type': 'text/javascript'},

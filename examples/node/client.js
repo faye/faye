@@ -8,7 +8,7 @@
 // sent by all connected users.
 
 var sys  = require('sys'),
-    faye = require('./faye');
+    faye = require('./faye-node');
 
 var client = new faye.Client('http://localhost:8000/comet');
 
