@@ -59,9 +59,8 @@
     Faye will notify your client with the new message.
     
     Channel names must be formatted as absolute path names whose segments
-    are valid JavaScript identifiers. For example, @/foo@ and @/my/channel@
-    are valid channel names, but @foo@ and @/num/43@ are not. Channel names
-    may also end with wildcards:
+    may contain only letters, numbers, and the symbols @-@, @_@, @!@, @~@,
+    @(@, @)@, @$@ and @@@. Channel names may also end with wildcards:
     
     * The @*@ wildcard matches any channel segment. So @/foo/*@ matches
       @/foo/bar@ and @/foo/thing@ but not @/foo/bar/thing@.
