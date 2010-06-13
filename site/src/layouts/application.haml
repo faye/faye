@@ -1,0 +1,35 @@
+!!!
+%html
+  %head
+    %meta{:'http-equiv' => "Content-type", :content => "text/html; charset=utf-8"}
+    %title Faye: Simple pub/sub messaging for the web
+    = stylesheets
+    = javascripts 'prettify'
+  %body{:onload => 'prettyPrint()'}
+    .header
+      .container
+        %h1
+          =link "Faye", "/"
+        %h2 Simple pub/sub messaging for the web
+        .docs
+          %h3 Documentation
+          %ul
+            %li
+              =link "Node.js server", "/node.html"
+            %li
+              =link "Ruby server", "/ruby.html"
+            %li
+              =link "Browser client", "/browser.html"
+        .download
+          %h3 Download
+          %ul
+            %li
+              =link "Packages for Node.js, Ruby and browsers", "/download.html"
+    .main
+      .container
+        = yield
+    .footer
+      .container
+        :textile
+          &copy; 2009&ndash;2010 "James Coglan":http://jcoglan.com.
+          Released under the MIT license.

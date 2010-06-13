@@ -1,0 +1,35 @@
+.front-matter
+  .intro
+    :textile
+      h3. What is it?
+      
+      Faye is an easy-to-use publish-subscribe messaging system
+      based on the "Bayeux":http://svn.cometd.com/trunk/bayeux/bayeux.html protocol.
+      It provides message servers for "Node.js":http://nodejs.org
+      and "Rack":http://rack.rubyforge.org, and clients for use in
+      Node and Ruby programs and in the browser.
+  
+  :textile
+    h3. %(number)1.% Start a server
+    
+    <pre class="prettyprint">var Faye   = require('./faye-node'),
+        server = new Faye.NodeAdapter({mount: '/'});
+    
+    server.run(8000);
+    </pre>
+    
+    h3. %(number)2.% Create a client
+    
+    <pre class="prettyprint">var client = new Faye.Client('http://localhost:8000/');
+    
+    client.subscribe('/messages', function(message) {
+      alert('Got a message: ' + message.text);
+    });
+    </pre>
+    
+    h3. %(number)3.% Send messages
+    
+    <pre class="prettyprint">client.publish('/messages', {
+      text: 'Hello world'
+    });
+    </pre>

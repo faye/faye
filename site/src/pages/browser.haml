@@ -1,0 +1,98 @@
+.content
+  :textile
+    h3. Browser client
+    
+    h4. Setting up
+    
+    In order to use the browser client, you'll need to start up a Faye
+    server to handle message delivery between clients. See the
+    "Node.js":/node.html or "Ruby":/ruby.html documentation for more
+    information.
+    
+    With the server up and running, you just need to include the
+    client script in your page. Let's assume you've mounted a server
+    at @http://localhost:8000/faye@.
+    
+    <pre class="prettyprint"><script type="text/javascript"
+            src="http://localhost:8000/faye.js">
+            </script></pre>
+    
+    You can then create a client. You should make sure you only create
+    one client per target server, since browsers impose a per-host connection
+    limit and creating more clients will saturate the available connections
+    in many browsers.
+    
+    To make client, all you need is the mount point of the server you
+    want to connect to:
+    
+    <pre class="prettyprint"><script type="text/javascript">
+        var client = new Faye.Client('http://localhost:8000/faye');
+    </script></pre>
+    
+    h4. Timeouts
+    
+    You can optionally specify a timeout; if the server does not send back
+    any data for the given period of time, the client will assume the
+    server has gone away and will attempt to reconnect. Specify the timeout
+    as follows:
+    
+    <pre class="prettyprint"><script type="text/javascript">
+        var client = new Faye.Client('http://localhost:8000/faye', {
+            timeout: 120
+        });
+    </script></pre>
+    
+    The timeout is given in seconds and should be larger that the timeout
+    you set up on the server side, so we give the server ample time to
+    respond before assuming there's been a network error.
+    
+    h4. Cross-domain operation
+    
+    Faye clients and servers transparently support cross-domain communication,
+    so your client can connect to a server on any domain you like without
+    further configuration.
+    
+    h4. Subscribing to channels
+    
+    Clients receive data from other clients by subscribing to channels.
+    Whenever any client sends a message to a channel you're subscribed to,
+    Faye will notify your client with the new message.
+    
+    Channel names must be formatted as absolute path names whose segments
+    are valid JavaScript identifiers. For example, @/foo@ and @/my/channel@
+    are valid channel names, but @foo@ and @/num/43@ are not. Channel names
+    may also end with wildcards:
+    
+    * The @*@ wildcard matches any channel segment. So @/foo/*@ matches
+      @/foo/bar@ and @/foo/thing@ but not @/foo/bar/thing@.
+    * The @**@ wildcard matches any channel name recursively. So
+      @/foo/**@ matches @/foo/bar@, @/foo/thing@ and @/foo/bar/thing@.
+    
+    So for example if you subscribe to @/foo/*@ and someone sends a
+    message to @/foo/bar@, you will receive that message.
+    
+    Clients should subscribe to channels using the @#subscribe()@ method:
+    
+    <pre class="prettyprint">client.subscribe('/foo', function(message) {
+      // handle message
+    });</pre>
+    
+    The subscriber function will be invoked when anybody sends a message
+    to @/foo@, and the @message@ parameter will contain the sent message
+    object.
+    
+    h4. Sending messages
+    
+    Clients do not send each other messages directly, instead they send
+    their messages to channels, and the server figures out which clients
+    need to receive the message. You can send a message using the @#publish()@
+    method, passing in the channel name and a message object.
+    
+    <pre class="prettyprint">client.publish('/foo', {text: 'Hi there'});</pre>
+    
+    The message object can be any arbitrary JavaScript object that can
+    be serialized to JSON, so it can contain strings, numbers, booleans,
+    arrays and other objects. There are no required fields, and the
+    object will be delivered verbatim to any subscriber functions
+    listening to that channel.
+

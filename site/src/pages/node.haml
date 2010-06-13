@@ -1,0 +1,78 @@
+.content
+  :textile
+    h3. Node.js server
+    
+    h4. Setting up
+    
+    All Faye clients need a central messaging server to communicate with;
+    the server records which clients are subscribed to which channels
+    and handles routing of messages between clients. Setting up a server
+    under Node.js is simple:
+    
+    <pre class="prettyprint">var http = require('http'),
+        Faye = require('./path/to/faye-node');
+    
+    var fayeServer = new Faye.NodeAdapter({
+      mount:    '/faye',
+      timeout:  45
+    });
+    
+    var httpServer = http.createServer(function(request, response) {
+      if (fayeServer.call(request, response)) return;
+      
+      // Handle non-Faye requests
+      response.writeHead(200, {'Content-Type': 'text/plain'});
+      response.write('Hello, non-Faye request');
+      response.end();
+    });
+    
+    httpServer.listen(8000);</pre>
+    
+    The @NodeAdapter@ class supports these options during setup:
+    
+    * @mount@: the path on the host at which the Faye service is available.
+      In this example, clients would connect to @http://localhost:8000/faye@
+      to talk to the server.
+    * @timeout@: the maximum time to hold a connection open before
+      returning the response. This is given in seconds and must be smaller
+      than the timeout on your frontend webserver.
+    
+    h4. Notes
+    
+    A note about the mount point: mounting the server at @/faye@ will make
+    the Faye server respond to any request whose path begins @/faye@; this
+    is so that it can interoperate with clients that use different request
+    paths for different channels.
+    
+    To allow browser clients to connect to the server, make sure you
+    have @faye-node.js@ and @faye-browser.js@ in the same directory.
+    
+    The @fayeServer@ has a @#call()@ method. You should use this to forward
+    incoming requests to Faye, and it will return @true@ if it was able
+    to handle the request. If it returns @false@, you should pass the request
+    through to another backend that can deliver a response.
+    
+    h4. Server-side Node.js clients
+    
+    You can use Faye clients on the server side to send messages to
+    in-browser clients or to other server-side processes. The API is
+    identical to the "browser client":/browser.html.
+    
+    To create a client, just supply the host you want to connect to:
+    
+    <pre class="prettyprint">var client = new Faye.Client('http://localhost:8000/faye');</pre>
+    
+    You can then use @client.subscribe()@ and @client.publish()@ to
+    send messages to other clients; see the "browser client":/browser.html
+    documentation for more information.
+    
+    The server has its own client attached to it so you can use the
+    server to send messages to browsers. This client has direct access
+    to the server without going over HTTP, and is thus more efficient.
+    To send messages through the server just use the @#getClient()@ method.
+    
+    <pre class="prettyprint">fayeServer.getClient().publish('/email/new', {
+      text:       'New email has arrived!',
+      inboxSize:  34
+    });</pre>
+    

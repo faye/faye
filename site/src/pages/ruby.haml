@@ -1,0 +1,82 @@
+.content
+  :textile
+    h3. Ruby server
+    
+    h4. Setting up
+    
+    All Faye clients need a central messaging server to communicate with;
+    the server records which clients are subscribed to which channels
+    and handles routing of messages between clients. Setting up a server
+    under Rack is simple:
+    
+    <pre class="prettyprint"># config.ru
+    require 'faye'
+    
+    faye_server = Faye::RackAdapter.new(:mount => '/faye', :timeout => 45)
+    run faye_server</pre>
+    
+    The @RackAdapter@ class supports these options during setup:
+    
+    * @:mount@: the path on the host at which the Faye service is available.
+      In this example, clients would connect to @http://localhost:9292/faye@
+      to talk to the server.
+    * @:timeout@: the maximum time to hold a connection open before
+      returning the response. This is given in seconds and must be smaller
+      than the timeout on your frontend webserver.
+    
+    Faye can also be setup as middleware, for example in front of a
+    Sinatra application:
+    
+    <pre class="prettyprint"># config.ru
+    require 'faye'
+    require File.dirname(__FILE__) + '/app'
+    
+    use Faye::RackAdapter, :mount => '/faye', :timeout => 45
+    run Sinatra::Application</pre>
+    
+    h4. Notes
+    
+    A note about the mount point: mounting the server at @/faye@ will make
+    the Faye server respond to any request whose path begins @/faye@; this
+    is so that it can interoperate with clients that use different request
+    paths for different channels.
+    
+    Faye works best when run under an asynchronous web server; for best
+    results you should use Thin to serve your Faye application:
+    
+    <pre class="prettyprint">rackup config.ru -s thin -E production</pre>
+    
+    h4. Server-side Ruby clients
+    
+    You can use Faye clients on the server side to send messages to
+    in-browser clients or to other server-side processes. The API is
+    identical to the "browser client":/browser.html.
+    
+    To create a client, just supply the host you want to connect to:
+    
+    <pre class="prettyprint">client = Faye::Client.new('http://localhost:9292/faye')</pre>
+    
+    You can then use @client.subscribe()@ and @client.publish()@ to
+    send messages to other clients; the API is similar to the "browser client":/browser.html
+    only you need to run the client inside EventMachine:
+    
+    <pre class="prettyprint">require 'eventmachine'
+    
+    EM.run {
+      client.subscribe('/foo') do |message|
+        puts message.inspect
+      end
+      
+      client.publish('/foo', 'text' => 'Hello world')
+    }</pre>
+    
+    The server has its own client attached to it so you can use the
+    server to send messages to browsers. This client has direct access
+    to the server without going over HTTP, and is thus more efficient.
+    To send messages through the server just use the @#get_client@ method.
+    
+    <pre class="prettyprint">faye_server.get_client.publish('/email/new', {
+      'text'      => 'New email has arrived!',
+      'inboxSize' =>34
+    })</pre>
+    
