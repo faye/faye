@@ -253,12 +253,8 @@ module Faye
     
     def deliver_messages(messages)
       messages.each do |message|
-        pipe_through_extensions(:incoming, message) do |message|
-          if message
-            info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
-            @channels.distribute_message(message)
-          end
-        end
+        info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
+        @channels.distribute_message(message)
       end
     end
     

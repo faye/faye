@@ -257,12 +257,8 @@ Faye.Client = Faye.Class({
   
   deliverMessages: function(messages) {
     Faye.each(messages, function(message) {
-      this.pipeThroughExtensions('incoming', message, function(message) {
-        if (!message) return;
-        
-        this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
-        this._channels.distributeMessage(message);
-      }, this);
+      this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
+      this._channels.distributeMessage(message);
     }, this);
   },
   

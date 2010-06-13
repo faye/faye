@@ -27,7 +27,7 @@ function() { with(this) {
   httpClient('B', ['/channels/b']);
   
   extendClient('A', 'incoming', function(message, callback) {
-    message.data.modified = 'hi';
+    if (message.data) message.data.modified = 'hi';
     callback(message);
   });
   

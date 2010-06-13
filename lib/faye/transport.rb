@@ -28,24 +28,39 @@ module Faye
         debug('Client ? received from ?: ?', @client.client_id, @endpoint, responses)
         
         if block_given?
-          messages, deliverable = [], true
-          [responses].flatten.each do |response|
-            
-            if message.is_a?(Hash) and response['id'] == message['id']
-              deliverable = false if block.call(response) == false
+          responses   = [responses].flatten
+          messages    = []
+          deliverable = true
+          processed   = 0
+          
+          ping = lambda do
+            processed += 1
+            if processed == responses.size
+              @client.deliver_messages(messages) if deliverable
             end
-            
-            if response['advice']
-              @client.handle_advice(response['advice'])
-            end
-            
-            if response['data'] and response['channel']
-              messages << response
-            end
-            
           end
           
-          @client.deliver_messages(messages) if deliverable
+          handle_response = lambda do |response|
+            @client.pipe_through_extensions(:incoming, response) do |response|
+              if response
+                if message.is_a?(Hash) and response['id'] == message['id']
+                  deliverable = false if block.call(response) == false
+                end
+                
+                if response['advice']
+                  @client.handle_advice(response['advice'])
+                end
+                
+                if response['data'] and response['channel']
+                  messages << response
+                end
+              end
+              
+              ping.call()
+            end
+          end
+          
+          responses.each(&handle_response)
         end
       }
     end

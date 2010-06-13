@@ -18,23 +18,37 @@ Faye.Transport = Faye.extend(Faye.Class({
       
       if (!callback) return;
       
-      var messages = [], deliverable = true;
-      Faye.each([].concat(responses), function(response) {
-    
-        if (response.id === message.id) {
-          if (callback.call(scope, response) === false)
-            deliverable = false;
-        }
-        
-        if (response.advice)
-          this._client.handleAdvice(response.advice);
-        
-        if (response.data && response.channel)
-          messages.push(response);
-        
-      }, this);
+      var responses   = [].concat(responses),
+          messages    = [],
+          deliverable = true,
+          processed   = 0;
       
-      if (deliverable) this._client.deliverMessages(messages);
+      var ping = function() {
+        processed += 1;
+        if (processed < responses.length) return;
+        if (deliverable) this._client.deliverMessages(messages);
+      };
+      
+      var handleResponse = function(response) {
+        this._client.pipeThroughExtensions('incoming', response, function(response) {
+          if (response) {
+            if (response.id === message.id) {
+              if (callback.call(scope, response) === false)
+                deliverable = false;
+            }
+            
+            if (response.advice)
+              this._client.handleAdvice(response.advice);
+            
+            if (response.data && response.channel)
+              messages.push(response);
+          }
+          
+          ping.call(this);
+        }, this);
+      };
+      
+      Faye.each(responses, handleResponse, this);
     }, this);
   }
 }), {

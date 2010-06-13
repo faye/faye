@@ -12,7 +12,9 @@ class TestClients < Test::Unit::TestCase
     http_client :B, ['/channels/b']
     
     extend_client :A, :incoming, lambda { |message, callback|
-      message['data']['modified'] = 'hi'
+      if message['data']
+        message['data']['modified'] = 'hi'
+      end
       callback.call(message)
     }
     
