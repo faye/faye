@@ -4,8 +4,6 @@ README.txt
 Rakefile
 jake.yml
 Jakefile
-build/faye.js
-build/faye-client-min.js
 examples/README.rdoc
 examples/shared/public/index.html
 examples/shared/public/favicon.ico
@@ -17,8 +15,8 @@ examples/shared/public/soapbox.js
 examples/shared/public/style.css
 examples/node/app.js
 examples/node/client.js
-examples/node/faye.js
-examples/node/faye-client-min.js
+examples/node/faye-node.js
+examples/node/faye-browser-min.js
 examples/rack/app.rb
 examples/rack/client.rb
 examples/rack/config.ru
