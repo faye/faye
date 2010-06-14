@@ -133,6 +133,27 @@ class TestClients < Test::Unit::TestCase
         :B => {}
     )
   end
+  
+  scenario "Two HTTP clients, two message deliveries" do
+    server 8000
+    http_client :A, ['/channels/a']
+    http_client :B, []
+    publish :B, '/channels/a', 'hello' => 'world'
+    check_inbox(
+        :A => {
+          '/channels/a' => ['hello' => 'world']
+        },
+        :B => {}
+    )
+    wait 1
+    publish :B, '/channels/a', 'hello' => 'world'
+    check_inbox(
+        :A => {
+          '/channels/a' => [{'hello' => 'world'}, {'hello' => 'world'}]
+        },
+        :B => {}
+    )
+  end
 
   scenario "Two HTTP clients, multiple subscriptions" do
     server 8000

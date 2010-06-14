@@ -61,6 +61,10 @@ module Scenario
       @inbox   = {}
       @pool    = 0
     end
+    
+    def wait(time, &block)
+      EM.add_timer(time, &block)
+    end
   
     def check_inbox(expected_inbox, &block)
       assert_equal expected_inbox, @inbox

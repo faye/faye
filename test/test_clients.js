@@ -167,6 +167,28 @@ function() { with(this) {
   });
 }});
 
+Scenario.run("Two HTTP clients, two message deliveries",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', []);
+  publish('B', '/channels/a', {hello: 'world'});
+  checkInbox({
+      A: {
+        '/channels/a': [{hello: 'world'}]
+      },
+      B: {}
+  });
+  wait(1);
+  publish('B', '/channels/a', {hello: 'world'});
+  checkInbox({
+      A: {
+        '/channels/a': [{hello: 'world'}, {hello: 'world'}]
+      },
+      B: {}
+  });
+}});
+
 Scenario.run("Two HTTP clients, multiple subscriptions",
 function() { with(this) {
   server(8000);
