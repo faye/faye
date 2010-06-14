@@ -3,6 +3,10 @@ Faye.XHRTransport = Faye.Class(Faye.Transport, {
     return Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), function(response) {
       if (callback) callback.call(scope, JSON.parse(response.text()));
     });
+  },
+  
+  abort: function(request) {
+    request.abort();
   }
 });
 
@@ -24,6 +28,7 @@ Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
     Faye.ENV[callbackName] = function(data) {
       Faye.ENV[callbackName] = undefined;
       try { delete Faye.ENV[callbackName] } catch (e) {}
+      if (!script.parentNode) return;
       head.removeChild(script);
       if (callback) callback.call(scope, data);
     };
@@ -34,6 +39,11 @@ Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
     head.appendChild(script);
     
     return script;
+  },
+  
+  abort: function(script) {
+    if (!script.parentNode) return;
+    script.parentNode.removeChild(script);
   }
 }), {
   _cbCount: 0,

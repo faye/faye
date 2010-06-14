@@ -101,8 +101,10 @@ Faye.Client = Faye.Class({
       return this.handshake(function() { this.connect(callback, scope) }, this);
     }
     
-    if (this._state === this.CONNECTING)
-      return this.callback(callback, scope);
+    if (this._state === this.CONNECTING || this._paused) {
+      if (callback) this.callback(callback, scope);
+      return;
+    }
     
     if (this._state !== this.CONNECTED) return;
     
@@ -114,7 +116,6 @@ Faye.Client = Faye.Class({
     if (this._connectRequest) return;
     this._connectRequest = true;
     
-    var self = this;
     this.info('Initiating connection for ?', this._clientId);
     
     this._send({
@@ -123,11 +124,7 @@ Faye.Client = Faye.Class({
       connectionType: this._transport.connectionType
       
     }, this._verifyClientId(function(response) {
-      this._connectRequest = null;
-      this.removeTimeout('reconnect');
-      
-      this.info('Closed connection for ?', this._clientId);
-      setTimeout(function() { self.connect() }, this._advice.interval);
+      this._cycleConnection();
     }));
     
     this._beginReconnectTimeout();
@@ -259,6 +256,32 @@ Faye.Client = Faye.Class({
       this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
       this._channels.distributeMessage(message);
     }, this);
+  },
+  
+  pause: function() {
+    if (this._paused) return;
+    this._paused = true;
+    if (this._connectRequest) this._transport.abort(this._connectRequest);
+    this._teardownConnection();
+  },
+  
+  resume: function() {
+    if (!this._paused) return;
+    this._paused = false;
+    this._cycleConnection();
+  },
+  
+  _teardownConnection: function() {
+    if (!this._connectRequest) return;
+    this._connectRequest = null;
+    this.removeTimeout('reconnect');
+    this.info('Closed connection for ?', this._clientId);
+  },
+  
+  _cycleConnection: function() {
+    this._teardownConnection();
+    var self = this;
+    setTimeout(function() { self.connect() }, this._advice.interval);
   },
   
   _beginReconnectTimeout: function() {

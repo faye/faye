@@ -121,11 +121,7 @@ module Faye
         'connectionType'  => @transport.connection_type
         
       }, &verify_client_id { |response|
-        @connect_request = nil
-        remove_timeout(:reconnect)
-        
-        info('Closed connection for ?', @client_id)
-        EventMachine.add_timer(@advice['interval'] / 1000.0) { connect }
+        cycle_connection
       })
       
       begin_reconnect_timeout
@@ -258,6 +254,18 @@ module Faye
     end
     
   private
+    
+    def teardown_connection
+      return unless @connect_request
+      @connect_request = nil
+      remove_timeout(:reconnect)
+      info('Closed connection for ?', @client_id)
+    end
+    
+    def cycle_connection
+      teardown_connection
+      EventMachine.add_timer(@advice['interval'] / 1000.0) { connect }
+    end
     
     def begin_reconnect_timeout
       add_timeout(:reconnect, @timeout) do
