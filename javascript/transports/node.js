@@ -9,6 +9,8 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
       });
     });
     request.end();
+    
+    return request;
   },
   
   createRequestForMessage: function(message) {
@@ -41,6 +43,7 @@ Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
     this._endpoint.process(message, true, function(response) {
       callback.call(scope, response);
     });
+    return true;
   }
 });
 

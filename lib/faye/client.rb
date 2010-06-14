@@ -17,7 +17,7 @@ module Faye
     
     CONNECTION_TIMEOUT  = 60.0
     
-    attr_reader :endpoint, :client_id, :namespace
+    attr_reader :endpoint, :client_id
     
     def initialize(endpoint = nil, options = {})
       info('New client created for ?', endpoint)
@@ -28,7 +28,6 @@ module Faye
       
       @transport = Transport.get(self)
       @state     = UNCONNECTED
-      @namespace = Namespace.new
       @outbox    = []
       @channels  = Channel::Tree.new
       
@@ -111,18 +110,18 @@ module Faye
       set_deferred_status(:deferred)
       block.call if block_given?
       
-      return unless @connection_id.nil?
-      @connection_id = @namespace.generate
+      return unless @connect_request.nil?
+      @connect_request = true
+      
       info('Initiating connection for ?', @client_id)
       
       send({
         'channel'         => Channel::CONNECT,
         'clientId'        => @client_id,
-        'connectionType'  => @transport.connection_type,
-        'id'              => @connection_id
+        'connectionType'  => @transport.connection_type
         
       }, &verify_client_id { |response|
-        @connection_id = nil
+        @connect_request = nil
         remove_timeout(:reconnect)
         
         info('Closed connection for ?', @client_id)
@@ -262,7 +261,7 @@ module Faye
     
     def begin_reconnect_timeout
       add_timeout(:reconnect, @timeout) do
-        @connection_id = nil
+        @connect_request = nil
         @client_id = nil
         @state = UNCONNECTED
         
@@ -276,7 +275,10 @@ module Faye
     def send(message, &callback)
       pipe_through_extensions(:outgoing, message) do |message|
         if message
-          @transport.send(message, &callback)
+          request = @transport.send(message, &callback)
+          if message['channel'] == Channel::CONNECT
+            @connect_request = request
+          end
         end
       end
     end

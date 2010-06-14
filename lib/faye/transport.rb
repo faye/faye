@@ -9,8 +9,9 @@ module Faye
     
     def initialize(client, endpoint)
       debug('Created new transport for ?', endpoint)
-      @client   = client
-      @endpoint = endpoint
+      @client    = client
+      @endpoint  = endpoint
+      @namespace = Namespace.new
     end
     
     def connection_type
@@ -19,7 +20,7 @@ module Faye
     
     def send(message, &block)
       if message.is_a?(Hash) and not message.has_key?('id')
-        message['id'] = @client.namespace.generate
+        message['id'] = @namespace.generate
       end
       
       debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, message)
@@ -117,6 +118,8 @@ module Faye
       request.callback do
         block.call(JSON.parse(request.response))
       end
+      
+      request
     end
   end
   Transport.register 'long-polling', HttpTransport
@@ -130,6 +133,8 @@ module Faye
       @endpoint.process(message, true) do |response|
         block.call(response)
       end
+      
+      true
     end
   end
   Transport.register 'in-process', LocalTransport

@@ -23,7 +23,6 @@ Faye.Client = Faye.Class({
     
     this._transport = Faye.Transport.get(this);
     this._state     = this.UNCONNECTED;
-    this._namespace = new Faye.Namespace();
     this._outbox    = [];
     this._channels  = new Faye.Channel.Tree();
     
@@ -112,19 +111,19 @@ Faye.Client = Faye.Class({
     this.setDeferredStatus('deferred');
     if (callback) callback.call(scope);
     
-    if (this._connectionId) return;
-    this._connectionId = this._namespace.generate();
+    if (this._connectRequest) return;
+    this._connectRequest = true;
+    
     var self = this;
     this.info('Initiating connection for ?', this._clientId);
     
     this._send({
       channel:        Faye.Channel.CONNECT,
       clientId:       this._clientId,
-      connectionType: this._transport.connectionType,
-      id:             this._connectionId
+      connectionType: this._transport.connectionType
       
     }, this._verifyClientId(function(response) {
-      this._connectionId = null;
+      this._connectRequest = null;
       this.removeTimeout('reconnect');
       
       this.info('Closed connection for ?', this._clientId);
@@ -264,7 +263,7 @@ Faye.Client = Faye.Class({
   
   _beginReconnectTimeout: function() {
     this.addTimeout('reconnect', this._timeout, function() {
-      this._connectionId = null;
+      this._connectRequest = null;
       this._clientId = null;
       this._state = this.UNCONNECTED;
       
@@ -278,7 +277,11 @@ Faye.Client = Faye.Class({
   _send: function(message, callback, scope) {
     this.pipeThroughExtensions('outgoing', message, function(message) {
       if (!message) return;
-      this._transport.send(message, callback, scope);
+      
+      var request = this._transport.send(message, callback, scope);
+      if (message.channel === Faye.Channel.CONNECT)
+        this._connectRequest = request;
+      
     }, this);
   },
   

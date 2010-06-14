@@ -1,18 +1,19 @@
 Faye.Transport = Faye.extend(Faye.Class({
   initialize: function(client, endpoint) {
     this.debug('Created new transport for ?', endpoint);
-    this._client   = client;
-    this._endpoint = endpoint;
+    this._client    = client;
+    this._endpoint  = endpoint;
+    this._namespace = new Faye.Namespace();
   },
   
   send: function(message, callback, scope) {
     if (!(message instanceof Array) && !message.id)
-      message.id = this._client._namespace.generate();
+      message.id = this._namespace.generate();
     
     this.debug('Client ? sending message to ?: ?',
                this._client._clientId, this._endpoint, message);
     
-    this.request(message, function(responses) {
+    return this.request(message, function(responses) {
       this.debug('Client ? received from ?: ?',
                  this._client._clientId, this._endpoint, responses);
       

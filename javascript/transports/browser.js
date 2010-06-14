@@ -1,6 +1,6 @@
 Faye.XHRTransport = Faye.Class(Faye.Transport, {
   request: function(message, callback, scope) {
-    Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), function(response) {
+    return Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), function(response) {
       if (callback) callback.call(scope, JSON.parse(response.text()));
     });
   }
@@ -32,6 +32,8 @@ Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
     script.type = 'text/javascript';
     script.src  = location.toURL();
     head.appendChild(script);
+    
+    return script;
   }
 }), {
   _cbCount: 0,
