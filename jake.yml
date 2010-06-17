@@ -1,6 +1,7 @@
 ---
 source_directory:   javascript
 build_directory:    build
+
 builds:
   src:
     packer:         false
@@ -8,35 +9,40 @@ builds:
   min:
     shrink_vars:    true
     private:        true
+
 packages:
+
   core:
     - faye
     - util/class
-    - util/deferrable
-    - publisher
-    - timeouts
-    - logging
-    - extensible
-    - channel
-    - subscription
-    - namespace
-    - transport
-    - client
+    - util/namespace
+    - mixins/deferrable
+    - mixins/publisher
+    - mixins/timeouts
+    - mixins/logging
+    - protocol/grammar
+    - protocol/extensible
+    - protocol/channel
+    - protocol/subscription
+    - protocol/client
+    - network/transport
+
   faye-node:
     extends: core
     files:
       - util/set
-      - server
-      - connection
+      - protocol/server
+      - protocol/connection
+      - network/node
+      - adapters/node_adapter
       - error
-      - node_adapter
-      - transports/node
+
   faye-browser:
     extends: core
     files:
-      - util/event
-      - util/uri
-      - util/xhr
-      - util/json
-      - transports/browser
+      - util/browser/event
+      - util/browser/uri
+      - util/browser/xhr
+      - util/browser/json
+      - network/browser
 

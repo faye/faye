@@ -14,15 +14,25 @@ module Faye
   JSONP_CALLBACK   = 'jsonpcallback'
   CONNECTION_TYPES = %w[long-polling callback-polling]
   
-  %w[ publisher timeouts logging grammar extensible
-      namespace server channel subscription
-      connection error client transport
+  %w[ mixins/publisher
+      mixins/timeouts
+      mixins/logging
+      util/namespace
+      protocol/grammar
+      protocol/extensible
+      protocol/channel
+      protocol/subscription
+      protocol/client
+      protocol/server
+      protocol/connection
+      network/transport
+      error
       
   ].each do |lib|
     require File.join(ROOT, 'faye', lib)
   end
   
-  autoload :RackAdapter, File.join(ROOT, 'faye', 'rack_adapter')
+  autoload :RackAdapter, File.join(ROOT, 'faye', 'adapters', 'rack_adapter')
   
   def self.random(bitlength = ID_LENGTH)
     field  = 2 ** bitlength
