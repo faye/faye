@@ -1,6 +1,6 @@
 Faye.Transport = Faye.extend(Faye.Class({
   initialize: function(client, endpoint) {
-    this.debug('Created new transport for ?', endpoint);
+    this.debug('Created new ? transport for ?', this.connectionType, endpoint);
     this._client    = client;
     this._endpoint  = endpoint;
     this._namespace = new Faye.Namespace();
@@ -61,7 +61,8 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (connectionTypes === undefined) connectionTypes = this.supportedConnectionTypes();
     
     var candidateClass = null;
-    Faye.each(this._transports, function(connType, klass) {
+    Faye.each(this._transports, function(pair) {
+      var connType = pair[0], klass = pair[1];
       if (Faye.indexOf(connectionTypes, connType) < 0) return;
       if (candidateClass) return;
       if (klass.isUsable(endpoint)) candidateClass = klass;
@@ -73,15 +74,15 @@ Faye.Transport = Faye.extend(Faye.Class({
   },
   
   register: function(type, klass) {
-    this._transports[type] = klass;
+    this._transports.push([type, klass]);
     klass.prototype.connectionType = type;
   },
   
-  _transports: {},
+  _transports: [],
   
   supportedConnectionTypes: function() {
     var list = [], key;
-    Faye.each(this._transports, function(key, type) { list.push(key) });
+    Faye.each(this._transports, function(pair) { list.push(pair[0]) });
     return list;
   }
 });

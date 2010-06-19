@@ -8,7 +8,7 @@ module Faye
     include Logging
     
     def initialize(client, endpoint)
-      debug('Created new transport for ?', endpoint)
+      debug('Created new ? transport for ?', connection_type, endpoint)
       @client    = client
       @endpoint  = endpoint
       @namespace = Namespace.new
@@ -66,7 +66,7 @@ module Faye
       }
     end
     
-    @transports = {}
+    @transports = []
     
     class << self
       attr_accessor :connection_type
@@ -75,7 +75,7 @@ module Faye
         endpoint = client.endpoint
         connection_types ||= supported_connection_types
         
-        candidate_class = @transports.find do |type, klass|
+        candidate_class = @transports.find do |(type, klass)|
           connection_types.include?(type) and
           klass.usable?(endpoint)
         end
@@ -88,12 +88,12 @@ module Faye
       end
       
       def register(type, klass)
-        @transports[type] = klass
+        @transports << [type, klass]
         klass.connection_type = type
       end
       
       def supported_connection_types
-        @transports.keys
+        @transports.map { |t| t.first }
       end
     end
   end
