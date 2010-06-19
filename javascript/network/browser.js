@@ -1,8 +1,8 @@
 Faye.XHRTransport = Faye.Class(Faye.Transport, {
-  request: function(message, callback, scope) {
+  request: function(message) {
     return Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), function(response) {
-      if (callback) callback.call(scope, JSON.parse(response.text()));
-    });
+      this.receive(JSON.parse(response.text()));
+    }, this);
   },
   
   abort: function(request) {
@@ -18,19 +18,20 @@ Faye.Transport.register('long-polling', Faye.XHRTransport);
 
 
 Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
-  request: function(message, callback, scope) {
+  request: function(message) {
     var params       = {message: Faye.toJSON(message)},
         head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = Faye.JSONPTransport.getCallbackName(),
-        location     = Faye.URI.parse(this._endpoint, params);
+        location     = Faye.URI.parse(this._endpoint, params),
+        self         = this;
     
     Faye.ENV[callbackName] = function(data) {
       Faye.ENV[callbackName] = undefined;
       try { delete Faye.ENV[callbackName] } catch (e) {}
       if (!script.parentNode) return;
       head.removeChild(script);
-      if (callback) callback.call(scope, data);
+      self.receive(data);
     };
     
     location.params.jsonp = callbackName;
