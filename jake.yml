@@ -31,6 +31,7 @@ packages:
     extends: core
     files:
       - util/set
+      - util/node/web_socket
       - protocol/server
       - protocol/connection
       - network/node

@@ -11,16 +11,18 @@ var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
 
 sys.puts('Listening on ' + port);
 
-http.createServer(function(request, response) {
+comet.addListener('request', function(request, response) {
   sys.puts(request.method + ' ' + request.url);
-  if (comet.call(request, response)) return;
   
   var path = (request.url === '/') ? '/index.html' : request.url;
   
   fs.readFile(PUBLIC_DIR + path, function(err, content) {
+    if (err) return;
     response.writeHead(200, {'Content-Type': 'text/html'});
     response.write(content);
     response.end();
   });
-}).listen(Number(port));
+});
+
+comet.listen(Number(port));
 

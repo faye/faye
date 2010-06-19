@@ -39,7 +39,12 @@
   </div>
   
   <script type="text/javascript">
-    Comet = new Faye.Client('/comet');
+    Faye.Logging.logLevel = 'debug';
+    Faye.logger = function(msg) {
+      if (window.console) console.log(msg);
+    };
+    
+    Comet = new Faye.Client('http://127.0.0.1:8000/comet');
     Soapbox.init(Comet);
   </script>
 

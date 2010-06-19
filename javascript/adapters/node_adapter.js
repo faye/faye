@@ -17,7 +17,7 @@ Faye.withDataFor = function(transport, callback, scope) {
   });
 };
 
-Faye.NodeAdapter = Faye.Class({
+Faye.NodeAdapter = Faye.Class(http.Server, {
   DEFAULT_ENDPOINT: '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   SCRIPT_PATH:      path.dirname(__filename) + '/faye-browser-min.js',
   
@@ -30,6 +30,16 @@ Faye.NodeAdapter = Faye.Class({
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
     this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]+)*(\\.js)?$');
     this._server     = new Faye.Server(this._options);
+    
+    http.Server.call(this, function(request, response) {
+      self.handle(request, response);
+    });
+    
+    this.addListener('upgrade', function(request, socket, head) {
+      self.handleUpgrade(request, socket, head);
+    });
+    
+    var self = this;
   },
   
   addExtension: function(extension) {
@@ -44,14 +54,7 @@ Faye.NodeAdapter = Faye.Class({
     return this._client = this._client || new Faye.Client(this._server);
   },
   
-  run: function(port) {
-    var self = this;
-    http.createServer(function(request, response) {
-      self.call(request, response);
-    }).listen(Number(port));
-  },
-  
-  call: function(request, response) {
+  handle: function(request, response) {
     var requestUrl = url.parse(request.url, true),
         self = this, data;
     
@@ -77,6 +80,19 @@ Faye.NodeAdapter = Faye.Class({
         });
     }
     return true;
+  },
+  
+  handleUpgrade: function(request, socket, head) {
+    var socket = new Faye.WebSocket(request),
+        self   = this;
+    
+    socket.onmessage = function(message) {
+      try {
+        self._server.process(JSON.parse(message.data), false, function(replies) {
+          socket.send(JSON.stringify(replies));
+        });
+      } catch (e) {}
+    };
   },
   
   _callWithParams: function(request, response, params) {

@@ -21,7 +21,7 @@ Faye.Client = Faye.Class({
     this._options   = options || {};
     this._timeout   = this._options.timeout || this.CONNECTION_TIMEOUT;
     
-    this._transport = Faye.Transport.get(this);
+    this._transport = Faye.Transport.get(this, Faye.MANDATORY_CONNECTION_TYPES);
     this._state     = this.UNCONNECTED;
     this._outbox    = [];
     this._channels  = new Faye.Channel.Tree();

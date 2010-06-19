@@ -1,3 +1,47 @@
+Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
+  UNCONNECTED:    1,
+  CONNECTING:     2,
+  CONNECTED:      3,
+  
+  request: function(message) {
+    this.withSocket(function(socket) { socket.send(Faye.toJSON(message)) });
+  },
+  
+  withSocket: function(callback, scope) {
+    this.callback(callback, scope);
+    
+    this._state = this._state || this.UNCONNECTED;
+    if (this._state !== this.UNCONNECTED) return;
+    
+    this._state = this.CONNECTING;
+    
+    var socketUrl = Faye.URI.parse(this._endpoint).toURL().
+                    replace(/^https?/ig, 'ws');
+    
+    this._socket = new WebSocket(socketUrl);
+    var self = this;
+    
+    this._socket.onopen = function() {
+      self._state = self.CONNECTED;
+      self.setDeferredStatus('succeeded', self._socket);
+    };
+    
+    this._socket.onmessage = function(message) {
+      self.receive(JSON.parse(message.data));
+    };
+  }
+});
+
+Faye.extend(Faye.WebSocketTransport.prototype, Faye.Deferrable);
+
+
+Faye.WebSocketTransport.isUsable = function(endpoint) {
+  return !!Faye.ENV.WebSocket;
+};
+
+Faye.Transport.register('websocket', Faye.WebSocketTransport);
+
+
 Faye.XHRTransport = Faye.Class(Faye.Transport, {
   request: function(message) {
     return Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), function(response) {
