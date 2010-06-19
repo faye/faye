@@ -13,7 +13,7 @@ Faye.Server = Faye.Class({
     return ids;
   },
   
-  process: function(messages, local, callback) {
+  process: function(messages, local, callback, scope) {
     this.debug('Processing messages from ? client', local ? 'LOCAL' : 'REMOTE');
     
     messages = [].concat(messages);
@@ -37,7 +37,7 @@ Faye.Server = Faye.Class({
           while (n--) {
             if (!responses[n]) responses.splice(n,1);
           }
-          callback(responses);
+          callback.call(scope, responses);
           
         }, this);
       }, this);

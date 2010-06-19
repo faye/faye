@@ -1,11 +1,11 @@
 Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
-  request: function(message, callback, scope) {
-    var request = this.createRequestForMessage(message);
+  request: function(message) {
+    var request = this.createRequestForMessage(message),
+        self    = this;
     
     request.addListener('response', function(response) {
-      if (!callback) return;
       Faye.withDataFor(response, function(data) {
-        callback.call(scope, JSON.parse(data));
+        self.receive(JSON.parse(data));
       });
     });
     request.end();
@@ -39,10 +39,8 @@ Faye.NodeHttpTransport.isUsable = function(endpoint) {
 Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
 
 Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
-  request: function(message, callback, scope) {
-    this._endpoint.process(message, true, function(response) {
-      callback.call(scope, response);
-    });
+  request: function(message) {
+    this._endpoint.process(message, true, this.receive, this);
     return true;
   }
 });

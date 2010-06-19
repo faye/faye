@@ -4,53 +4,57 @@ Faye.Transport = Faye.extend(Faye.Class({
     this._client    = client;
     this._endpoint  = endpoint;
     this._namespace = new Faye.Namespace();
+    this._callbacks = {};
   },
   
   send: function(message, callback, scope) {
-    if (!(message instanceof Array) && !message.id)
+    if (!(message instanceof Array) && !message.id) {
       message.id = this._namespace.generate();
+      if (callback) this._callbacks[message.id] = [callback, scope];
+    }
     
     this.debug('Client ? sending message to ?: ?',
                this._client._clientId, this._endpoint, message);
     
-    return this.request(message, function(responses) {
-      this.debug('Client ? received from ?: ?',
-                 this._client._clientId, this._endpoint, responses);
-      
-      if (!callback) return;
-      
-      var responses   = [].concat(responses),
-          messages    = [],
-          deliverable = true,
-          processed   = 0;
-      
-      var ping = function() {
-        processed += 1;
-        if (processed < responses.length) return;
-        if (deliverable) this._client.deliverMessages(messages);
-      };
-      
-      var handleResponse = function(response) {
-        this._client.pipeThroughExtensions('incoming', response, function(response) {
-          if (response) {
-            if (response.id === message.id) {
-              if (callback.call(scope, response) === false)
-                deliverable = false;
-            }
-            
-            if (response.advice)
-              this._client.handleAdvice(response.advice);
-            
-            if (response.data && response.channel)
-              messages.push(response);
+    return this.request(message);
+  },
+  
+  receive: function(responses) {
+    this.debug('Client ? received from ?: ?',
+               this._client._clientId, this._endpoint, responses);
+    
+    var responses   = [].concat(responses),
+        messages    = [],
+        deliverable = true,
+        processed   = 0;
+    
+    var ping = function() {
+      processed += 1;
+      if (processed < responses.length) return;
+      if (deliverable) this._client.deliverMessages(messages);
+    };
+    
+    var handleResponse = function(response) {
+      this._client.pipeThroughExtensions('incoming', response, function(response) {
+        if (response) {
+          if (callback = this._callbacks[response.id]) {
+            delete this._callbacks[response.id];
+            if (callback[0].call(callback[1], response) === false)
+              deliverable = false;
           }
           
-          ping.call(this);
-        }, this);
-      };
-      
-      Faye.each(responses, handleResponse, this);
-    }, this);
+          if (response.advice)
+            this._client.handleAdvice(response.advice);
+          
+          if (response.data && response.channel)
+            messages.push(response);
+        }
+        
+        ping.call(this);
+      }, this);
+    };
+    
+    Faye.each(responses, handleResponse, this);
   },
   
   abort: function() {}
