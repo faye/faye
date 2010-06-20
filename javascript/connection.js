@@ -30,6 +30,8 @@ Faye.Connection = Faye.Class({
   },
   
   connect: function(callback, scope) {
+    this.setDeferredStatus('deferred');
+    
     this.callback(callback, scope);
     if (this._connected) return;
     
