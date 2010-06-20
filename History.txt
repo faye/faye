@@ -1,3 +1,8 @@
+=== 0.3.4 / 2010-06-20
+
+* Stop local clients going into an infinite loop if a subscription block causes a reconnect
+
+
 === 0.3.3 / 2010-06-07
 
 * Bring Node APIs up to date with 0.1.97

@@ -37,6 +37,8 @@ module Faye
     end
     
     def connect(&block)
+      set_deferred_status(:deferred)
+      
       callback(&block)
       return if @connected
       
