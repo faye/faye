@@ -43,9 +43,19 @@ Faye.Transport.register('websocket', Faye.WebSocketTransport);
 
 
 Faye.XHRTransport = Faye.Class(Faye.Transport, {
-  request: function(message) {
-    return Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), function(response) {
-      this.receive(JSON.parse(response.text()));
+  request: function(message, timeout) {
+    var timeout = timeout || this._client.getTimeout();
+    
+    return Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), {
+      success:function(response) {
+       this.receive(JSON.parse(response.text()));
+      },
+      failure: function() {
+        var self = this;
+        setTimeout(function() {
+          self.request(message, 2 * timeout);
+        }, 1000 * timeout);
+      }
     }, this);
   },
   
