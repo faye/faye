@@ -32,6 +32,10 @@ Faye.Client = Faye.Class({
                                   this.disconnect, this);
   },
   
+  getTimeout: function() {
+    return this._timeout;
+  },
+  
   // Request
   // MUST include:  * channel
   //                * version
@@ -73,6 +77,8 @@ Faye.Client = Faye.Class({
         this._transport = Faye.Transport.get(this, response.supportedConnectionTypes);
         
         this.info('Handshake successful: ?', this._clientId);
+        
+        this.subscribe(this._channels.getKeys());
         if (callback) callback.call(scope);
         
       } else {
@@ -96,10 +102,8 @@ Faye.Client = Faye.Class({
     if (this._advice.reconnect === this.NONE) return;
     if (this._state === this.DISCONNECTED) return;
     
-    if (this._advice.reconnect === this.HANDSHAKE || this._state === this.UNCONNECTED) {
-      this._beginReconnectTimeout();
+    if (this._state === this.UNCONNECTED)
       return this.handshake(function() { this.connect(callback, scope) }, this);
-    }
     
     if (this._state === this.CONNECTING || this._paused) {
       if (callback) this.callback(callback, scope);
@@ -126,8 +130,6 @@ Faye.Client = Faye.Class({
     }, this._verifyClientId(function(response) {
       this._cycleConnection();
     }));
-    
-    this._beginReconnectTimeout();
   },
   
   // Request                              Response
@@ -150,7 +152,6 @@ Faye.Client = Faye.Class({
     
     this.info('Clearing channel listeners for ?', this._clientId);
     this._channels = new Faye.Channel.Tree();
-    this.removeTimeout('reconnect');
   },
   
   // Request                              Response
@@ -165,6 +166,7 @@ Faye.Client = Faye.Class({
   //                                                     * timestamp
   subscribe: function(channels, callback, scope) {
     channels = [].concat(channels);
+    if (channels.length === 0) return;
     this._validateChannels(channels);
     
     this.connect(function() {
@@ -200,6 +202,7 @@ Faye.Client = Faye.Class({
   //                                                     * timestamp
   unsubscribe: function(channels, callback, scope) {
     channels = [].concat(channels);
+    if (channels.length === 0) return;
     this._validateChannels(channels);
     
     var deadChannels = this._channels.unsubscribe(channels, callback, scope);
@@ -248,7 +251,12 @@ Faye.Client = Faye.Class({
   
   handleAdvice: function(advice) {
     Faye.extend(this._advice, advice);
-    if (this._advice.reconnect === this.HANDSHAKE) this._clientId = null;
+    
+    if (this._advice.reconnect === this.HANDSHAKE && this._state !== this.DISCONNECTED) {
+      this._state    = this.UNCONNECTED;
+      this._clientId = null;
+      this._cycleConnection();
+    }
   },
   
   deliverMessages: function(messages) {
@@ -274,7 +282,6 @@ Faye.Client = Faye.Class({
   _teardownConnection: function() {
     if (!this._connectRequest) return;
     this._connectRequest = null;
-    this.removeTimeout('reconnect');
     this.info('Closed connection for ?', this._clientId);
   },
   
@@ -282,19 +289,6 @@ Faye.Client = Faye.Class({
     this._teardownConnection();
     var self = this;
     setTimeout(function() { self.connect() }, this._advice.interval);
-  },
-  
-  _beginReconnectTimeout: function() {
-    this.addTimeout('reconnect', this._timeout, function() {
-      this._connectRequest = null;
-      this._clientId = null;
-      this._state = this.UNCONNECTED;
-      
-      this.info('Server took >?s to reply to connection for ?: attempting to reconnect',
-                this._timeout, this._clientId);
-      
-      this.subscribe(this._channels.getKeys());
-    }, this);
   },
   
   _send: function(message, callback, scope) {

@@ -1,6 +1,7 @@
 Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
-  request: function(message) {
-    var request = this.createRequestForMessage(message),
+  request: function(message, timeout) {
+    var timeout = timeout || this._client.getTimeout(),
+        request = this.createRequestForMessage(message, timeout),
         self    = this;
     
     request.addListener('response', function(response) {
@@ -13,12 +14,17 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
     return request;
   },
   
-  createRequestForMessage: function(message) {
+  createRequestForMessage: function(message, timeout) {
     var content = JSON.stringify(message),
         uri     = url.parse(this._endpoint),
-        client  = http.createClient(uri.port, uri.hostname);
+        client  = http.createClient(uri.port, uri.hostname),
+        self    = this;
     
-    client.addListener('error', function() { /* catch ECONNREFUSED */ });
+    var retry = function() {
+      self.request(message, 2 * timeout);
+    };
+    
+    client.addListener('error', function() { setTimeout(retry, timeout) });
     
     if (parseInt(uri.port) === 443) client.setSecure('X509_PEM');
     
