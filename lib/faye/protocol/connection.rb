@@ -8,11 +8,12 @@ module Faye
     INTERVAL  = 1.0
     TIMEOUT   = 60.0
     
-    attr_reader :id   
+    attr_reader :id, :interval, :timeout
     
     def initialize(id, options = {})
       @id        = id
       @options   = options
+      @interval  = @options[:interval] || INTERVAL
       @timeout   = @options[:timeout] || TIMEOUT
       @channels  = Set.new
       @inbox     = Set.new

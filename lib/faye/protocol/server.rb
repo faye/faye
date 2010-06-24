@@ -82,10 +82,17 @@ module Faye
           if Channel.meta?(channel_name)
             response = __send__(Channel.parse(channel_name)[1], message, local)
             
-            client_id = response['clientId']
-            response['advice'] ||= {}
-            response['advice']['reconnect'] ||= @connections.has_key?(client_id) ? 'retry' : 'handshake'
-            response['advice']['interval']  ||= (Connection::INTERVAL * 1000).floor
+            client_id  = response['clientId']
+            connection = @connections[client_id]
+            
+            advice = response['advice'] ||= {}
+            if connection
+              advice['reconnect'] ||= 'retry'
+              advice['interval']  ||= (connection.interval * 1000).floor
+              advice['timeout']   ||= (connection.timeout * 1000).floor
+            else
+              advice['reconnect'] ||= 'handshake'
+            end
             
             return callback.call([response]) unless response['channel'] == Channel::CONNECT and
                                                     response['successful'] == true
@@ -156,7 +163,7 @@ module Faye
     # MAY contain   * ext
     #               * id
     def connect(message, local = false)
-      response  = make_response(message)
+      response   = make_response(message)
       
       client_id  = message['clientId']
       connection = client_id ? @connections[client_id] : nil
@@ -178,7 +185,7 @@ module Faye
     # MAY contain   * ext
     #               * id
     def disconnect(message, local = false)
-      response  = make_response(message)
+      response   = make_response(message)
       
       client_id  = message['clientId']
       connection = client_id ? @connections[client_id] : nil

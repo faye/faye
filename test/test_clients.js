@@ -131,7 +131,7 @@ function() { with(this) {
   killServer();
   wait(6);
   server(8000);
-  wait(22);
+  wait(15);
   publish('B', '/channels/a', {hello: 'world'});
   checkInbox({
       A: {

@@ -84,12 +84,21 @@ Faye.Server = Faye.Class({
       if (Faye.Channel.isMeta(channelName)) {
         response = this[Faye.Channel.parse(channelName)[1]](message, local);
         
-        var clientId = response.clientId;
+        var clientId   = response.clientId,
+            connection = this._connections[clientId];
+        
         response.advice = response.advice || {};
-        Faye.extend(response.advice, {
-          reconnect:  this._connections.hasOwnProperty(clientId) ? 'retry' : 'handshake',
-          interval:   Math.floor(Faye.Connection.prototype.INTERVAL * 1000)
-        }, false);
+        if (connection) {
+          Faye.extend(response.advice, {
+            reconnect:  'retry',
+            interval:   Math.floor(connection.interval * 1000),
+            timeout:    Math.floor(connection.timeout * 1000)
+          }, false);
+        } else {
+          Faye.extend(response.advice, {
+            reconnect:  'handshake'
+          }, false);
+        }
         
         if (response.channel !== Faye.Channel.CONNECT ||
             response.successful !== true)
@@ -165,7 +174,7 @@ Faye.Server = Faye.Class({
   // MAY contain   * ext
   //               * id
   connect: function(message, local) {
-    var response = this._makeResponse(message);
+    var response   = this._makeResponse(message);
     
     var clientId   = message.clientId,
         connection = clientId ? this._connections[clientId] : null,
@@ -187,7 +196,7 @@ Faye.Server = Faye.Class({
   // MAY contain   * ext
   //               * id
   disconnect: function(message, local) {
-    var response = this._makeResponse(message);
+    var response   = this._makeResponse(message);
     
     var clientId   = message.clientId,
         connection = clientId ? this._connections[clientId] : null;
@@ -211,7 +220,7 @@ Faye.Server = Faye.Class({
   // MAY contain   * ext
   //               * id
   subscribe: function(message, local) {
-    var response = this._makeResponse(message);
+    var response     = this._makeResponse(message);
     
     var clientId     = message.clientId,
         connection   = clientId ? this._connections[clientId] : null,
@@ -246,7 +255,7 @@ Faye.Server = Faye.Class({
   // MAY contain   * ext
   //               * id
   unsubscribe: function(message, local) {
-    var response = this._makeResponse(message);
+    var response     = this._makeResponse(message);
     
     var clientId     = message.clientId,
         connection   = clientId ? this._connections[clientId] : null,

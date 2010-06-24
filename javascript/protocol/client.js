@@ -12,28 +12,31 @@ Faye.Client = Faye.Class({
   
   DEFAULT_ENDPOINT:     '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   MAX_DELAY:            <%= Faye::Connection::MAX_DELAY %>,
-  INTERVAL:             <%= Faye::Connection::INTERVAL * 1000 %>,
+  INTERVAL:             <%= Faye::Connection::INTERVAL %>,
   
   initialize: function(endpoint, options) {
     this.info('New client created for ?', endpoint);
     
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
     this._options   = options || {};
-    this._timeout   = this._options.timeout || this.CONNECTION_TIMEOUT;
     
     this._transport = Faye.Transport.get(this, Faye.MANDATORY_CONNECTION_TYPES);
     this._state     = this.UNCONNECTED;
     this._outbox    = [];
     this._channels  = new Faye.Channel.Tree();
     
-    this._advice = {reconnect: this.RETRY, interval: this.INTERVAL};
+    this._advice = {
+      reconnect: this.RETRY,
+      interval:  1000 * (this._options.interval || this.INTERVAL),
+      timeout:   1000 * (this._options.timeout  || this.CONNECTION_TIMEOUT)
+    };
     
     if (Faye.Event) Faye.Event.on(Faye.ENV, 'beforeunload',
                                   this.disconnect, this);
   },
   
   getTimeout: function() {
-    return this._timeout;
+    return this._advice.timeout;
   },
   
   // Request
