@@ -450,7 +450,6 @@ class TestServer < Test::Unit::TestCase
     @server.send :handle, 'channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => 'fake' do |r|
       assert_equal  '401:fake:Unknown client', r.first['error']
       assert_equal  'handshake',      r.first['advice']['reconnect']
-      assert_equal  1000,             r.first['advice']['interval']
     end
     
     id = get_client_id
@@ -458,6 +457,7 @@ class TestServer < Test::Unit::TestCase
       assert_equal  true,             r.first['successful']
       assert_equal  'retry',          r.first['advice']['reconnect']
       assert_equal  1000,             r.first['advice']['interval']
+      assert_equal  60000,            r.first['advice']['timeout']
     end
   end
 end

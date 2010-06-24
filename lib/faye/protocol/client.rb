@@ -24,14 +24,17 @@ module Faye
       
       @endpoint  = endpoint || RackAdapter::DEFAULT_ENDPOINT
       @options   = options
-      @timeout   = @options[:timeout] || CONNECTION_TIMEOUT
       
       @transport = Transport.get(self)
       @state     = UNCONNECTED
       @outbox    = []
       @channels  = Channel::Tree.new
       
-      @advice = {'reconnect' => RETRY, 'interval' => Connection::INTERVAL}
+      @advice = {
+        'reconnect' => RETRY,
+        'interval'  => 1000.0 * (@options[:interval] || Connection::INTERVAL),
+        'timeout'   => 1000.0 * (@options[:timeout] || CONNECTION_TIMEOUT)
+      }
     end
     
     # Request
@@ -268,13 +271,14 @@ module Faye
     end
     
     def begin_reconnect_timeout
-      add_timeout(:reconnect, @timeout) do
+      timeout = @advice['timeout'] / 1000.0
+      add_timeout(:reconnect, timeout) do
         @connect_request = nil
         @client_id = nil
         @state = UNCONNECTED
         
         info('Server took >?s to reply to connection for ?: attempting to reconnect',
-             @timeout, @client_id)
+             timeout, @client_id)
         
         subscribe(@channels.keys)
       end

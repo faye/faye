@@ -20,7 +20,7 @@ AsyncScenario = Faye.Class({
   
   server: function(port, Continue) {
     this._endpoint = 'http://0.0.0.0:' + port + '/comet';
-    var comet = this._comet  = new faye.NodeAdapter({mount: '/comet', timeout: 30});
+    var comet = this._comet  = new faye.NodeAdapter({mount: '/comet', timeout: 5});
     this._server = http.createServer(function(request, response) {
       comet.call(request, response);
     });
@@ -35,7 +35,7 @@ AsyncScenario = Faye.Class({
   },
   
   httpClient: function(name, channels, Continue) {
-    this._setupClient(new faye.Client(this._endpoint, {timeout: 5}), name, channels, Continue);
+    this._setupClient(new faye.Client(this._endpoint, {timeout: 8}), name, channels, Continue);
   },
   
   localClient: function(name, channels, Continue) {

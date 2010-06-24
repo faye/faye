@@ -6,7 +6,8 @@ Faye.Connection = Faye.Class({
   initialize: function(id, options) {
     this.id         = id;
     this._options   = options;
-    this._timeout   = this._options.timeout || this.TIMEOUT;
+    this.interval   = this._options.interval || this.INTERVAL;
+    this.timeout    = this._options.timeout || this.TIMEOUT;
     this._channels  = new Faye.Set();
     this._inbox     = new Faye.Set();
     this._connected = false
@@ -65,7 +66,7 @@ Faye.Connection = Faye.Class({
   
   _beginConnectionTimeout: function() {
     if (!this._connected) return;
-    this.addTimeout('connection', this._timeout, this.flush, this);
+    this.addTimeout('connection', this.timeout, this.flush, this);
   },
   
   _releaseConnection: function() {
