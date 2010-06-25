@@ -16,7 +16,7 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
   createRequestForMessage: function(message) {
     var content = JSON.stringify(message),
         uri     = url.parse(this._endpoint),
-        client  = http.createClient(uri.port, uri.hostname, parseInt(uri.port) === 443);
+        client  = http.createClient(uri.port, uri.hostname, uri.protocol === 'https:');
     
     client.addListener('error', function() { /* catch ECONNREFUSED */ });
     
