@@ -456,7 +456,7 @@ class TestServer < Test::Unit::TestCase
     @server.send :handle, 'channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => id do |r|
       assert_equal  true,             r.first['successful']
       assert_equal  'retry',          r.first['advice']['reconnect']
-      assert_equal  1000,             r.first['advice']['interval']
+      assert_equal  0,                r.first['advice']['interval']
       assert_equal  60000,            r.first['advice']['timeout']
     end
   end

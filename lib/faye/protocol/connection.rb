@@ -5,7 +5,7 @@ module Faye
     include Timeouts
     
     MAX_DELAY = 0.1
-    INTERVAL  = 1.0
+    INTERVAL  = 0.0
     TIMEOUT   = 60.0
     
     attr_reader :id, :interval, :timeout
@@ -83,7 +83,7 @@ module Faye
       remove_timeout(:delivery)
       @connected = false
       
-      add_timeout(:deletion, 10 * INTERVAL) do
+      add_timeout(:deletion, 10 * @timeout) do
         publish_event(:stale_connection, self)
       end
     end
