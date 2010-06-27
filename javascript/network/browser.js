@@ -4,6 +4,9 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
   CONNECTED:      3,
   
   request: function(message) {
+    if (message.channel === Faye.Channel.CONNECT)
+      this._connectMessage = message;
+    
     this.withSocket(function(socket) { socket.send(Faye.toJSON(message)) });
     return this;
   },
@@ -29,6 +32,13 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
     
     this._socket.onmessage = function(message) {
       self.receive(JSON.parse(message.data));
+    };
+    
+    this._socket.onclose = function() {
+      self._state = self.UNCONNECTED;
+      self.setDeferredStatus('deferred');
+      self._socket = null;
+      self.request(self._connectMessage);
     };
   }
 });

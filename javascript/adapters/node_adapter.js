@@ -88,7 +88,8 @@ Faye.NodeAdapter = Faye.Class(http.Server, {
     
     socket.onmessage = function(message) {
       try {
-        self._server.process(JSON.parse(message.data), false, function(replies) {
+        var message = JSON.parse(message.data);
+        self._server.process(message, socket, function(replies) {
           socket.send(JSON.stringify(replies));
         });
       } catch (e) {}
