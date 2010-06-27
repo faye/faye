@@ -13,8 +13,14 @@ Faye.Connection = Faye.Class({
     this._connected = false
   },
   
+  setSocket: function(socket) {
+    this._connected = true;
+    this._socket    = socket;
+  },
+  
   _onMessage: function(event) {
-    this._inbox.add(event);
+    if (!this._inbox.add(event)) return;
+    if (this._socket) this._socket.send(Faye.toJSON(event));
     this._beginDeliveryTimeout();
   },
   
@@ -70,6 +76,8 @@ Faye.Connection = Faye.Class({
   },
   
   _releaseConnection: function() {
+    if (this._socket) return;
+    
     this.removeTimeout('connection');
     this.removeTimeout('delivery');
     this._connected = false;

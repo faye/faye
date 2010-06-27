@@ -13,7 +13,10 @@ Faye.Server = Faye.Class({
     return ids;
   },
   
-  process: function(messages, local, callback) {
+  process: function(messages, localOrRemote, callback, scope) {
+    var socket = (localOrRemote instanceof Faye.WebSocket) ? localOrRemote : null,
+        local  = (localOrRemote === true);
+    
     this.debug('Processing messages from ? client', local ? 'LOCAL' : 'REMOTE');
     
     messages = [].concat(messages);
@@ -37,14 +40,14 @@ Faye.Server = Faye.Class({
           while (n--) {
             if (!responses[n]) responses.splice(n,1);
           }
-          callback(responses);
+          callback.call(scope, responses);
           
         }, this);
       }, this);
     };
     
     Faye.each(messages, function(message) {
-      this._handle(message, local, handleReply, this);
+      this._handle(message, socket, local, handleReply, this);
     }, this);
   },
   
@@ -69,7 +72,7 @@ Faye.Server = Faye.Class({
     delete this._connections[connection.id];
   },
   
-  _handle: function(message, local, callback, scope) {
+  _handle: function(message, socket, local, callback, scope) {
     this.pipeThroughExtensions('incoming', message, function(message) {
       if (!message) return callback.call(scope, []);
       
@@ -106,7 +109,10 @@ Faye.Server = Faye.Class({
         
         this.info('Accepting connection from ?', response.clientId);
         
-        return this._connection(response.clientId).connect(function(events) {
+        connection = this._connection(response.clientId);
+        if (socket) return connection.setSocket(socket);
+        
+        return connection.connect(function(events) {
           this.info('Sending event messages to ?', response.clientId);
           this.debug('Events for ?: ?', response.clientId, events);
           Faye.each(events, function(e) { delete e.__id });

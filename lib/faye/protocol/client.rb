@@ -25,7 +25,7 @@ module Faye
       @endpoint  = endpoint || RackAdapter::DEFAULT_ENDPOINT
       @options   = options
       
-      @transport = Transport.get(self)
+      @transport = Transport.get(self, MANDATORY_CONNECTION_TYPES)
       @state     = UNCONNECTED
       @outbox    = []
       @channels  = Channel::Tree.new
@@ -35,6 +35,10 @@ module Faye
         'interval'  => 1000.0 * (@options[:interval] || Connection::INTERVAL),
         'timeout'   => 1000.0 * (@options[:timeout] || CONNECTION_TIMEOUT)
       }
+    end
+    
+    def get_timeout
+      @advice['timeout'] / 1000.0
     end
     
     # Request
@@ -77,6 +81,8 @@ module Faye
           @transport = Transport.get(self, response['supportedConnectionTypes'])
           
           info('Handshake successful: ?', @client_id)
+          
+          subscribe(@channels.keys)
           block.call if block_given?
           
         else
@@ -100,10 +106,7 @@ module Faye
       return if @advice['reconnect'] == NONE or
                 @state == DISCONNECTED
       
-      if @advice['reconnect'] == HANDSHAKE or @state == UNCONNECTED
-        begin_reconnect_timeout
-        return handshake { connect(&block) }
-      end
+      return handshake { connect(&block) } if @state == UNCONNECTED
       
       return callback(&block) if @state == CONNECTING
       return unless @state == CONNECTED
@@ -126,8 +129,6 @@ module Faye
       }, &verify_client_id { |response|
         cycle_connection
       })
-      
-      begin_reconnect_timeout
     end
     
     # Request                              Response
@@ -150,7 +151,6 @@ module Faye
       
       info('Clearing channel listeners for ?', @client_id)
       @channels = Channel::Tree.new
-      remove_timeout(:reconnect)
     end
     
     # Request                              Response
@@ -165,6 +165,7 @@ module Faye
     #                                                     * timestamp
     def subscribe(channels, &block)
       channels = [channels].flatten
+      return if channels.empty?
       validate_channels(channels)
       
       connect {
@@ -199,6 +200,7 @@ module Faye
     #                                                     * timestamp
     def unsubscribe(channels, &block)
       channels = [channels].flatten
+      return if channels.empty?
       validate_channels(channels)
       
       dead_channels = @channels.unsubscribe(channels, block)
@@ -246,7 +248,11 @@ module Faye
     
     def handle_advice(advice)
       @advice.update(advice)
-      @client_id = nil if @advice['reconnect'] == HANDSHAKE
+      if @advice['reconnect'] == HANDSHAKE and @state != DISCONNECTED
+        @state     = UNCONNECTED
+        @client_id = nil
+        cycle_connection
+      end
     end
     
     def deliver_messages(messages)
@@ -261,27 +267,12 @@ module Faye
     def teardown_connection
       return unless @connect_request
       @connect_request = nil
-      remove_timeout(:reconnect)
       info('Closed connection for ?', @client_id)
     end
     
     def cycle_connection
       teardown_connection
       EventMachine.add_timer(@advice['interval'] / 1000.0) { connect }
-    end
-    
-    def begin_reconnect_timeout
-      timeout = @advice['timeout'] / 1000.0
-      add_timeout(:reconnect, timeout) do
-        @connect_request = nil
-        @client_id = nil
-        @state = UNCONNECTED
-        
-        info('Server took >?s to reply to connection for ?: attempting to reconnect',
-             timeout, @client_id)
-        
-        subscribe(@channels.keys)
-      end
     end
     
     def send(message, &callback)

@@ -20,8 +20,14 @@ module Faye
       @connected = false
     end
     
+    def socket=(socket)
+      @connected = true
+      @socket    = socket
+    end
+    
     def on_message(event)
-      @inbox.add(event)
+      return unless @inbox.add(event)
+      @socket.send(JSON.unparse(event)) if @socket
       begin_delivery_timeout!
     end
     
@@ -79,6 +85,8 @@ module Faye
     end
     
     def release_connection!
+      return if @socket
+      
       remove_timeout(:connection)
       remove_timeout(:delivery)
       @connected = false

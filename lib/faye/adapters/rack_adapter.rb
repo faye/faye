@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'rack'
 require 'thin'
+require Faye::ROOT + '/thin_extensions'
 
 module Faye
   class RackAdapter
@@ -36,7 +37,7 @@ module Faye
       @client ||= Client.new(@server)
     end
     
-    def run(port)
+    def listen(port)
       handler = Rack::Handler.get('thin')
       handler.run(self, :Port => port)
     end
@@ -51,6 +52,10 @@ module Faye
                       [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
       end
       
+      if env['HTTP_UPGRADE'] == 'WebSocket'
+        return handle_upgrade(request)
+      end
+      
       if request.path_info =~ /\.js$/
         return [200, TYPE_SCRIPT, File.new(SCRIPT_PATH)]
       end
@@ -59,14 +64,22 @@ module Faye
         json_msg = request.post? ? request.body.read : request.params['message']
         message  = JSON.parse(json_msg)
         jsonp    = request.params['jsonp'] || JSONP_CALLBACK
+        type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
+        callback = env['async.callback']
+        body     = DeferredBody.new
         
         @server.flush_connection(message) if request.get?
         
-        on_response(env, message) do |replies|
+        callback.call [200, type, body]
+        
+        @server.process(message, false) do |replies|
           response = JSON.unparse(replies)
           response = "#{ jsonp }(#{ response });" if request.get?
-          response
+          body.succeed(response)
         end
+        
+        ASYNC_RESPONSE
+        
       rescue
         [400, TYPE_TEXT, 'Bad request']
       end
@@ -74,22 +87,19 @@ module Faye
     
   private
     
-    def on_response(env, message, &block)
-      request  = Rack::Request.new(env)
-      type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
-      callback = env['async.callback']
+    def handle_upgrade(request)
+      socket = Faye::WebSocket.new(request)
       
-      if callback
-        body = DeferredBody.new
-        callback.call [200, type, body]
-        @server.process(message, false) { |r| body.succeed block.call(r) }
-        return ASYNC_RESPONSE
+      socket.onmessage = lambda do |message|
+        begin
+          message = JSON.parse(message.data)
+          @server.process(message, socket) do |replies|
+            socket.send(JSON.unparse(replies))
+          end
+        rescue
+        end
       end
-      
-      response = nil
-      @server.process(message, false) { |r| response = block.call(r) }
-      sleep(0.1) while response.nil?
-      [200, type, [response]]
+      ASYNC_RESPONSE
     end
     
     def ensure_reactor_running!

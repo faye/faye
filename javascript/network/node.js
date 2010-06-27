@@ -1,11 +1,12 @@
 Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
-  request: function(message, callback, scope) {
-    var request = this.createRequestForMessage(message);
+  request: function(message, timeout) {
+    var timeout = timeout || this._client.getTimeout(),
+        request = this.createRequestForMessage(message, timeout),
+        self    = this;
     
     request.addListener('response', function(response) {
-      if (!callback) return;
       Faye.withDataFor(response, function(data) {
-        callback.call(scope, JSON.parse(data));
+        self.receive(JSON.parse(data));
       });
     });
     request.end();
@@ -13,12 +14,17 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
     return request;
   },
   
-  createRequestForMessage: function(message) {
+  createRequestForMessage: function(message, timeout) {
     var content = JSON.stringify(message),
         uri     = url.parse(this._endpoint),
-        client  = http.createClient(uri.port, uri.hostname);
+        client  = http.createClient(uri.port, uri.hostname),
+        self    = this;
     
-    client.addListener('error', function() { /* catch ECONNREFUSED */ });
+    var retry = function() {
+      self.request(message, 2 * timeout);
+    };
+    
+    client.addListener('error', function() { setTimeout(retry, 1000 * timeout) });
     
     if (parseInt(uri.port) === 443) client.setSecure('X509_PEM');
     
@@ -39,10 +45,8 @@ Faye.NodeHttpTransport.isUsable = function(endpoint) {
 Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
 
 Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
-  request: function(message, callback, scope) {
-    this._endpoint.process(message, true, function(response) {
-      callback.call(scope, response);
-    });
+  request: function(message) {
+    this._endpoint.process(message, true, this.receive, this);
     return true;
   }
 });

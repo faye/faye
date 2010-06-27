@@ -17,9 +17,11 @@ Faye.extend(Faye, {
   BAYEUX_VERSION:   '<%= Faye::BAYEUX_VERSION %>',
   ID_LENGTH:        <%= Faye::ID_LENGTH %>,
   JSONP_CALLBACK:   '<%= Faye::JSONP_CALLBACK %>',
-  CONNECTION_TYPES: <%= Faye::CONNECTION_TYPES.inspect %>,
+  CONNECTION_TYPES: ['long-polling', 'callback-polling', 'websocket'],
   
-  ENV:              this,
+  MANDATORY_CONNECTION_TYPES: ['long-polling', 'callback-polling', 'in-process'],
+  
+  ENV: (function() { return this })(),
   
   random: function(bitlength) {
     bitlength = bitlength || this.ID_LENGTH;

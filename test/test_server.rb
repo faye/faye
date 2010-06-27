@@ -30,7 +30,7 @@ class TestServer < Test::Unit::TestCase
     # MUST
     assert_equal  '/meta/handshake',                  @r['channel']
     assert_not_equal  nil,                            @r['version']
-    assert_equal  %w[long-polling callback-polling],  @r['supportedConnectionTypes']
+    assert_equal  %w[long-polling callback-polling websocket], @r['supportedConnectionTypes']
     assert_match( /[a-z0-9]+/,                        @r['clientId'] )
     assert_equal  true,                               @r['successful']
     # MAY
@@ -62,7 +62,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  '402:version:Missing required parameter', @r['error']
     # MAY
     assert_not_equal  nil,                            @r['version']
-    assert_equal  %w[long-polling callback-polling],  @r['supportedConnectionTypes']
+    assert_equal  %w[long-polling callback-polling websocket], @r['supportedConnectionTypes']
     # MAY include advice, minimumVersion, ext, id
     
     #================================================================
@@ -73,7 +73,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  false,                  @r['successful']
     assert_equal  '301:iframe,flash:Connection types not supported', @r['error']
     # MAY
-    assert_equal  %w[long-polling callback-polling],  @r['supportedConnectionTypes']
+    assert_equal  %w[long-polling callback-polling websocket], @r['supportedConnectionTypes']
     assert_equal  nil,                    @r['id']
     
     #================================================================
@@ -84,7 +84,7 @@ class TestServer < Test::Unit::TestCase
     assert_equal  false,                  @r['successful']
     assert_equal  '402:supportedConnectionTypes:Missing required parameter', @r['error']
     # MAY
-    assert_equal  %w[long-polling callback-polling],  @r['supportedConnectionTypes']
+    assert_equal  %w[long-polling callback-polling websocket], @r['supportedConnectionTypes']
     assert_equal  'foo',                  @r['id']
     
     #================================================================
