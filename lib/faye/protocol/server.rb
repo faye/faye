@@ -221,9 +221,7 @@ module Faye
       
       client_id     = message['clientId']
       connection    = client_id ? @connections[client_id] : nil
-      
-      subscription  = message['subscription']
-      subscription  = [subscription].flatten
+      subscription  = [message['subscription']].flatten
       
       response['error'] = Error.client_unknown(client_id) if connection.nil?
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
@@ -256,9 +254,7 @@ module Faye
       
       client_id     = message['clientId']
       connection    = client_id ? @connections[client_id] : nil
-      
-      subscription  = message['subscription']
-      subscription  = [subscription].flatten
+      subscription  = [message['subscription']].flatten
       
       response['error'] = Error.client_unknown(client_id) if connection.nil?
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?

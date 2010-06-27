@@ -108,17 +108,13 @@ Faye.Client = Faye.Class({
     if (this._state === this.UNCONNECTED)
       return this.handshake(function() { this.connect(callback, scope) }, this);
     
-    if (this._state === this.CONNECTING || this._paused) {
-      if (callback) this.callback(callback, scope);
-      return;
-    }
-    
+    this.callback(callback, scope);
+    if (this._state === this.CONNECTING || this._paused) return;
     if (this._state !== this.CONNECTED) return;
     
     this.info('Calling deferred actions for ?', this._clientId);
     this.setDeferredStatus('succeeded');
     this.setDeferredStatus('deferred');
-    if (callback) callback.call(scope);
     
     if (this._connectRequest) return;
     this._connectRequest = true;

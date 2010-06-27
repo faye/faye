@@ -26,7 +26,7 @@ module Faye
     end
     
     def on_message(event)
-      return unless @inbox.add(event)
+      return unless @inbox.add?(event)
       @socket.send(JSON.unparse(event)) if @socket
       begin_delivery_timeout!
     end

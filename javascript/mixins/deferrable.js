@@ -1,5 +1,7 @@
 Faye.Deferrable = {
   callback: function(callback, scope) {
+    if (!callback) return;
+    
     if (this._deferredStatus === 'succeeded')
       return callback.apply(scope, this._deferredArgs);
     

@@ -108,13 +108,13 @@ module Faye
       
       return handshake { connect(&block) } if @state == UNCONNECTED
       
-      return callback(&block) if @state == CONNECTING
+      callback(&block)
+      return if @state == CONNECTING
       return unless @state == CONNECTED
       
       info('Calling deferred actions for ?', @client_id)
       set_deferred_status(:succeeded)
       set_deferred_status(:deferred)
-      block.call if block_given?
       
       return unless @connect_request.nil?
       @connect_request = true
@@ -248,6 +248,7 @@ module Faye
     
     def handle_advice(advice)
       @advice.update(advice)
+      
       if @advice['reconnect'] == HANDSHAKE and @state != DISCONNECTED
         @state     = UNCONNECTED
         @client_id = nil
