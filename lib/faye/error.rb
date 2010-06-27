@@ -1,13 +1,6 @@
 module Faye
   class Error
     
-    def self.parse(string)
-      return nil unless Grammar::ERROR =~ string
-      parts = string.split(':')
-      args  = parts[1].split(',')
-      new(parts[0].to_i, args, parts[2])
-    end
-    
     def self.method_missing(type, *args)
       code = const_get(type.to_s.upcase)
       new(code[0], args, code[1]).to_s
