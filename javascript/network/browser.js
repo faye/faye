@@ -5,6 +5,7 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
   
   request: function(message) {
     this.withSocket(function(socket) { socket.send(Faye.toJSON(message)) });
+    return this;
   },
   
   withSocket: function(callback, scope) {
