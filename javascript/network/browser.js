@@ -81,8 +81,9 @@ Faye.Transport.register('long-polling', Faye.XHRTransport);
 
 
 Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
-  request: function(message) {
-    var params       = {message: Faye.toJSON(message)},
+  request: function(message, timeout) {
+    var timeout      = timeout || this._client.getTimeout() * 2,
+        params       = {message: Faye.toJSON(message)},
         head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = Faye.JSONPTransport.getCallbackName(),
@@ -96,6 +97,12 @@ Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
       head.removeChild(script);
       self.receive(data);
     };
+    
+    setTimeout(function() {
+      if (!Faye.ENV[callbackName]) return;
+      self.abort(script);
+      self.request(message, 2 * timeout);
+    }, 1000 * timeout);
     
     location.params.jsonp = callbackName;
     script.type = 'text/javascript';

@@ -37,14 +37,14 @@ Faye.Transport = Faye.extend(Faye.Class({
     var handleResponse = function(response) {
       this._client.pipeThroughExtensions('incoming', response, function(response) {
         if (response) {
+          if (response.advice)
+            this._client.handleAdvice(response.advice);
+          
           if (callback = this._callbacks[response.id]) {
             delete this._callbacks[response.id];
             if (callback[0].call(callback[1], response) === false)
               deliverable = false;
           }
-          
-          if (response.advice)
-            this._client.handleAdvice(response.advice);
           
           if (response.data && response.channel)
             messages.push(response);
