@@ -128,41 +128,23 @@ Faye.extend(Faye.WebSocket, {
     return String.fromCharCode(value);
   };
   
-  var stringFromBytes = function(byteSequence) {
-    return byteSequence.split(/\s+/).map(byteToChar).join('');
-  };
+  var FRAME_START = byteToChar('00'),
+      FRAME_END   = byteToChar('FF');
   
   Faye.WebSocket.Protocol75 = {
-    PART1: stringFromBytes(
-            '48 54 54 50 2F 31 2E 31  20 31 30 31 20 57 65 62 ' +
-            '20 53 6F 63 6B 65 74 20  50 72 6F 74 6F 63 6F 6C ' +
-            '20 48 61 6E 64 73 68 61  6B 65 0D 0A 55 70 67 72 ' +
-            '61 64 65 3A 20 57 65 62  53 6F 63 6B 65 74 0D 0A ' +
-            '43 6F 6E 6E 65 63 74 69  6F 6E 3A 20 55 70 67 72 ' +
-            '61 64 65 0D 0A 57 65 62  53 6F 63 6B 65 74 2D 4F ' +
-            '72 69 67 69 6E 3A 20'),
-    
-    PART2: stringFromBytes(
-            '0D 0A 57 65 62 53 6F 63  6B 65 74 2D 4C 6F 63 61 ' +
-            '74 69 6F 6E 3A 20'),
-    
-    PART3: stringFromBytes('0D 0A 0D 0A'),
-    
-    FRAME_START:  byteToChar('00'),
-    FRAME_END:    byteToChar('FF'),
-    
     handshake: function(url, request, socket) {
-      socket.write(this.PART1);
-      socket.write(request.headers.origin);
-      socket.write(this.PART2);
-      socket.write(url);
-      socket.write(this.PART3);
+      socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n');
+      socket.write('Upgrade: WebSocket\r\n');
+      socket.write('Connection: Upgrade\r\n');
+      socket.write('WebSocket-Origin: ' + request.headers.origin + '\r\n');
+      socket.write('WebSocket-Location: ' + url + '\r\n');
+      socket.write('\r\n');
     },
     
     send: function(socket, message) {
-      socket.write(this.FRAME_START, 'binary');
+      socket.write(FRAME_START, 'binary');
       socket.write(message, 'utf8');
-      socket.write(this.FRAME_END, 'binary');
+      socket.write(FRAME_END, 'binary');
     }
   };
 })();
