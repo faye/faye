@@ -11,6 +11,7 @@ AsyncScenario = Faye.Class({
     this._name    = name;
     this._clients = {};
     this._inbox   = {};
+    this._errors  = {};
     this._pool    = 0;
   },
   
@@ -51,6 +52,14 @@ AsyncScenario = Faye.Class({
     object[stage] = extension;
     this._clients[name].addExtension(object);
     Continue();
+  },
+  
+  listenForErrors: function(name, Continue) {
+    var errors = this._errors[name] = [];
+    this.extendClient(name, 'incoming', function(message, callback) {
+      if (message.successful === false) errors.push(message.error);
+      callback(message);
+    }, Continue);
   },
   
   _setupClient: function(client, name, channels, Continue) {
@@ -95,6 +104,11 @@ AsyncScenario = Faye.Class({
   
   checkInbox: function(expectedInbox, Continue) {
     assert.deepEqual(this._inbox, expectedInbox);
+    Continue();
+  },
+  
+  checkErrors: function(name, expectedErrors, Continue) {
+    assert.deepEqual(this._errors[name], expectedErrors);
     Continue();
   },
   
@@ -143,7 +157,7 @@ SyncScenario = Faye.Class({
 
 ['wait', 'server', 'killServer', 'httpClient', 'localClient',
  'subscribe', 'cancelLastSubscription', 'publish', 'checkInbox',
- 'extendServer', 'extendClient'].
+ 'extendServer', 'extendClient', 'listenForErrors', 'checkErrors'].
 forEach(function(method) {
   SyncScenario.prototype[method] = function() {
     this._commands.push([method, arguments]);

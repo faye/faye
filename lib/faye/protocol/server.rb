@@ -74,6 +74,8 @@ module Faye
       pipe_through_extensions(:incoming, message) do |message|
         if !message
           callback.call([])
+        elsif message['error']
+          callback.call([make_response(message)])
         else
           channel_name = message['channel']
           
@@ -125,11 +127,12 @@ module Faye
     
     def make_response(message)
       response = {}
-      %w[id clientId channel].each do |field|
+      %w[id clientId channel error].each do |field|
         if message[field]
           response[field] = message[field]
         end
       end
+      response['successful'] = !response['error']
       response
     end
     

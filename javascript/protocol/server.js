@@ -75,6 +75,7 @@ Faye.Server = Faye.Class({
   _handle: function(message, socket, local, callback, scope) {
     this.pipeThroughExtensions('incoming', message, function(message) {
       if (!message) return callback.call(scope, []);
+      if (message.error) return callback.call(scope, [this._makeResponse(message)]);
       
       var channelName = message.channel, response;
       
@@ -131,9 +132,10 @@ Faye.Server = Faye.Class({
   
   _makeResponse: function(message) {
     var response = {};
-    Faye.each(['id', 'clientId', 'channel'], function(field) {
+    Faye.each(['id', 'clientId', 'channel', 'error'], function(field) {
       if (message[field]) response[field] = message[field];
     });
+    response.successful = !response.error;
     return response;
   },
   

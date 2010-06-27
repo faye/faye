@@ -68,6 +68,25 @@ class TestClients < Test::Unit::TestCase
     )
   end
   
+  scenario "Server blocks a message by setting an error" do
+    server 8000
+    http_client :A, ['/channels/a']
+    http_client :B, ['/channels/b']
+    
+    extend_server :incoming, lambda { |message, callback|
+      if message['data']
+        message['error'] = Faye::Error.ext_mismatch
+      end
+      callback.call(message)
+    }
+    
+    listen_for_errors :A
+    
+    publish :A, '/channels/b', 'message_for' => 'B'
+    check_inbox( :A => {}, :B => {} )
+    check_errors :A, ['302::Extension mismatch']
+  end
+  
   scenario "Server modifies outgoing message" do
     server 8000
     http_client :A, []

@@ -59,6 +59,7 @@ module Scenario
     def initialize
       @clients = {}
       @inbox   = {}
+      @errors  = {}
       @pool    = 0
     end
     
@@ -68,7 +69,12 @@ module Scenario
   
     def check_inbox(expected_inbox, &block)
       assert_equal expected_inbox, @inbox
-      block.call
+      EM.next_tick(&block)
+    end
+    
+    def check_errors(name, expected_errors, &block)
+      assert_equal expected_errors, @errors[name]
+      EM.next_tick(&block)
     end
     
     def server(port, &block)
@@ -100,6 +106,16 @@ module Scenario
       (class << object; self; end).send(:define_method, stage, &extension)
       @clients[name].add_extension(object)
       block.call
+    end
+    
+    def listen_for_errors(name, &block)
+      @errors[name] = []
+      extend_client(name, :incoming, lambda { |message, callback|
+        if message['successful'] == false
+          @errors[name] << message['error']
+        end
+        callback.call(message)
+      }, &block)
     end
     
     def setup_client(client, name, channels, &block)

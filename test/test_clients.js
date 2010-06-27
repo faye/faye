@@ -81,6 +81,24 @@ function() { with(this) {
   });
 }});
 
+Scenario.run("Server blocks a message by setting an error",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', ['/channels/b']);
+  
+  extendServer('incoming', function(message, callback) {
+    if (message.data) message.error = Faye.Error.extMismatch();
+    callback(message);
+  });
+  
+  listenForErrors('A');
+  
+  publish('A', '/channels/b', {messageFor: 'B'});
+  checkInbox({ A: {}, B: {} });
+  checkErrors('A', ['302::Extension mismatch']);
+}});
+
 Scenario.run("Server modifies outgoing message",
 function() { with(this) {
   server(8000);
