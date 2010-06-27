@@ -38,7 +38,7 @@ module Faye
     end
     
     def get_timeout
-      @advice['timeout']
+      @advice['timeout'] / 1000.0
     end
     
     # Request

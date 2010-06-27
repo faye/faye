@@ -123,7 +123,7 @@ module Faye
         receive(JSON.parse(request.response))
       end
       request.errback do
-        EventMachine.add_timer(timeout / 1000.0) { request(message, 2 * timeout) }
+        EventMachine.add_timer(timeout) { request(message, 2 * timeout) }
       end
       
       request

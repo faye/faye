@@ -24,7 +24,7 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
       self.request(message, 2 * timeout);
     };
     
-    client.addListener('error', function() { setTimeout(retry, timeout) });
+    client.addListener('error', function() { setTimeout(retry, 1000 * timeout) });
     
     if (parseInt(uri.port) === 443) client.setSecure('X509_PEM');
     

@@ -63,7 +63,7 @@ Faye.XHRTransport = Faye.Class(Faye.Transport, {
       },
       failure: function() {
         var self = this;
-        setTimeout(function() { self.request(message, 2 * timeout) }, timeout);
+        setTimeout(function() { self.request(message, 2 * timeout) }, 1000 * timeout);
       }
     }, this);
   },

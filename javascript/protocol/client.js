@@ -36,7 +36,7 @@ Faye.Client = Faye.Class({
   },
   
   getTimeout: function() {
-    return this._advice.timeout;
+    return this._advice.timeout / 1000;
   },
   
   // Request
