@@ -35,7 +35,9 @@ lib/faye/protocol/grammar.rb
 lib/faye/protocol/server.rb
 lib/faye/protocol/subscription.rb
 lib/faye/util/namespace.rb
+lib/faye/util/web_socket.rb
 lib/faye/error.rb
+lib/thin_extensions.rb
 test/scenario.js
 test/scenario.rb
 test/test_channel.rb

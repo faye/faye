@@ -16,7 +16,10 @@ module Faye
       @connections.keys
     end
     
-    def process(messages, local = false, &callback)
+    def process(messages, local_or_remote = false, &callback)
+      socket = local_or_remote.is_a?(WebSocket) ? local_or_remote : nil
+      local  = (local_or_remote == true)
+      
       debug('Processing messages from ? client', local ? 'LOCAL' : 'REMOTE')
       
       messages = [messages].flatten
@@ -41,7 +44,7 @@ module Faye
       end
       
       messages.each do |message|
-        handle(message, local, &handle_reply)
+        handle(message, socket, local, &handle_reply)
       end
     end
     
@@ -67,7 +70,7 @@ module Faye
       @connections.delete(connection.id)
     end
     
-    def handle(message, local = false, &callback)
+    def handle(message, socket = nil, local = false, &callback)
       pipe_through_extensions(:incoming, message) do |message|
         if !message
           callback.call([])
@@ -99,7 +102,12 @@ module Faye
             
             info('Accepting connection from ?', response['clientId'])
             
-            return connection(response['clientId']).connect do |events|
+            connection = connection(response['clientId'])
+            if socket
+              return connection.socket = socket
+            end
+            
+            return connection.connect do |events|
               info('Sending event messages to ?', response['clientId'])
               debug('Events for ?: ?', response['clientId'], events)
               callback.call([response] + events)

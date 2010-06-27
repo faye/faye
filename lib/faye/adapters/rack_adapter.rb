@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'rack'
 require 'thin'
+require Faye::ROOT + '/thin_extensions'
 
 module Faye
   class RackAdapter
@@ -51,6 +52,10 @@ module Faye
                       [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
       end
       
+      if env['HTTP_UPGRADE'] == 'WebSocket'
+        return handle_upgrade(request)
+      end
+      
       if request.path_info =~ /\.js$/
         return [200, TYPE_SCRIPT, File.new(SCRIPT_PATH)]
       end
@@ -81,6 +86,21 @@ module Faye
     end
     
   private
+    
+    def handle_upgrade(request)
+      socket = Faye::WebSocket.new(request)
+      
+      socket.onmessage = lambda do |message|
+        begin
+          message = JSON.parse(message.data)
+          @server.process(message, socket) do |replies|
+            socket.send(JSON.unparse(replies))
+          end
+        rescue
+        end
+      end
+      ASYNC_RESPONSE
+    end
     
     def ensure_reactor_running!
       Thread.new { EM.run } unless EM.reactor_running?

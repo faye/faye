@@ -18,8 +18,9 @@ Faye.URI = Faye.extend(Faye.Class({
   },
   
   toURL: function() {
+    var query = this.queryString();
     return this.protocol + this.hostname + ':' + this.port +
-           this.pathname + '?' + this.queryString();
+           this.pathname + (query ? '?' + query : '');
   }
 }), {
   parse: function(url, params) {
