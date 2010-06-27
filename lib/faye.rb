@@ -14,6 +14,8 @@ module Faye
   JSONP_CALLBACK   = 'jsonpcallback'
   CONNECTION_TYPES = %w[long-polling callback-polling]
   
+  MANDATORY_CONNECTION_TYPES = %w[long-polling callback-polling in-process]
+  
   %w[ mixins/publisher
       mixins/timeouts
       mixins/logging

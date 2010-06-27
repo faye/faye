@@ -12,6 +12,7 @@ module Faye
       @client    = client
       @endpoint  = endpoint
       @namespace = Namespace.new
+      @callbacks = {}
     end
     
     def connection_type
@@ -21,49 +22,50 @@ module Faye
     def send(message, &block)
       if message.is_a?(Hash) and not message.has_key?('id')
         message['id'] = @namespace.generate
+        @callbacks[message['id']] = block
       end
       
       debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, message)
-      
-      request(message) { |responses|
-        debug('Client ? received from ?: ?', @client.client_id, @endpoint, responses)
+      request(message)
+    end
+    
+    def receive(responses)
+      debug('Client ? received from ?: ?', @client.client_id, @endpoint, responses)
         
-        if block_given?
-          responses   = [responses].flatten
-          messages    = []
-          deliverable = true
-          processed   = 0
-          
-          ping = lambda do
-            processed += 1
-            if processed == responses.size
-              @client.deliver_messages(messages) if deliverable
-            end
-          end
-          
-          handle_response = lambda do |response|
-            @client.pipe_through_extensions(:incoming, response) do |response|
-              if response
-                if message.is_a?(Hash) and response['id'] == message['id']
-                  deliverable = false if block.call(response) == false
-                end
-                
-                if response['advice']
-                  @client.handle_advice(response['advice'])
-                end
-                
-                if response['data'] and response['channel']
-                  messages << response
-                end
-              end
-              
-              ping.call()
-            end
-          end
-          
-          responses.each(&handle_response)
+      responses   = [responses].flatten
+      messages    = []
+      deliverable = true
+      processed   = 0
+      
+      ping = lambda do
+        processed += 1
+        if processed == responses.size
+          @client.deliver_messages(messages) if deliverable
         end
-      }
+      end
+      
+      handle_response = lambda do |response|
+        @client.pipe_through_extensions(:incoming, response) do |response|
+          if response
+            if callback = @callbacks[response['id']]
+              @callbacks.delete(response['id'])
+              deliverable = false if callback.call(response) == false
+            end
+            
+            if response['advice']
+              @client.handle_advice(response['advice'])
+            end
+            
+            if response['data'] and response['channel']
+              messages << response
+            end
+          end
+          
+          ping.call()
+        end
+      end
+      
+      responses.each(&handle_response)
     end
     
     @transports = []
@@ -103,7 +105,9 @@ module Faye
       endpoint.is_a?(String)
     end
     
-    def request(message, &block)
+    def request(message, timeout = nil)
+      timeout ||= @client.get_timeout
+      
       content = JSON.unparse(message)
       params = {
         :head => {
@@ -116,7 +120,10 @@ module Faye
       }
       request = EventMachine::HttpRequest.new(@endpoint).post(params)
       request.callback do
-        block.call(JSON.parse(request.response))
+        receive(JSON.parse(request.response))
+      end
+      request.errback do
+        EventMachine.add_timer(timeout / 1000.0) { request(message, 2 * timeout) }
       end
       
       request
@@ -129,11 +136,8 @@ module Faye
       endpoint.is_a?(Server)
     end
     
-    def request(message, &block)
-      @endpoint.process(message, true) do |response|
-        block.call(response)
-      end
-      
+    def request(message)
+      @endpoint.process(message, true, &method(:receive))
       true
     end
   end
