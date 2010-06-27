@@ -94,7 +94,7 @@ module Faye
     end
   end
   
-  class Event
+  class WebSocket::Event
     attr_reader   :type, :bubbles, :cancelable
     attr_accessor :target, :current_target, :event_phase, :data
     
