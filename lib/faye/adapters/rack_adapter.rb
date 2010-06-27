@@ -36,7 +36,7 @@ module Faye
       @client ||= Client.new(@server)
     end
     
-    def run(port)
+    def listen(port)
       handler = Rack::Handler.get('thin')
       handler.run(self, :Port => port)
     end
@@ -59,38 +59,28 @@ module Faye
         json_msg = request.post? ? request.body.read : request.params['message']
         message  = JSON.parse(json_msg)
         jsonp    = request.params['jsonp'] || JSONP_CALLBACK
+        type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
+        callback = env['async.callback']
+        body     = DeferredBody.new
         
         @server.flush_connection(message) if request.get?
         
-        on_response(env, message) do |replies|
+        callback.call [200, type, body]
+        
+        @server.process(message, false) do |replies|
           response = JSON.unparse(replies)
           response = "#{ jsonp }(#{ response });" if request.get?
-          response
+          body.succeed(response)
         end
+        
+        ASYNC_RESPONSE
+        
       rescue
         [400, TYPE_TEXT, 'Bad request']
       end
     end
     
   private
-    
-    def on_response(env, message, &block)
-      request  = Rack::Request.new(env)
-      type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
-      callback = env['async.callback']
-      
-      if callback
-        body = DeferredBody.new
-        callback.call [200, type, body]
-        @server.process(message, false) { |r| body.succeed block.call(r) }
-        return ASYNC_RESPONSE
-      end
-      
-      response = nil
-      @server.process(message, false) { |r| response = block.call(r) }
-      sleep(0.1) while response.nil?
-      [200, type, [response]]
-    end
     
     def ensure_reactor_running!
       Thread.new { EM.run } unless EM.reactor_running?
