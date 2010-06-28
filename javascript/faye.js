@@ -32,7 +32,7 @@ Faye.extend(Faye, {
       return string;
     }
     var field = Math.pow(2, bitlength);
-    return Math.floor(Math.random() * field).toString(16);
+    return Math.floor(Math.random() * field).toString(36);
   },
   
   commonElement: function(lista, listb) {
