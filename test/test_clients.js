@@ -119,6 +119,35 @@ function() { with(this) {
   });
 }});
 
+['outgoing', 'incoming'].forEach(function(direction) {
+  Scenario.run("Server delays " + direction + " message",
+  function() { with(this) {
+    server(8000);
+    httpClient('A', []);
+    httpClient('B', ['/channels/b']);
+    
+    extendServer(direction, function(message, callback) {
+      var timeout = message.data ? 5000 : 0;
+      setTimeout(function() { callback(message) }, timeout);
+    });
+    
+    publish('A', '/channels/b', {messageFor: 'B'});
+    checkInbox({ A: {}, B: {} });
+    
+    wait(4);
+    checkInbox({ A: {}, B: {} });
+    
+    wait(1);
+    
+    checkInbox({
+        A: {},
+        B: {
+            '/channels/b': [{messageFor: 'B'}]
+        }
+    });
+  }});
+});
+
 Scenario.run("Server blocks outgoing message",
 function() { with(this) {
   server(8000);

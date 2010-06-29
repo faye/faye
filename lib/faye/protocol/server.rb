@@ -72,53 +72,62 @@ module Faye
     
     def handle(message, socket = nil, local = false, &callback)
       pipe_through_extensions(:incoming, message) do |message|
-        return callback.call([]) if !message
-        return callback.call([make_response(message)]) if message['error']
-        
-        channel_name = message['channel']
-        
-        @channels.glob(channel_name).each do |channel|
-          channel << message
-          info('Publishing message ? from client ? to ?', message['data'], message['clientId'], channel.name)
-        end
-        
-        if Channel.meta?(channel_name)
-          response = __send__(Channel.parse(channel_name)[1], message, local)
+        if !message
+          callback.call([])
+        elsif message['error']
+          callback.call([make_response(message)])
+        else
           
-          client_id  = response['clientId']
-          connection = @connections[client_id]
+          channel_name = message['channel']
           
-          advice = response['advice'] ||= {}
-          if connection
-            advice['reconnect'] ||= 'retry'
-            advice['interval']  ||= (connection.interval * 1000).floor
-            advice['timeout']   ||= (connection.timeout * 1000).floor
+          @channels.glob(channel_name).each do |channel|
+            channel << message
+            info('Publishing message ? from client ? to ?', message['data'], message['clientId'], channel.name)
+          end
+          
+          if Channel.meta?(channel_name)
+            response = __send__(Channel.parse(channel_name)[1], message, local)
+            
+            client_id  = response['clientId']
+            connection = @connections[client_id]
+            
+            advice = response['advice'] ||= {}
+            if connection
+              advice['reconnect'] ||= 'retry'
+              advice['interval']  ||= (connection.interval * 1000).floor
+              advice['timeout']   ||= (connection.timeout * 1000).floor
+            else
+              advice['reconnect'] ||= 'handshake'
+            end
+            
+            if response['channel'] != Channel::CONNECT or !response['successful']
+              callback.call([response])
+            else
+              
+              info('Accepting connection from ?', response['clientId'])
+              
+              connection = connection(response['clientId'])
+              if socket
+                connection.socket = socket
+              else
+                connection.connect do |events|
+                  info('Sending event messages to ?', response['clientId'])
+                  debug('Events for ?: ?', response['clientId'], events)
+                  callback.call([response] + events)
+                end
+              end
+            end
           else
-            advice['reconnect'] ||= 'handshake'
-          end
-          
-          return callback.call([response]) unless response['channel'] == Channel::CONNECT and
-                                                  response['successful'] == true
-          
-          info('Accepting connection from ?', response['clientId'])
-          
-          connection = connection(response['clientId'])
-          if socket
-            return connection.socket = socket
-          end
-          
-          return connection.connect do |events|
-            info('Sending event messages to ?', response['clientId'])
-            debug('Events for ?: ?', response['clientId'], events)
-            callback.call([response] + events)
+            
+            if message['clientId'].nil? or Channel.service?(channel_name)
+              callback.call([])
+            else
+              response = make_response(message)
+              response['successful'] = true
+              callback.call([response])
+            end
           end
         end
-        
-        return callback.call([]) if message['clientId'].nil? or Channel.service?(channel_name)
-        
-        response = make_response(message)
-        response['successful'] = true
-        callback.call([response])
       end
     end
     

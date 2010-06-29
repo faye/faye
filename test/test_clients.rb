@@ -106,6 +106,34 @@ class TestClients < Test::Unit::TestCase
     )
   end
   
+  [:incoming, :outgoing].each do |direction|
+    scenario "Server delays #{ direction } message" do
+      server 8000
+      http_client :A, []
+      http_client :B, ['/channels/b']
+      
+      extend_server direction, lambda { |message, callback|
+        timeout = message['data'] ? 5 : 0
+        EM.add_timer(timeout) { callback.call(message) }
+      }
+      
+      publish :A, '/channels/b', 'message_for' => 'B'
+      check_inbox( :A => {}, :B => {} )
+      
+      wait 3
+      check_inbox( :A => {}, :B => {} )
+      
+      wait 1
+      
+      check_inbox(
+          :A => {},
+          :B => {
+            '/channels/b' => ['message_for' => 'B']
+          }
+      )
+    end
+  end
+  
   scenario "Server blocks outgoing message" do
     server 8000
     http_client :A, []
