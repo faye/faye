@@ -47,7 +47,9 @@ Faye.Server = Faye.Class({
     };
     
     Faye.each(messages, function(message) {
-      this._handle(message, socket, local, handleReply, this);
+      this.pipeThroughExtensions('incoming', message, function(pipedMessage) {
+        this._handle(pipedMessage, socket, local, handleReply, this);
+      }, this);
     }, this);
   },
   
@@ -72,64 +74,6 @@ Faye.Server = Faye.Class({
     delete this._connections[connection.id];
   },
   
-  _handle: function(message, socket, local, callback, scope) {
-    this.pipeThroughExtensions('incoming', message, function(message) {
-      if (!message) return callback.call(scope, []);
-      if (message.error) return callback.call(scope, [this._makeResponse(message)]);
-      
-      var channelName = message.channel, response;
-      
-      message.__id = Faye.random();
-      Faye.each(this._channels.glob(channelName), function(channel) {
-        channel.push(message);
-        this.info('Publishing message ? from client ? to ?', message.data, message.clientId, channel.name);
-      }, this);
-      
-      if (Faye.Channel.isMeta(channelName)) {
-        response = this[Faye.Channel.parse(channelName)[1]](message, local);
-        
-        var clientId   = response.clientId,
-            connection = this._connections[clientId];
-        
-        response.advice = response.advice || {};
-        if (connection) {
-          Faye.extend(response.advice, {
-            reconnect:  'retry',
-            interval:   Math.floor(connection.interval * 1000),
-            timeout:    Math.floor(connection.timeout * 1000)
-          }, false);
-        } else {
-          Faye.extend(response.advice, {
-            reconnect:  'handshake'
-          }, false);
-        }
-        
-        if (response.channel !== Faye.Channel.CONNECT ||
-            response.successful !== true)
-          return callback.call(scope, [response]);
-        
-        this.info('Accepting connection from ?', response.clientId);
-        
-        connection = this._connection(response.clientId);
-        if (socket) return connection.setSocket(socket);
-        
-        return connection.connect(function(events) {
-          this.info('Sending event messages to ?', response.clientId);
-          this.debug('Events for ?: ?', response.clientId, events);
-          Faye.each(events, function(e) { delete e.__id });
-          callback.call(scope, [response].concat(events));
-        }, this);
-      }
-      
-      if (!message.clientId || Faye.Channel.isService(channelName))
-        return callback.call(scope, []);
-      
-      response = this._makeResponse(message);
-      response.successful = true;
-      callback.call(scope, [response]);
-    }, this);
-  },
-  
   _makeResponse: function(message) {
     var response = {};
     Faye.each(['id', 'clientId', 'channel', 'error'], function(field) {
@@ -137,6 +81,74 @@ Faye.Server = Faye.Class({
     });
     response.successful = !response.error;
     return response;
+  },
+  
+  _distributeMessage: function(message) {
+    message.__id = Faye.random();
+    Faye.each(this._channels.glob(message.channel), function(channel) {
+      channel.push(message);
+      this.info('Publishing message ? from client ? to ?', message.data, message.clientId, channel.name);
+    }, this);
+  },
+  
+  _handle: function(message, socket, local, callback, scope) {
+    if (!message) return callback.call(scope, []);
+    if (message.error) return callback.call(scope, [this._makeResponse(message)]);
+    
+    this._distributeMessage(message);
+    var channelName = message.channel;
+    
+    if (Faye.Channel.isMeta(channelName)) {
+      this._handleMeta(message, socket, local, callback, scope);
+    } else if (!message.clientId || Faye.Channel.isService(channelName)) {
+      callback.call(scope, []);
+    } else {
+      response = this._makeResponse(message);
+      response.successful = true;
+      callback.call(scope, [response]);
+    }
+  },
+  
+  _handleMeta: function(message, socket, local, callback, scope) {
+    var response = this[Faye.Channel.parse(message.channel)[1]](message, local);
+    
+    this._advize(response);
+    
+    if (response.channel === Faye.Channel.CONNECT && response.successful === true)
+      return this._acceptConnection(response, socket, callback, scope);
+    
+    callback.call(scope, [response]);
+  },
+  
+  _acceptConnection: function(response, socket, callback, scope) {
+    this.info('Accepting connection from ?', response.clientId);
+    
+    var connection = this._connection(response.clientId);
+    if (socket) return connection.setSocket(socket);
+    
+    connection.connect(function(events) {
+      this.info('Sending event messages to ?', response.clientId);
+      this.debug('Events for ?: ?', response.clientId, events);
+      Faye.each(events, function(e) { delete e.__id });
+      callback.call(scope, [response].concat(events));
+    }, this);
+  },
+  
+  _advize: function(response) {
+    var connection = this._connections[response.clientId];
+    
+    response.advice = response.advice || {};
+    if (connection) {
+      Faye.extend(response.advice, {
+        reconnect:  'retry',
+        interval:   Math.floor(connection.interval * 1000),
+        timeout:    Math.floor(connection.timeout * 1000)
+      }, false);
+    } else {
+      Faye.extend(response.advice, {
+        reconnect:  'handshake'
+      }, false);
+    }
   },
   
   // MUST contain  * version

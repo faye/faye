@@ -44,7 +44,9 @@ module Faye
       end
       
       messages.each do |message|
-        handle(message, socket, local, &handle_reply)
+        pipe_through_extensions(:incoming, message) do |piped_message|
+          handle(piped_message, socket, local, &handle_reply)
+        end
       end
     end
     
@@ -70,67 +72,6 @@ module Faye
       @connections.delete(connection.id)
     end
     
-    def handle(message, socket = nil, local = false, &callback)
-      pipe_through_extensions(:incoming, message) do |message|
-        if !message
-          callback.call([])
-        elsif message['error']
-          callback.call([make_response(message)])
-        else
-          
-          channel_name = message['channel']
-          
-          @channels.glob(channel_name).each do |channel|
-            channel << message
-            info('Publishing message ? from client ? to ?', message['data'], message['clientId'], channel.name)
-          end
-          
-          if Channel.meta?(channel_name)
-            response = __send__(Channel.parse(channel_name)[1], message, local)
-            
-            client_id  = response['clientId']
-            connection = @connections[client_id]
-            
-            advice = response['advice'] ||= {}
-            if connection
-              advice['reconnect'] ||= 'retry'
-              advice['interval']  ||= (connection.interval * 1000).floor
-              advice['timeout']   ||= (connection.timeout * 1000).floor
-            else
-              advice['reconnect'] ||= 'handshake'
-            end
-            
-            if response['channel'] != Channel::CONNECT or !response['successful']
-              callback.call([response])
-            else
-              
-              info('Accepting connection from ?', response['clientId'])
-              
-              connection = connection(response['clientId'])
-              if socket
-                connection.socket = socket
-              else
-                connection.connect do |events|
-                  info('Sending event messages to ?', response['clientId'])
-                  debug('Events for ?: ?', response['clientId'], events)
-                  callback.call([response] + events)
-                end
-              end
-            end
-          else
-            
-            if message['clientId'].nil? or Channel.service?(channel_name)
-              callback.call([])
-            else
-              response = make_response(message)
-              response['successful'] = true
-              callback.call([response])
-            end
-          end
-        end
-      end
-    end
-    
     def make_response(message)
       response = {}
       %w[id clientId channel error].each do |field|
@@ -140,6 +81,71 @@ module Faye
       end
       response['successful'] = !response['error']
       response
+    end
+    
+    def distribute_message(message)
+      @channels.glob(message['channel']).each do |channel|
+        channel << message
+        info('Publishing message ? from client ? to ?', message['data'], message['clientId'], channel.name)
+      end
+    end
+    
+    def handle(message, socket = nil, local = false, &callback)
+      return callback.call([]) if !message
+      return callback.call([make_response(message)]) if message['error']
+      
+      distribute_message(message)
+      channel_name = message['channel']
+      
+      if Channel.meta?(channel_name)
+        handle_meta(message, socket, local, &callback)
+      elsif message['clientId'].nil? or Channel.service?(channel_name)
+        callback.call([])
+      else
+        response = make_response(message)
+        response['successful'] = true
+        callback.call([response])
+      end
+    end
+    
+    def handle_meta(message, socket, local, &callback)
+      response = __send__(Channel.parse(message['channel'])[1], message, local)
+      
+      advize(response)
+      
+      if response['channel'] == Channel::CONNECT and response['successful'] == true
+        return accept_connection(response, socket, &callback)
+      end
+      
+      callback.call([response])
+    end
+    
+    def accept_connection(response, socket, &callback)
+      info('Accepting connection from ?', response['clientId'])
+      
+      connection = connection(response['clientId'])
+      if socket
+        return connection.socket = socket
+      end
+      
+      connection.connect do |events|
+        info('Sending event messages to ?', response['clientId'])
+        debug('Events for ?: ?', response['clientId'], events)
+        callback.call([response] + events)
+      end
+    end
+    
+    def advize(response)
+      connection = @connections[response['clientId']]
+      
+      advice = response['advice'] ||= {}
+      if connection
+        advice['reconnect'] ||= 'retry'
+        advice['interval']  ||= (connection.interval * 1000).floor
+        advice['timeout']   ||= (connection.timeout * 1000).floor
+      else
+        advice['reconnect'] ||= 'handshake'
+      end
     end
     
     # MUST contain  * version
