@@ -126,9 +126,7 @@ Faye.Client = Faye.Class({
       clientId:       this._clientId,
       connectionType: this._transport.connectionType
       
-    }, this._verifyClientId(function(response) {
-      this._cycleConnection();
-    }));
+    }, this._cycleConnection, this);
   },
   
   // Request                              Response
@@ -176,13 +174,13 @@ Faye.Client = Faye.Class({
         clientId:     this._clientId,
         subscription: channels
         
-      }, this._verifyClientId(function(response) {
+      }, function(response) {
         if (!response.successful) return;
         
         var channels = [].concat(response.subscription);
         this.info('Subscription acknowledged for ? to ?', this._clientId, channels);
         this._channels.subscribe(channels, callback, scope);
-      }));
+      }, this);
       
     }, this);
     
@@ -214,12 +212,12 @@ Faye.Client = Faye.Class({
         clientId:     this._clientId,
         subscription: deadChannels
         
-      }, this._verifyClientId(function(response) {
+      }, function(response) {
         if (!response.successful) return;
         
         var channels = [].concat(response.subscription);
         this.info('Unsubscription acknowledged for ? from ?', this._clientId, channels);
-      }));
+      }, this);
       
     }, this);
   },
@@ -321,15 +319,6 @@ Faye.Client = Faye.Class({
       if (!Faye.Channel.isSubscribable(channel))
         throw 'Clients may not subscribe to channel "' + channel + '"';
     });
-  },
-  
-  _verifyClientId: function(callback) {
-    var self = this;
-    return function(response) {
-      if (response.clientId !== self._clientId) return false;
-      callback.call(self, response);
-      return true;
-    };
   }
 });
 

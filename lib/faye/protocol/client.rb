@@ -126,9 +126,9 @@ module Faye
         'clientId'        => @client_id,
         'connectionType'  => @transport.connection_type
         
-      }, &verify_client_id { |response|
+      }) do
         cycle_connection
-      })
+      end
     end
     
     # Request                              Response
@@ -176,14 +176,14 @@ module Faye
           'clientId'      => @client_id,
           'subscription'  => channels
           
-        }, &verify_client_id { |response|
+        }) do |response|
           if response['successful']
             
             channels = [response['subscription']].flatten
             info('Subscription acknowledged for ? to ?', @client_id, channels)
             @channels.subscribe(channels, block)
           end
-        })
+        end
       }
       Subscription.new(self, channels, block)
     end
@@ -213,13 +213,13 @@ module Faye
           'clientId'      => @client_id,
           'subscription'  => dead_channels
           
-        }, &verify_client_id { |response|
+        }) do |response|
           if response['successful']
             
             channels = [response['subscription']].flatten
             info('Unsubscription acknowledged for ? from ?', @client_id, channels)
           end
-        })
+        end
       }
     end
     
@@ -305,17 +305,6 @@ module Faye
       channels.each do |channel|
         raise "'#{ channel }' is not a valid channel name" unless Channel.valid?(channel)
         raise "Clients may not subscribe to channel '#{ channel }'" unless Channel.subscribable?(channel)
-      end
-    end
-    
-    def verify_client_id(&block)
-      lambda do |response|
-        if response['clientId'] != @client_id
-          false
-        else
-          block.call(response)
-          true
-        end
       end
     end
     
