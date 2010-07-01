@@ -19,14 +19,16 @@ module Faye
       self.class.connection_type
     end
     
-    def send(message, &block)
-      if message.is_a?(Hash) and not message.has_key?('id')
+    def send(messages, &block)
+      messages = [messages].flatten
+      
+      messages.each do |message|
         message['id'] = @namespace.generate
         @callbacks[message['id']] = block
       end
       
-      debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, message)
-      request(message)
+      debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, messages)
+      request(messages)
     end
     
     def receive(responses)

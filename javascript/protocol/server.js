@@ -84,7 +84,6 @@ Faye.Server = Faye.Class({
   },
   
   _distributeMessage: function(message) {
-    message.__id = Faye.random();
     Faye.each(this._channels.glob(message.channel), function(channel) {
       channel.push(message);
       this.info('Publishing message ? from client ? to ?', message.data, message.clientId, channel.name);
@@ -129,7 +128,6 @@ Faye.Server = Faye.Class({
     connection.connect(function(events) {
       this.info('Sending event messages to ?', response.clientId);
       this.debug('Events for ?: ?', response.clientId, events);
-      Faye.each(events, function(e) { delete e.__id });
       callback.call(scope, [response].concat(events));
     }, this);
   },

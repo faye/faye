@@ -7,16 +7,18 @@ Faye.Transport = Faye.extend(Faye.Class({
     this._callbacks = {};
   },
   
-  send: function(message, callback, scope) {
-    if (!(message instanceof Array) && !message.id) {
+  send: function(messages, callback, scope) {
+    messages = [].concat(messages);
+    
+    Faye.each(messages, function(message) {
       message.id = this._namespace.generate();
       if (callback) this._callbacks[message.id] = [callback, scope];
-    }
+    }, this);
     
     this.debug('Client ? sending message to ?: ?',
-               this._client._clientId, this._endpoint, message);
+               this._client._clientId, this._endpoint, messages);
     
-    return this.request(message);
+    return this.request(messages);
   },
   
   receive: function(responses) {

@@ -214,6 +214,20 @@ function() { with(this) {
   });
 }});
 
+Scenario.run("Two HTTP clients, two identical messages sent together",
+function() { with(this) {
+  server(8000);
+  httpClient('A', ['/channels/a']);
+  httpClient('B', []);
+  publish('B', '/channels/a', [{hello: 'world'}, {hello: 'world'}]);
+  checkInbox({
+      A: {
+        '/channels/a': [{hello: 'world'}, {hello: 'world'}]
+      },
+      B: {}
+  });
+}});
+
 Scenario.run("Two HTTP clients, two message deliveries",
 function() { with(this) {
   server(8000);

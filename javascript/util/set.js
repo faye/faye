@@ -4,7 +4,7 @@ Faye.Set = Faye.Class({
   },
   
   add: function(item) {
-    var key = (item.__id !== undefined) ? item.__id : item;
+    var key = (item.id !== undefined) ? item.id : item;
     if (this._index.hasOwnProperty(key)) return false;
     this._index[key] = item;
     return true;
@@ -32,7 +32,7 @@ Faye.Set = Faye.Class({
   },
   
   remove: function(item) {
-    var key = (item.__id !== undefined) ? item.__id : item;
+    var key = (item.id !== undefined) ? item.id : item;
     delete this._index[key];
   },
   

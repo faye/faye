@@ -144,12 +144,9 @@ module Scenario
       EM.add_timer(0.5, &block)
     end
     
-    def publish(from, channel, message, &block)
-      if Array === message
-        message.each { |msg| @clients[from].publish(channel, msg) }
-      else
-        @clients[from].publish(channel, message)
-      end
+    def publish(from, channel, messages, &block)
+      messages = [messages].flatten
+      messages.each { |msg| @clients[from].publish(channel, msg) }
       EM.add_timer(2, &block)
     end
     
