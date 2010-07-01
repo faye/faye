@@ -70,7 +70,7 @@ Faye.Client = Faye.Class({
     this._send({
       channel:      Faye.Channel.HANDSHAKE,
       version:      Faye.BAYEUX_VERSION,
-      supportedConnectionTypes: Faye.Transport.supportedConnectionTypes()
+      supportedConnectionTypes: [this._transport.connectionType]
       
     }, function(response) {
       
@@ -162,9 +162,12 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   subscribe: function(channels, callback, scope) {
-    channels = [].concat(channels);
-    if (channels.length === 0) return;
-    this._validateChannels(channels);
+    if (channels instanceof Array)
+      return  Faye.each(channels, function(channel) {
+                this.subscribe(channel, callback, scope);
+              }, this);
+    
+    this._validateChannel(channels);
     
     this.connect(function() {
       this.info('Client ? attempting to subscribe to ?', this._clientId, channels);
@@ -198,19 +201,23 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   unsubscribe: function(channels, callback, scope) {
-    channels = [].concat(channels);
-    if (channels.length === 0) return;
-    this._validateChannels(channels);
+    if (channels instanceof Array)
+      return  Faye.each(channels, function(channel) {
+                this.unsubscribe(channel, callback, scope);
+              }, this);
     
-    var deadChannels = this._channels.unsubscribe(channels, callback, scope);
+    this._validateChannel(channels);
+    
+    var dead = this._channels.unsubscribe(channels, callback, scope);
+    if (!dead) return;
     
     this.connect(function() {
-      this.info('Client ? attempting to unsubscribe from ?', this._clientId, deadChannels);
+      this.info('Client ? attempting to unsubscribe from ?', this._clientId, channels);
       
       this._send({
         channel:      Faye.Channel.UNSUBSCRIBE,
         clientId:     this._clientId,
-        subscription: deadChannels
+        subscription: channels
         
       }, function(response) {
         if (!response.successful) return;
@@ -229,10 +236,9 @@ Faye.Client = Faye.Class({
   //                * id                                 * error
   //                * ext                                * ext
   publish: function(channel, data) {
+    this._validateChannel(channel);
+    
     this.connect(function() {
-      
-      this._validateChannels([channel]);
-      
       this.info('Client ? queueing published message to ?: ?', this._clientId, channel, data);
       
       this._enqueue({
@@ -312,13 +318,11 @@ Faye.Client = Faye.Class({
     this._outbox = [];
   },
   
-  _validateChannels: function(channels) {
-    Faye.each(channels, function(channel) {
-      if (!Faye.Channel.isValid(channel))
-        throw '"' + channel + '" is not a valid channel name';
-      if (!Faye.Channel.isSubscribable(channel))
-        throw 'Clients may not subscribe to channel "' + channel + '"';
-    });
+  _validateChannel: function(channel) {
+    if (!Faye.Channel.isValid(channel))
+      throw '"' + channel + '" is not a valid channel name';
+    if (!Faye.Channel.isSubscribable(channel))
+      throw 'Clients may not subscribe to channel "' + channel + '"';
   }
 });
 

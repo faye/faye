@@ -128,17 +128,11 @@ module Faye
         end
       end
       
-      def unsubscribe(names, callback)
-        dead_channels = []
-        
-        names.each do |name|
-          channel = self[name]
-          next unless channel
-          channel.remove_subscriber(:message, callback)
-          dead_channels.push(name) if channel.count_subscribers(:message).zero?
-        end
-        
-        dead_channels
+      def unsubscribe(name, callback)
+        channel = self[name]
+        return false unless channel
+        channel.remove_subscriber(:message, callback)
+        channel.count_subscribers(:message).zero?
       end
       
       def distribute_message(message)

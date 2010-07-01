@@ -71,7 +71,7 @@ module Faye
       send({
         'channel'     => Channel::HANDSHAKE,
         'version'     => BAYEUX_VERSION,
-        'supportedConnectionTypes' => Transport.supported_connection_types
+        'supportedConnectionTypes' => [@transport.connection_type]
         
       }) do |response|
         
@@ -164,9 +164,13 @@ module Faye
     #                                                     * id
     #                                                     * timestamp
     def subscribe(channels, &block)
-      channels = [channels].flatten
-      return if channels.empty?
-      validate_channels(channels)
+      if Array === channels
+        return channels.each do |channel|
+          subscribe(channel, &block)
+        end
+      end
+      
+      validate_channel(channels)
       
       connect {
         info('Client ? attempting to subscribe to ?', @client_id, channels)
@@ -199,19 +203,24 @@ module Faye
     #                                                     * id
     #                                                     * timestamp
     def unsubscribe(channels, &block)
-      channels = [channels].flatten
-      return if channels.empty?
-      validate_channels(channels)
+      if Array === channels
+        return channels.each do |channel|
+          unsubscribe(channel, &block)
+        end
+      end
       
-      dead_channels = @channels.unsubscribe(channels, block)
+      validate_channel(channels)
+      
+      dead = @channels.unsubscribe(channels, block)
+      return unless dead
       
       connect {
-        info('Client ? attempting to unsubscribe from ?', @client_id, dead_channels)
+        info('Client ? attempting to unsubscribe from ?', @client_id, channels)
         
         send({
           'channel'       => Channel::UNSUBSCRIBE,
           'clientId'      => @client_id,
-          'subscription'  => dead_channels
+          'subscription'  => channels
           
         }) do |response|
           if response['successful']
@@ -230,9 +239,9 @@ module Faye
     #                * id                                 * error
     #                * ext                                * ext
     def publish(channel, data)
+      validate_channel(channel)
+      
       connect {
-        validate_channels([channel])
-        
         info('Client ? queueing published message to ?: ?', @client_id, channel, data)
         
         enqueue({
@@ -301,11 +310,9 @@ module Faye
       @outbox = []
     end
     
-    def validate_channels(channels)
-      channels.each do |channel|
-        raise "'#{ channel }' is not a valid channel name" unless Channel.valid?(channel)
-        raise "Clients may not subscribe to channel '#{ channel }'" unless Channel.subscribable?(channel)
-      end
+    def validate_channel(channel)
+      raise "'#{ channel }' is not a valid channel name" unless Channel.valid?(channel)
+      raise "Clients may not subscribe to channel '#{ channel }'" unless Channel.subscribable?(channel)
     end
     
   end
