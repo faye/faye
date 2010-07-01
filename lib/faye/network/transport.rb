@@ -49,13 +49,13 @@ module Faye
       handle_response = lambda do |response|
         @client.pipe_through_extensions(:incoming, response) do |response|
           if response
+            if response['advice']
+              @client.handle_advice(response['advice'])
+            end
+            
             if callback = @callbacks[response['id']]
               @callbacks.delete(response['id'])
               deliverable = false if callback.call(response) == false
-            end
-            
-            if response['advice']
-              @client.handle_advice(response['advice'])
             end
             
             if response['data'] and response['channel']
