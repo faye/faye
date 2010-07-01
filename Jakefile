@@ -7,7 +7,7 @@ jake_hook :build_complete do |build|
   FileUtils.cp browser_min, DIR + '/examples/node/faye-browser-min.js'
   FileUtils.cp build.package(:'faye-node').build_path(:src), DIR + '/examples/node/faye-node.js'
   
-  [['faye-browser', :src], [:'faye-node', :min], [:core, :src], [:core, :min]].each do |(pkg,typ)|
+  [[:'faye-node', :min], [:core, :src], [:core, :min]].each do |(pkg,typ)|
     FileUtils.rm build.package(pkg).build_path(typ)
   end
 end
