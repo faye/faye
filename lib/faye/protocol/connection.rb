@@ -28,7 +28,7 @@ module Faye
     def on_message(event)
       return unless @inbox.add?(event)
       @socket.send(JSON.unparse(event)) if @socket
-      begin_delivery_timeout!
+      begin_delivery_timeout
     end
     
     def subscribe(channel)
@@ -43,7 +43,10 @@ module Faye
       channel.remove_subscriber(:message, method(:on_message))
     end
     
-    def connect(&block)
+    def connect(options, &block)
+      options = options || {}
+      timeout = options['timeout'] ? options['timeout'] / 1000.0 : @timeout
+      
       set_deferred_status(:deferred)
       
       callback(&block)
@@ -52,8 +55,8 @@ module Faye
       @connected = true
       remove_timeout(:deletion)
       
-      begin_delivery_timeout!
-      begin_connection_timeout!
+      begin_delivery_timeout
+      begin_connection_timeout(timeout)
     end
     
     def flush!
@@ -74,14 +77,14 @@ module Faye
     
   private
     
-    def begin_delivery_timeout!
+    def begin_delivery_timeout
       return unless @connected and not @inbox.empty?
       add_timeout(:delivery, MAX_DELAY) { flush! }
     end
     
-    def begin_connection_timeout!
+    def begin_connection_timeout(timeout)
       return unless @connected
-      add_timeout(:connection, @timeout) { flush! }
+      add_timeout(:connection, timeout) { flush! }
     end
     
     def release_connection!
@@ -91,7 +94,7 @@ module Faye
       remove_timeout(:delivery)
       @connected = false
       
-      add_timeout(:deletion, 10 * @timeout) do
+      add_timeout(:deletion, TIMEOUT + 10 * @timeout) do
         publish_event(:stale_connection, self)
       end
     end

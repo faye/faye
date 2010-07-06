@@ -36,7 +36,10 @@ Faye.Connection = Faye.Class({
     channel.removeSubscriber('message', this._onMessage, this);
   },
   
-  connect: function(callback, scope) {
+  connect: function(options, callback, scope) {
+    options = options || {};
+    var timeout = (options.timeout !== undefined) ? options.timeout / 1000 : this.timeout;
+    
     this.setDeferredStatus('deferred');
     
     this.callback(callback, scope);
@@ -46,7 +49,7 @@ Faye.Connection = Faye.Class({
     this.removeTimeout('deletion');
     
     this._beginDeliveryTimeout();
-    this._beginConnectionTimeout();
+    this._beginConnectionTimeout(timeout);
   },
   
   flush: function() {
@@ -70,9 +73,9 @@ Faye.Connection = Faye.Class({
     this.addTimeout('delivery', this.MAX_DELAY, this.flush, this);
   },
   
-  _beginConnectionTimeout: function() {
+  _beginConnectionTimeout: function(timeout) {
     if (!this._connected) return;
-    this.addTimeout('connection', this.timeout, this.flush, this);
+    this.addTimeout('connection', timeout, this.flush, this);
   },
   
   _releaseConnection: function() {
@@ -82,7 +85,7 @@ Faye.Connection = Faye.Class({
     this.removeTimeout('delivery');
     this._connected = false;
     
-    this.addTimeout('deletion', 10 * this.timeout, function() {
+    this.addTimeout('deletion', this.TIMEOUT + 10 * this.timeout, function() {
       this.publishEvent('staleConnection', this);
     }, this);
   }

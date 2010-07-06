@@ -21,7 +21,7 @@ module Faye
       @options  = [app, options].grep(Hash).first || {}
       
       @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
-      @endpoint_re = Regexp.new('^' + @endpoint + '(/[^/]+)*(\\.js)?$')
+      @endpoint_re = Regexp.new('^' + @endpoint + '(/[^/]*)*(\\.js)?$')
       @server      = Server.new(@options)
     end
     
