@@ -30,6 +30,9 @@ module Faye
       @outbox    = []
       @channels  = Channel::Tree.new
       
+      @namespace = Namespace.new
+      @response_callbacks = {}
+      
       @advice = {
         'reconnect' => RETRY,
         'interval'  => 1000.0 * (@options[:interval] || Connection::INTERVAL),
@@ -109,7 +112,6 @@ module Faye
       return handshake { connect(&block) } if @state == UNCONNECTED
       
       callback(&block)
-      return if @state == CONNECTING
       return unless @state == CONNECTED
       
       info('Calling deferred actions for ?', @client_id)
@@ -244,16 +246,31 @@ module Faye
       connect {
         info('Client ? queueing published message to ?: ?', @client_id, channel, data)
         
-        enqueue({
+        send({
           'channel'   => channel,
           'data'      => data,
           'clientId'  => @client_id
-          
-        }) do
-          add_timeout(:publish, Connection::MAX_DELAY) { flush! }
-        end
+        })
       }
     end
+    
+    def receive_message(message)
+      pipe_through_extensions(:incoming, message) do |message|
+        if message
+          handle_advice(message['advice']) if message['advice']
+          
+          callback = @response_callbacks[message['id']]
+          if callback
+            @response_callbacks.delete(message['id'])
+            callback.call(message)
+          end
+          
+          deliver_message(message)
+        end
+      end
+    end
+    
+  private
     
     def handle_advice(advice)
       @advice.update(advice)
@@ -265,14 +282,11 @@ module Faye
       end
     end
     
-    def deliver_messages(messages)
-      messages.each do |message|
-        info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
-        @channels.distribute_message(message)
-      end
+    def deliver_message(message)
+      return unless message['channel'] and message['data']
+      info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
+      @channels.distribute_message(message)
     end
-    
-  private
     
     def teardown_connection
       return unless @connect_request
@@ -286,26 +300,35 @@ module Faye
     end
     
     def send(message, &callback)
+      message['id'] = @namespace.generate
+      @response_callbacks[message['id']] = callback if callback
+      
       pipe_through_extensions(:outgoing, message) do |message|
         if message
-          request = @transport.send(message, &callback)
-          if message['channel'] == Channel::CONNECT
-            @connect_request = request
+          if message['channel'] == Channel::HANDSHAKE
+            @transport.send(message)
+          else
+            @outbox << message
+            
+            if message['channel'] == Channel::CONNECT
+              @connect_message = message
+            end
+            
+            add_timeout(:publish, Connection::MAX_DELAY) { flush! }
           end
         end
       end
     end
     
-    def enqueue(message, &callback)
-      pipe_through_extensions(:outgoing, message) do |message|
-        if message
-          @outbox << message
-          callback.call()
-        end
-      end
-    end
-    
     def flush!
+      remove_timeout(:publish)
+      
+      if @outbox.size > 1 and @connect_message
+        @connect_message['advice'] = {'timeout' => 0}
+      end
+      
+      @connect_message = nil
+      
       @transport.send(@outbox)
       @outbox = []
     end

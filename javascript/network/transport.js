@@ -3,17 +3,10 @@ Faye.Transport = Faye.extend(Faye.Class({
     this.debug('Created new ? transport for ?', this.connectionType, endpoint);
     this._client    = client;
     this._endpoint  = endpoint;
-    this._namespace = new Faye.Namespace();
-    this._callbacks = {};
   },
   
   send: function(messages, callback, scope) {
     messages = [].concat(messages);
-    
-    Faye.each(messages, function(message) {
-      message.id = this._namespace.generate();
-      if (callback) this._callbacks[message.id] = [callback, scope];
-    }, this);
     
     this.debug('Client ? sending message to ?: ?',
                this._client._clientId, this._endpoint, messages);
@@ -25,38 +18,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     this.debug('Client ? received from ?: ?',
                this._client._clientId, this._endpoint, responses);
     
-    var responses   = [].concat(responses),
-        messages    = [],
-        deliverable = true,
-        processed   = 0;
-    
-    var ping = function() {
-      processed += 1;
-      if (processed < responses.length) return;
-      if (deliverable) this._client.deliverMessages(messages);
-    };
-    
-    var handleResponse = function(response) {
-      this._client.pipeThroughExtensions('incoming', response, function(response) {
-        if (response) {
-          if (response.advice)
-            this._client.handleAdvice(response.advice);
-          
-          if (callback = this._callbacks[response.id]) {
-            delete this._callbacks[response.id];
-            if (callback[0].call(callback[1], response) === false)
-              deliverable = false;
-          }
-          
-          if (response.data && response.channel)
-            messages.push(response);
-        }
-        
-        ping.call(this);
-      }, this);
-    };
-    
-    Faye.each(responses, handleResponse, this);
+    Faye.each(responses, this._client.receiveMessage, this._client);
   },
   
   abort: function() {}

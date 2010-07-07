@@ -25,6 +25,9 @@ Faye.Client = Faye.Class({
     this._outbox    = [];
     this._channels  = new Faye.Channel.Tree();
     
+    this._namespace = new Faye.Namespace();
+    this._responseCallbacks = {};
+    
     this._advice = {
       reconnect: this.RETRY,
       interval:  1000 * (this._options.interval || this.INTERVAL),
@@ -109,7 +112,6 @@ Faye.Client = Faye.Class({
       return this.handshake(function() { this.connect(callback, scope) }, this);
     
     this.callback(callback, scope);
-    if (this._state === this.CONNECTING || this._paused) return;
     if (this._state !== this.CONNECTED) return;
     
     this.info('Calling deferred actions for ?', this._clientId);
@@ -241,18 +243,31 @@ Faye.Client = Faye.Class({
     this.connect(function() {
       this.info('Client ? queueing published message to ?: ?', this._clientId, channel, data);
       
-      this._enqueue({
+      this._send({
         channel:      channel,
         data:         data,
         clientId:     this._clientId
-        
-      }, function() {
-        this.addTimeout('publish', this.MAX_DELAY, this._flush, this);
       });
     }, this);
   },
   
-  handleAdvice: function(advice) {
+  receiveMessage: function(message) {
+    this.pipeThroughExtensions('incoming', message, function(message) {
+      if (!message) return;
+      
+      if (message.advice) this._handleAdvice(message.advice);
+      
+      var callback = this._responseCallbacks[message.id];
+      if (callback) {
+        delete this._responseCallbacks[message.id];
+        callback[0].call(callback[1], message);
+      }
+      
+      this._deliverMessage(message);
+    }, this);
+  },
+  
+  _handleAdvice: function(advice) {
     Faye.extend(this._advice, advice);
     
     if (this._advice.reconnect === this.HANDSHAKE && this._state !== this.DISCONNECTED) {
@@ -262,24 +277,10 @@ Faye.Client = Faye.Class({
     }
   },
   
-  deliverMessages: function(messages) {
-    Faye.each(messages, function(message) {
-      this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
-      this._channels.distributeMessage(message);
-    }, this);
-  },
-  
-  pause: function() {
-    if (this._paused) return;
-    this._paused = true;
-    if (this._connectRequest) this._transport.abort(this._connectRequest);
-    this._teardownConnection();
-  },
-  
-  resume: function() {
-    if (!this._paused) return;
-    this._paused = false;
-    this._cycleConnection();
+  _deliverMessage: function(message) {
+    if (!message.channel || !message.data) return;
+    this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
+    this._channels.distributeMessage(message);
   },
   
   _teardownConnection: function() {
@@ -295,25 +296,32 @@ Faye.Client = Faye.Class({
   },
   
   _send: function(message, callback, scope) {
+    message.id = this._namespace.generate();
+    if (callback) this._responseCallbacks[message.id] = [callback, scope];
+    
     this.pipeThroughExtensions('outgoing', message, function(message) {
       if (!message) return;
       
-      var request = this._transport.send(message, callback, scope);
-      if (message.channel === Faye.Channel.CONNECT)
-        this._connectRequest = request;
+      if (message.channel === Faye.Channel.HANDSHAKE)
+        return this._transport.send(message);
       
-    }, this);
-  },
-  
-  _enqueue: function(message, callback) {
-    this.pipeThroughExtensions('outgoing', message, function(message) {
-      if (!message) return;
       this._outbox.push(message);
-      callback.call(this);
+      
+      if (message.channel === Faye.Channel.CONNECT)
+        this._connectMessage = message;
+      
+      this.addTimeout('publish', this.MAX_DELAY, this._flush, this);
     }, this);
   },
   
   _flush: function() {
+    this.removeTimeout('publish');
+    
+    if (this._outbox.length > 1 && this._connectMessage)
+      this._connectMessage.advice = {timeout: 0};
+    
+    this._connectMessage = null;
+    
     this._transport.send(this._outbox);
     this._outbox = [];
   },

@@ -19,7 +19,11 @@ Faye.Logging = {
         klass  = null,
         
         message = messageArgs.shift().replace(/\?/g, function() {
-          return Faye.toJSON(messageArgs.shift());
+          try {
+            return Faye.toJSON(messageArgs.shift());
+          } catch (e) {
+            return '[Object]';
+          }
         });
     
     for (var key in Faye) {
