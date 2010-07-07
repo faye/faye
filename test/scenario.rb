@@ -96,7 +96,12 @@ module Scenario
     
     def extend_server(stage, extension, &block)
       object = Object.new
-      (class << object; self; end).send(:define_method, stage, &extension)
+      def object.added
+        @active = true
+      end
+      (class << object; self; end).send(:define_method, stage) do |*args|
+        extension.call(*args) if @active
+      end
       @comet.add_extension(object)
       block.call
     end

@@ -170,6 +170,12 @@
     
     client.add_extension(ClientAuth.new)</pre>
     
+    If an extension has an @added()@ method, that will be called when
+    the extension is added to its host. To remove an extension, call:
+    
+    <pre class="prettyprint"># Calls extension.removed() if defined
+    host_object.remove_extension(extension)</pre>
+    
     To write extensions you'll need to know what kinds of messages are
     used by the Bayeux protocol; see "the specification":http://svn.cometd.com/trunk/bayeux/bayeux.html
     for more details.

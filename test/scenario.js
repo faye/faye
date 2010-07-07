@@ -41,8 +41,15 @@ AsyncScenario = Faye.Class({
   },
   
   extendServer: function(stage, extension, Continue) {
-    var object = {};
-    object[stage] = extension;
+    var object = {
+      added: function() {
+        this._active = true;
+      }
+    };
+    object[stage] = function() {
+      if (!this._active) return;
+      extension.apply(this, arguments);
+    };
     this._server.addExtension(object);
     Continue();
   },

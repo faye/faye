@@ -2,14 +2,16 @@ Faye.Extensible = {
   addExtension: function(extension) {
     this._extensions = this._extensions || [];
     this._extensions.push(extension);
+    if (extension.added) extension.added();
   },
   
   removeExtension: function(extension) {
     if (!this._extensions) return;
     var i = this._extensions.length;
     while (i--) {
-      if (this._extensions[i] === extension)
-        this._extensions.splice(i,1);
+      if (this._extensions[i] !== extension) continue;
+      this._extensions.splice(i,1);
+      if (extension.removed) extension.removed();
     }
   },
   
