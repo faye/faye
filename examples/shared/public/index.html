@@ -44,7 +44,7 @@
       if (window.console) console.log(msg);
     };
     
-    Comet = new Faye.Client('/comet');
+    Comet = new Faye.Client('http://' + window.location.hostname + ':8080/cometd');
     Soapbox.init(Comet);
   </script>
 

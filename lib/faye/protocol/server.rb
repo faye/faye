@@ -25,20 +25,21 @@ module Faye
       messages = [messages].flatten
       processed, responses = 0, []
       
+      gather_replies = lambda do |replies|
+        responses.concat(replies)
+        processed += 1
+        callback.call(responses.compact) if processed == messages.size
+      end
+      
       handle_reply = lambda do |replies|
         extended, expected = 0, replies.size
+        gather_replies.call(replies) if expected == 0
         
         replies.each_with_index do |reply, i|
           pipe_through_extensions(:outgoing, reply) do |message|
             replies[i] = message
-            
-            extended += 1
-            if extended == expected
-              
-              responses.concat(replies)
-              processed += 1
-              callback.call(responses.compact) if processed == messages.size
-            end
+            extended  += 1
+            gather_replies.call(replies) if extended == expected
           end
         end
       end
@@ -114,21 +115,24 @@ module Faye
       advize(response)
       
       if response['channel'] == Channel::CONNECT and response['successful'] == true
-        return accept_connection(response, socket, &callback)
+        return accept_connection(message['advice'], response, socket, &callback)
       end
       
       callback.call([response])
     end
     
-    def accept_connection(response, socket, &callback)
+    def accept_connection(options, response, socket, &callback)
       info('Accepting connection from ?', response['clientId'])
       
       connection = connection(response['clientId'])
-      if socket
-        return connection.socket = socket
-      end
       
-      connection.connect do |events|
+      # Disabled because CometD doesn't like messages not being
+      # delivered as part of a /meta/* response
+      # if socket
+      #   return connection.socket = socket
+      # end
+      
+      connection.connect(options) do |events|
         info('Sending event messages to ?', response['clientId'])
         debug('Events for ?: ?', response['clientId'], events)
         callback.call([response] + events)

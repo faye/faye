@@ -30,6 +30,9 @@ module Faye
       @outbox    = []
       @channels  = Channel::Tree.new
       
+      @namespace = Namespace.new
+      @response_callbacks = {}
+      
       @advice = {
         'reconnect' => RETRY,
         'interval'  => 1000.0 * (@options[:interval] || Connection::INTERVAL),
@@ -71,7 +74,7 @@ module Faye
       send({
         'channel'     => Channel::HANDSHAKE,
         'version'     => BAYEUX_VERSION,
-        'supportedConnectionTypes' => Transport.supported_connection_types
+        'supportedConnectionTypes' => [@transport.connection_type]
         
       }) do |response|
         
@@ -109,7 +112,6 @@ module Faye
       return handshake { connect(&block) } if @state == UNCONNECTED
       
       callback(&block)
-      return if @state == CONNECTING
       return unless @state == CONNECTED
       
       info('Calling deferred actions for ?', @client_id)
@@ -126,9 +128,9 @@ module Faye
         'clientId'        => @client_id,
         'connectionType'  => @transport.connection_type
         
-      }, &verify_client_id { |response|
+      }) do
         cycle_connection
-      })
+      end
     end
     
     # Request                              Response
@@ -164,9 +166,13 @@ module Faye
     #                                                     * id
     #                                                     * timestamp
     def subscribe(channels, &block)
-      channels = [channels].flatten
-      return if channels.empty?
-      validate_channels(channels)
+      if Array === channels
+        return channels.each do |channel|
+          subscribe(channel, &block)
+        end
+      end
+      
+      validate_channel(channels)
       
       connect {
         info('Client ? attempting to subscribe to ?', @client_id, channels)
@@ -176,14 +182,14 @@ module Faye
           'clientId'      => @client_id,
           'subscription'  => channels
           
-        }, &verify_client_id { |response|
+        }) do |response|
           if response['successful']
             
             channels = [response['subscription']].flatten
             info('Subscription acknowledged for ? to ?', @client_id, channels)
             @channels.subscribe(channels, block)
           end
-        })
+        end
       }
       Subscription.new(self, channels, block)
     end
@@ -199,27 +205,32 @@ module Faye
     #                                                     * id
     #                                                     * timestamp
     def unsubscribe(channels, &block)
-      channels = [channels].flatten
-      return if channels.empty?
-      validate_channels(channels)
+      if Array === channels
+        return channels.each do |channel|
+          unsubscribe(channel, &block)
+        end
+      end
       
-      dead_channels = @channels.unsubscribe(channels, block)
+      validate_channel(channels)
+      
+      dead = @channels.unsubscribe(channels, block)
+      return unless dead
       
       connect {
-        info('Client ? attempting to unsubscribe from ?', @client_id, dead_channels)
+        info('Client ? attempting to unsubscribe from ?', @client_id, channels)
         
         send({
           'channel'       => Channel::UNSUBSCRIBE,
           'clientId'      => @client_id,
-          'subscription'  => dead_channels
+          'subscription'  => channels
           
-        }, &verify_client_id { |response|
+        }) do |response|
           if response['successful']
             
             channels = [response['subscription']].flatten
             info('Unsubscription acknowledged for ? from ?', @client_id, channels)
           end
-        })
+        end
       }
     end
     
@@ -230,21 +241,36 @@ module Faye
     #                * id                                 * error
     #                * ext                                * ext
     def publish(channel, data)
+      validate_channel(channel)
+      
       connect {
-        validate_channels([channel])
-        
         info('Client ? queueing published message to ?: ?', @client_id, channel, data)
         
-        enqueue({
+        send({
           'channel'   => channel,
           'data'      => data,
           'clientId'  => @client_id
-          
-        }) do
-          add_timeout(:publish, Connection::MAX_DELAY) { flush! }
-        end
+        })
       }
     end
+    
+    def receive_message(message)
+      pipe_through_extensions(:incoming, message) do |message|
+        if message
+          handle_advice(message['advice']) if message['advice']
+          
+          callback = @response_callbacks[message['id']]
+          if callback
+            @response_callbacks.delete(message['id'])
+            callback.call(message)
+          end
+          
+          deliver_message(message)
+        end
+      end
+    end
+    
+  private
     
     def handle_advice(advice)
       @advice.update(advice)
@@ -256,14 +282,11 @@ module Faye
       end
     end
     
-    def deliver_messages(messages)
-      messages.each do |message|
-        info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
-        @channels.distribute_message(message)
-      end
+    def deliver_message(message)
+      return unless message['channel'] and message['data']
+      info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
+      @channels.distribute_message(message)
     end
-    
-  private
     
     def teardown_connection
       return unless @connect_request
@@ -277,46 +300,42 @@ module Faye
     end
     
     def send(message, &callback)
+      message['id'] = @namespace.generate
+      @response_callbacks[message['id']] = callback if callback
+      
       pipe_through_extensions(:outgoing, message) do |message|
         if message
-          request = @transport.send(message, &callback)
-          if message['channel'] == Channel::CONNECT
-            @connect_request = request
+          if message['channel'] == Channel::HANDSHAKE
+            @transport.send(message)
+          else
+            @outbox << message
+            
+            if message['channel'] == Channel::CONNECT
+              @connect_message = message
+            end
+            
+            add_timeout(:publish, Connection::MAX_DELAY) { flush! }
           end
         end
       end
     end
     
-    def enqueue(message, &callback)
-      pipe_through_extensions(:outgoing, message) do |message|
-        if message
-          @outbox << message
-          callback.call()
-        end
-      end
-    end
-    
     def flush!
+      remove_timeout(:publish)
+      
+      if @outbox.size > 1 and @connect_message
+        @connect_message['advice'] = {'timeout' => 0}
+      end
+      
+      @connect_message = nil
+      
       @transport.send(@outbox)
       @outbox = []
     end
     
-    def validate_channels(channels)
-      channels.each do |channel|
-        raise "'#{ channel }' is not a valid channel name" unless Channel.valid?(channel)
-        raise "Clients may not subscribe to channel '#{ channel }'" unless Channel.subscribable?(channel)
-      end
-    end
-    
-    def verify_client_id(&block)
-      lambda do |response|
-        if response['clientId'] != @client_id
-          false
-        else
-          block.call(response)
-          true
-        end
-      end
+    def validate_channel(channel)
+      raise "'#{ channel }' is not a valid channel name" unless Channel.valid?(channel)
+      raise "Clients may not subscribe to channel '#{ channel }'" unless Channel.subscribable?(channel)
     end
     
   end

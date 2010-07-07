@@ -28,7 +28,7 @@ Faye.NodeAdapter = Faye.Class(http.Server, {
   initialize: function(options) {
     this._options    = options || {};
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
-    this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]+)*(\\.js)?$');
+    this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]*)*(\\.js)?$');
     this._server     = new Faye.Server(this._options);
     
     http.Server.call(this, function(request, response) {

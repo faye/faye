@@ -147,17 +147,11 @@ Faye.extend(Faye.Channel, {
       }, this);
     },
     
-    unsubscribe: function(names, callback, scope) {
-      var deadChannels = [];
-      
-      Faye.each(names, function(name) {
-        var channel = this.get(name);
-        if (!channel) return;
-        channel.removeSubscriber('message', callback, scope);
-        if (channel.countSubscribers('message') === 0) deadChannels.push(name);
-      }, this);
-      
-      return deadChannels;
+    unsubscribe: function(name, callback, scope) {
+      var channel = this.get(name);
+      if (!channel) return false;
+      channel.removeSubscriber('message', callback, scope);
+      return channel.countSubscribers('message') === 0;
     },
     
     distributeMessage: function(message) {

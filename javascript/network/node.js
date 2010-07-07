@@ -10,8 +10,6 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
       });
     });
     request.end();
-    
-    return request;
   },
   
   createRequestForMessage: function(message, timeout) {
@@ -47,7 +45,6 @@ Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
 Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
   request: function(message) {
     this._endpoint.process(message, true, this.receive, this);
-    return true;
   }
 });
 

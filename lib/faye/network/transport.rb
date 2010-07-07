@@ -11,8 +11,6 @@ module Faye
       debug('Created new ? transport for ?', connection_type, endpoint)
       @client    = client
       @endpoint  = endpoint
-      @namespace = Namespace.new
-      @callbacks = {}
     end
     
     def connection_type
@@ -21,53 +19,13 @@ module Faye
     
     def send(messages, &block)
       messages = [messages].flatten
-      
-      messages.each do |message|
-        message['id'] = @namespace.generate
-        @callbacks[message['id']] = block
-      end
-      
       debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, messages)
       request(messages)
     end
     
     def receive(responses)
       debug('Client ? received from ?: ?', @client.client_id, @endpoint, responses)
-        
-      responses   = [responses].flatten
-      messages    = []
-      deliverable = true
-      processed   = 0
-      
-      ping = lambda do
-        processed += 1
-        if processed == responses.size
-          @client.deliver_messages(messages) if deliverable
-        end
-      end
-      
-      handle_response = lambda do |response|
-        @client.pipe_through_extensions(:incoming, response) do |response|
-          if response
-            if response['advice']
-              @client.handle_advice(response['advice'])
-            end
-            
-            if callback = @callbacks[response['id']]
-              @callbacks.delete(response['id'])
-              deliverable = false if callback.call(response) == false
-            end
-            
-            if response['data'] and response['channel']
-              messages << response
-            end
-          end
-          
-          ping.call()
-        end
-      end
-      
-      responses.each(&handle_response)
+      responses.each { |response| @client.receive_message(response) }
     end
     
     @transports = []
@@ -127,8 +85,6 @@ module Faye
       request.errback do
         EventMachine.add_timer(timeout) { request(message, 2 * timeout) }
       end
-      
-      request
     end
   end
   Transport.register 'long-polling', HttpTransport
@@ -140,7 +96,6 @@ module Faye
     
     def request(message)
       @endpoint.process(message, true, &method(:receive))
-      true
     end
   end
   Transport.register 'in-process', LocalTransport

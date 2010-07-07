@@ -142,9 +142,13 @@ Faye.extend(Faye.WebSocket, {
     },
     
     send: function(socket, message) {
-      socket.write(FRAME_START, 'binary');
-      socket.write(message, 'utf8');
-      socket.write(FRAME_END, 'binary');
+      try {
+        socket.write(FRAME_START, 'binary');
+        socket.write(message, 'utf8');
+        socket.write(FRAME_END, 'binary');
+      } catch (e) {
+        // socket closed while writing
+      }
     }
   };
 })();

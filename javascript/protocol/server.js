@@ -22,27 +22,28 @@ Faye.Server = Faye.Class({
     messages = [].concat(messages);
     var processed = 0, responses = [];
     
+    var gatherReplies = function(replies) {
+      responses = responses.concat(replies);
+      processed += 1;
+      if (processed < messages.length) return;
+      
+      var n = responses.length;
+      while (n--) {
+        if (!responses[n]) responses.splice(n,1);
+      }
+      callback.call(scope, responses);
+    };
+    
     var handleReply = function(replies) {
       var extended = 0, expected = replies.length;
+      if (expected === 0) gatherReplies(replies);
       
       Faye.each(replies, function(reply, i) {
         this.pipeThroughExtensions('outgoing', reply, function(message) {
           replies[i] = message;
-          
-          extended += 1;
-          if (extended < expected) return;
-          
-          responses = responses.concat(replies);
-          processed += 1;
-          if (processed < messages.length) return;
-          
-          var n = responses.length;
-          while (n--) {
-            if (!responses[n]) responses.splice(n,1);
-          }
-          callback.call(scope, responses);
-          
-        }, this);
+          extended  += 1;
+          if (extended === expected) gatherReplies(replies);
+        });
       }, this);
     };
     
@@ -114,18 +115,21 @@ Faye.Server = Faye.Class({
     this._advize(response);
     
     if (response.channel === Faye.Channel.CONNECT && response.successful === true)
-      return this._acceptConnection(response, socket, callback, scope);
+      return this._acceptConnection(message.advice, response, socket, callback, scope);
     
     callback.call(scope, [response]);
   },
   
-  _acceptConnection: function(response, socket, callback, scope) {
+  _acceptConnection: function(options, response, socket, callback, scope) {
     this.info('Accepting connection from ?', response.clientId);
     
     var connection = this._connection(response.clientId);
-    if (socket) return connection.setSocket(socket);
     
-    connection.connect(function(events) {
+    // Disabled because CometD doesn't like messages not being
+    // delivered as part of a /meta/* response
+    // if (socket) return connection.setSocket(socket);
+    
+    connection.connect(options, function(events) {
       this.info('Sending event messages to ?', response.clientId);
       this.debug('Events for ?: ?', response.clientId, events);
       callback.call(scope, [response].concat(events));
