@@ -19,9 +19,7 @@ Faye.Transport = Faye.extend(Faye.Class({
                this._client._clientId, this._endpoint, responses);
     
     Faye.each(responses, this._client.receiveMessage, this._client);
-  },
-  
-  abort: function() {}
+  }
   
 }), {
   get: function(client, connectionTypes) {

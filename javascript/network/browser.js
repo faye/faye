@@ -8,7 +8,6 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
       this._connectMessage = message;
     
     this.withSocket(function(socket) { socket.send(Faye.toJSON(message)) });
-    return this;
   },
   
   withSocket: function(callback, scope) {
@@ -57,7 +56,7 @@ Faye.XHRTransport = Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
     var timeout = timeout || this._client.getTimeout();
     
-    return Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), {
+    Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), {
       success:function(response) {
        this.receive(JSON.parse(response.text()));
       },
@@ -66,10 +65,6 @@ Faye.XHRTransport = Faye.Class(Faye.Transport, {
         setTimeout(function() { self.request(message, 2 * timeout) }, 1000 * timeout);
       }
     }, this);
-  },
-  
-  abort: function(request) {
-    request.abort();
   }
 });
 
@@ -90,17 +85,22 @@ Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
         location     = Faye.URI.parse(this._endpoint, params),
         self         = this;
     
+    var removeScript = function() {
+      if (!script.parentNode) return false;
+      script.parentNode.removeChild(script);
+      return true;
+    };
+    
     Faye.ENV[callbackName] = function(data) {
       Faye.ENV[callbackName] = undefined;
       try { delete Faye.ENV[callbackName] } catch (e) {}
-      if (!script.parentNode) return;
-      head.removeChild(script);
+      if (!removeScript()) return;
       self.receive(data);
     };
     
     setTimeout(function() {
       if (!Faye.ENV[callbackName]) return;
-      self.abort(script);
+      removeScript();
       self.request(message, 2 * timeout);
     }, 1000 * timeout);
     
@@ -108,13 +108,6 @@ Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
     script.type = 'text/javascript';
     script.src  = location.toURL();
     head.appendChild(script);
-    
-    return script;
-  },
-  
-  abort: function(script) {
-    if (!script.parentNode) return;
-    script.parentNode.removeChild(script);
   }
 }), {
   _cbCount: 0,

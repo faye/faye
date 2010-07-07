@@ -85,8 +85,6 @@ module Faye
       request.errback do
         EventMachine.add_timer(timeout) { request(message, 2 * timeout) }
       end
-      
-      request
     end
   end
   Transport.register 'long-polling', HttpTransport
@@ -98,7 +96,6 @@ module Faye
     
     def request(message)
       @endpoint.process(message, true, &method(:receive))
-      true
     end
   end
   Transport.register 'in-process', LocalTransport
