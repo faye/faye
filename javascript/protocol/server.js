@@ -8,9 +8,7 @@ Faye.Server = Faye.Class({
   },
   
   clientIds: function() {
-    var ids = [];
-    Faye.each(this._connections, function(key, value) { ids.push(key) });
-    return ids;
+    return Faye.map(this._connections, function(key, value) { return key });
   },
   
   process: function(messages, localOrRemote, callback, scope) {

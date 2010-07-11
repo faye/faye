@@ -47,11 +47,7 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
   },
   
   resend: function() {
-    var messages = [];
-    for (var id in this._messages) {
-      if (!this._messages.hasOwnProperty(id)) continue;
-      messages.push(this._messages[id]);
-    }
+    var messages = Faye.map(this._messages, function(id, msg) { return msg });
     this.request(messages);
   }
 });

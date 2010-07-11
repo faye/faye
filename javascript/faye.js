@@ -64,6 +64,14 @@ Faye.extend(Faye, {
     }
   },
   
+  map: function(object, callback, scope) {
+    var result = [];
+    this.each(object, function() {
+      result.push(callback.apply(scope || null, arguments));
+    });
+    return result;
+  },
+  
   filter: function(array, callback, scope) {
     var result = [];
     this.each(array, function() {
