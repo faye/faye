@@ -16,16 +16,21 @@
 var Buffer = require('buffer').Buffer;
 
 Faye.WebSocket = Faye.Class({
+  onopen:     null,
+  onmessage:  null,
+  onerror:    null,
+  onclose:    null,
+  
   initialize: function(request) {
     this._request = request;
-    this._socket  = request.socket;
+    this._stream  = request.socket;
     
     this.url = 'ws://' + request.headers.host + request.url;
     this.readyState = Faye.WebSocket.CONNECTING;
     this.bufferedAmount = 0;
     
     this._handler = Faye.WebSocket.Protocol75;
-    this._handler.handshake(this.url, this._request, this._socket);
+    this._handler.handshake(this.url, this._request, this._stream);
     this.readyState = Faye.WebSocket.OPEN;
     
     var event = new Faye.WebSocket.Event();
@@ -37,10 +42,34 @@ Faye.WebSocket = Faye.Class({
     
     var self = this;
     
-    this._socket.addListener('data', function(data) {
+    this._stream.addListener('data', function(data) {
       for (var i = 0, n = data.length; i < n; i++)
         self._handleChar(data[i]);
     });
+  },
+  
+  send: function(data) {
+    this._handler.send(this._stream, data);
+    return true;
+  },
+  
+  close: function() {},
+  
+  addEventListener: function(type, listener, useCapture) {
+    this.addSubscriber(type, listener);
+  },
+  
+  removeEventListener: function(type, listener, useCapture) {
+    this.removeSubscriber(type, listener);
+  },
+  
+  dispatchEvent: function(event) {
+    event.target = event.currentTarget = this;
+    event.eventPhase = Faye.WebSocket.Event.AT_TARGET;
+    
+    this.publishEvent(event.type, event);
+    if (this['on' + event.type])
+      this['on' + event.type](event);
   },
   
   _handleChar: function(data) {
@@ -65,35 +94,6 @@ Faye.WebSocket = Faye.Class({
       default:
         if (this._buffering) this._buffer.push(data);
     }
-  },
-  
-  onopen:     null,
-  onmessage:  null,
-  onerror:    null,
-  onclose:    null,
-  
-  send: function(data) {
-    this._handler.send(this._socket, data);
-    return true;
-  },
-  
-  close: function() {},
-  
-  addEventListener: function(type, listener, useCapture) {
-    this.addSubscriber(type, listener);
-  },
-  
-  removeEventListener: function(type, listener, useCapture) {
-    this.removeSubscriber(type, listener);
-  },
-  
-  dispatchEvent: function(event) {
-    event.target = event.currentTarget = this;
-    event.eventPhase = Faye.WebSocket.Event.AT_TARGET;
-    
-    this.publishEvent(event.type, event);
-    if (this['on' + event.type])
-      this['on' + event.type](event);
   }
 });
 
