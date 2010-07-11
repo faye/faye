@@ -100,7 +100,7 @@ module Faye
       
       if Channel.meta?(channel_name)
         handle_meta(message, socket, local, &callback)
-      elsif message['clientId'].nil? or Channel.service?(channel_name)
+      elsif message['clientId'].nil?
         callback.call([])
       else
         response = make_response(message)

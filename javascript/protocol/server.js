@@ -100,7 +100,7 @@ Faye.Server = Faye.Class({
     
     if (Faye.Channel.isMeta(channelName)) {
       this._handleMeta(message, socket, local, callback, scope);
-    } else if (!message.clientId || Faye.Channel.isService(channelName)) {
+    } else if (!message.clientId) {
       callback.call(scope, []);
     } else {
       response = this._makeResponse(message);
