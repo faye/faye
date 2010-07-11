@@ -3,11 +3,12 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
   CONNECTING:     2,
   CONNECTED:      3,
   
-  request: function(message) {
-    if (message.channel === Faye.Channel.CONNECT)
-      this._connectMessage = message;
-    
-    this.withSocket(function(socket) { socket.send(Faye.toJSON(message)) });
+  request: function(messages) {
+    this._messages = this._messages || {};
+    Faye.each(messages, function(message) {
+      this._messages[message.id] = message;
+    }, this);
+    this.withSocket(function(socket) { socket.send(Faye.toJSON(messages)) });
   },
   
   withSocket: function(callback, scope) {
@@ -29,16 +30,29 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
       self.setDeferredStatus('succeeded', self._socket);
     };
     
-    this._socket.onmessage = function(message) {
-      self.receive(JSON.parse(message.data));
+    this._socket.onmessage = function(event) {
+      var messages = [].concat(JSON.parse(event.data));
+      Faye.each(messages, function(message) {
+        delete self._messages[message.id];
+      });
+      self.receive(messages);
     };
     
     this._socket.onclose = function() {
-      self._state = self.UNCONNECTED;
       self.setDeferredStatus('deferred');
+      self._state = self.UNCONNECTED;
       self._socket = null;
-      self.request(self._connectMessage);
+      self.resend();
     };
+  },
+  
+  resend: function() {
+    var messages = [];
+    for (var id in this._messages) {
+      if (!this._messages.hasOwnProperty(id)) continue;
+      messages.push(this._messages[id]);
+    }
+    this.request(messages);
   }
 });
 

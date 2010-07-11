@@ -306,7 +306,7 @@ module Faye
       pipe_through_extensions(:outgoing, message) do |message|
         if message
           if message['channel'] == Channel::HANDSHAKE
-            @transport.send(message)
+            @transport.send([message])
           else
             @outbox << message
             

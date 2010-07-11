@@ -303,7 +303,7 @@ Faye.Client = Faye.Class({
       if (!message) return;
       
       if (message.channel === Faye.Channel.HANDSHAKE)
-        return this._transport.send(message);
+        return this._transport.send([message]);
       
       this._outbox.push(message);
       
