@@ -59,7 +59,7 @@ Faye.NodeAdapter = Faye.Class(http.Server, {
         self = this, data;
     
     if (!this._endpointRe.test(requestUrl.pathname))
-      return false;
+      return this.emit('passthrough', request, response);
     
     if (/\.js$/.test(requestUrl.pathname)) {
       fs.readFile(this.SCRIPT_PATH, function(err, content) {

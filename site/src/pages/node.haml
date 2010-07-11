@@ -9,24 +9,21 @@
     and handles routing of messages between clients. Setting up a server
     under Node.js is simple:
     
-    <pre class="prettyprint">var http = require('http'),
-        Faye = require('./path/to/faye-node');
+    <pre class="prettyprint">var faye = require('./path/to/faye-node');
     
-    var fayeServer = new Faye.NodeAdapter({
+    var server = new faye.NodeAdapter({
       mount:    '/faye',
       timeout:  45
     });
     
-    var httpServer = http.createServer(function(request, response) {
-      if (fayeServer.call(request, response)) return;
-      
-      // Handle non-Faye requests
+    // Handle non-Bayeux requests
+    server.addListener('passthrough', function(request, response) {
       response.writeHead(200, {'Content-Type': 'text/plain'});
-      response.write('Hello, non-Faye request');
+      response.write('Hello, non-Bayeux request');
       response.end();
     });
     
-    httpServer.listen(8000);</pre>
+    server.listen(8000);</pre>
     
     The @NodeAdapter@ class supports these options during setup:
     
@@ -47,11 +44,6 @@
     To allow browser clients to connect to the server, make sure you
     have @faye-node.js@ and @faye-client-min.js@ in the same directory.
     
-    The @fayeServer@ has a @#call()@ method. You should use this to forward
-    incoming requests to Faye, and it will return @true@ if it was able
-    to handle the request. If it returns @false@, you should pass the request
-    through to another backend that can deliver a response.
-    
     h4. Server-side Node.js clients
     
     You can use Faye clients on the server side to send messages to
@@ -60,7 +52,7 @@
     
     To create a client, just supply the host you want to connect to:
     
-    <pre class="prettyprint">var client = new Faye.Client('http://localhost:8000/faye');</pre>
+    <pre class="prettyprint">var client = new faye.Client('http://localhost:8000/faye');</pre>
     
     You can then use @client.subscribe()@ and @client.publish()@ to
     send messages to other clients; see the "browser client":/browser.html
@@ -71,7 +63,7 @@
     to the server without going over HTTP, and is thus more efficient.
     To send messages through the server just use the @#getClient()@ method.
     
-    <pre class="prettyprint">fayeServer.getClient().publish('/email/new', {
+    <pre class="prettyprint">server.getClient().publish('/email/new', {
       text:       'New email has arrived!',
       inboxSize:  34
     });</pre>
@@ -136,7 +128,7 @@
       }
     };
     
-    fayeServer.addExtension(serverAuth);</pre>
+    server.addExtension(serverAuth);</pre>
     
     If you add an @error@ property to a message, the server will not
     process the message further and will simply return it to the

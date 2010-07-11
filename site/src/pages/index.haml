@@ -15,7 +15,7 @@
     <pre class="prettyprint">var Faye   = require('./faye-node'),
         server = new Faye.NodeAdapter({mount: '/'});
     
-    server.run(8000);
+    server.listen(8000);
     </pre>
     
     h3. %(number)2.% Create a client
