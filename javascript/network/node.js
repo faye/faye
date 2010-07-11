@@ -15,7 +15,7 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
   createRequestForMessage: function(message, timeout) {
     var content = JSON.stringify(message),
         uri     = url.parse(this._endpoint),
-        client  = http.createClient(uri.port, uri.hostname),
+        client  = http.createClient(uri.port, uri.hostname, uri.protocol === 'https:'),
         self    = this;
     
     var retry = function() {
@@ -23,8 +23,6 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
     };
     
     client.addListener('error', function() { setTimeout(retry, 1000 * timeout) });
-    
-    if (parseInt(uri.port) === 443) client.setSecure('X509_PEM');
     
     var request = client.request('POST', uri.pathname, {
       'Content-Type':   'application/json',
