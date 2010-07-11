@@ -156,7 +156,9 @@ Faye.extend(Faye.Channel, {
     
     distributeMessage: function(message) {
       var channels = this.glob(message.channel);
-      Faye.each(channels, function(channel) { channel.publishEvent('message', message.data) });
+      Faye.each(channels, function(channel) {
+        channel.publishEvent('message', message.data);
+      });
     }
   })
 });
