@@ -10,7 +10,7 @@
 var sys  = require('sys'),
     faye = require('./faye-node');
 
-var client = new faye.Client('http://localhost:8000/comet');
+var client = new faye.Client('http://localhost:8000/bayeux');
 
 client.subscribe('/from/*', function(message) {
   var user = message.user;

@@ -1,12 +1,12 @@
 Soapbox = {
   /**
-   * Initializes the application, passing in the globally shared Comet
-   * client. Apps on the same page should share a Comet client so
+   * Initializes the application, passing in the globally shared Bayeux
+   * client. Apps on the same page should share a Bayeux client so
    * that they may share an open HTTP connection with the server.
    */
-  init: function(comet) {
+  init: function(bayeux) {
     var self = this;
-    this._comet = comet;
+    this._bayeux = bayeux;
     
     this._login   = $('#enterUsername');
     this._app     = $('#app');
@@ -31,7 +31,7 @@ Soapbox = {
    */
   launch: function() {
     var self = this;
-    this._comet.subscribe('/mentioning/' + this._username, this.accept, this);
+    this._bayeux.subscribe('/mentioning/' + this._username, this.accept, this);
     
     // Hide login form, show main application UI
     this._login.fadeOut('slow', function() {
@@ -44,7 +44,7 @@ Soapbox = {
       var follow = $('#followee'),
           name   = follow.val();
       
-      self._comet.subscribe('/from/' + name, self.accept, self);
+      self._bayeux.subscribe('/from/' + name, self.accept, self);
       follow.val('');
       return false;
     });
@@ -76,14 +76,14 @@ Soapbox = {
       if (word !== self._username) mentions.push(word);
     });
     
-    // Message object to transmit over Comet channels
+    // Message object to transmit over Bayeux channels
     message = {user: this._username, message: message};
     
     // Publish to this user's 'from' channel, and to channels for any
     // @replies found in the message
-    this._comet.publish('/from/' + this._username, message);
+    this._bayeux.publish('/from/' + this._username, message);
     $.each(mentions, function(i, name) {
-      self._comet.publish('/mentioning/' + name, message);
+      self._bayeux.publish('/mentioning/' + name, message);
     });
   },
   

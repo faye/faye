@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/style.css" type="text/css" media="screen">
   <script src="/mootools.js" type="text/javascript"></script>
   <script src="/jquery.js" type="text/javascript"></script>
-  <script src="/comet.js" type="text/javascript"></script>
+  <script src="/bayeux.js" type="text/javascript"></script>
   <script src="/soapbox.js" type="text/javascript"></script>
 </head>
 <body>
@@ -44,8 +44,8 @@
       if (window.console) console.log(msg);
     };
     
-    Comet = new Faye.Client('http://' + window.location.hostname + ':8000/comet');
-    Soapbox.init(Comet);
+    Bayeux = new Faye.Client('http://' + window.location.hostname + ':8000/bayeux');
+    Soapbox.init(Bayeux);
   </script>
 
 </div>  

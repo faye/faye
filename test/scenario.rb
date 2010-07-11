@@ -78,9 +78,9 @@ module Scenario
     end
     
     def server(port, &block)
-      @endpoint = "http://0.0.0.0:#{port}/comet"
-      @comet = Faye::RackAdapter.new(:mount => '/comet', :timeout => 30)
-      Rack::Handler.get('thin').run(@comet, :Port => port) do |server|
+      @endpoint = "http://0.0.0.0:#{port}/bayeux"
+      @bayeux = Faye::RackAdapter.new(:mount => '/bayeux', :timeout => 30)
+      Rack::Handler.get('thin').run(@bayeux, :Port => port) do |server|
         @server = server
         EM.next_tick(&block)
       end
@@ -91,7 +91,7 @@ module Scenario
     end
     
     def local_client(name, channels, &block)
-      setup_client(@comet.get_client, name, channels, &block)
+      setup_client(@bayeux.get_client, name, channels, &block)
     end
     
     def extend_server(stage, extension, &block)
@@ -102,7 +102,7 @@ module Scenario
       (class << object; self; end).send(:define_method, stage) do |*args|
         extension.call(*args) if @active
       end
-      @comet.add_extension(object)
+      @bayeux.add_extension(object)
       block.call
     end
     

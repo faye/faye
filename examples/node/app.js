@@ -5,13 +5,13 @@ var fs    = require('fs'),
     faye  = require('./faye-node');
 
 var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
-    comet      = new faye.NodeAdapter({mount: '/comet', timeout: 20}),
+    bayeux     = new faye.NodeAdapter({mount: '/bayeux', timeout: 20}),
     
     port       = process.ARGV[2] || '8000';
 
 sys.puts('Listening on ' + port);
 
-comet.addListener('request', function(request, response) {
+bayeux.addListener('request', function(request, response) {
   sys.puts(request.method + ' ' + request.url);
   
   var path = (request.url === '/') ? '/index.html' : request.url;
@@ -24,5 +24,5 @@ comet.addListener('request', function(request, response) {
   });
 });
 
-comet.listen(Number(port));
+bayeux.listen(Number(port));
 
