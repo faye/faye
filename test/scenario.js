@@ -4,7 +4,7 @@ var sys    = require('sys'),
     assert = require('assert'),
     faye   = require('../build/faye-node');
 
-Faye.Logging.logLevel = 'info';
+faye.Logging.logLevel = 'info';
 
 AsyncScenario = Faye.Class({
   initialize: function(name) {

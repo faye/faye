@@ -122,4 +122,5 @@ Faye.NodeAdapter = Faye.Class(http.Server, {
 
 exports.NodeAdapter = Faye.NodeAdapter;
 exports.Client = Faye.Client;
+exports.Logging = Faye.Logging;
 
