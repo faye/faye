@@ -1,28 +1,27 @@
 Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
-    var timeout = timeout || this._client.getTimeout(),
-        request = this.createRequestForMessage(message, timeout),
+    var retry   = this.retry(message, timeout),
+        request = this.createRequestForMessage(message, retry),
         self    = this;
     
     request.addListener('response', function(response) {
       Faye.withDataFor(response, function(data) {
-        self.receive(JSON.parse(data));
+        try {
+          self.receive(JSON.parse(data));
+        } catch (e) {
+          retry();
+        }
       });
     });
     request.end();
   },
   
-  createRequestForMessage: function(message, timeout) {
+  createRequestForMessage: function(message, retry) {
     var content = JSON.stringify(message),
         uri     = url.parse(this._endpoint),
-        client  = http.createClient(uri.port, uri.hostname, uri.protocol === 'https:'),
-        self    = this;
+        client  = http.createClient(uri.port, uri.hostname, uri.protocol === 'https:');
     
-    var retry = function() {
-      self.request(message, 2 * timeout);
-    };
-    
-    client.addListener('error', function() { setTimeout(retry, 1000 * timeout) });
+    client.addListener('error', retry);
     
     var request = client.request('POST', uri.pathname, {
       'Content-Type':   'application/json',
@@ -41,7 +40,7 @@ Faye.NodeHttpTransport.isUsable = function(endpoint) {
 Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
 
 Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
-  request: function(message) {
+  request: function(message, timeout) {
     this._endpoint.process(message, true, this.receive, this);
   }
 });

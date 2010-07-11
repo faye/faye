@@ -5,13 +5,13 @@ Faye.Transport = Faye.extend(Faye.Class({
     this._endpoint  = endpoint;
   },
   
-  send: function(messages, callback, scope) {
+  send: function(messages, timeout) {
     messages = [].concat(messages);
     
     this.debug('Client ? sending message to ?: ?',
                this._client._clientId, this._endpoint, messages);
     
-    return this.request(messages);
+    return this.request(messages, timeout);
   },
   
   receive: function(responses) {
@@ -19,6 +19,13 @@ Faye.Transport = Faye.extend(Faye.Class({
                this._client._clientId, this._endpoint, responses);
     
     Faye.each(responses, this._client.receiveMessage, this._client);
+  },
+  
+  retry: function(message, timeout) {
+    var self = this;
+    return function() {
+      setTimeout(function() { self.request(message, 2 * timeout) }, 1000 * timeout);
+    };
   }
   
 }), {

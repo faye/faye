@@ -17,15 +17,21 @@ module Faye
       self.class.connection_type
     end
     
-    def send(messages, &block)
+    def send(messages, timeout)
       messages = [messages].flatten
       debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, messages)
-      request(messages)
+      request(messages, timeout)
     end
     
     def receive(responses)
       debug('Client ? received from ?: ?', @client.client_id, @endpoint, responses)
       responses.each { |response| @client.receive_message(response) }
+    end
+    
+    def retry_block(message, timeout)
+      lambda do
+        EventMachine.add_timer(timeout) { request(message, 2 * timeout) }
+      end
     end
     
     @transports = []
@@ -65,8 +71,8 @@ module Faye
       endpoint.is_a?(String)
     end
     
-    def request(message, timeout = nil)
-      timeout ||= @client.get_timeout
+    def request(message, timeout)
+      retry_block = retry_block(message, timeout)
       
       content = JSON.unparse(message)
       params = {
@@ -80,11 +86,13 @@ module Faye
       }
       request = EventMachine::HttpRequest.new(@endpoint).post(params)
       request.callback do
-        receive(JSON.parse(request.response))
+        begin
+          receive(JSON.parse(request.response))
+        rescue
+          retry_block.call
+        end
       end
-      request.errback do
-        EventMachine.add_timer(timeout) { request(message, 2 * timeout) }
-      end
+      request.errback(&retry_block)
     end
   end
   Transport.register 'long-polling', HttpTransport
@@ -94,7 +102,7 @@ module Faye
       endpoint.is_a?(Server)
     end
     
-    def request(message)
+    def request(message, timeout)
       @endpoint.process(message, true, &method(:receive))
     end
   end

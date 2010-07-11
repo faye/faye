@@ -3,7 +3,7 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
   CONNECTING:     2,
   CONNECTED:      3,
   
-  request: function(messages) {
+  request: function(messages, timeout) {
     this._messages = this._messages || {};
     Faye.each(messages, function(message) {
       this._messages[message.id] = message;
@@ -64,16 +64,17 @@ Faye.Transport.register('websocket', Faye.WebSocketTransport);
 
 Faye.XHRTransport = Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
-    var timeout = timeout || this._client.getTimeout();
+    var retry = this.retry(message, timeout);
     
     Faye.XHR.request('post', this._endpoint, Faye.toJSON(message), {
       success:function(response) {
-       this.receive(JSON.parse(response.text()));
+        try {
+          this.receive(JSON.parse(response.text()));
+        } catch (e) {
+          retry();
+        }
       },
-      failure: function() {
-        var self = this;
-        setTimeout(function() { self.request(message, 2 * timeout) }, 1000 * timeout);
-      }
+      failure: retry
     }, this);
   }
 });
@@ -87,8 +88,7 @@ Faye.Transport.register('long-polling', Faye.XHRTransport);
 
 Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
-    var timeout      = timeout || this._client.getTimeout() * 2,
-        params       = {message: Faye.toJSON(message)},
+    var params       = {message: Faye.toJSON(message)},
         head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = Faye.JSONPTransport.getCallbackName(),

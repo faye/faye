@@ -40,10 +40,6 @@ module Faye
       }
     end
     
-    def get_timeout
-      @advice['timeout'] / 1000.0
-    end
-    
     # Request
     # MUST include:  * channel
     #                * version
@@ -306,7 +302,7 @@ module Faye
       pipe_through_extensions(:outgoing, message) do |message|
         if message
           if message['channel'] == Channel::HANDSHAKE
-            @transport.send([message])
+            @transport.send(message, @advice['timeout'] / 1000.0)
           else
             @outbox << message
             
@@ -329,7 +325,7 @@ module Faye
       
       @connect_message = nil
       
-      @transport.send(@outbox)
+      @transport.send(@outbox, @advice['timeout'] / 1000.0)
       @outbox = []
     end
     
