@@ -41,8 +41,10 @@
     is so that it can interoperate with clients that use different request
     paths for different channels.
     
-    Faye works best when run under an asynchronous web server; for best
-    results you should use Thin to serve your Faye application:
+    Being an event-driven application, Faye only works with event-driven
+    servers. It currently only supports Thin, and makes some extensions to
+    Thin in order to support WebSockets. If you use @rackup@ you'll need
+    to specify Thin as the web server:
     
     <pre class="prettyprint">rackup config.ru -s thin -E production</pre>
     
