@@ -10,7 +10,9 @@ Faye.Connection = Faye.Class({
     this.timeout    = this._options.timeout || this.TIMEOUT;
     this._channels  = new Faye.Set();
     this._inbox     = new Faye.Set();
-    this._connected = false
+    this._connected = false;
+    
+    this._beginDeletionTimeout();
   },
   
   setSocket: function(socket) {
@@ -68,6 +70,16 @@ Faye.Connection = Faye.Class({
     this.flush();
   },
   
+  _releaseConnection: function() {
+    if (this._socket) return;
+    
+    this.removeTimeout('connection');
+    this.removeTimeout('delivery');
+    this._connected = false;
+    
+    this._beginDeletionTimeout();
+  },
+  
   _beginDeliveryTimeout: function() {
     if (!this._connected || this._inbox.isEmpty()) return;
     this.addTimeout('delivery', this.MAX_DELAY, this.flush, this);
@@ -78,13 +90,8 @@ Faye.Connection = Faye.Class({
     this.addTimeout('connection', timeout, this.flush, this);
   },
   
-  _releaseConnection: function() {
-    if (this._socket) return;
-    
-    this.removeTimeout('connection');
-    this.removeTimeout('delivery');
-    this._connected = false;
-    
+  _beginDeletionTimeout: function() {
+    if (this._connected) return;
     this.addTimeout('deletion', this.TIMEOUT + 10 * this.timeout, function() {
       this.publishEvent('staleConnection', this);
     }, this);

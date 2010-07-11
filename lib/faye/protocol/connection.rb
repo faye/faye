@@ -18,6 +18,8 @@ module Faye
       @channels  = Set.new
       @inbox     = Set.new
       @connected = false
+      
+      begin_deletion_timeout
     end
     
     def socket=(socket)
@@ -77,6 +79,16 @@ module Faye
     
   private
     
+    def release_connection!
+      return if @socket
+      
+      remove_timeout(:connection)
+      remove_timeout(:delivery)
+      @connected = false
+      
+      begin_deletion_timeout
+    end
+    
     def begin_delivery_timeout
       return unless @connected and not @inbox.empty?
       add_timeout(:delivery, MAX_DELAY) { flush! }
@@ -87,13 +99,8 @@ module Faye
       add_timeout(:connection, timeout) { flush! }
     end
     
-    def release_connection!
-      return if @socket
-      
-      remove_timeout(:connection)
-      remove_timeout(:delivery)
-      @connected = false
-      
+    def begin_deletion_timeout
+      return if @connected
       add_timeout(:deletion, TIMEOUT + 10 * @timeout) do
         publish_event(:stale_connection, self)
       end

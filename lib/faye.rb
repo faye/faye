@@ -48,5 +48,10 @@ module Faye
       else value.to_s
     end
   end
+  
+  def self.ensure_reactor_running!
+    Thread.new { EM.run } unless EM.reactor_running?
+    while not EM.reactor_running?; end
+  end
 end
 

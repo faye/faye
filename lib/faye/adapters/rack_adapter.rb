@@ -43,7 +43,7 @@ module Faye
     end
     
     def call(env)
-      ensure_reactor_running!
+      Faye.ensure_reactor_running!
       request = Rack::Request.new(env)
       
       unless request.path_info =~ @endpoint_re
@@ -100,11 +100,6 @@ module Faye
         end
       end
       ASYNC_RESPONSE
-    end
-    
-    def ensure_reactor_running!
-      Thread.new { EM.run } unless EM.reactor_running?
-      while not EM.reactor_running?; end
     end
     
     class DeferredBody
