@@ -115,9 +115,11 @@ module Scenario
     
     def listen_for_errors(name, &block)
       @errors[name] = []
+      errors = @errors
+      
       extend_client(name, :incoming, lambda { |message, callback|
         if message['successful'] == false
-          @errors[name] << message['error']
+          errors[name] << message['error']
         end
         callback.call(message)
       }, &block)
