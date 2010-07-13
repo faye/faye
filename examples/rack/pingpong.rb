@@ -17,6 +17,6 @@ EM.run {
     EM.add_timer(1) { ping.publish('/ping', {}) }
   end
   
-  ping.publish('/pong', {})
+  EM.add_timer(0.5) { ping.publish('/pong', {}) }
 }
 
