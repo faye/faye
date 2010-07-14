@@ -1,10 +1,27 @@
 Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
-    var retry   = this.retry(message, timeout),
-        request = this.createRequestForMessage(message, retry),
-        self    = this;
+    var uri      = url.parse(this._endpoint),
+        secure   = (uri.protocol === 'https:'),
+        client   = http.createClient(uri.port, uri.hostname, secure),
+        content  = JSON.stringify(message),
+        response = null,
+        retry    = this.retry(message, timeout),
+        self     = this;
     
-    request.addListener('response', function(response) {
+    client.addListener('error', retry);
+    
+    client.addListener('end', function() {
+      if (!response) retry();
+    });
+    
+    var request = client.request('POST', uri.pathname, {
+      'Content-Type':   'application/json',
+      'Host':           uri.hostname,
+      'Content-Length': content.length
+    });
+    
+    request.addListener('response', function(stream) {
+      response = stream;
       Faye.withDataFor(response, function(data) {
         try {
           self.receive(JSON.parse(data));
@@ -13,23 +30,9 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
         }
       });
     });
-    request.end();
-  },
-  
-  createRequestForMessage: function(message, retry) {
-    var content = JSON.stringify(message),
-        uri     = url.parse(this._endpoint),
-        client  = http.createClient(uri.port, uri.hostname, uri.protocol === 'https:');
     
-    client.addListener('error', retry);
-    
-    var request = client.request('POST', uri.pathname, {
-      'Content-Type':   'application/json',
-      'host':           uri.hostname,
-      'Content-Length': content.length
-    });
     request.write(content);
-    return request;
+    request.end();
   }
 });
 
