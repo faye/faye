@@ -1,4 +1,4 @@
-dir = File.dirname(__FILE__)
+dir = ::File.dirname(__FILE__)
 
 require dir + '/../../lib/faye'
 require dir + '/app'
