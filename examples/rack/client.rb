@@ -8,7 +8,7 @@
 # sent by all connected users.
 
 dir = File.dirname(__FILE__)
-require dir + '/../../lib/faye'
+require File.expand_path(dir + '/../../lib/faye')
 
 EM.run do
   client = Faye::Client.new('http://localhost:9292/bayeux')
