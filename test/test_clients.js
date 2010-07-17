@@ -404,8 +404,7 @@ function() { with(this) {
       B: {},
       C: {
         '/channels/name': [{msg: 'hey'}],
-        '/channels/foo/**': [{msg: 'hey'}],
-        '/channels/name': [{msg: 'hey'}],
+        '/channels/foo/**': [{msg: 'hey'}]
       }
   });
 }});
