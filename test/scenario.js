@@ -22,7 +22,7 @@ AsyncScenario = Faye.Class({
   server: function(port, Continue) {
     this._endpoint = 'http://0.0.0.0:' + port + '/bayeux';
     this._bayeux = new faye.NodeAdapter({mount: '/bayeux', timeout: 5});
-    this._server = http.createServer();
+    this._server = http.createServer(function() {});
     this._bayeux.attach(this._server);
     this._server.listen(port);
     Continue();
