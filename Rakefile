@@ -7,6 +7,7 @@ require './lib/faye.rb'
 Hoe.spec('faye') do |p|
   # p.rubyforge_name = 'fayex' # if different than lowercase project name
   p.developer('James Coglan', 'jcoglan@googlemail.com')
+  p.description = 'Simple pub/sub messaging for the web'
   p.extra_deps = [
     ['eventmachine', '>= 0.12'],
     ['em-http-request', '>= 0.2'],
