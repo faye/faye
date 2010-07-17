@@ -1,17 +1,33 @@
 = Faye
 
 * http://faye.jcoglan.com
+* http://github.com/jcoglan/faye
 
 Faye is a set of tools for dirt-simple publish-subscribe messaging
 between web clients. It ships with easy-to-use message routing servers
 for Node.js and Rack applications, and clients that can be used on
 the server and in the browser.
 
+See http://faye.jcoglan.com for documentation.
+
+
+== Development
+
+To hack on Faye, you'll need Ruby and Jake, which we use to build
+the JavaScript packages. Once you have Ruby installed:
+
+  sudo gem install jake
+
+Just run `jake` from the root of the project to build the JavaScripts.
+
+The Ruby version depends on the following gems, which you'll need
+to install:
+
+  sudo gem install hoe eventmachine em-http-request rack thin json
+
 
 == To-do
 
-* Investigate WebSockets as a possible message transport
-* Support Bayeux extensions for authentication
 * Let local server-side clients listen to <tt>/meta/*</tt> channels
 * Provide support for user-defined <tt>/service/*</tt> channels
 * Allow server to scale to multiple nodes

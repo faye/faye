@@ -1,3 +1,16 @@
+=== 0.5.0 / 2010-07-17 
+
+* Handle multiple event listeners bound to a channel
+* Add extension system for adding domain-specific logic to the protocol
+* Improve handling of client reconnections if the server goes down
+* Change default polling interval to 0 (immediate reconnect)
+* Add support for WebSockets (draft75 only) as a network transport
+* Remove support for Ruby servers other than Thin
+* Make client and server compatible with CometD (1.x and 2.0) components
+* Improve clean-up of unused server-side connections
+* Change Node API for adding Faye service to an HTTP server
+
+
 === 0.3.4 / 2010-06-20
 
 * Stop local clients going into an infinite loop if a subscription block causes a reconnect
