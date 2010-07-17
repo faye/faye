@@ -21,7 +21,9 @@ AsyncScenario = Faye.Class({
   
   server: function(port, Continue) {
     this._endpoint = 'http://0.0.0.0:' + port + '/bayeux';
-    this._server = new faye.NodeAdapter({mount: '/bayeux', timeout: 5});
+    this._bayeux = new faye.NodeAdapter({mount: '/bayeux', timeout: 5});
+    this._server = http.createServer();
+    this._bayeux.attach(this._server);
     this._server.listen(port);
     Continue();
   },
@@ -37,7 +39,7 @@ AsyncScenario = Faye.Class({
   },
   
   localClient: function(name, channels, Continue) {
-    this._setupClient(this._server.getClient(), name, channels, Continue);
+    this._setupClient(this._bayeux.getClient(), name, channels, Continue);
   },
   
   extendServer: function(stage, extension, Continue) {
@@ -50,7 +52,7 @@ AsyncScenario = Faye.Class({
       if (!this._active) return;
       extension.apply(this, arguments);
     };
-    this._server.addExtension(object);
+    this._bayeux.addExtension(object);
     Continue();
   },
   

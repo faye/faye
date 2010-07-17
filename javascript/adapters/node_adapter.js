@@ -17,7 +17,7 @@ Faye.withDataFor = function(transport, callback, scope) {
   });
 };
 
-Faye.NodeAdapter = Faye.Class(http.Server, {
+Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   SCRIPT_PATH:      path.dirname(__filename) + '/faye-browser-min.js',
   
@@ -30,16 +30,6 @@ Faye.NodeAdapter = Faye.Class(http.Server, {
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
     this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]*)*(\\.js)?$');
     this._server     = new Faye.Server(this._options);
-    
-    http.Server.call(this, function(request, response) {
-      self.handle(request, response);
-    });
-    
-    this.addListener('upgrade', function(request, socket, head) {
-      self.handleUpgrade(request, socket, head);
-    });
-    
-    var self = this;
   },
   
   addExtension: function(extension) {
@@ -54,12 +44,39 @@ Faye.NodeAdapter = Faye.Class(http.Server, {
     return this._client = this._client || new Faye.Client(this._server);
   },
   
+  listen: function(port) {
+    var httpServer = http.createServer();
+    this.attach(httpServer);
+    httpServer.listen(port);
+  },
+  
+  attach: function(httpServer) {
+    this._overrideListeners(httpServer, 'request', 'handle');
+    this._overrideListeners(httpServer, 'upgrade', 'handleUpgrade');
+  },
+  
+  _overrideListeners: function(httpServer, event, method) {
+    var listeners = httpServer.listeners(event),
+        self      = this;
+    
+    httpServer.removeAllListeners(event);
+    
+    httpServer.addListener(event, function(request) {
+      if (self.check(request)) return self[method].apply(self, arguments);
+      
+      for (var i = 0, n = listeners.length; i < n; i++)
+        listeners[i].apply(this, arguments);
+    });
+  },
+  
+  check: function(request) {
+    var path = url.parse(request.url, true).pathname;
+    return !!this._endpointRe.test(path);
+  },
+  
   handle: function(request, response) {
     var requestUrl = url.parse(request.url, true),
         self = this, data;
-    
-    if (!this._endpointRe.test(requestUrl.pathname))
-      return this.emit('passthrough', request, response);
     
     if (/\.js$/.test(requestUrl.pathname)) {
       fs.readFile(this.SCRIPT_PATH, function(err, content) {

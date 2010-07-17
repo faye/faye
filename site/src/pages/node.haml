@@ -9,20 +9,22 @@
     and handles routing of messages between clients. Setting up a server
     under Node.js is simple:
     
-    <pre class="prettyprint">var faye = require('./path/to/faye-node');
+    <pre class="prettyprint">var http = require('http'),
+        faye = require('./path/to/faye-node');
     
-    var server = new faye.NodeAdapter({
+    var bayeux = new faye.NodeAdapter({
       mount:    '/faye',
       timeout:  45
     });
     
     // Handle non-Bayeux requests
-    server.addListener('passthrough', function(request, response) {
+    var server = http.createServer(function(request, response) {
       response.writeHead(200, {'Content-Type': 'text/plain'});
       response.write('Hello, non-Bayeux request');
       response.end();
     });
     
+    bayeux.attach(server);
     server.listen(8000);</pre>
     
     The @NodeAdapter@ class supports these options during setup:
@@ -63,7 +65,7 @@
     to the server without going over HTTP, and is thus more efficient.
     To send messages through the server just use the @#getClient()@ method.
     
-    <pre class="prettyprint">server.getClient().publish('/email/new', {
+    <pre class="prettyprint">bayeux.getClient().publish('/email/new', {
       text:       'New email has arrived!',
       inboxSize:  34
     });</pre>
@@ -128,7 +130,7 @@
       }
     };
     
-    server.addExtension(serverAuth);</pre>
+    bayeux.addExtension(serverAuth);</pre>
     
     If you add an @error@ property to a message, the server will not
     process the message further and will simply return it to the
