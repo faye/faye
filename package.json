@@ -1,0 +1,27 @@
+{ "name"          : "faye"
+, "description"   : "Simple pub/sub messaging for the web"
+, "keywords"      : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
+, "author"        : "James Coglan <jcoglan@gmail.com>"
+
+, "version"       : "0.3.4"
+, "engines"       : {"node": ">=0.1.96"}
+, "main"          : "./faye-node"
+
+, "bugs"          : "http://github.com/jcoglan/faye/issues"
+
+, "maintainers"   : [ { "name"    : "James Coglan"
+                      , "email"   : "jcoglan@gmail.com"
+                      , "web"     : "http://jcoglan.com"
+                      }
+                    ]
+
+, "licenses"      : [ { "type"    : "MIT"
+                      , "url"     : "http://www.opensource.org/licenses/mit-license.php"
+                      }
+                    ]
+
+, "repositories"  : [ { "type"    : "git"
+                      , "url"     : "git://github.com/jcoglan/faye.git"
+                      }
+                    ]
+}
