@@ -54,9 +54,7 @@ Faye.Transport = Faye.extend(Faye.Class({
   _transports: [],
   
   supportedConnectionTypes: function() {
-    var list = [], key;
-    Faye.each(this._transports, function(pair) { list.push(pair[0]) });
-    return list;
+    return Faye.map(this._transports, function(pair) { return pair[0] });
   }
 });
 
