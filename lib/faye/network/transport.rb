@@ -92,7 +92,7 @@ module Faye
           retry_block.call
         end
       end
-      request.errback(&retry_block)
+      request.errback { retry_block.call }
     end
   end
   Transport.register 'long-polling', HttpTransport

@@ -1,8 +1,8 @@
 dir = File.dirname(__FILE__)
-require dir + '/../../lib/faye'
+require File.expand_path(dir + '/../../lib/faye')
 
 EM.run {
-  ENDPOINT = 'http://localhost:8080/cometd'
+  ENDPOINT = 'http://localhost:9292/bayeux'
   puts 'Connecting to ' + ENDPOINT
   
   ping = Faye::Client.new(ENDPOINT)

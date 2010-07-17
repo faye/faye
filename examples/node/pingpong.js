@@ -1,7 +1,7 @@
-var faye = require('./faye-node'),
+var faye = require('faye'),
     sys  = require('sys');
 
-ENDPOINT = 'http://localhost:9292/bayeux';
+ENDPOINT = 'http://localhost:8000/bayeux';
 sys.puts('Connecting to ' + ENDPOINT);
 
 var ping = new Faye.Client(ENDPOINT);
