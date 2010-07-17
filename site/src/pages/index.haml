@@ -12,7 +12,7 @@
   :textile
     h3. %(number)1.% Start a server
     
-    <pre class="prettyprint">var Faye   = require('./faye-node'),
+    <pre class="prettyprint">var Faye   = require('faye'),
         server = new Faye.NodeAdapter({mount: '/'});
     
     server.listen(8000);

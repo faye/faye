@@ -10,7 +10,7 @@
     under Node.js is simple:
     
     <pre class="prettyprint">var http = require('http'),
-        faye = require('./path/to/faye-node');
+        faye = require('faye');
     
     var bayeux = new faye.NodeAdapter({
       mount:    '/faye',
@@ -42,9 +42,6 @@
     the Faye server respond to any request whose path begins @/faye@; this
     is so that it can interoperate with clients that use different request
     paths for different channels.
-    
-    To allow browser clients to connect to the server, make sure you
-    have @faye-node.js@ and @faye-browser-min.js@ in the same directory.
     
     h4. Server-side Node.js clients
     

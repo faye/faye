@@ -2,14 +2,22 @@
   :textile
     h3. Download Faye
     
-    The latest version is 0.3.4, released June 20 2010. It is written
-    by "James Coglan":http://jcoglan.com and is open-source software,
-    released under the MIT license.
+    The latest version is 0.5.0, released July 17 2010. It is open-source
+    software, released under the MIT license. You can follow development
+    on Faye's "GitHub page":http://github.com/jcoglan/faye.
     
     h4. Download for Node.js and web browsers
     
-    <a href="/assets/faye.0-3-4.zip" onclick="trackDownload('0.3.4')">
-      Download JavaScript version 0.3.4
+    The Node.js version is available through "npm":http://npmjs.org/.
+    This package contains a copy of the browser client, which is served
+    up by the Faye server when running.
+    
+    <pre class="prettyprint">sudo npm install faye</pre>
+    
+    Alternatively you can grab the latest release package:
+    
+    <a href="/assets/faye.0-5-0.zip" onclick="trackDownload('0.5.0')">
+      Download JavaScript version 0.5.0
     </a>
     
     The above package contains two files:
@@ -17,15 +25,15 @@
     * @faye-node.js@
     * @faye-browser-min.js@
     
-    To use Faye for Node.js, just put these two files together in
-    a directory, and load the server-side component using
+    To use Faye for Node.js, just put these two files together in a
+    directory, and load the server-side component using
     @require('./path/to/faye-node')@. The @faye-browser-min.js@ file
     contains the web browser client, which your Faye server will serve for
     you automatically.
     
     The browser client can be used standalone with other Bayeux
-    servers; just include @faye-browser-min.js@ in your web page to
-    use it.
+    servers like "CometD":http://cometd.org - just include
+    @faye-browser-min.js@ in your web page to use it.
     
     h4. Download for Ruby
     
@@ -34,3 +42,6 @@
     @json@, which should all be automatically installed for you.
     
     <pre class="prettyprint">sudo gem install faye</pre>
+    
+    This package also includes the browser client which is served up
+    by the Faye server when running.

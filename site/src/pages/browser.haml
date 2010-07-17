@@ -22,7 +22,7 @@
     limit and creating more clients will saturate the available connections
     in many browsers.
     
-    To make client, all you need is the mount point of the server you
+    To make a client, all you need is the mount point of the server you
     want to connect to:
     
     <pre class="prettyprint"><script type="text/javascript">
@@ -72,13 +72,20 @@
     
     Clients should subscribe to channels using the @#subscribe()@ method:
     
-    <pre class="prettyprint">client.subscribe('/foo', function(message) {
+    <pre class="prettyprint">var subscription = client.subscribe('/foo', function(message) {
       // handle message
     });</pre>
     
     The subscriber function will be invoked when anybody sends a message
     to @/foo@, and the @message@ parameter will contain the sent message
-    object.
+    object. A client may bind multiple listeners to a channel, and the Faye
+    client handles all the management of those listeners and makes sure the
+    server sends it the right messages.
+    
+    The @subscribe()@ method returns a @Subscription@ object, which you can
+    cancel if you want to remove that listener from the channel.
+    
+    <pre class="prettyprint">subscription.cancel();</pre>
     
     h4. Sending messages
     
@@ -97,7 +104,7 @@
     
     h4. Extensions
     
-    Faye clients support an extension messages that lets you intercept
+    Faye clients support an extension system that lets you intercept
     messages as they pass between the client and the server. To add
     an extension to a client, just call:
     
