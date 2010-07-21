@@ -2,7 +2,7 @@ var fs    = require('fs'),
     path  = require('path'),
     sys   = require('sys'),
     http  = require('http'),
-    faye  = require('faye');
+    faye  = require('../../build/faye-node');
 
 var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
     bayeux     = new faye.NodeAdapter({mount: '/bayeux', timeout: 20}),
