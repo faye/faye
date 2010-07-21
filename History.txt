@@ -1,3 +1,8 @@
+=== 0.5.1 / 2010-07-21
+
+* Fix a publishing problem in Ruby LocalTransport
+
+
 === 0.5.0 / 2010-07-17 
 
 * Handle multiple event listeners bound to a channel
