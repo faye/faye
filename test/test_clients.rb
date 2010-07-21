@@ -228,6 +228,20 @@ class TestClients < Test::Unit::TestCase
         :B => {}
     )
   end
+  
+  scenario "One HTTP client, one local with no subscriptions" do
+    server 8000
+    http_client :A, ['/channels/a']
+    local_client :B
+    publish :B, '/channels/a', 'hello' => 'world'
+    
+    check_inbox(
+        :A => {
+          '/channels/a' => ['hello' => 'world']
+        },
+        :B => {}
+    )
+  end
 
   scenario "Two HTTP clients, two subscriptions on the same channel" do
     server 8000

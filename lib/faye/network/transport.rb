@@ -103,7 +103,7 @@ module Faye
     end
     
     def request(message, timeout)
-      @endpoint.process(message, true, &method(:receive))
+      @endpoint.process(message, true) { |responses| receive(responses) }
     end
   end
   Transport.register 'in-process', LocalTransport

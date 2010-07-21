@@ -66,16 +66,6 @@ module Scenario
     def wait(time, &block)
       EM.add_timer(time, &block)
     end
-  
-    def check_inbox(expected_inbox, &block)
-      assert_equal expected_inbox, @inbox
-      EM.next_tick(&block)
-    end
-    
-    def check_errors(name, expected_errors, &block)
-      assert_equal expected_errors, @errors[name]
-      EM.next_tick(&block)
-    end
     
     def server(port, &block)
       @endpoint = "http://0.0.0.0:#{port}/bayeux"
@@ -86,11 +76,11 @@ module Scenario
       end
     end
     
-    def http_client(name, channels, &block)
+    def http_client(name, channels = nil, &block)
       setup_client(Faye::Client.new(@endpoint), name, channels, &block)
     end
     
-    def local_client(name, channels, &block)
+    def local_client(name, channels = nil, &block)
       setup_client(@bayeux.get_client, name, channels, &block)
     end
     
@@ -130,6 +120,8 @@ module Scenario
       @inbox[name]   = {}
       @pool         += 1
       
+      return block.call if channels.nil?
+      
       channels.each { |channel| subscribe(name, channel) }
       EM.add_timer(0.5 * channels.size, &block)
     end
@@ -155,6 +147,16 @@ module Scenario
       messages = [messages].flatten
       messages.each { |msg| @clients[from].publish(channel, msg) }
       EM.add_timer(2, &block)
+    end
+  
+    def check_inbox(expected_inbox, &block)
+      assert_equal expected_inbox, @inbox
+      EM.next_tick(&block)
+    end
+    
+    def check_errors(name, expected_errors, &block)
+      assert_equal expected_errors, @errors[name]
+      EM.next_tick(&block)
     end
     
     def finish(&block)
