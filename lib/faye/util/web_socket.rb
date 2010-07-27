@@ -34,7 +34,8 @@ module Faye
     end
     
     def send(data)
-      @stream.write("\x00#{ data }\xFF")
+      string = ["\x00", data, "\xFF"].map(&method(:encode)) * ''
+      @stream.write(string)
     end
     
     def close
@@ -67,7 +68,7 @@ module Faye
         when "\xFF" then
           event = Event.new
           event.init_event('message', false, false)
-          event.data = @buffer.join('')
+          event.data = encode(@buffer.join(''))
           
           dispatch_event(event)
           
@@ -77,6 +78,11 @@ module Faye
         else
           @buffer.push(data) if @buffering
       end
+    end
+    
+    def encode(string, encoding = 'UTF-8')
+      return string unless string.respond_to?(:force_encoding)
+      string.force_encoding(encoding)
     end
     
   end
