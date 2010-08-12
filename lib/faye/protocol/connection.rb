@@ -4,7 +4,7 @@ module Faye
     include Publisher
     include Timeouts
     
-    MAX_DELAY = 0.1
+    MAX_DELAY = 0.001
     INTERVAL  = 0.0
     TIMEOUT   = 60.0
     
