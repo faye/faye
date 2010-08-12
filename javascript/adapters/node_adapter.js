@@ -100,7 +100,7 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   handleUpgrade: function(request, socket, head) {
-    var socket = new Faye.WebSocket(request),
+    var socket = new Faye.WebSocket(request, head),
         self   = this;
     
     socket.onmessage = function(message) {

@@ -10,10 +10,12 @@
  * For implementation reference:
  * http://dev.w3.org/html5/websockets/
  * http://tools.ietf.org/html/draft-hixie-thewebsocketprotocol-75
+ * http://tools.ietf.org/html/draft-hixie-thewebsocketprotocol-76
  * http://www.w3.org/TR/DOM-Level-2-Events/events.html
  **/
 
-var Buffer = require('buffer').Buffer;
+var Buffer = require('buffer').Buffer,
+    crypto = require('crypto');
 
 Faye.WebSocket = Faye.Class({
   onopen:     null,
@@ -21,16 +23,17 @@ Faye.WebSocket = Faye.Class({
   onerror:    null,
   onclose:    null,
   
-  initialize: function(request) {
+  initialize: function(request, head) {
     this._request = request;
+    this._head    = head;
     this._stream  = request.socket;
     
     this.url = 'ws://' + request.headers.host + request.url;
     this.readyState = Faye.WebSocket.CONNECTING;
     this.bufferedAmount = 0;
     
-    this._handler = Faye.WebSocket.Protocol75;
-    this._handler.handshake(this.url, this._request, this._stream);
+    this._handler = Faye.WebSocket.getHandler(request);
+    this._handler.handshake(this.url, this._request, this._head, this._stream);
     this.readyState = Faye.WebSocket.OPEN;
     
     var event = new Faye.WebSocket.Event();
@@ -119,7 +122,14 @@ Faye.extend(Faye.WebSocket, {
     CAPTURING_PHASE:  1,
     AT_TARGET:        2,
     BUBBLING_PHASE:   3
-  })
+  }),
+  
+  getHandler: function(request) {
+    var headers = request.headers;
+    return (headers['sec-websocket-key1'] && headers['sec-websocket-key2'])
+         ? this.Protocol76
+         : this.Protocol75;
+  }
 });
 
 (function() {
@@ -128,11 +138,37 @@ Faye.extend(Faye.WebSocket, {
     return String.fromCharCode(value);
   };
   
+  var numberFromKey = function(key) {
+    return parseInt(key.match(/[0-9]/g).join(''), 10);
+  };
+  
+  var spacesInKey = function(key) {
+    return key.match(/ /g).length;
+  };
+  
+  var bigEndian = function(number) {
+    var string = '';
+    Faye.each([24,16,8,0], function(offset) {
+      string += String.fromCharCode(number >> offset & 0xFF);
+    });
+    return string;
+  };
+  
+  var writeToSocket = function(socket, message) {
+    try {
+      socket.write(FRAME_START, 'binary');
+      socket.write(message, 'utf8');
+      socket.write(FRAME_END, 'binary');
+    } catch (e) {
+      // socket closed while writing
+    }
+  };
+  
   var FRAME_START = byteToChar('00'),
       FRAME_END   = byteToChar('FF');
   
   Faye.WebSocket.Protocol75 = {
-    handshake: function(url, request, socket) {
+    handshake: function(url, request, head, socket) {
       socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n');
       socket.write('Upgrade: WebSocket\r\n');
       socket.write('Connection: Upgrade\r\n');
@@ -142,14 +178,36 @@ Faye.extend(Faye.WebSocket, {
     },
     
     send: function(socket, message) {
-      try {
-        socket.write(FRAME_START, 'binary');
-        socket.write(message, 'utf8');
-        socket.write(FRAME_END, 'binary');
-      } catch (e) {
-        // socket closed while writing
-      }
+      writeToSocket(socket, message);
     }
   };
+  
+  Faye.WebSocket.Protocol76 = {
+    handshake: function(url, request, head, socket) {
+      var key1   = request.headers['sec-websocket-key1'],
+          value1 = numberFromKey(key1) / spacesInKey(key1),
+          
+          key2   = request.headers['sec-websocket-key2'],
+          value2 = numberFromKey(key2) / spacesInKey(key2),
+          
+          MD5    = crypto.createHash('md5');
+      
+      MD5.update(bigEndian(value1));
+      MD5.update(bigEndian(value2));
+      MD5.update(head.toString('binary'));
+      
+      socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n', 'binary');
+      socket.write('Upgrade: WebSocket\r\n', 'binary');
+      socket.write('Connection: Upgrade\r\n', 'binary');
+      socket.write('Sec-WebSocket-Origin: ' + request.headers.origin + '\r\n', 'binary');
+      socket.write('Sec-WebSocket-Location: ' + url + '\r\n', 'binary');
+      socket.write('\r\n', 'binary');
+      socket.write(MD5.digest('binary'), 'binary');
+    },
+    
+    send: function(socket, message) {
+      writeToSocket(socket, message);
+    }
+  }
 })();
 
