@@ -1,3 +1,9 @@
+=== 0.5.2 / 2010-08-12
+
+* Support draft-76 of the WebSocket protocol (FF4, Chrome 6)
+* Reduce Connection::MAX_DELAY to improve latency
+
+
 === 0.5.1 / 2010-07-21
 
 * Fix a publishing problem in Ruby LocalTransport
