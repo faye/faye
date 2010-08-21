@@ -25,7 +25,7 @@ AsyncScenario = Faye.Class({
     this._server = http.createServer(function() {});
     this._bayeux.attach(this._server);
     this._server.listen(port);
-    Continue();
+    setTimeout(Continue, 100);
   },
   
   killServer: function(Continue) {
