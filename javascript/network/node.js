@@ -2,7 +2,8 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
     var uri      = url.parse(this._endpoint),
         secure   = (uri.protocol === 'https:'),
-        client   = http.createClient(uri.port || 80, uri.hostname, secure),
+        port     = (secure ? 443 : 80),
+        client   = http.createClient(uri.port || port, uri.hostname, secure),
         content  = JSON.stringify(message),
         response = null,
         retry    = this.retry(message, timeout),
