@@ -20,7 +20,7 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
     this._state = this.CONNECTING;
     
     var socketUrl = Faye.URI.parse(this._endpoint).toURL().
-                    replace(/^https?/ig, 'ws');
+                    replace(/^http(s?):/ig, 'ws$1:');
     
     this._socket = new WebSocket(socketUrl);
     var self = this;
