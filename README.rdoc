@@ -28,8 +28,15 @@ to install:
 
 == To-do
 
-* Let local server-side clients listen to <tt>/meta/*</tt> channels
+* Support legacy <tt>application/x-www-form-urlencoded</tt> POST requests
+* Detect failed WebSocket connection and fall back to polling transports
+* Clean up unused channel objects when subscriptions are removed
+* Optimise channel unsubscription -- currently O(N) where N = clients
+* Provide better API for adding extensions to Rack middleware
+* Add sugar for authentication extensions for protected subscribe + publish
+* Expose the Timeouts module to help users expire clients at the app level
 * Provide support for user-defined <tt>/service/*</tt> channels
+* Let local server-side clients listen to <tt>/meta/*</tt> channels
 * Allow server to scale to multiple nodes
 
 
