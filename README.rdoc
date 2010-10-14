@@ -1,6 +1,7 @@
 = Faye
 
 * http://faye.jcoglan.com
+* http://groups.google.com/group/faye-users
 * http://github.com/jcoglan/faye
 
 Faye is a set of tools for dirt-simple publish-subscribe messaging
@@ -9,6 +10,16 @@ for Node.js and Rack applications, and clients that can be used on
 the server and in the browser.
 
 See http://faye.jcoglan.com for documentation.
+
+
+== Questions, issues, ideas
+
+Please raise questions on the mailing list: http://groups.google.com/group/faye-users,
+and feel free to announce and share ideas on Faye-related projects here
+too. I'd appreciate it if we only use the GitHub issue tracker for bona
+fide bugs; posting a question there will probably not get you a swift
+answer since I treat it as a to-do list for whenever I have time to work
+on this.
 
 
 == Development
