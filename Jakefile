@@ -1,5 +1,5 @@
-require File.join('lib', 'faye')
 DIR = File.dirname(__FILE__)
+require File.join(DIR, 'lib', 'faye')
 
 jake_hook :build_complete do |build|
   browser_min = build.package('faye-browser').build_path(:min)
