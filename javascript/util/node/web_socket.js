@@ -28,7 +28,8 @@ Faye.WebSocket = Faye.Class({
     this._head    = head;
     this._stream  = request.socket;
     
-    this.url = 'ws://' + request.headers.host + request.url;
+    var scheme = request.socket.secure ? 'wss:' : 'ws:';
+    this.url = scheme + '//' + request.headers.host + request.url;    
     this.readyState = Faye.WebSocket.CONNECTING;
     this.bufferedAmount = 0;
     
