@@ -59,7 +59,8 @@ class Thin::Request
   end
 
   def websocket_url
-    @env['websocket.url'] = "ws://#{@env['HTTP_HOST']}#{@env['REQUEST_PATH']}"
+    scheme = (@env['HTTP_ORIGIN'] =~ /^https:/i) ? 'wss:' : 'ws:'
+    @env['websocket.url'] = "#{ scheme }//#{ @env['HTTP_HOST'] }#{ @env['REQUEST_PATH'] }"
   end
 
   def websocket_upgrade_data
