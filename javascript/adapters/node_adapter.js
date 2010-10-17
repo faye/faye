@@ -93,7 +93,9 @@ Faye.NodeAdapter = Faye.Class({
       
       else
         Faye.withDataFor(request, function(data) {
-          var params = (request.headers['content-type'] === 'application/json')
+          var type   = request.headers['content-type'].split(';')[0],
+              
+              params = (type === 'application/json')
                      ? {message: data}
                      : querystring.parse(data);
           
