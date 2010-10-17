@@ -39,7 +39,6 @@ to install:
 
 == To-do
 
-* Support legacy <tt>application/x-www-form-urlencoded</tt> POST requests
 * Detect failed WebSocket connection and fall back to polling transports
 * Clean up unused channel objects when subscriptions are removed
 * Optimise channel unsubscription -- currently O(N) where N = clients

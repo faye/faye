@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'json'
 require 'rack'
 require 'thin'
 require Faye::ROOT + '/thin_extensions'
@@ -61,7 +62,7 @@ module Faye
       end
       
       begin
-        json_msg = request.post? ? request.body.read : request.params['message']
+        json_msg = message_from_request(request)
         message  = JSON.parse(json_msg)
         jsonp    = request.params['jsonp'] || JSONP_CALLBACK
         type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
@@ -86,6 +87,16 @@ module Faye
     end
     
   private
+    
+    def message_from_request(request)
+      if request.post?
+        request.env['CONTENT_TYPE'] == 'application/json' ?
+            request.body.read :
+            request.params['message']
+      else
+        request.params['message']
+      end
+    end
     
     def handle_upgrade(request)
       socket = Faye::WebSocket.new(request)

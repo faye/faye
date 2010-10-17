@@ -93,7 +93,11 @@ Faye.NodeAdapter = Faye.Class({
       
       else
         Faye.withDataFor(request, function(data) {
-          self._callWithParams(request, response, {message: data});
+          var params = (request.headers['content-type'] === 'application/json')
+                     ? {message: data}
+                     : querystring.parse(data);
+          
+          self._callWithParams(request, response, params);
         });
     }
     return true;
