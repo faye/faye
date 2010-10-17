@@ -40,7 +40,6 @@ to install:
 == To-do
 
 * Detect failed WebSocket connection and fall back to polling transports
-* Clean up unused channel objects when subscriptions are removed
 * Optimise channel unsubscription -- currently O(N) where N = clients
 * Provide better API for adding extensions to Rack middleware
 * Add sugar for authentication extensions for protected subscribe + publish

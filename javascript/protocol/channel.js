@@ -5,6 +5,10 @@ Faye.Channel = Faye.Class({
   
   push: function(message) {
     this.publishEvent('message', message);
+  },
+  
+  isUnused: function() {
+    return this.countSubscribers('message') === 0;
   }
 });
 
@@ -46,8 +50,9 @@ Faye.extend(Faye.Channel, {
   },
   
   Tree: Faye.Class({
-    initialize: function(value) {
-      this._value = value;
+    initialize: function(parent, value) {
+      this._parent   = parent;
+      this._value    = value;
       this._children = {};
     },
     
@@ -87,6 +92,25 @@ Faye.extend(Faye.Channel, {
       if (subtree) subtree._value = value;
     },
     
+    remove: function(name) {
+      if (name) {
+        var subtree = this.traverse(name);
+        if (subtree) subtree.remove();
+      } else {
+        if (!this._parent) return;
+        this._parent.removeChild(this);
+        this._parent = this._value = undefined;
+      }
+    },
+    
+    removeChild: function(subtree) {
+      this.eachChild(function(key, child) {
+        if (child === subtree) delete this._children[key];
+      }, this);
+      if (Faye.size(this._children) === 0 && this._value === undefined)
+        this.remove();
+    },
+    
     traverse: function(path, createIfAbsent) {
       if (typeof path === 'string') path = Faye.Channel.parse(path);
       
@@ -95,7 +119,7 @@ Faye.extend(Faye.Channel, {
       
       var subtree = this._children[path[0]];
       if (!subtree && !createIfAbsent) return null;
-      if (!subtree) subtree = this._children[path[0]] = new Faye.Channel.Tree();
+      if (!subtree) subtree = this._children[path[0]] = new Faye.Channel.Tree(this);
       
       return subtree.traverse(path.slice(1), createIfAbsent);
     },
@@ -151,7 +175,13 @@ Faye.extend(Faye.Channel, {
       var channel = this.get(name);
       if (!channel) return false;
       channel.removeSubscriber('message', callback, scope);
-      return channel.countSubscribers('message') === 0;
+      
+      if (channel.isUnused()) {
+        this.remove(name);
+        return true;
+      } else {
+        return false;
+      }
     },
     
     distributeMessage: function(message) {

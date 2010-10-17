@@ -21,6 +21,14 @@ class TestChannel < Test::Unit::TestCase
     assert_equal %w[/bar /foo /foo/bar], tree.keys.sort
   end
   
+  def test_removal
+    tree = Channel::Tree.new
+    tree['/foo'] = tree['/bar'] = tree['/foo/bar'] = true
+    
+    tree.remove('/foo/bar')
+    assert_equal %w[/bar /foo], tree.keys.sort
+  end
+  
   def test_globbing
     tree = Channel::Tree.new
     tree['/foo/bar']     = 1

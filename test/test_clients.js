@@ -13,6 +13,9 @@ var Scenario = require('./scenario'),
   assert.deepEqual(tree.glob('/foo/**').sort(),       [1,2,5,7,8]);
   assert.deepEqual(tree.glob('/foo/bar/boo').sort(),  [5,8]);
   
+  tree.remove('/foo/bar/boo');
+  assert.equal(-1, tree.getKeys().indexOf('/foo/bar/boo'));
+  
   tree.set('/channels/hello', 'A');
   tree.set('/channels/name', 'B');
   tree.set('/channels/nested/hello', 'C');

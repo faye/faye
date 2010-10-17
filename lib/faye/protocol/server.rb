@@ -248,13 +248,13 @@ module Faye
       
       response['subscription'] = subscription.compact
       
-      subscription.each do |channel|
+      subscription.each do |channel_name|
         next if response['error']
-        response['error'] = Error.channel_forbidden(channel) unless local or Channel.subscribable?(channel)
-        response['error'] = Error.channel_invalid(channel) unless Channel.valid?(channel)
+        response['error'] = Error.channel_forbidden(channel_name) unless local or Channel.subscribable?(channel_name)
+        response['error'] = Error.channel_invalid(channel_name) unless Channel.valid?(channel_name)
         
         next if response['error']
-        channel = @channels[channel] ||= Channel.new(channel)
+        channel = @channels[channel_name] ||= Channel.new(channel_name)
         
         info('Subscribing client ? to ?', client_id, channel.name)
         connection.subscribe(channel)
@@ -281,19 +281,20 @@ module Faye
       
       response['subscription'] = subscription.compact
       
-      subscription.each do |channel|
+      subscription.each do |channel_name|
         next if response['error']
         
-        unless Channel.valid?(channel)
-          response['error'] = Error.channel_invalid(channel)
+        unless Channel.valid?(channel_name)
+          response['error'] = Error.channel_invalid(channel_name)
           next
         end
         
-        channel = @channels[channel]
+        channel = @channels[channel_name]
         next unless channel
         
         info('Unsubscribing client ? from ?', client_id, channel.name)
         connection.unsubscribe(channel)
+        @channels.remove(channel_name) if channel.unused?
       end
       
       response['successful'] = response['error'].nil?

@@ -12,6 +12,10 @@ module Faye
       publish_event(:message, message)
     end
     
+    def unused?
+      count_subscribers(:message).zero?
+    end
+    
     HANDSHAKE   = '/meta/handshake'
     CONNECT     = '/meta/connect'
     SUBSCRIBE   = '/meta/subscribe'
@@ -52,8 +56,9 @@ module Faye
       include Enumerable
       attr_accessor :value
       
-      def initialize(value = nil)
-        @value = value
+      def initialize(parent = nil, value = nil)
+        @parent   = parent
+        @value    = value
         @children = {}
       end
       
@@ -80,6 +85,24 @@ module Faye
         subtree.value = value unless subtree.nil?
       end
       
+      def remove(name = nil)
+        if name
+          subtree = traverse(name)
+          subtree.remove unless subtree.nil?
+        else
+          return unless @parent
+          @parent.remove_child(self)
+          @parent = @value = nil
+        end
+      end
+      
+      def remove_child(subtree)
+        each_child do |key, child|
+          @children.delete(key) if child == subtree
+        end
+        remove if @children.empty? and @value.nil?
+      end
+      
       def traverse(path, create_if_absent = false)
         path = Channel.parse(path) if String === path
         
@@ -88,7 +111,7 @@ module Faye
         
         subtree = @children[path.first]
         return nil if subtree.nil? and not create_if_absent
-        subtree = @children[path.first] = self.class.new if subtree.nil?
+        subtree = @children[path.first] = Tree.new(self) if subtree.nil?
         
         subtree.traverse(path[1..-1], create_if_absent)
       end
@@ -132,7 +155,13 @@ module Faye
         channel = self[name]
         return false unless channel
         channel.remove_subscriber(:message, callback)
-        channel.count_subscribers(:message).zero?
+        
+        if channel.unused?
+          remove(name)
+          true
+        else
+          false
+        end
       end
       
       def distribute_message(message)

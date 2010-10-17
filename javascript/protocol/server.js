@@ -254,13 +254,13 @@ Faye.Server = Faye.Class({
     
     response.subscription = subscription;
     
-    Faye.each(subscription, function(channel) {
+    Faye.each(subscription, function(channelName) {
       if (response.error) return;
-      if (!local && !Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
-      if (!Faye.Channel.isValid(channel))                  response.error = Faye.Error.channelInvalid(channel);
+      if (!local && !Faye.Channel.isSubscribable(channelName)) response.error = Faye.Error.channelForbidden(channelName);
+      if (!Faye.Channel.isValid(channelName))                  response.error = Faye.Error.channelInvalid(channelName);
       
       if (response.error) return;
-      channel = this._channels.findOrCreate(channel);
+      var channel = this._channels.findOrCreate(channelName);
       
       this.info('Subscribing client ? to ?', clientId, channel.name);
       connection.subscribe(channel);
@@ -289,17 +289,18 @@ Faye.Server = Faye.Class({
     
     response.subscription = subscription;
     
-    Faye.each(subscription, function(channel) {
+    Faye.each(subscription, function(channelName) {
       if (response.error) return;
       
-      if (!Faye.Channel.isValid(channel))
-        return response.error = Faye.Error.channelInvalid(channel);
+      if (!Faye.Channel.isValid(channelName))
+        return response.error = Faye.Error.channelInvalid(channelName);
       
-      channel = this._channels.get(channel);
+      var channel = this._channels.get(channelName);
       if (!channel) return;
       
       this.info('Unsubscribing client ? from ?', clientId, channel.name);
       connection.unsubscribe(channel);
+      if (channel.isUnused()) this._channels.remove(channelName);
     }, this);
     
     response.successful = !response.error;
