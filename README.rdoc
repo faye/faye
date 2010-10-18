@@ -40,9 +40,11 @@ to install:
 == To-do
 
 * Detect failed WebSocket connection and fall back to polling transports
-* Optimise channel unsubscription -- currently O(N) where N = clients
+* Add events to Subscriptions to notify the user when they are active
+* Notify listeners of network drop-out (may be transport dependent)
 * Provide better API for adding extensions to Rack middleware
 * Add sugar for authentication extensions for protected subscribe + publish
+* Optimise channel unsubscription -- currently O(N) where N = clients
 * Expose the Timeouts module to help users expire clients at the app level
 * Provide support for user-defined <tt>/service/*</tt> channels
 * Let local server-side clients listen to <tt>/meta/*</tt> channels
