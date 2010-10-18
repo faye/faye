@@ -74,12 +74,21 @@ Faye.NodeAdapter = Faye.Class({
     return !!this._endpointRe.test(path);
   },
   
+  loadClientScript: function(callback) {
+    if (this._clientScript) return callback(this._clientScript);
+    var self = this;
+    fs.readFile(this.SCRIPT_PATH, function(err, content) {
+      self._clientScript = content;
+      callback(content);
+    });
+  },
+  
   handle: function(request, response) {
     var requestUrl = url.parse(request.url, true),
         self = this, data;
     
     if (/\.js$/.test(requestUrl.pathname)) {
-      fs.readFile(this.SCRIPT_PATH, function(err, content) {
+      this.loadClientScript(function(content) {
         response.writeHead(200, self.TYPE_SCRIPT);
         response.write(content);
         response.end();
