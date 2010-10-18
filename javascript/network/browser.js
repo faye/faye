@@ -13,16 +13,20 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
   
   withSocket: function(callback, scope) {
     this.callback(callback, scope);
-    
+    this.connect();
+  },
+  
+  getSocketUrl: function() {
+    return Faye.URI.parse(this._endpoint).toURL().replace(/^http(s?):/ig, 'ws$1:');
+  },
+  
+  connect: function() {
     this._state = this._state || this.UNCONNECTED;
     if (this._state !== this.UNCONNECTED) return;
     
     this._state = this.CONNECTING;
     
-    var socketUrl = Faye.URI.parse(this._endpoint).toURL().
-                    replace(/^http(s?):/ig, 'ws$1:');
-    
-    this._socket = new WebSocket(socketUrl);
+    this._socket = new WebSocket(this.getSocketUrl());
     var self = this;
     
     this._socket.onopen = function() {
@@ -39,21 +43,18 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
     };
     
     this._socket.onclose = function() {
+      var connected = (self._state === self.CONNECTED);
       self.setDeferredStatus('deferred');
       self._state = self.UNCONNECTED;
       self._socket = null;
-      self.resend();
+      if (connected) self.resend();
+      else self.connect();
     };
   },
   
-  // We must do this asynchronously otherwise the socket can get
-  // into a feedback loop if messages were sent during disconnection
   resend: function() {
-    var self = this;
-    setTimeout(function() {
-      var messages = Faye.map(self._messages, function(id, msg) { return msg });
-      self.request(messages);
-    }, 10);
+    var messages = Faye.map(this._messages, function(id, msg) { return msg });
+    this.request(messages);
   }
 });
 
