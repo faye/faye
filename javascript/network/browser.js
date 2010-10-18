@@ -46,9 +46,14 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
     };
   },
   
+  // We must do this asynchronously otherwise the socket can get
+  // into a feedback loop if messages were sent during disconnection
   resend: function() {
-    var messages = Faye.map(this._messages, function(id, msg) { return msg });
-    this.request(messages);
+    var self = this;
+    setTimeout(function() {
+      var messages = Faye.map(self._messages, function(id, msg) { return msg });
+      self.request(messages);
+    }, 10);
   }
 });
 
