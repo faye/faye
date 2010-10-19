@@ -85,6 +85,7 @@ module Faye
     end
     
     def distribute_message(message)
+      return if message['error']
       @channels.glob(message['channel']).each do |channel|
         channel << message
         info('Publishing message ? from client ? to ?', message['data'], message['clientId'], channel.name)
@@ -93,7 +94,6 @@ module Faye
     
     def handle(message, socket = nil, local = false, &callback)
       return callback.call([]) if !message
-      return callback.call([make_response(message)]) if message['error']
       
       distribute_message(message)
       channel_name = message['channel']
@@ -104,7 +104,7 @@ module Faye
         callback.call([])
       else
         response = make_response(message)
-        response['successful'] = true
+        response['successful'] = !response['error']
         callback.call([response])
       end
     end

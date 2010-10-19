@@ -4,6 +4,13 @@ require File.dirname(__FILE__) + "/../lib/faye"
 class TestServer < Test::Unit::TestCase
   include Faye
   
+  class ErrorExtension
+    def incoming(message, callback)
+      message['error'] = 'Extension error'
+      callback.call(message)
+    end
+  end
+  
   def setup
     @server = Server.new
   end
@@ -460,4 +467,22 @@ class TestServer < Test::Unit::TestCase
       assert_equal  60000,            r.first['advice']['timeout']
     end
   end
+  
+  def test_errors_from_extensions
+    @server.add_extension(ErrorExtension.new)
+    
+    id = get_client_id
+    @server.send :process, ['channel' => '/meta/subscribe', 'subscription' => '/foo', 'clientId' => id], false do |r|
+      # MUST
+      assert_equal  '/meta/subscribe',    r.first['channel']
+      assert_equal  false,                r.first['successful']
+      assert_equal  id,                   r.first['clientId']
+      assert_equal  ['/foo'],             r.first['subscription']
+      # MAY
+      assert_equal  'Extension error',    r.first['error']
+      assert_equal  nil,                  r.first['id']
+      # MAY include advice, ext, timestamp
+    end
+  end
 end
+

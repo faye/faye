@@ -83,6 +83,7 @@ Faye.Server = Faye.Class({
   },
   
   _distributeMessage: function(message) {
+    if (message.error) return;
     Faye.each(this._channels.glob(message.channel), function(channel) {
       channel.push(message);
       this.info('Publishing message ? from client ? to ?', message.data, message.clientId, channel.name);
@@ -91,7 +92,6 @@ Faye.Server = Faye.Class({
   
   _handle: function(message, socket, local, callback, scope) {
     if (!message) return callback.call(scope, []);
-    if (message.error) return callback.call(scope, [this._makeResponse(message)]);
     
     this._distributeMessage(message);
     var channelName = message.channel, response;
@@ -102,7 +102,7 @@ Faye.Server = Faye.Class({
       callback.call(scope, []);
     } else {
       response = this._makeResponse(message);
-      response.successful = true;
+      response.successful = !response.error;
       callback.call(scope, [response]);
     }
   },
