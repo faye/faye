@@ -1,3 +1,14 @@
+=== 0.5.3 / 2010-10-21
+
+* Improve detection of wss: requirement for secure WebSocket connections
+* Correctly use default ports (80,443) for server-side HTTP connections
+* Support legacy application/x-www-form-urlencoded POST requests
+* Delete unused Channel objects that have all their subscribers removed
+* Fix resend/reconnect logic in WebSocket transport
+* Keep client script in memory rather than reading it from disk every time
+* Prevent error-adding extensions from breaking the core protocol
+
+
 === 0.5.2 / 2010-08-12
 
 * Support draft-76 of the WebSocket protocol (FF4, Chrome 6)
