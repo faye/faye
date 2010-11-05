@@ -76,11 +76,15 @@ AsyncScenario = Faye.Class({
     this._inbox[name]   = {};
     this._pool         += 1;
     
-    Faye.each(channels, function(channel) {
-      this.subscribe(name, channel);
-    }, this);
+    var completed = 0;
+    if (channels.length === 0) return Continue();
     
-    setTimeout(Continue, 500 * channels.length);
+    Faye.each(channels, function(channel) {
+      this.subscribe(name, channel, function() {
+        completed += 1;
+        if (completed === channels.length) Continue();
+      });
+    }, this);
   },
   
   subscribe: function(name, channel, Continue) {
@@ -92,7 +96,7 @@ AsyncScenario = Faye.Class({
       box[channel].push(message);
     }, this);
     
-    setTimeout(Continue, 500);
+    this._lastSub.callback(Continue);
   },
   
   cancelLastSubscription: function(Continue) {
