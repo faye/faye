@@ -15,7 +15,6 @@ module Faye
       @options   = options
       @interval  = @options[:interval] || INTERVAL
       @timeout   = @options[:timeout] || TIMEOUT
-      @channels  = Set.new
       @inbox     = Set.new
       @connected = false
       
@@ -27,22 +26,10 @@ module Faye
       @socket    = socket
     end
     
-    def on_message(event)
-      return unless @inbox.add?(event)
-      @socket.send(JSON.unparse(event)) if @socket
+    def deliver(message)
+      return unless @inbox.add?(message)
+      @socket.send(JSON.unparse(message)) if @socket
       begin_delivery_timeout
-    end
-    
-    def subscribe(channel)
-      return unless @channels.add?(channel)
-      channel.add_subscriber(:message, method(:on_message))
-    end
-    
-    def unsubscribe(channel)
-      return @channels.each(&method(:unsubscribe)) if channel == :all
-      return unless @channels.member?(channel)
-      @channels.delete(channel)
-      channel.remove_subscriber(:message, method(:on_message))
     end
     
     def connect(options, &block)
@@ -70,11 +57,6 @@ module Faye
       
       set_deferred_status(:succeeded, events)
       set_deferred_status(:deferred)
-    end
-    
-    def disconnect!
-      unsubscribe(:all)
-      flush!
     end
     
   private

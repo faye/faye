@@ -7,9 +7,13 @@ module Faye
     def initialize(options = {})
       info('New server created')
       @options     = options
-      @channels    = Channel::Tree.new
+      @engine      = Engine::Memory.new(options)
       @connections = {}
-      @namespace   = Namespace.new
+      
+      @engine.on_message do |client_id, message|
+        connection = @connections[client_id]
+        connection.deliver(message) if connection
+      end
     end
     
     def client_ids
@@ -68,7 +72,6 @@ module Faye
     end
     
     def destroy_connection(connection)
-      connection.disconnect!
       connection.remove_subscriber(:stale_connection, method(:destroy_connection))
       @connections.delete(connection.id)
     end
@@ -84,18 +87,11 @@ module Faye
       response
     end
     
-    def distribute_message(message)
-      return if message['error']
-      @channels.glob(message['channel']).each do |channel|
-        channel << message
-        info('Publishing message ? from client ? to ?', message['data'], message['clientId'], channel.name)
-      end
-    end
-    
     def handle(message, socket = nil, local = false, &callback)
       return callback.call([]) if !message
       
-      distribute_message(message)
+      info('Publishing message ? from client ? to ?', message['data'], message['clientId'], message['channel'])
+      @engine.distribute_message(message)
       channel_name = message['channel']
       
       if Channel.meta?(channel_name)
@@ -179,7 +175,7 @@ module Faye
       response['successful'] = response['error'].nil?
       return response unless response['successful']
       
-      client_id = @namespace.generate
+      client_id = @engine.create_client_id
       response['clientId'] = connection(client_id).id
       info('Accepting handshake from client ?', response['clientId'])
       response
@@ -225,6 +221,7 @@ module Faye
       return response unless response['successful']
       
       destroy_connection(connection)
+      @engine.disconnect(connection.id)
       
       info('Disconnected client: ?', client_id)
       response['clientId'] = client_id
@@ -248,16 +245,14 @@ module Faye
       
       response['subscription'] = subscription.compact
       
-      subscription.each do |channel_name|
+      subscription.each do |channel|
         next if response['error']
-        response['error'] = Error.channel_forbidden(channel_name) unless local or Channel.subscribable?(channel_name)
-        response['error'] = Error.channel_invalid(channel_name) unless Channel.valid?(channel_name)
+        response['error'] = Error.channel_forbidden(channel) unless local or Channel.subscribable?(channel)
+        response['error'] = Error.channel_invalid(channel) unless Channel.valid?(channel)
         
         next if response['error']
-        channel = @channels[channel_name] ||= Channel.new(channel_name)
-        
-        info('Subscribing client ? to ?', client_id, channel.name)
-        connection.subscribe(channel)
+        info('Subscribing client ? to ?', client_id, channel)
+        @engine.subscribe(client_id, channel)
       end
       
       response['successful'] = response['error'].nil?
@@ -281,20 +276,16 @@ module Faye
       
       response['subscription'] = subscription.compact
       
-      subscription.each do |channel_name|
+      subscription.each do |channel|
         next if response['error']
         
-        unless Channel.valid?(channel_name)
-          response['error'] = Error.channel_invalid(channel_name)
+        unless Channel.valid?(channel)
+          response['error'] = Error.channel_invalid(channel)
           next
         end
         
-        channel = @channels[channel_name]
-        next unless channel
-        
-        info('Unsubscribing client ? from ?', client_id, channel.name)
-        connection.unsubscribe(channel)
-        @channels.remove(channel_name) if channel.unused?
+        info('Unsubscribing client ? from ?', client_id, channel)
+        @engine.unsubscribe(client_id, channel)
       end
       
       response['successful'] = response['error'].nil?
