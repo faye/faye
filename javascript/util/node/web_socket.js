@@ -28,7 +28,7 @@ Faye.WebSocket = Faye.Class({
     this._head    = head;
     this._stream  = request.socket;
     
-    var scheme = request.socket.secure ? 'wss:' : 'ws:';
+    var scheme = Faye.WebSocket.isSecureConnection(request) ? 'wss:' : 'ws:';
     this.url = scheme + '//' + request.headers.host + request.url;    
     this.readyState = Faye.WebSocket.CONNECTING;
     this.bufferedAmount = 0;
@@ -130,6 +130,14 @@ Faye.extend(Faye.WebSocket, {
     return (headers['sec-websocket-key1'] && headers['sec-websocket-key2'])
          ? this.Protocol76
          : this.Protocol75;
+  },
+  
+  isSecureConnection: function(request) {
+    if (request.headers['x-forwarded-proto']) {
+      return request.headers['x-forwarded-proto'] == 'https';
+    } else {
+      return request.socket.secure;
+    }
   }
 });
 
