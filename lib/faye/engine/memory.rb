@@ -15,6 +15,13 @@ module Faye
         id
       end
       
+      def client_exists?(client_id)
+        @clients.has_key?(client_id)
+      end
+      
+      def ping(client_id)
+      end
+      
       def subscribe(client_id, channel_name)
         channel = @channels[channel_name] ||= Channel.new(channel_name)
         channel.add_subscriber(:message, lambda { |message|

@@ -71,7 +71,8 @@ module Faye
       @connections[id] = connection
     end
     
-    def destroy_connection(connection)
+    def destroy_connection(client_id)
+      connection = @connections[client_id]
       connection.remove_subscriber(:stale_connection, method(:destroy_connection))
       @connections.delete(connection.id)
     end
@@ -186,13 +187,11 @@ module Faye
     # MAY contain   * ext
     #               * id
     def connect(message, local = false)
-      response   = make_response(message)
-      
-      client_id  = message['clientId']
-      connection = client_id ? @connections[client_id] : nil
+      response        = make_response(message)
+      client_id       = message['clientId']
       connection_type = message['connectionType']
       
-      response['error'] = Error.client_unknown(client_id) if connection.nil?
+      response['error'] = Error.client_unknown(client_id) unless @engine.client_exists?(client_id)
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       response['error'] = Error.parameter_missing('connectionType') if connection_type.nil?
       
@@ -200,7 +199,9 @@ module Faye
       response.delete('clientId') unless response['successful']
       return response unless response['successful']
       
-      response['clientId'] = connection.id
+      @engine.ping(client_id)
+      
+      response['clientId'] = client_id
       response
     end
     
@@ -208,20 +209,18 @@ module Faye
     # MAY contain   * ext
     #               * id
     def disconnect(message, local = false)
-      response   = make_response(message)
+      response  = make_response(message)
+      client_id = message['clientId']
       
-      client_id  = message['clientId']
-      connection = client_id ? @connections[client_id] : nil
-      
-      response['error'] = Error.client_unknown(client_id) if connection.nil?
+      response['error'] = Error.client_unknown(client_id) unless @engine.client_exists?(client_id)
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       
       response['successful'] = response['error'].nil?
       response.delete('clientId') unless response['successful']
       return response unless response['successful']
       
-      destroy_connection(connection)
-      @engine.disconnect(connection.id)
+      destroy_connection(client_id)
+      @engine.disconnect(client_id)
       
       info('Disconnected client: ?', client_id)
       response['clientId'] = client_id
@@ -233,13 +232,11 @@ module Faye
     # MAY contain   * ext
     #               * id
     def subscribe(message, local = false)
-      response      = make_response(message)
+      response     = make_response(message)
+      client_id    = message['clientId']
+      subscription = [message['subscription']].flatten
       
-      client_id     = message['clientId']
-      connection    = client_id ? @connections[client_id] : nil
-      subscription  = [message['subscription']].flatten
-      
-      response['error'] = Error.client_unknown(client_id) if connection.nil?
+      response['error'] = Error.client_unknown(client_id) unless @engine.client_exists?(client_id)
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
       
@@ -264,13 +261,11 @@ module Faye
     # MAY contain   * ext
     #               * id
     def unsubscribe(message, local = false)
-      response      = make_response(message)
+      response     = make_response(message)
+      client_id    = message['clientId']
+      subscription = [message['subscription']].flatten
       
-      client_id     = message['clientId']
-      connection    = client_id ? @connections[client_id] : nil
-      subscription  = [message['subscription']].flatten
-      
-      response['error'] = Error.client_unknown(client_id) if connection.nil?
+      response['error'] = Error.client_unknown(client_id) unless @engine.client_exists?(client_id)
       response['error'] = Error.parameter_missing('clientId') if client_id.nil?
       response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
       

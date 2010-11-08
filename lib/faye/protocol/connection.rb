@@ -84,7 +84,7 @@ module Faye
     def begin_deletion_timeout
       return if @connected
       add_timeout(:deletion, TIMEOUT + 10 * @timeout) do
-        publish_event(:stale_connection, self)
+        publish_event(:stale_connection, @id)
       end
     end
     
