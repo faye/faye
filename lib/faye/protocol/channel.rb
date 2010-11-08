@@ -26,6 +26,16 @@ module Faye
     SERVICE     = :service
     
     class << self
+      def expand(name)
+        segments = parse(name)
+        channels = ['/**', name]
+        channels << unparse(segments[0..-2] + ['*'])
+        0.upto(segments.size - 2) do |i|
+          channels << unparse(segments[0..i] + ['**'])
+        end
+        channels
+      end
+      
       def valid?(name)
         Grammar::CHANNEL_NAME =~ name or
         Grammar::CHANNEL_PATTERN =~ name
@@ -34,6 +44,10 @@ module Faye
       def parse(name)
         return nil unless valid?(name)
         name.split('/')[1..-1].map { |s| s.to_sym }
+      end
+      
+      def unparse(segments)
+        '/' + segments.join('/')
       end
       
       def meta?(name)
