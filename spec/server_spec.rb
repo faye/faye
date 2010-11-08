@@ -14,17 +14,21 @@ describe Faye::Server do
                'version' => '1.0',
                'supportedConnectionTypes' => ['long-polling']}
     
-    server.__send__(:handshake, message)['clientId']
+    client_id = nil
+    server.__send__(:handshake, message) { |r| client_id = r['clientId'] }
+    client_id
   end
   
   def method_missing(action, local = false)
     message['channel'] = "/meta/#{action}"
-    @response ||= server.__send__(action, message, local)
+    return @response if defined?(@response)
+    server.__send__(action, message, local) { |r| @response = r }
+    @response
   end
   
   describe :handshake do
     before do
-      engine.stub(:create_client_id).and_return('the_id')
+      engine.stub(:create_client_id).and_callback('the_id')
     end
     
     describe "with valid parameters" do
@@ -131,7 +135,7 @@ describe Faye::Server do
     describe "with valid parameters" do
       let(:message) { {'clientId' => client_id, 'connectionType' => 'long-polling'} }
       
-      before { engine.should_receive(:client_exists?).with(client_id).and_return(true) }
+      before { engine.should_receive(:client_exists?).with(client_id).and_callback(true) }
       
       it "pings the engine to say the client is active" do
         engine.should_receive(:ping).with(client_id)
@@ -180,7 +184,7 @@ describe Faye::Server do
     describe "with an unrecognized clientId" do
       let(:message) { {'clientId' => 'anything', 'connectionType' => 'long-polling'} }
       
-      before { engine.should_receive(:client_exists?).with('anything').and_return(false) }
+      before { engine.should_receive(:client_exists?).with('anything').and_callback(false) }
       
       it "does not ping the engine" do
         engine.should_not_receive(:ping)
@@ -199,7 +203,7 @@ describe Faye::Server do
     describe "missing connectionType" do
       let(:message) { {'clientId' => client_id} }
       
-      before { engine.should_receive(:client_exists?).with(client_id).and_return(true) }
+      before { engine.should_receive(:client_exists?).with(client_id).and_callback(true) }
       
       it "does not ping the engine" do
         engine.should_not_receive(:ping)
@@ -222,7 +226,7 @@ describe Faye::Server do
     describe "with a clientId" do
       let(:message) { {'clientId' => client_id} }
       
-      before { engine.should_receive(:client_exists?).with(client_id).and_return(true) }
+      before { engine.should_receive(:client_exists?).with(client_id).and_callback(true) }
       
       it "tells the engine to disconnect the client" do
         engine.should_receive(:disconnect).with(client_id)
@@ -271,7 +275,7 @@ describe Faye::Server do
     describe "with an unrecognized clientId" do
       let(:message) { {'clientId' => 'anything'} }
       
-      before { engine.should_receive(:client_exists?).with('anything').and_return(false) }
+      before { engine.should_receive(:client_exists?).with('anything').and_callback(false) }
       
       it "does not tell the engine to disconnect" do
         engine.should_not_receive(:disconnect)
@@ -292,7 +296,7 @@ describe Faye::Server do
     describe "with a single subscription" do
       let(:message) { {'clientId' => client_id, 'subscription' => '/foo'} }
       
-      before { engine.should_receive(:client_exists?).with(client_id).and_return(true) }
+      before { engine.should_receive(:client_exists?).with(client_id).and_callback(true) }
       
       it "registers the subscription with the engine" do
         engine.should_receive(:subscribe).with(client_id, '/foo')
@@ -312,7 +316,7 @@ describe Faye::Server do
     describe "with a list of subscriptions" do
       let(:message) { {'clientId' => client_id, 'subscription' => ['/foo', '/bar']} }
       
-      before { engine.should_receive(:client_exists?).with(client_id).and_return(true) }
+      before { engine.should_receive(:client_exists?).with(client_id).and_callback(true) }
       
       it "registers the subscription with the engine" do
         engine.should_receive(:subscribe).with(client_id, '/foo')
@@ -333,7 +337,7 @@ describe Faye::Server do
     describe "with a single subscription pattern" do
       let(:message) { {'clientId' => client_id, 'subscription' => '/foo/**'} }
       
-      before { engine.should_receive(:client_exists?).with(client_id).and_return(true) }
+      before { engine.should_receive(:client_exists?).with(client_id).and_callback(true) }
       
       it "registers the subscription with the engine" do
         engine.should_receive(:subscribe).with(client_id, '/foo/**')
@@ -371,7 +375,7 @@ describe Faye::Server do
     describe "with an unrecognized clientId" do
       let(:message) { {'clientId' => 'anything', 'subscription' => '/foo'} }
       
-      before { engine.should_receive(:client_exists?).with('anything').and_return(false) }
+      before { engine.should_receive(:client_exists?).with('anything').and_callback(false) }
       
       it "does not register the subscription with the engine" do
         engine.should_not_receive(:subscribe)
@@ -392,7 +396,7 @@ describe Faye::Server do
     describe "missing subscription" do
       let(:message) { {'clientId' => client_id} }
       
-      before { engine.should_receive(:client_exists?).with(client_id).and_return(true) }
+      before { engine.should_receive(:client_exists?).with(client_id).and_callback(true) }
       
       it "does not register the subscription with the engine" do
         engine.should_not_receive(:subscribe)
@@ -517,13 +521,13 @@ describe Faye::Server do
     before do
       server.__send__(:subscribe, 'channel'      => '/meta/subscribe',
                                   'subscription' => '/my/channel',
-                                  'clientId'     => client_id)
+                                  'clientId'     => client_id) {}
     end
     
     describe "with a channel the client is subscribed to" do
       let(:message) { {'clientId' => client_id, 'subscription' => '/my/channel'} }
       
-      before { engine.should_receive(:client_exists?).with(client_id).and_return(true) }
+      before { engine.should_receive(:client_exists?).with(client_id).and_callback(true) }
       
       it "removes the subscription from the engine" do
         engine.should_receive(:unsubscribe).with(client_id, '/my/channel')
@@ -561,7 +565,7 @@ describe Faye::Server do
     describe "with an unrecognized clientId" do
       let(:message) { {'clientId' => 'anything', 'subscription' => '/my/channel'} }
       
-      before { engine.should_receive(:client_exists?).with('anything').and_return(false) }
+      before { engine.should_receive(:client_exists?).with('anything').and_callback(false) }
       
       it "does not remove the subscription from the engine" do
         engine.should_not_receive(:unsubscribe)
@@ -582,7 +586,7 @@ describe Faye::Server do
     describe "missing subscription" do
       let(:message) { {'clientId' => client_id} }
       
-      before { engine.should_receive(:client_exists?).with(client_id).and_return(true) }
+      before { engine.should_receive(:client_exists?).with(client_id).and_callback(true) }
       
       it "does not remove the subscription from the engine" do
         engine.should_not_receive(:unsubscribe)

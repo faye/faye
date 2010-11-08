@@ -9,14 +9,14 @@ module Faye
         @namespace = Namespace.new
       end
       
-      def create_client_id
+      def create_client_id(&callback)
         id = @namespace.generate
         @clients[id] = Set.new
-        id
+        callback.call(id)
       end
       
-      def client_exists?(client_id)
-        @clients.has_key?(client_id)
+      def client_exists?(client_id, &callback)
+        callback.call(@clients.has_key?(client_id))
       end
       
       def ping(client_id)
@@ -34,7 +34,7 @@ module Faye
         # TODO
       end
       
-      def distribute_message(message)
+      def distribute(message)
         return if message['error']
         @channels.glob(message['channel']).each { |c| c << message }
       end

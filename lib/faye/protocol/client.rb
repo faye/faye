@@ -281,7 +281,7 @@ module Faye
     def deliver_message(message)
       return unless message['channel'] and message['data']
       info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
-      @channels.distribute_message(message)
+      @channels.distribute(message)
     end
     
     def teardown_connection

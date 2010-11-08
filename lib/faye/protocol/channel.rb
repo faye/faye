@@ -164,7 +164,7 @@ module Faye
         end
       end
       
-      def distribute_message(message)
+      def distribute(message)
         glob(message['channel']).each do |channel|
           channel.publish_event(:message, message['data'])
         end
