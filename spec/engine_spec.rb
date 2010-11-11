@@ -36,9 +36,51 @@ unless $engine_spec
       end
     end
     
+    describe :ping do
+      before { options[:timeout] = 1 }
+      
+      it "removes a client if it does not ping often enough" do
+        engine.client_exists?(alice) { |e| e.should be_true }
+        sleep 2.5
+        engine.client_exists?(alice) { |e| e.should be_false }
+      end
+      
+      it "removes a client if it does not ping often enough" do
+        engine.client_exists?(alice) { |e| e.should be_true }
+        sleep 1.5
+        engine.ping(alice)
+        sleep 1.0
+        engine.client_exists?(alice) { |e| e.should be_true }
+      end
+    end
+    
+    describe :disconnect do
+      it "removes the given client" do
+        engine.disconnect(alice)
+        engine.client_exists?(alice) { |e| e.should be_false }
+      end
+      
+      describe "when the client has subscriptions" do
+        let(:inbox) { Hash.new { |h,k| h[k] = [] } }
+        let(:message) { {'channel' => '/messages/foo',    'data' => 'ok'} }
+        
+        before do
+          engine.on_message do |client_id, message|
+            inbox[client_id] << message
+          end
+          engine.subscribe(alice, '/messages/foo')
+        end
+        
+        it "stops the client receiving messages" do
+          engine.disconnect(alice)
+          engine.distribute(message)
+          inbox.should == {}
+        end
+      end
+    end
+    
     describe :distribute do
       let(:inbox) { Hash.new { |h,k| h[k] = [] } }
-      
       let(:message) { {'channel' => '/messages/foo',    'data' => 'ok'} }
       
       before do

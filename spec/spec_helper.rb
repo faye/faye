@@ -1,7 +1,7 @@
 require 'rspec/mocks'
 
 class RSpec::Mocks::MessageExpectation
-  def and_callback(value)
+  def and_yield(value)
     @return_block = lambda { |*args| args.last.call(value) }
   end
 end
