@@ -21,6 +21,7 @@ module Faye
       end
       
       def ping(client_id)
+        return unless Numeric === timeout
         remove_timeout(client_id)
         add_timeout(client_id, 2*timeout) { disconnect(client_id) }
       end
