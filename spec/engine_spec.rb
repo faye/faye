@@ -28,11 +28,11 @@ unless $engine_spec
     
     describe :client_exists? do
       it "returns true if the client id exists" do
-        engine.client_exists?(alice) { |e| e.should be_true }
+        engine.client_exists? alice, &should_yield(true)
       end
       
       it "returns false if the client id does not exist" do
-        engine.client_exists?('anything') { |e| e.should be_false }
+        engine.client_exists? 'anything', &should_yield(false)
       end
     end
     
@@ -40,24 +40,24 @@ unless $engine_spec
       before { options[:timeout] = 1 }
       
       it "removes a client if it does not ping often enough" do
-        engine.client_exists?(alice) { |e| e.should be_true }
+        engine.client_exists? alice, &should_yield(true)
         sleep 2.5
-        engine.client_exists?(alice) { |e| e.should be_false }
+        engine.client_exists? alice, &should_yield(false)
       end
       
       it "removes a client if it does not ping often enough" do
-        engine.client_exists?(alice) { |e| e.should be_true }
+        engine.client_exists? alice, &should_yield(true)
         sleep 1.5
         engine.ping(alice)
         sleep 1.0
-        engine.client_exists?(alice) { |e| e.should be_true }
+        engine.client_exists? alice, &should_yield(true)
       end
     end
     
     describe :disconnect do
       it "removes the given client" do
         engine.disconnect(alice)
-        engine.client_exists?(alice) { |e| e.should be_false }
+        engine.client_exists? alice, &should_yield(false)
       end
       
       describe "when the client has subscriptions" do
