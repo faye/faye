@@ -57,9 +57,17 @@ class Thin::Request
   def websocket?
     @env['HTTP_CONNECTION'] == 'Upgrade' && @env['HTTP_UPGRADE'] == 'WebSocket'
   end
+  
+  def secure_websocket?
+    if @env.has_key?('HTTP_X_FORWARDED_PROTO')
+      @env['HTTP_X_FORWARDED_PROTO'] == 'https' 
+    else
+      @env['HTTP_ORIGIN'] =~ /^https:/i
+    end
+  end
 
   def websocket_url
-    scheme = (@env['HTTP_ORIGIN'] =~ /^https:/i) ? 'wss:' : 'ws:'
+    scheme = secure_websocket? ? 'wss:' : 'ws:'
     @env['websocket.url'] = "#{ scheme }//#{ @env['HTTP_HOST'] }#{ @env['REQUEST_PATH'] }"
   end
 
