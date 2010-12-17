@@ -11,7 +11,7 @@ dir = File.dirname(__FILE__)
 require File.expand_path(dir + '/../../lib/faye')
 
 EM.run do
-  client = Faye::Client.new('http://localhost:9292/bayeux')
+  client = Faye::Client.new('http://localhost:8000/bayeux')
   
   client.subscribe '/from/*' do |message|
     user = message['user']
