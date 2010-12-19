@@ -166,6 +166,7 @@ Faye.Client = Faye.Class({
               }, this);
     
     this._validateChannel(channels);
+    var subscription = new Faye.Subscription(this, channels, callback, scope);
     
     this.connect(function() {
       this.info('Client ? attempting to subscribe to ?', this._clientId, channels);
@@ -181,11 +182,13 @@ Faye.Client = Faye.Class({
         var channels = [].concat(response.subscription);
         this.info('Subscription acknowledged for ? to ?', this._clientId, channels);
         this._channels.subscribe(channels, callback, scope);
+        
+        subscription.setDeferredStatus('succeeded');
       }, this);
       
     }, this);
     
-    return new Faye.Subscription(this, channels, callback, scope);
+    return subscription;
   },
   
   // Request                              Response

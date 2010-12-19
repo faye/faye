@@ -1,5 +1,6 @@
 module Faye
   class Subscription
+    include EventMachine::Deferrable
     
     def initialize(client, channels, callback)
       @client    = client

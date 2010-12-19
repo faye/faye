@@ -169,6 +169,7 @@ module Faye
       end
       
       validate_channel(channels)
+      subscription = Subscription.new(self, channels, block)
       
       connect {
         info('Client ? attempting to subscribe to ?', @client_id, channels)
@@ -184,10 +185,12 @@ module Faye
             channels = [response['subscription']].flatten
             info('Subscription acknowledged for ? to ?', @client_id, channels)
             @channels.subscribe(channels, block)
+            
+            subscription.set_deferred_status(:succeeded)
           end
         end
       }
-      Subscription.new(self, channels, block)
+      subscription
     end
     
     # Request                              Response

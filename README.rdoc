@@ -51,7 +51,6 @@ Fault tolerance:
 
 Notification API:
 
-* Add events to Subscriptions to notify the user when they are active
 * Notify listeners of network drop-out (may be transport dependent)
 * Provide reflection API for internal stats on channels, subscriptions, message queues
 * (Maybe) build a monitoring GUI into the server
