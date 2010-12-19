@@ -31,6 +31,10 @@ Faye.NodeAdapter = Faye.Class({
     this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]*)*(\\.js)?$');
     this._server     = new Faye.Server(this._options);
     this._failed     = {};
+    
+    var extensions = this._options.extensions;
+    if (!extensions) return;
+    Faye.each([].concat(extensions), this.addExtension, this);
   },
   
   addExtension: function(extension) {

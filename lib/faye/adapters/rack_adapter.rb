@@ -24,6 +24,9 @@ module Faye
       @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
       @endpoint_re = Regexp.new('^' + @endpoint + '(/[^/]*)*(\\.js)?$')
       @server      = Server.new(@options)
+      
+      return unless extensions = @options[:extensions]
+      [*extensions].each { |extension| add_extension(extension) }
     end
     
     def add_extension(extension)

@@ -57,7 +57,6 @@ Notification API:
 
 Sugar:
 
-* Provide better API for adding extensions to Rack middleware
 * Add sugar for authentication extensions for protected subscribe + publish
 
 Performance:
