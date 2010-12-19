@@ -9,7 +9,18 @@
   }})
 
   JS.require('JS.Set', 'JS.Range', 'JS.Test', function() {
-    JS.require('EngineSpec', JS.Test.method('autorun'))
+    
+    JS.Test.Unit.Assertions.include({
+      assertYield: function(expectedValue) {
+        var self = this
+        return function(actualValue) { self.assertEqual(expectedValue, actualValue) }
+      }
+    })
+    
+    JS.require( 'ChannelSpec',
+                'EngineSpec',
+                
+                JS.Test.method('autorun'))
   })
   
 })()

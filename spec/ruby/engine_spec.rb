@@ -42,7 +42,7 @@ shared_examples_for "faye engine" do
       engine.client_exists? alice, &should_yield(false)
     end
     
-    it "removes a client if it does not ping often enough" do
+    it "prolongs the life of a client" do
       engine.client_exists? alice, &should_yield(true)
       sleep 1.5
       engine.ping(alice)
@@ -59,7 +59,7 @@ shared_examples_for "faye engine" do
     
     describe "when the client has subscriptions" do
       let(:inbox) { Hash.new { |h,k| h[k] = [] } }
-      let(:message) { {'channel' => '/messages/foo',    'data' => 'ok'} }
+      let(:message) { {'channel' => '/messages/foo', 'data' => 'ok'} }
       
       before do
         engine.on_message do |client_id, message|
@@ -78,7 +78,7 @@ shared_examples_for "faye engine" do
   
   describe :distribute do
     let(:inbox) { Hash.new { |h,k| h[k] = [] } }
-    let(:message) { {'channel' => '/messages/foo',    'data' => 'ok'} }
+    let(:message) { {'channel' => '/messages/foo', 'data' => 'ok'} }
     
     before do
       engine.on_message do |client_id, message|
