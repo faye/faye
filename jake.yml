@@ -20,6 +20,8 @@ packages:
     - mixins/publisher
     - mixins/timeouts
     - mixins/logging
+    - engine/base
+    - engine/memory
     - protocol/grammar
     - protocol/extensible
     - protocol/channel

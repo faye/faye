@@ -5,16 +5,15 @@ module Faye
       include Timeouts
       
       def initialize(options = {})
-        @options = options
+        @options   = options
+        @listeners = []
       end
       
       def on_message(&block)
-        @listeners ||= []
         @listeners << block
       end
       
       def announce(client_id, message)
-        return unless @listeners
         @listeners.each { |block| block.call(client_id, message) }
       end
       

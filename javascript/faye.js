@@ -23,6 +23,8 @@ Faye.extend(Faye, {
   
   ENV: (function() { return this })(),
   
+  Engine: {},
+  
   random: function(bitlength) {
     bitlength = bitlength || this.ID_LENGTH;
     if (bitlength > 32) {
