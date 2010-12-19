@@ -34,8 +34,8 @@
     require File.dirname(__FILE__) + '/app'
     
     use Faye::RackAdapter, :mount      => '/faye',
-                       :timeout    => 45,
-                       :extensions => [MyExtension.new]
+                           :timeout    => 45,
+                           :extensions => [MyExtension.new]
     
     run Sinatra::Application</pre>
     
