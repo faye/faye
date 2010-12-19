@@ -1,3 +1,12 @@
+=== 0.5.4 / 2010-12-19
+
+* Add a #callback method to Subscriptions to detect when they become active
+* Add :extensions option to RackAdapter to make it easier to extend middleware
+* Detect secure WebSocket requests through the HTTP_X_FORWARDED_PROTO header
+* Handle socket errors when sending WebSocket messages from NodeAdapter
+* Use exponential backoff to reconnect client-side WebSockets to reduce CPU load
+
+
 === 0.5.3 / 2010-10-21
 
 * Improve detection of wss: requirement for secure WebSocket connections

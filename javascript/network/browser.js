@@ -4,6 +4,7 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
   CONNECTED:      3,
   
   request: function(messages, timeout) {
+    this._timeout = this._timeout || timeout;
     this._messages = this._messages || {};
     Faye.each(messages, function(message) {
       this._messages[message.id] = message;
@@ -30,6 +31,7 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
     var self = this;
     
     this._socket.onopen = function() {
+      delete self._timeout;
       self._state = self.CONNECTED;
       self.setDeferredStatus('succeeded', self._socket);
     };
@@ -43,12 +45,15 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
     };
     
     this._socket.onclose = function() {
-      var connected = (self._state === self.CONNECTED);
+      var wasConnected = (self._state === self.CONNECTED);
       self.setDeferredStatus('deferred');
       self._state = self.UNCONNECTED;
-      self._socket = null;
-      if (connected) self.resend();
-      else self.connect();
+      delete self._socket;
+      
+      if (wasConnected) return self.resend();
+      
+      setTimeout(function() { self.connect() }, 1000 * self._timeout);
+      self._timeout = self._timeout * 2;
     };
   },
   

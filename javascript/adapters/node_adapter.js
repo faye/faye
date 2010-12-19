@@ -30,6 +30,11 @@ Faye.NodeAdapter = Faye.Class({
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
     this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]*)*(\\.js)?$');
     this._server     = new Faye.Server(this._options);
+    this._failed     = {};
+    
+    var extensions = this._options.extensions;
+    if (!extensions) return;
+    Faye.each([].concat(extensions), this.addExtension, this);
   },
   
   addExtension: function(extension) {
@@ -118,12 +123,29 @@ Faye.NodeAdapter = Faye.Class({
     var socket = new Faye.WebSocket(request, head),
         self   = this;
     
+    var send = function(messages) {
+      try {
+        socket.send(JSON.stringify(messages));
+      } catch (e) {
+        self._failed[socket.clientId] = messages;
+      }
+    };
+    
     socket.onmessage = function(message) {
       try {
-        var message = JSON.parse(message.data);
-        self._server.process(message, socket, function(replies) {
-          socket.send(JSON.stringify(replies));
-        });
+        var message  = JSON.parse(message.data),
+            clientId = self._server.determineClient(message),
+            failed   = null;
+        
+        if (clientId) {
+          socket.clientId = clientId;
+          if (failed = self._failed[clientId]) {
+            delete self._failed[clientId];
+            send(failed);
+          }
+        }
+        
+        self._server.process(message, socket, send);
       } catch (e) {}
     };
   },

@@ -135,7 +135,7 @@ module Scenario
         box[channel] << message
       end
       
-      EM.add_timer(0.5, &block)
+      @last_sub.callback(&block)
     end
     
     def cancel_last_subscription(&block)

@@ -92,7 +92,7 @@ AsyncScenario = Faye.Class({
       box[channel].push(message);
     }, this);
     
-    setTimeout(Continue, 500);
+    this._lastSub.callback(Continue);
   },
   
   cancelLastSubscription: function(Continue) {

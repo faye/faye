@@ -17,7 +17,7 @@ and one for Rack. To run the Node.js version:
 To run the Rack version you need a few gems first:
 
   sudo gem install eventmachine thin rack json sinatra
-  rackup -s thin -E production examples/rack/config.ru
+  rackup -s thin -E production -p 8000 examples/rack/config.ru
 
 Note that Faye does not depend on Sinatra; the demo just uses it to
 provide a concrete app behind the Faye middleware.

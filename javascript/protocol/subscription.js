@@ -18,3 +18,5 @@ Faye.Subscription = Faye.Class({
   }
 });
 
+Faye.extend(Faye.Subscription.prototype, Faye.Deferrable);
+

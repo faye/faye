@@ -87,6 +87,13 @@
     
     <pre class="prettyprint">subscription.cancel();</pre>
     
+    It also lets you add callbacks that will run as soon as the subcription
+    has been set up and acknowledged by the server:
+    
+    <pre class="prettyprint">subscription.callback(function() {
+      alert('Subscription is now active!');
+    });</pre>
+    
     h4. Sending messages
     
     Clients do not send each other messages directly, instead they send

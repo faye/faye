@@ -11,6 +11,17 @@ Faye.Server = Faye.Class({
     return Faye.map(this._connections, function(key, value) { return key });
   },
   
+  determineClient: function(messages) {
+    messages = [].concat(messages);
+    var i = messages.length, message;
+    while (i--) {
+      message = messages[i];
+      if (message.channel === Faye.Channel.CONNECT)
+        return message.clientId;
+    }
+    return null;
+  },
+  
   process: function(messages, localOrRemote, callback, scope) {
     var socket = (localOrRemote instanceof Faye.WebSocket) ? localOrRemote : null,
         local  = (localOrRemote === true);

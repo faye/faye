@@ -23,6 +23,8 @@
     * @:timeout@: the maximum time to hold a connection open before
       returning the response. This is given in seconds and must be smaller
       than the timeout on your frontend webserver.
+    * @:extensions@: (optional) a list of extensions to add to the server,
+      useful when using @RackAdapter@ as middleware.
     
     Faye can also be setup as middleware, for example in front of a
     Sinatra application:
@@ -31,7 +33,10 @@
     require 'faye'
     require File.dirname(__FILE__) + '/app'
     
-    use Faye::RackAdapter, :mount => '/faye', :timeout => 45
+    use Faye::RackAdapter, :mount      => '/faye',
+                           :timeout    => 45,
+                           :extensions => [MyExtension.new]
+    
     run Sinatra::Application</pre>
     
     h4. Notes
