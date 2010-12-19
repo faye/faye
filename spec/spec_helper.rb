@@ -18,5 +18,3 @@ root = File.expand_path(File.dirname(__FILE__) + '/..')
 require root + '/lib/faye'
 Faye.ensure_reactor_running!
 
-require 'engine_spec'
-
