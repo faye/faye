@@ -178,12 +178,17 @@ Faye.extend(Faye.WebSocket, {
   
   Faye.WebSocket.Protocol75 = {
     handshake: function(url, request, head, socket) {
-      socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n');
-      socket.write('Upgrade: WebSocket\r\n');
-      socket.write('Connection: Upgrade\r\n');
-      socket.write('WebSocket-Origin: ' + request.headers.origin + '\r\n');
-      socket.write('WebSocket-Location: ' + url + '\r\n');
-      socket.write('\r\n');
+      try {
+        socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n');
+        socket.write('Upgrade: WebSocket\r\n');
+        socket.write('Connection: Upgrade\r\n');
+        socket.write('WebSocket-Origin: ' + request.headers.origin + '\r\n');
+        socket.write('WebSocket-Location: ' + url + '\r\n');
+        socket.write('\r\n');
+      } catch (e) {
+        // socket closed while writing
+        // TODO client should switch transports
+      }
     },
     
     send: function(socket, message) {
@@ -205,13 +210,18 @@ Faye.extend(Faye.WebSocket, {
       MD5.update(bigEndian(value2));
       MD5.update(head.toString('binary'));
       
-      socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n', 'binary');
-      socket.write('Upgrade: WebSocket\r\n', 'binary');
-      socket.write('Connection: Upgrade\r\n', 'binary');
-      socket.write('Sec-WebSocket-Origin: ' + request.headers.origin + '\r\n', 'binary');
-      socket.write('Sec-WebSocket-Location: ' + url + '\r\n', 'binary');
-      socket.write('\r\n', 'binary');
-      socket.write(MD5.digest('binary'), 'binary');
+      try {
+        socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n', 'binary');
+        socket.write('Upgrade: WebSocket\r\n', 'binary');
+        socket.write('Connection: Upgrade\r\n', 'binary');
+        socket.write('Sec-WebSocket-Origin: ' + request.headers.origin + '\r\n', 'binary');
+        socket.write('Sec-WebSocket-Location: ' + url + '\r\n', 'binary');
+        socket.write('\r\n', 'binary');
+        socket.write(MD5.digest('binary'), 'binary');
+      } catch (e) {
+        // socket closed while writing
+        // TODO client should switch transports
+      }
     },
     
     send: function(socket, message) {
