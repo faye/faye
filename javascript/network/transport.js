@@ -29,21 +29,21 @@ Faye.Transport = Faye.extend(Faye.Class({
   }
   
 }), {
-  get: function(client, connectionTypes) {
+  get: function(client, connectionTypes, callback, scope) {
     var endpoint = client._endpoint;
     if (connectionTypes === undefined) connectionTypes = this.supportedConnectionTypes();
     
-    var candidateClass = null;
-    Faye.each(this._transports, function(pair) {
+    Faye.asyncEach(this._transports, function(pair, resume) {
       var connType = pair[0], klass = pair[1];
-      if (Faye.indexOf(connectionTypes, connType) < 0) return;
-      if (candidateClass) return;
-      if (klass.isUsable(endpoint)) candidateClass = klass;
+      if (Faye.indexOf(connectionTypes, connType) < 0) return resume();
+      
+      klass.isUsable(endpoint, function(isUsable) {
+        if (isUsable) callback.call(scope, new klass(client, endpoint));
+        else resume();
+      });
+    }, function() {
+      throw 'Could not find a usable connection type for ' + endpoint;
     });
-    
-    if (!candidateClass) throw 'Could not find a usable connection type for ' + endpoint;
-    
-    return new candidateClass(client, endpoint);
   },
   
   register: function(type, klass) {
