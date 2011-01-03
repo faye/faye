@@ -164,14 +164,9 @@ Faye.extend(Faye.WebSocket, {
   };
   
   var writeToSocket = function(socket, message) {
-    try {
-      socket.write(FRAME_START, 'binary');
-      socket.write(message, 'utf8');
-      socket.write(FRAME_END, 'binary');
-    } catch (e) {
-      // socket closed while writing
-      // server will keep message and retry when a new socket is open
-    }
+    socket.write(FRAME_START, 'binary');
+    socket.write(message, 'utf8');
+    socket.write(FRAME_END, 'binary');
   };
   
   var FRAME_START = byteToChar('00'),
