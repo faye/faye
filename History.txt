@@ -1,3 +1,9 @@
+=== 0.5.5 / 2011-01-16
+
+* Open a real socket to check for WebSocket usability, not just object detection
+* Catch server-side errors when handshaking with WebSockets
+
+
 === 0.5.4 / 2010-12-19
 
 * Add a #callback method to Subscriptions to detect when they become active
