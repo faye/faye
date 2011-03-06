@@ -100,25 +100,20 @@ Faye.NodeAdapter = Faye.Class({
         response.end();
       });
     
-    try {
-      if (requestMethod === 'GET') {
-        this._callWithParams(request, response, requestUrl.query);
+    if (requestMethod === 'GET') {
+      this._callWithParams(request, response, requestUrl.query);
+      
+    } else if (requestMethod === 'POST') {
+      Faye.withDataFor(request, function(data) {
+        var type   = (request.headers['content-type'] || '').split(';')[0],
+            params = (type === 'application/json')
+                   ? {message: data}
+                   : querystring.parse(data);
         
-      } else if (requestMethod === 'POST') {
-        Faye.withDataFor(request, function(data) {
-          var type   = request.headers['content-type'].split(';')[0],
-              
-              params = (type === 'application/json')
-                     ? {message: data}
-                     : querystring.parse(data);
-          
-          self._callWithParams(request, response, params);
-        });
-        
-      } else {
-        this._returnError(response);
-      }
-    } catch (e) {
+        self._callWithParams(request, response, params);
+      });
+      
+    } else {
       this._returnError(response);
     }
   },
@@ -155,20 +150,24 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   _callWithParams: function(request, response, params) {
-    var message = JSON.parse(params.message),
-        jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
-        isGet   = (request.method === 'GET'),
-        type    = isGet ? this.TYPE_SCRIPT : this.TYPE_JSON;
-    
-    if (isGet) this._server.flushConnection(message);
-    
-    this._server.process(message, false, function(replies) {
-      var body = JSON.stringify(replies);
-      if (isGet) body = jsonp + '(' + body + ');';
-      response.writeHead(200, type);
-      response.write(body);
-      response.end();
-    });
+    try {
+      var message = JSON.parse(params.message),
+          jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
+          isGet   = (request.method === 'GET'),
+          type    = isGet ? this.TYPE_SCRIPT : this.TYPE_JSON;
+          
+      if (isGet) this._server.flushConnection(message);
+      
+      this._server.process(message, false, function(replies) {
+        var body = JSON.stringify(replies);
+        if (isGet) body = jsonp + '(' + body + ');';
+        response.writeHead(200, type);
+        response.write(body);
+        response.end();
+      });
+    } catch (e) {
+      this._returnError(response);
+    }
   },
   
   _returnError: function(response) {
