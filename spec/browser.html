@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Faye test suite</title>
+    <script type="text/javascript" src="../build/faye-browser-min.js"></script>
+    <script type="text/javascript" src="../vendor/js.class/build/min/loader.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript">
+      
+      JS.Packages(function() { with(this) {
+        autoload(/.*Spec/, {from: './javascript'})
+      }})
+
+      JS.require('JS.Test', 'JS.Range', function() {
+        JS.Test.Unit.Assertions.include({
+          assertYield: function(expected) {
+            var testcase = this
+            return function(actual) { testcase.assertEqual(expected, actual) }
+          }
+        })
+        
+        JS.require( 'ChannelSpec',
+                    JS.Test.method('autorun'))
+      })
+      
+    </script>
+  </body>
+</html>
+

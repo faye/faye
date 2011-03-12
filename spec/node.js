@@ -6,7 +6,6 @@ JS.Packages(function() { with(this) {
   autoload(/.*Spec/, {from: 'spec/javascript'})
 }})
 
-
 JS.require('Faye', 'JS.Test', 'JS.Range', function() {
   JS.Test.Unit.Assertions.include({
     assertYield: function(expected) {
