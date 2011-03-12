@@ -1,6 +1,7 @@
 JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
   before(function() { with(this) {
-    this.engine = new Faye.Engine.Memory()
+    this.engine = {}
+    stub(engine, "addSubscriber")
     stub(Faye.Engine, "get").returns(engine)
     this.server = new Faye.Server()
   }})
@@ -147,6 +148,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       }})
       
       it("returns a successful response", function() { with(this) {
+        stub(engine, "ping")
         server.connect(message, false, function(response) {
           assertEqual({
               channel:    "/meta/connect",
@@ -160,6 +162,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         before(function() { this.message.id = "foo" })
         
         it("returns the same id", function() { with(this) {
+          stub(engine, "ping")
           server.connect(message, false, function(response) {
             assertEqual({
                 channel:    "/meta/connect",
