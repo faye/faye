@@ -1,3 +1,5 @@
+.DS_Store
+.redcar
 build
 *.rbc
 examples/node/faye*

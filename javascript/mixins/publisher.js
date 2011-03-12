@@ -23,6 +23,10 @@ Faye.Publisher = {
     }
   },
   
+  removeSubscribers: function() {
+    this._subscribers = {};
+  },
+  
   publishEvent: function() {
     var args = Array.prototype.slice.call(arguments),
         eventType = args.shift();

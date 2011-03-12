@@ -33,6 +33,8 @@ packages:
       - util/set
       - util/node/web_socket
       - error
+      - engines/base
+      - engines/memory
       - protocol/server
       - protocol/connection
       - network/node

@@ -24,6 +24,23 @@ Faye.extend(Faye.Channel, {
   META:         '<%= Faye::Channel::META %>',
   SERVICE:      '<%= Faye::Channel::SERVICE %>',
   
+  expand: function(name) {
+    var segments = this.parse(name),
+        channels = ['/**', name];
+    
+    var copy = segments.slice();
+    copy[copy.length - 1] = '*';
+    channels.push(this.unparse(copy));
+    
+    for (var i = 1, n = segments.length; i < n; i++) {
+      copy = segments.slice(0, i);
+      copy.push('**');
+      channels.push(this.unparse(copy));
+    }
+    
+    return channels;
+  },
+  
   isValid: function(name) {
     return Faye.Grammar.CHANNEL_NAME.test(name) ||
            Faye.Grammar.CHANNEL_PATTERN.test(name);
@@ -32,6 +49,10 @@ Faye.extend(Faye.Channel, {
   parse: function(name) {
     if (!this.isValid(name)) return null;
     return name.split('/').slice(1);
+  },
+  
+  unparse: function(segments) {
+    return '/' + segments.join('/');
   },
   
   isMeta: function(name) {

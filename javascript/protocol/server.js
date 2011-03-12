@@ -1,14 +1,47 @@
 Faye.Server = Faye.Class({
   initialize: function(options) {
-    this.info('New server created');
     this._options     = options || {};
-    this._channels    = new Faye.Channel.Tree();
     this._connections = {};
-    this._namespace   = new Faye.Namespace();
+    this._engine      = Faye.Engine.get('memory', options);
+    
+    this._engine.addSubscriber('message', function(clientId, message) {
+      var connection = this._connection(clientId);
+      connection.deliver(message);
+    }, this);
+    
+    this._engine.addSubscriber('disconnect', function(clientId) {
+      var connection = this._connections[clientId];
+      this._destroyConnection(connection);
+    }, this);
   },
   
-  clientIds: function() {
-    return Faye.map(this._connections, function(key, value) { return key });
+  _connection: function(id) {
+    if (this._connections.hasOwnProperty(id)) return this._connections[id];
+    var connection = new Faye.Connection(id, this._options);
+    connection.addSubscriber('staleConnection', this._destroyConnection, this);
+    return this._connections[id] = connection;
+  },
+  
+  _destroyConnection: function(connection) {
+    if (!connection) return;
+    connection.flush();
+    connection.removeSubscribers();
+    delete this._connections[connection.id];
+  },
+  
+  _acceptConnection: function(options, response, socket, callback, scope) {
+    var connection = this._connection(response.clientId);
+    connection.connect(options, function(events) {
+      callback.call(scope, [response].concat(events));
+    }, this);
+  },
+  
+  flushConnection: function(messages) {
+    messages = [].concat(messages);
+    Faye.each(messages, function(message) {
+      var connection = this._connections[message.clientId];
+      if (connection) connection.flush();
+    }, this);
   },
   
   determineClient: function(messages) {
@@ -25,8 +58,6 @@ Faye.Server = Faye.Class({
   process: function(messages, localOrRemote, callback, scope) {
     var socket = (localOrRemote instanceof Faye.WebSocket) ? localOrRemote : null,
         local  = (localOrRemote === true);
-    
-    this.debug('Processing messages from ? client', local ? 'LOCAL' : 'REMOTE');
     
     messages = [].concat(messages);
     var processed = 0, responses = [];
@@ -63,27 +94,6 @@ Faye.Server = Faye.Class({
     }, this);
   },
   
-  flushConnection: function(messages) {
-    messages = [].concat(messages);
-    Faye.each(messages, function(message) {
-      var connection = this._connections[message.clientId];
-      if (connection) connection.flush();
-    }, this);
-  },
-  
-  _connection: function(id) {
-    if (this._connections.hasOwnProperty(id)) return this._connections[id];
-    var connection = new Faye.Connection(id, this._options);
-    connection.addSubscriber('staleConnection', this._destroyConnection, this);
-    return this._connections[id] = connection;
-  },
-  
-  _destroyConnection: function(connection) {
-    connection.disconnect();
-    connection.removeSubscriber('staleConnection', this._destroyConnection, this);
-    delete this._connections[connection.id];
-  },
-  
   _makeResponse: function(message) {
     var response = {};
     Faye.each(['id', 'clientId', 'channel', 'error'], function(field) {
@@ -93,18 +103,10 @@ Faye.Server = Faye.Class({
     return response;
   },
   
-  _distributeMessage: function(message) {
-    if (message.error) return;
-    Faye.each(this._channels.glob(message.channel), function(channel) {
-      channel.push(message);
-      this.info('Publishing message ? from client ? to ?', message.data, message.clientId, channel.name);
-    }, this);
-  },
-  
   _handle: function(message, socket, local, callback, scope) {
     if (!message) return callback.call(scope, []);
     
-    this._distributeMessage(message);
+    this._engine.distribute(message);
     var channelName = message.channel, response;
     
     if (Faye.Channel.isMeta(channelName)) {
@@ -119,34 +121,20 @@ Faye.Server = Faye.Class({
   },
   
   _handleMeta: function(message, socket, local, callback, scope) {
-    var response = this[Faye.Channel.parse(message.channel)[1]](message, local);
+    var method = Faye.Channel.parse(message.channel)[1];
     
-    this._advize(response);
-    
-    if (response.channel === Faye.Channel.CONNECT && response.successful === true)
-      return this._acceptConnection(message.advice, response, socket, callback, scope);
-    
-    callback.call(scope, [response]);
-  },
-  
-  _acceptConnection: function(options, response, socket, callback, scope) {
-    this.info('Accepting connection from ?', response.clientId);
-    
-    var connection = this._connection(response.clientId);
-    
-    // Disabled because CometD doesn't like messages not being
-    // delivered as part of a /meta/* response
-    // if (socket) return connection.setSocket(socket);
-    
-    connection.connect(options, function(events) {
-      this.info('Sending event messages to ?', response.clientId);
-      this.debug('Events for ?: ?', response.clientId, events);
-      callback.call(scope, [response].concat(events));
+    this[method](message, local, function(response) {
+      this._advize(response);
+      
+      if (response.channel === Faye.Channel.CONNECT && response.successful === true)
+        return this._acceptConnection(message.advice, response, socket, callback, scope);
+      
+      callback.call(scope, [response]);
     }, this);
   },
   
   _advize: function(response) {
-    var connection = this._connections[response.clientId];
+    var connection = response.clientId && this._connection(response.clientId);
     
     response.advice = response.advice || {};
     if (connection) {
@@ -167,7 +155,7 @@ Faye.Server = Faye.Class({
   // MAY contain   * minimumVersion
   //               * ext
   //               * id
-  handshake: function(message, local) {
+  handshake: function(message, local, callback, scope) {
     var response = this._makeResponse(message);
     response.version = Faye.BAYEUX_VERSION;
     
@@ -192,130 +180,117 @@ Faye.Server = Faye.Class({
     }
     
     response.successful = !response.error;
-    if (!response.successful) return response;
+    if (!response.successful) return callback.call(scope, response);
     
-    var clientId = this._namespace.generate();
-    response.clientId = this._connection(clientId).id;
-    this.info('Accepting handshake from client ?', response.clientId);
-    return response;
+    this._engine.createClient(function(clientId) {
+      response.clientId = clientId;
+      callback.call(scope, response);
+    }, this);
   },
   
   // MUST contain  * clientId
   //               * connectionType
   // MAY contain   * ext
   //               * id
-  connect: function(message, local) {
-    var response   = this._makeResponse(message);
-    
-    var clientId   = message.clientId,
-        connection = clientId ? this._connections[clientId] : null,
+  connect: function(message, local, callback, scope) {
+    var response       = this._makeResponse(message),
+        clientId       = message.clientId,
         connectionType = message.connectionType;
     
-    if (!connection)     response.error = Faye.Error.clientUnknown(clientId);
-    if (!clientId)       response.error = Faye.Error.parameterMissing('clientId');
-    if (!connectionType) response.error = Faye.Error.parameterMissing('connectionType');
-    
-    response.successful = !response.error;
-    if (!response.successful) delete response.clientId;
-    if (!response.successful) return response;
-    
-    response.clientId = connection.id;
-    return response;
+    this._engine.clientExists(clientId, function(exists) {
+      if (!exists)         response.error = Faye.Error.clientUnknown(clientId);
+      if (!clientId)       response.error = Faye.Error.parameterMissing('clientId');
+      if (!connectionType) response.error = Faye.Error.parameterMissing('connectionType');
+      
+      response.successful = !response.error;
+      if (!response.successful) delete response.clientId;
+      
+      if (response.successful) this._engine.ping(clientId);
+      callback.call(scope, response);
+    }, this);
   },
   
   // MUST contain  * clientId
   // MAY contain   * ext
   //               * id
-  disconnect: function(message, local) {
-    var response   = this._makeResponse(message);
+  disconnect: function(message, local, callback, scope) {
+    var response = this._makeResponse(message),
+        clientId = message.clientId;
     
-    var clientId   = message.clientId,
-        connection = clientId ? this._connections[clientId] : null;
-    
-    if (!connection) response.error = Faye.Error.clientUnknown(clientId);
-    if (!clientId)   response.error = Faye.Error.parameterMissing('clientId');
-    
-    response.successful = !response.error;
-    if (!response.successful) delete response.clientId;
-    if (!response.successful) return response;
-    
-    this._destroyConnection(connection);
-    
-    this.info('Disconnected client: ?', clientId);
-    response.clientId = clientId;
-    return response;
+    this._engine.clientExists(clientId, function(exists) {
+      if (!exists)   response.error = Faye.Error.clientUnknown(clientId);
+      if (!clientId) response.error = Faye.Error.parameterMissing('clientId');
+      
+      response.successful = !response.error;
+      if (!response.successful) delete response.clientId;
+      
+      if (response.successful) this._engine.destroyClient(clientId);
+      callback.call(scope, response);
+    }, this);
   },
   
   // MUST contain  * clientId
   //               * subscription
   // MAY contain   * ext
   //               * id
-  subscribe: function(message, local) {
-    var response     = this._makeResponse(message);
-    
-    var clientId     = message.clientId,
-        connection   = clientId ? this._connections[clientId] : null,
+  subscribe: function(message, local, callback, scope) {
+    var response     = this._makeResponse(message),
+        clientId     = message.clientId,
         subscription = message.subscription;
     
-    subscription = [].concat(subscription);
+    subscription = subscription ? [].concat(subscription) : [];
     
-    if (!connection)           response.error = Faye.Error.clientUnknown(clientId);
-    if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
-    if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
-    
-    response.subscription = subscription;
-    
-    Faye.each(subscription, function(channelName) {
-      if (response.error) return;
-      if (!local && !Faye.Channel.isSubscribable(channelName)) response.error = Faye.Error.channelForbidden(channelName);
-      if (!Faye.Channel.isValid(channelName))                  response.error = Faye.Error.channelInvalid(channelName);
+    this._engine.clientExists(clientId, function(exists) {
+      if (!exists)               response.error = Faye.Error.clientUnknown(clientId);
+      if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
+      if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
       
-      if (response.error) return;
-      var channel = this._channels.findOrCreate(channelName);
+      response.subscription = subscription;
       
-      this.info('Subscribing client ? to ?', clientId, channel.name);
-      connection.subscribe(channel);
+      Faye.each(subscription, function(channel) {
+        if (response.error) return;
+        if (!local && !Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
+        if (!Faye.Channel.isValid(channel))                  response.error = Faye.Error.channelInvalid(channel);
+        
+        if (response.error) return;
+        this._engine.subscribe(clientId, channel);
+      }, this);
+      
+      response.successful = !response.error;
+      callback.call(scope, response);
     }, this);
-    
-    response.successful = !response.error;
-    return response;
   },
   
   // MUST contain  * clientId
   //               * subscription
   // MAY contain   * ext
   //               * id
-  unsubscribe: function(message, local) {
-    var response     = this._makeResponse(message);
-    
-    var clientId     = message.clientId,
-        connection   = clientId ? this._connections[clientId] : null,
+  unsubscribe: function(message, local, callback, scope) {
+    var response     = this._makeResponse(message),
+        clientId     = message.clientId,
         subscription = message.subscription;
     
-    subscription = [].concat(subscription);
+    subscription = subscription ? [].concat(subscription) : [];
     
-    if (!connection)           response.error = Faye.Error.clientUnknown(clientId);
-    if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
-    if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
-    
-    response.subscription = subscription;
-    
-    Faye.each(subscription, function(channelName) {
-      if (response.error) return;
+    this._engine.clientExists(clientId, function(exists) {
+      if (!exists)               response.error = Faye.Error.clientUnknown(clientId);
+      if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
+      if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
       
-      if (!Faye.Channel.isValid(channelName))
-        return response.error = Faye.Error.channelInvalid(channelName);
+      response.subscription = subscription;
       
-      var channel = this._channels.get(channelName);
-      if (!channel) return;
+      Faye.each(subscription, function(channel) {
+        if (response.error) return;
+        if (!local && !Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
+        if (!Faye.Channel.isValid(channel))                  response.error = Faye.Error.channelInvalid(channel);
+        
+        if (response.error) return;
+        this._engine.unsubscribe(clientId, channel);
+      }, this);
       
-      this.info('Unsubscribing client ? from ?', clientId, channel.name);
-      connection.unsubscribe(channel);
-      if (channel.isUnused()) this._channels.remove(channelName);
+      response.successful = !response.error;
+      callback.call(scope, response);
     }, this);
-    
-    response.successful = !response.error;
-    return response;
   }
 });
 

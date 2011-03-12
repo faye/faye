@@ -8,7 +8,6 @@ Faye.Connection = Faye.Class({
     this._options   = options;
     this.interval   = this._options.interval || this.INTERVAL;
     this.timeout    = this._options.timeout || this.TIMEOUT;
-    this._channels  = new Faye.Set();
     this._inbox     = new Faye.Set();
     this._connected = false;
     
@@ -20,22 +19,11 @@ Faye.Connection = Faye.Class({
     this._socket    = socket;
   },
   
-  _onMessage: function(event) {
+  deliver: function(event) {
     if (!this._inbox.add(event)) return;
     if (this._socket) this._socket.send(Faye.toJSON(event));
+    this.removeTimeout('deletion');
     this._beginDeliveryTimeout();
-  },
-  
-  subscribe: function(channel) {
-    if (!this._channels.add(channel)) return;
-    channel.addSubscriber('message', this._onMessage, this);
-  },
-  
-  unsubscribe: function(channel) {
-    if (channel === 'all') return this._channels.forEach(this.unsubscribe, this);
-    if (!this._channels.member(channel)) return;
-    this._channels.remove(channel);
-    channel.removeSubscriber('message', this._onMessage, this);
   },
   
   connect: function(options, callback, scope) {
@@ -63,11 +51,6 @@ Faye.Connection = Faye.Class({
     
     this.setDeferredStatus('succeeded', events);
     this.setDeferredStatus('deferred');
-  },
-  
-  disconnect: function() {
-    this.unsubscribe('all');
-    this.flush();
   },
   
   _releaseConnection: function() {
