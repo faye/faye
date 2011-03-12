@@ -6,6 +6,12 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
     this.server = new Faye.Server()
   }})
   
+  it("listens for notifications from Engine", function() { with(this) {
+    expect(engine, "addSubscriber").given("message", instanceOf(Function), instanceOf(Faye.Server))
+    expect(engine, "addSubscriber").given("disconnect", instanceOf(Function), instanceOf(Faye.Server))
+    new Faye.Server()
+  }})
+  
   describe("#handshake", function() { with(this) {
     before(function() { with(this) {
       this.message = {channel: "/meta/handshake",
