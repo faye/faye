@@ -22,7 +22,6 @@ Faye.Connection = Faye.Class({
   deliver: function(event) {
     if (!this._inbox.add(event)) return;
     if (this._socket) this._socket.send(Faye.toJSON(event));
-    this.removeTimeout('deletion');
     this._beginDeliveryTimeout();
   },
   
