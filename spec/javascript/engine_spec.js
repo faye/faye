@@ -132,6 +132,11 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         check_client_exists("alice", false)
       }})
       
+      it("notifies listeners of the destroyed client", function() { with(this) {
+        expect(engine, "publishEvent").given("disconnect", alice)
+        engine.destroyClient(alice)
+      }})
+
       describe("when the client has subscriptions", function() { with(this) {
         before(function() { with(this) {
           this.message = {"channel": "/messages/foo", "data": "ok"}

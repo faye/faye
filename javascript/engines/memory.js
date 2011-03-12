@@ -22,6 +22,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     }, this);
     this.removeTimeout(clientId);
     delete clients[clientId];
+    this.publishEvent('disconnect', clientId);
   },
   
   clientExists: function(clientId, callback, scope) {
