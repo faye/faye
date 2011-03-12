@@ -534,6 +534,23 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
             }, response)
         })
       }})
+      
+      it("subscribes local clients to the channel", function() { with(this) {
+        expect(engine, "subscribe").given(clientId, "/meta/foo")
+        server.subscribe(message, true, function() {})
+      }})
+      
+      it("returns a successful response for local clients", function() { with(this) {
+        stub(engine, "subscribe")
+        server.subscribe(message, true, function(response) {
+          assertEqual({
+              channel:      "/meta/subscribe",
+              successful:   true,
+              clientId:     clientId,
+              subscription: ["/meta/foo"]
+            }, response)
+        })
+      }})
     }})
   }})
   
@@ -726,6 +743,23 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               channel:      "/meta/unsubscribe",
               successful:   false,
               error:        "403:/meta/foo:Forbidden channel",
+              clientId:     clientId,
+              subscription: ["/meta/foo"]
+            }, response)
+        })
+      }})
+      
+      it("unsubscribes local clients from the channel", function() { with(this) {
+        expect(engine, "unsubscribe").given(clientId, "/meta/foo")
+        server.unsubscribe(message, true, function() {})
+      }})
+      
+      it("returns a successful response for local clients", function() { with(this) {
+        stub(engine, "unsubscribe")
+        server.unsubscribe(message, true, function(response) {
+          assertEqual({
+              channel:      "/meta/unsubscribe",
+              successful:   true,
               clientId:     clientId,
               subscription: ["/meta/foo"]
             }, response)
