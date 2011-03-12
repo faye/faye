@@ -92,19 +92,13 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     
     describe("distribute", function() { with(this) {
       before(function() { with(this) {
-        this.inbox = {}
         this.message = {'channel': '/messages/foo', 'data': 'ok'}
-        
-        engine.addSubscriber('message', function(clientId, message) {
-          inbox[clientId] = inbox[clientId] || []
-          inbox[clientId].push(message)
-        })
       }})
       
       describe("with no subscriptions", function() { with(this) {
         it("delivers no messages", function() { with(this) {
+          expect(engine, "announce").exactly(0)
           engine.distribute(message)
-          assertEqual( {}, inbox )
         }})
       }})
       
@@ -114,8 +108,8 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("delivers messages to the subscribed client", function() { with(this) {
+          expect(engine, "announce").given(alice, message)
           engine.distribute(message)
-          assertEqual( [message], inbox[alice] )
         }})
       }})
       
@@ -126,8 +120,8 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("does not deliver messages to unsubscribed clients", function() { with(this) {
+          expect(engine, "announce").exactly(0)
           engine.distribute(message)
-          assertEqual( {}, inbox )
         }})
       }})
       
@@ -139,10 +133,10 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("delivers messages to the subscribed clients", function() { with(this) {
+          expect(engine, "announce").given(alice, message)
+          expect(engine, "announce").given(bob, message).exactly(0)
+          expect(engine, "announce").given(cecil, message)
           engine.distribute(message)
-          assertEqual( [message], inbox[alice] )
-          assertEqual( undefined, inbox[bob]   )
-          assertEqual( [message], inbox[cecil] )
         }})
       }})
       
@@ -154,10 +148,10 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("delivers messages to matching subscriptions", function() { with(this) {
+          expect(engine, "announce").given(alice, message)
+          expect(engine, "announce").given(bob, message).exactly(0)
+          expect(engine, "announce").given(cecil, message).exactly(0)
           engine.distribute(message)
-          assertEqual( [message], inbox[alice] )
-          assertEqual( undefined, inbox[bob]   )
-          assertEqual( undefined, inbox[cecil] )
         }})
       }})
       
@@ -169,10 +163,10 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("delivers messages to matching subscriptions", function() { with(this) {
+          expect(engine, "announce").given(alice, message)
+          expect(engine, "announce").given(bob, message).exactly(0)
+          expect(engine, "announce").given(cecil, message)
           engine.distribute(message)
-          assertEqual( [message], inbox[alice] )
-          assertEqual( undefined, inbox[bob]   )
-          assertEqual( [message], inbox[cecil] )
         }})
       }})
     }})
