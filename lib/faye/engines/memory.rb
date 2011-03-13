@@ -23,6 +23,7 @@ module Faye
         end
         remove_timeout(client_id)
         @clients.delete(client_id)
+        publish_event(:disconnect, client_id)
       end
       
       def client_exists(client_id, &callback)

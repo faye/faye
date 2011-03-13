@@ -56,6 +56,11 @@ EngineSteps = EM::RSpec.async_steps do
     resume.call
   end
   
+  def expect_disconnect(name, &resume)
+    engine.should_receive(:publish_event).with(:disconnect, @clients[name])
+    resume.call
+  end
+  
   def expect_announce(name, message, &resume)
     engine.should_receive(:announce).with(@clients[name], message)
     resume.call
@@ -130,6 +135,11 @@ describe "Pub/sub engines" do
       it "removes the given client" do
         destroy_client :alice
         check_client_exists :alice, false
+      end
+      
+      it "notifies listeners of the destroyed client" do
+        expect_disconnect :alice
+        destroy_client :alice
       end
       
       describe "when the client has subscriptions" do

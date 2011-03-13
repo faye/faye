@@ -55,6 +55,11 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
     resume()
   },
   
+  expect_disconnect: function(name, resume) {
+    this.expect(this.engine, "publishEvent").given("disconnect", this._clients[name])
+    resume()
+  },
+  
   expect_announce: function(name, message, resume) {
     this.expect(this.engine, "announce").given(this._clients[name], message)
     resume()
@@ -133,8 +138,8 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
       }})
       
       it("notifies listeners of the destroyed client", function() { with(this) {
-        expect(engine, "publishEvent").given("disconnect", alice)
-        engine.destroyClient(alice)
+        expect_disconnect("alice")
+        destroy_client("alice")
       }})
 
       describe("when the client has subscriptions", function() { with(this) {
