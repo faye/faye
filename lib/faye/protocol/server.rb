@@ -5,22 +5,59 @@ module Faye
     include Extensible
     
     def initialize(options = {})
-      info('New server created')
       @options     = options
-      @channels    = Channel::Tree.new
       @connections = {}
-      @namespace   = Namespace.new
+      @engine      = Faye::Engine.get('memory', options)
+      
+      @engine.add_subscriber(:message, method(:on_message))
+      @engine.add_subscriber(:disconnect, method(:on_disconnect))
     end
     
-    def client_ids
-      @connections.keys
+  private
+    
+    def on_message(client_id, message)
+      conn = connection(client_id)
+      conn.deliver(message)
+    end
+    
+    def on_disconnect(client_id)
+      conn = @connections[client_id]
+      destroy_connection(conn)
+    end
+    
+    def connection(id)
+      return @connections[id] if @connections.has_key?(id)
+      connection = Connection.new(id, @options)
+      connection.add_subscriber(:stale_connection, method(:destroy_connection))
+      @connections[id] = connection
+    end
+    
+    def destroy_connection(connection)
+      return unless connection
+      connection.disconnect!
+      connection.remove_subscriber(:stale_connection, method(:destroy_connection))
+      @connections.delete(connection.id)
+    end
+    
+    def accept_connection(options, response, socket, &callback)
+      connection = connection(response['clientId'])
+      connection.connect(options) do |events|
+        callback.call([response] + events)
+      end
+    end
+    
+  public
+    
+    def flush_connection(messages)
+      [messages].flatten.each do |message|
+        connection = @connections[message['clientId']]
+        connection.flush! if connection
+      end
     end
     
     def process(messages, local_or_remote = false, &callback)
       socket = local_or_remote.is_a?(WebSocket) ? local_or_remote : nil
       local  = (local_or_remote == true)
-      
-      debug('Processing messages from ? client', local ? 'LOCAL' : 'REMOTE')
       
       messages = [messages].flatten
       processed, responses = 0, []
@@ -51,28 +88,6 @@ module Faye
       end
     end
     
-    def flush_connection(messages)
-      [messages].flatten.each do |message|
-        connection = @connections[message['clientId']]
-        connection.flush! if connection
-      end
-    end
-    
-  private
-    
-    def connection(id)
-      return @connections[id] if @connections.has_key?(id)
-      connection = Connection.new(id, @options)
-      connection.add_subscriber(:stale_connection, method(:destroy_connection))
-      @connections[id] = connection
-    end
-    
-    def destroy_connection(connection)
-      connection.disconnect!
-      connection.remove_subscriber(:stale_connection, method(:destroy_connection))
-      @connections.delete(connection.id)
-    end
-    
     def make_response(message)
       response = {}
       %w[id clientId channel error].each do |field|
@@ -84,18 +99,10 @@ module Faye
       response
     end
     
-    def distribute_message(message)
-      return if message['error']
-      @channels.glob(message['channel']).each do |channel|
-        channel << message
-        info('Publishing message ? from client ? to ?', message['data'], message['clientId'], channel.name)
-      end
-    end
-    
     def handle(message, socket = nil, local = false, &callback)
       return callback.call([]) if !message
       
-      distribute_message(message)
+      @engine.publish(message)
       channel_name = message['channel']
       
       if Channel.meta?(channel_name)
@@ -110,37 +117,21 @@ module Faye
     end
     
     def handle_meta(message, socket, local, &callback)
-      response = __send__(Channel.parse(message['channel'])[1], message, local)
+      method = Channel.parse(message['channel'])[1]
       
-      advize(response)
-      
-      if response['channel'] == Channel::CONNECT and response['successful'] == true
-        return accept_connection(message['advice'], response, socket, &callback)
-      end
-      
-      callback.call([response])
-    end
-    
-    def accept_connection(options, response, socket, &callback)
-      info('Accepting connection from ?', response['clientId'])
-      
-      connection = connection(response['clientId'])
-      
-      # Disabled because CometD doesn't like messages not being
-      # delivered as part of a /meta/* response
-      # if socket
-      #   return connection.socket = socket
-      # end
-      
-      connection.connect(options) do |events|
-        info('Sending event messages to ?', response['clientId'])
-        debug('Events for ?: ?', response['clientId'], events)
-        callback.call([response] + events)
+      __send__(method, message, local) do |response|
+        advize(response)
+        
+        if response['channel'] == Channel::CONNECT and response['successful'] == true
+          return accept_connection(message['advice'], response, socket, &callback)
+        end
+        
+        callback.call([response])
       end
     end
     
     def advize(response)
-      connection = @connections[response['clientId']]
+      connection = response['clientId'] && connection(response['clientId'])
       
       advice = response['advice'] ||= {}
       if connection
@@ -157,7 +148,7 @@ module Faye
     # MAY contain   * minimumVersion
     #               * ext
     #               * id
-    def handshake(message, local = false)
+    def handshake(message, local = false, &callback)
       response = make_response(message)
       response['version'] = BAYEUX_VERSION
       
@@ -177,128 +168,113 @@ module Faye
       end
       
       response['successful'] = response['error'].nil?
-      return response unless response['successful']
+      return callback.call(response) unless response['successful']
       
-      client_id = @namespace.generate
-      response['clientId'] = connection(client_id).id
-      info('Accepting handshake from client ?', response['clientId'])
-      response
+      @engine.create_client do |client_id|
+        response['clientId'] = client_id
+        callback.call(response)
+      end
     end
     
     # MUST contain  * clientId
     #               * connectionType
     # MAY contain   * ext
     #               * id
-    def connect(message, local = false)
-      response   = make_response(message)
-      
-      client_id  = message['clientId']
-      connection = client_id ? @connections[client_id] : nil
+    def connect(message, local = false, &callback)
+      response        = make_response(message)
+      client_id       = message['clientId']
       connection_type = message['connectionType']
       
-      response['error'] = Error.client_unknown(client_id) if connection.nil?
-      response['error'] = Error.parameter_missing('clientId') if client_id.nil?
-      response['error'] = Error.parameter_missing('connectionType') if connection_type.nil?
-      
-      response['successful'] = response['error'].nil?
-      response.delete('clientId') unless response['successful']
-      return response unless response['successful']
-      
-      response['clientId'] = connection.id
-      response
-    end
-    
-    # MUST contain  * clientId
-    # MAY contain   * ext
-    #               * id
-    def disconnect(message, local = false)
-      response   = make_response(message)
-      
-      client_id  = message['clientId']
-      connection = client_id ? @connections[client_id] : nil
-      
-      response['error'] = Error.client_unknown(client_id) if connection.nil?
-      response['error'] = Error.parameter_missing('clientId') if client_id.nil?
-      
-      response['successful'] = response['error'].nil?
-      response.delete('clientId') unless response['successful']
-      return response unless response['successful']
-      
-      destroy_connection(connection)
-      
-      info('Disconnected client: ?', client_id)
-      response['clientId'] = client_id
-      response
-    end
-    
-    # MUST contain  * clientId
-    #               * subscription
-    # MAY contain   * ext
-    #               * id
-    def subscribe(message, local = false)
-      response      = make_response(message)
-      
-      client_id     = message['clientId']
-      connection    = client_id ? @connections[client_id] : nil
-      subscription  = [message['subscription']].flatten
-      
-      response['error'] = Error.client_unknown(client_id) if connection.nil?
-      response['error'] = Error.parameter_missing('clientId') if client_id.nil?
-      response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
-      
-      response['subscription'] = subscription.compact
-      
-      subscription.each do |channel_name|
-        next if response['error']
-        response['error'] = Error.channel_forbidden(channel_name) unless local or Channel.subscribable?(channel_name)
-        response['error'] = Error.channel_invalid(channel_name) unless Channel.valid?(channel_name)
+      @engine.client_exists(client_id) do |exists|
+        response['error'] = Error.client_unknown(client_id) unless exists
+        response['error'] = Error.parameter_missing('clientId') if client_id.nil?
+        response['error'] = Error.parameter_missing('connectionType') if connection_type.nil?
         
-        next if response['error']
-        channel = @channels[channel_name] ||= Channel.new(channel_name)
+        response['successful'] = response['error'].nil?
+        response.delete('clientId') unless response['successful']
         
-        info('Subscribing client ? to ?', client_id, channel.name)
-        connection.subscribe(channel)
+        @engine.ping(client_id) if response['successful']
+        callback.call(response)
       end
+    end
+    
+    # MUST contain  * clientId
+    # MAY contain   * ext
+    #               * id
+    def disconnect(message, local = false, &callback)
+      response   = make_response(message)      
+      client_id  = message['clientId']
       
-      response['successful'] = response['error'].nil?
-      response
+      @engine.client_exists(client_id) do |exists|
+        response['error'] = Error.client_unknown(client_id) unless exists
+        response['error'] = Error.parameter_missing('clientId') if client_id.nil?
+        
+        response['successful'] = response['error'].nil?
+        response.delete('clientId') unless response['successful']
+        
+        @engine.destroy_client(client_id) if response['successful']
+        callback.call(response)
+      end
     end
     
     # MUST contain  * clientId
     #               * subscription
     # MAY contain   * ext
     #               * id
-    def unsubscribe(message, local = false)
-      response      = make_response(message)
+    def subscribe(message, local = false, &callback)
+      response     = make_response(message)
+      client_id    = message['clientId']
+      subscription = [message['subscription']].flatten
       
-      client_id     = message['clientId']
-      connection    = client_id ? @connections[client_id] : nil
-      subscription  = [message['subscription']].flatten
-      
-      response['error'] = Error.client_unknown(client_id) if connection.nil?
-      response['error'] = Error.parameter_missing('clientId') if client_id.nil?
-      response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
-      
-      response['subscription'] = subscription.compact
-      
-      subscription.each do |channel_name|
-        next if response['error']
+      @engine.client_exists(client_id) do |exists|
+        response['error'] = Error.client_unknown(client_id) unless exists
+        response['error'] = Error.parameter_missing('clientId') if client_id.nil?
+        response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
         
-        unless Channel.valid?(channel_name)
-          response['error'] = Error.channel_invalid(channel_name)
-          next
+        response['subscription'] = subscription.compact
+        
+        subscription.each do |channel|
+          next if response['error']
+          response['error'] = Error.channel_forbidden(channel) unless local or Channel.subscribable?(channel)
+          response['error'] = Error.channel_invalid(channel) unless Channel.valid?(channel)
+          
+          next if response['error']
+          @engine.subscribe(client_id, channel)
         end
         
-        channel = @channels[channel_name]
-        next unless channel
-        
-        info('Unsubscribing client ? from ?', client_id, channel.name)
-        connection.unsubscribe(channel)
-        @channels.remove(channel_name) if channel.unused?
+        response['successful'] = response['error'].nil?
+        callback.call(response)
       end
+    end
+    
+    # MUST contain  * clientId
+    #               * subscription
+    # MAY contain   * ext
+    #               * id
+    def unsubscribe(message, local = false, &callback)
+      response     = make_response(message)
+      client_id    = message['clientId']
+      subscription = [message['subscription']].flatten
       
-      response['successful'] = response['error'].nil?
-      response
+      @engine.client_exists(client_id) do |exists|
+        response['error'] = Error.client_unknown(client_id) unless exists
+        response['error'] = Error.parameter_missing('clientId') if client_id.nil?
+        response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
+        
+        response['subscription'] = subscription.compact
+        
+        subscription.each do |channel|
+          next if response['error']
+          response['error'] = Error.channel_forbidden(channel) unless local or Channel.subscribable?(channel)
+          response['error'] = Error.channel_invalid(channel) unless Channel.valid?(channel)
+          
+          next if response['error']
+          @engine.unsubscribe(client_id, channel)
+        end
+        
+        response['successful'] = response['error'].nil?
+        callback.call(response)
+      end
     end
     
   end
