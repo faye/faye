@@ -106,7 +106,7 @@ Faye.Server = Faye.Class({
   _handle: function(message, socket, local, callback, scope) {
     if (!message) return callback.call(scope, []);
     
-    this._engine.distribute(message);
+    this._engine.publish(message);
     var channelName = message.channel, response;
     
     if (Faye.Channel.isMeta(channelName)) {

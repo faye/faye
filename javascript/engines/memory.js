@@ -51,7 +51,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     if (channels.hasOwnProperty(channel)) channels[channel].remove(clientId);
   },
   
-  distribute: function(message) {
+  publish: function(message) {
     if (message.error) return;
     var channels = Faye.Channel.expand(message.channel);
     Faye.each(channels, function(channel) {

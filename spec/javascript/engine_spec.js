@@ -42,8 +42,8 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
     resume()
   },
   
-  distribute: function(message, resume) {
-    this.engine.distribute(message)
+  publish: function(message, resume) {
+    this.engine.publish(message)
     resume()
   },
   
@@ -143,12 +143,12 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         it("stops the client receiving messages", function() { with(this) {
           expect(engine, "announce").exactly(0)
           destroy_client("alice")
-          distribute(message)
+          publish(message)
         }})
       }})
     }})
     
-    describe("distribute", function() { with(this) {
+    describe("publish", function() { with(this) {
       before(function() { with(this) {
         this.message = {"channel": "/messages/foo", "data": "ok"}
       }})
@@ -156,7 +156,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
       describe("with no subscriptions", function() { with(this) {
         it("delivers no messages", function() { with(this) {
           expect(engine, "announce").exactly(0)
-          engine.distribute(message)
+          engine.publish(message)
         }})
       }})
       
@@ -167,7 +167,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         
         it("delivers messages to the subscribed client", function() { with(this) {
           expect_announce("alice", message)
-          distribute(message)
+          publish(message)
         }})
       }})
       
@@ -179,7 +179,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         
         it("does not deliver messages to unsubscribed clients", function() { with(this) {
           expect(engine, "announce").exactly(0)
-          engine.distribute(message)
+          engine.publish(message)
         }})
       }})
       
@@ -194,7 +194,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
           expect_announce("alice", message)
           expect_no_announce("bob", message)
           expect_announce("carol", message)
-          distribute(message)
+          publish(message)
         }})
       }})
       
@@ -209,7 +209,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
           expect_announce("alice", message)
           expect_no_announce("bob", message)
           expect_no_announce("carol", message)
-          distribute(message)
+          publish(message)
         }})
       }})
       
@@ -224,7 +224,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
           expect_announce("alice", message)
           expect_no_announce("bob", message)
           expect_announce("carol", message)
-          distribute(message)
+          publish(message)
         }})
       }})
     }})
