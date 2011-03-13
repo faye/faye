@@ -34,13 +34,11 @@ EngineSteps = EM::RSpec.async_steps do
   end
   
   def subscribe(name, channel, &resume)
-    engine.subscribe(@clients[name], channel)
-    resume.call
+    engine.subscribe(@clients[name], channel, &resume)
   end
   
   def unsubscribe(name, channel, &resume)
-    engine.unsubscribe(@clients[name], channel)
-    resume.call
+    engine.unsubscribe(@clients[name], channel, &resume)
   end
   
   def publish(message, &resume)

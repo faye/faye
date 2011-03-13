@@ -36,16 +36,18 @@ module Faye
         add_timeout(client_id, 2 * timeout) { destroy_client(client_id) }
       end
       
-      def subscribe(client_id, channel)
+      def subscribe(client_id, channel, &callback)
         @clients[client_id] ||= Set.new
         @channels[channel]  ||= Set.new
         @clients[client_id].add(channel)
         @channels[channel].add(client_id)
+        callback.call(true) if callback
       end
       
-      def unsubscribe(client_id, channel)
+      def unsubscribe(client_id, channel, &callback)
         @clients[client_id].delete(channel) if @clients.has_key?(client_id)
         @channels[channel].delete(client_id) if @channels.has_key?(channel)
+        callback.call(true) if callback
       end
       
       def publish(message)

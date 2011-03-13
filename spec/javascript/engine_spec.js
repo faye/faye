@@ -33,13 +33,11 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   },
   
   subscribe: function(name, channel, resume) {
-    this.engine.subscribe(this._clients[name], channel)
-    resume()
+    this.engine.subscribe(this._clients[name], channel, resume)
   },
   
   unsubscribe: function(name, channel, resume) {
-    this.engine.unsubscribe(this._clients[name], channel)
-    resume()
+    this.engine.unsubscribe(this._clients[name], channel, resume)
   },
   
   publish: function(message, resume) {

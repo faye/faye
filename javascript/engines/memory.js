@@ -37,18 +37,20 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     }, this);
   },
   
-  subscribe: function(clientId, channel) {
+  subscribe: function(clientId, channel, callback, scope) {
     var clients = this._clients, channels = this._channels;
     clients[clientId] = clients[clientId] || new Faye.Set();
     channels[channel] = channels[channel] || new Faye.Set();
     clients[clientId].add(channel);
     channels[channel].add(clientId);
+    if (callback) callback.call(scope, true);
   },
   
-  unsubscribe: function(clientId, channel) {
+  unsubscribe: function(clientId, channel, callback, scope) {
     var clients = this._clients, channels = this._channels;
     if (clients.hasOwnProperty(clientId)) clients[clientId].remove(channel);
     if (channels.hasOwnProperty(channel)) channels[channel].remove(clientId);
+    if (callback) callback.call(scope, true);
   },
   
   publish: function(message) {
