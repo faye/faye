@@ -20,6 +20,8 @@ module Faye
       mixins/timeouts
       mixins/logging
       util/namespace
+      engines/base
+      engines/memory
       protocol/grammar
       protocol/extensible
       protocol/channel
