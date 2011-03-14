@@ -134,4 +134,117 @@ describe Faye::Server do
       end
     end
   end
+  
+  describe :connect do
+    let(:client_id) { "fakeclientid" }
+    let(:message) {{"channel" => "/meta/connect",
+                    "clientId" => "fakeclientid",
+                    "connectionType" => "long-polling"
+                  }}
+    
+    describe "with valid paramters" do
+      before do
+        engine.should_receive(:client_exists).with(client_id).and_yield true
+      end
+      
+      it "pings the engine to say the client is active" do
+        engine.should_receive(:ping).with(client_id)
+        server.connect(message) {}
+      end
+      
+      it "returns a successful response" do
+        engine.stub(:ping)
+        server.connect(message) do |response|
+          response.should == {
+            "channel"    => "/meta/connect",
+            "successful" => true,
+            "clientId"   => client_id
+          }
+        end
+      end
+      
+      describe "with a message id" do
+        before { message["id"] = "foo" }
+        
+        it "returns the same id" do
+          engine.stub(:ping)
+          server.connect(message) do |response|
+            response.should == {
+              "channel"    => "/meta/connect",
+              "successful" => true,
+              "clientId"   => client_id,
+              "id"         => "foo"
+            }
+          end
+        end
+      end
+    end
+    
+    describe "with an unknown client" do
+      before do
+        engine.should_receive(:client_exists).with(client_id).and_yield false
+      end
+      
+      it "does not ping the engine" do
+        engine.should_not_receive(:ping)
+        server.connect(message) {}
+      end
+      
+      it "returns an unsuccessful response" do
+        server.connect(message) do |response|
+          response.should == {
+            "channel"    => "/meta/connect",
+            "successful" => false,
+            "error"      => "401:fakeclientid:Unknown client"
+          }
+        end
+      end
+    end
+    
+    describe "missing clientId" do
+      before do
+        message.delete("clientId")
+        engine.should_receive(:client_exists).with(nil).and_yield false
+      end
+      
+      it "does not ping the engine" do
+        engine.should_not_receive(:ping)
+        server.connect(message) {}
+      end
+      
+      it "returns an unsuccessful response" do
+        server.connect(message) do |response|
+          response.should == {
+            "channel"    => "/meta/connect",
+            "successful" => false,
+            "error"      => "402:clientId:Missing required parameter"
+          }
+        end
+      end
+    end
+    
+    describe "missing connectionType" do
+      before do
+        message.delete("connectionType")
+        engine.should_receive(:client_exists).with(client_id).and_yield true
+      end
+      
+      it "does not ping the engine" do
+        engine.should_not_receive(:ping)
+        server.connect(message) {}
+      end
+      
+      it "returns an unsuccessful response" do
+        server.connect(message) do |response|
+          response.should == {
+            "channel"    => "/meta/connect",
+            "successful" => false,
+            "error"      => "402:connectionType:Missing required parameter"
+          }
+        end
+      end
+    end
+    
+    # TODO fail if connectionType is not recognized
+  end
 end
