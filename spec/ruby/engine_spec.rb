@@ -212,7 +212,7 @@ describe "Pub/sub engines" do
           subscribe :carol, "/*"
         end
         
-        it "delivers messages to the subscribed clients" do
+        it "delivers messages to matching subscriptions" do
           expect_announce    :alice, @message
           expect_no_announce :bob,   @message
           expect_no_announce :carol, @message
@@ -228,7 +228,7 @@ describe "Pub/sub engines" do
           subscribe :carol, "/**"
         end
         
-        it "delivers messages to the subscribed clients" do
+        it "delivers messages to matching subscriptions" do
           expect_announce    :alice, @message
           expect_no_announce :bob,   @message
           expect_announce    :carol, @message
