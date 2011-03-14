@@ -399,7 +399,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
           message.subscription = "/foo/**"
         }})
         
-        it("creates multiple subscriptions", function() { with(this) {
+        it("subscribes the client to the channel pattern", function() { with(this) {
           expect(engine, "subscribe").given(clientId, "/foo/**")
           server.subscribe(message, false, function() {})
         }})
@@ -613,7 +613,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
           message.subscription = "/foo/**"
         }})
         
-        it("destroys multiple subscriptions", function() { with(this) {
+        it("destroys the subscription to the channel pattern", function() { with(this) {
           expect(engine, "unsubscribe").given(clientId, "/foo/**")
           server.unsubscribe(message, false, function() {})
         }})
