@@ -51,7 +51,6 @@ module Faye
       request = Rack::Request.new(env)
       
       unless request.path_info =~ @endpoint_re
-        env['faye.client'] = get_client
         return @app ? @app.call(env) :
                       [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
       end
@@ -85,7 +84,7 @@ module Faye
         ASYNC_RESPONSE
         
       rescue
-        [400, TYPE_TEXT, 'Bad request']
+        [400, TYPE_TEXT, ['Bad request']]
       end
     end
     
