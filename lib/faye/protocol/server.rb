@@ -34,8 +34,8 @@ module Faye
     
     def destroy_connection(connection)
       return unless connection
-      connection.disconnect!
-      connection.remove_subscriber(:stale_connection, method(:destroy_connection))
+      connection.flush!
+      connection.remove_subscribers
       @connections.delete(connection.id)
     end
     

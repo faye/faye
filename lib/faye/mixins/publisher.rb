@@ -17,6 +17,10 @@ module Faye
       @subscribers[event_type].delete_if(&listener.method(:==))
     end
     
+    def remove_subscribers
+      @subscribers = {}
+    end
+    
     def publish_event(event_type, *args)
       return unless @subscribers and @subscribers[event_type]
       @subscribers[event_type].each do |listener|
