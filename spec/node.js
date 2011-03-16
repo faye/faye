@@ -17,5 +17,6 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
   JS.require( 'ChannelSpec',
               'EngineSpec',
               'ServerSpec',
+              'NodeAdapterSpec',
               JS.Test.method('autorun'))
 })

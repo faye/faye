@@ -53,6 +53,11 @@ Faye.NodeAdapter = Faye.Class({
     var httpServer = http.createServer(function() {});
     this.attach(httpServer);
     httpServer.listen(port);
+    this._httpServer = httpServer;
+  },
+  
+  stop: function() {
+    this._httpServer.close();
   },
   
   attach: function(httpServer) {
