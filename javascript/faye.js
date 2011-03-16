@@ -31,8 +31,12 @@ Faye.extend(Faye, {
       while (parts--) string += this.random(32);
       return string;
     }
-    var field = Math.pow(2, bitlength);
-    return Math.floor(Math.random() * field).toString(36);
+    var limit   = Math.pow(2, bitlength) - 1,
+        maxSize = limit.toString(36).length,
+        string  = Math.floor(Math.random() * limit).toString(36);
+    
+    while (string.length < maxSize) string = '0' + string;
+    return string;
   },
   
   commonElement: function(lista, listb) {

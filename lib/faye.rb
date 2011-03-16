@@ -40,7 +40,11 @@ module Faye
   autoload :WebSocket, File.join(ROOT, 'faye', 'util', 'web_socket')
   
   def self.random(bitlength = ID_LENGTH)
-    rand(2 ** bitlength).to_s(36)
+    limit    = 2 ** bitlength - 1
+    max_size = limit.to_s(36).size
+    string   = rand(limit).to_s(36)
+    string = '0' + string while string.size < max_size
+    string
   end
   
   def self.to_json(value)
