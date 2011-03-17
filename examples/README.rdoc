@@ -16,11 +16,22 @@ and one for Rack. To run the Node.js version:
 
 To run the Rack version you need a few gems first:
 
-  sudo gem install eventmachine thin rack json sinatra
-  rackup -s thin -E production -p 8000 examples/rack/config.ru
+  gem install eventmachine em-hiredis thin rack json sinatra
+  rake example[8000]
 
 Note that Faye does not depend on Sinatra; the demo just uses it to
-provide a concrete app behind the Faye middleware.
+provide a concrete app behind the Faye middleware. You need a Redis
+server running that supports pub/sub to run the Ruby demo.
+
+You can also run the Ruby demo on several ports and use HAProxy to
+load balance between them.
+
+  rake example[7070] &
+  rake example[8080] &
+  rake example[9090] &
+  haproxy -f shared/haproxy.conf
+
+The demo app will then be available on port 7000.
 
 
 == Source code

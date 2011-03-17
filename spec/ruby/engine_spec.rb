@@ -10,8 +10,7 @@ EngineSteps = EM::RSpec.async_steps do
   end
   
   def destroy_client(name, &resume)
-    engine.destroy_client(@clients[name])
-    resume.call
+    engine.destroy_client(@clients[name], &resume)
   end
   
   def check_client_id(name, pattern, &resume)
@@ -43,7 +42,7 @@ EngineSteps = EM::RSpec.async_steps do
   
   def publish(message, &resume)
     engine.publish(message)
-    resume.call
+    EM.add_timer(0.01, &resume)
   end
   
   def ping(name, &resume)
@@ -62,33 +61,33 @@ EngineSteps = EM::RSpec.async_steps do
   end
   
   def expect_announce(name, message, &resume)
-    engine.should_receive(:announce).with(@clients[name], message)
+    engine.should_receive(:publish_event).with(:message, @clients[name], message)
     resume.call
   end
   
   def expect_no_announce(name, message, &resume)
-    engine.should_not_receive(:announce).with(@clients[name], message)
+    engine.should_not_receive(:pubish_event).with(:message, @clients[name], message)
     resume.call
+  end
+  
+  def clean_redis_db(&resume)
+    engine.disconnect
+    redis = EM::Hiredis::Client.connect
+    redis.flushall(&resume)
   end
 end
 
 describe "Pub/sub engines" do
   shared_examples_for "faye engine" do
-    include EM::RSpec::FakeClock
     include EngineSteps
     
     let(:options) { {} }
     
     before do
       Faye.ensure_reactor_running!
-      clock.stub
       create_client :alice
       create_client :bob
       create_client :carol
-    end
-    
-    after do
-      clock.reset
     end
     
     describe :create_client do
@@ -112,7 +111,7 @@ describe "Pub/sub engines" do
         check_client_exists :anything, false
       end
     end
-    
+=begin
     describe :ping do
       let(:options) { {:timeout => 1} }
       
@@ -130,7 +129,7 @@ describe "Pub/sub engines" do
         check_client_exists :alice, false
       end
     end
-    
+=end
     describe :destroy_client do
       it "removes the given client" do
         destroy_client :alice
@@ -149,7 +148,7 @@ describe "Pub/sub engines" do
         end
         
         it "stops the client receiving messages" do
-          engine.should_not_receive(:announce)
+          engine.should_receive(:unsubscribe)
           destroy_client :alice
           publish @message
         end
@@ -241,6 +240,12 @@ describe "Pub/sub engines" do
   
   describe Faye::Engine::Memory do
     let(:engine) { Faye::Engine::Memory.new(options) }
+    it_should_behave_like "faye engine"
+  end
+  
+  describe Faye::Engine::Redis do
+    let(:engine) { Faye::Engine::Redis.new(options) }
+    after { clean_redis_db }
     it_should_behave_like "faye engine"
   end
 end

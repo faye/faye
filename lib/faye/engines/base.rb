@@ -1,7 +1,13 @@
 module Faye
   module Engine
-    def self.get(type, options)
-      Memory.new(options)
+    def self.register(type, klass)
+      @backends ||= {}
+      @backends[type] = klass
+    end
+    
+    def self.get(options)
+      klass = @backends[options[:engine]] || Memory
+      klass.new(options)
     end
     
     class Base
@@ -12,8 +18,10 @@ module Faye
         @options = options
       end
       
-      def announce(client_id, message)
-        publish_event(:message, client_id, message)
+      def announce(client_ids, message)
+        client_ids.each do |client_id|
+          publish_event(:message, client_id, message)
+        end
       end
     end
   end

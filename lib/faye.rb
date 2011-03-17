@@ -22,6 +22,7 @@ module Faye
       util/namespace
       engines/base
       engines/memory
+      engines/redis
       protocol/grammar
       protocol/extensible
       protocol/channel

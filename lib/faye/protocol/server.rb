@@ -7,7 +7,7 @@ module Faye
     def initialize(options = {})
       @options     = options
       @connections = {}
-      @engine      = Faye::Engine.get('memory', options)
+      @engine      = Faye::Engine.get(options)
       
       @engine.add_subscriber(:message, method(:on_message))
       @engine.add_subscriber(:disconnect, method(:on_disconnect))
@@ -102,7 +102,7 @@ module Faye
     def handle(message, socket = nil, local = false, &callback)
       return callback.call([]) if !message
       
-      @engine.publish(message)
+      @engine.publish(message) unless message['error']
       channel_name = message['channel']
       
       if Channel.meta?(channel_name)
@@ -123,10 +123,10 @@ module Faye
         advize(response)
         
         if response['channel'] == Channel::CONNECT and response['successful'] == true
-          return accept_connection(message['advice'], response, socket, &callback)
+          accept_connection(message['advice'], response, socket, &callback)
+        else
+          callback.call([response])
         end
-        
-        callback.call([response])
       end
     end
     

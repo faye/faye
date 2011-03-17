@@ -10,13 +10,16 @@ Hoe.spec('faye') do
   self.extra_deps = [
     ['eventmachine', '>= 0.12'],
     ['em-http-request', '>= 0.2'],
+    ['em-hiredis', '>= 0.0.1'],
     ['rack', '>= 1.0'],
     ['thin', '>= 1.2'],
     ['json', '>= 1.0']
   ]
 end
 
-# vim: syntax=Ruby
+task :example, :port do |t, args|
+  system "rackup -s thin -E production -p #{args[:port]} examples/rack/config.ru"
+end
 
 task :handshake, :port, :n, :c do |t, args|
   require 'cgi'
@@ -32,3 +35,5 @@ task :handshake, :port, :n, :c do |t, args|
   
   system "ab -n #{args[:n]} -c #{args[:c]} '#{url}'"
 end
+
+# vim: syntax=Ruby

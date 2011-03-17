@@ -16,7 +16,7 @@ module Faye
         callback.call(client_id)
       end
       
-      def destroy_client(client_id)
+      def destroy_client(client_id, &callback)
         return unless @clients.has_key?(client_id)
         @clients[client_id].each do |channel|
           unsubscribe(client_id, channel)
@@ -24,6 +24,7 @@ module Faye
         remove_timeout(client_id)
         @clients.delete(client_id)
         publish_event(:disconnect, client_id)
+        callback.call if callback
       end
       
       def client_exists(client_id, &callback)
@@ -52,16 +53,15 @@ module Faye
       end
       
       def publish(message)
-        return if message['error']
         channels = Channel.expand(message['channel'])
         channels.each do |channel|
           next unless clients = @channels[channel]
-          clients.each do |client_id|
-            announce(client_id, message)
-          end
+          announce(clients, message)
         end
       end
     end
+    
+    register :memory, Memory
     
   end
 end
