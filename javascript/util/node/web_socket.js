@@ -164,13 +164,9 @@ Faye.extend(Faye.WebSocket, {
   };
   
   var writeToSocket = function(socket, message) {
-    try {
-      socket.write(FRAME_START, 'binary');
-      socket.write(message, 'utf8');
-      socket.write(FRAME_END, 'binary');
-    } catch (e) {
-      // socket closed while writing
-    }
+    socket.write(FRAME_START, 'binary');
+    socket.write(message, 'utf8');
+    socket.write(FRAME_END, 'binary');
   };
   
   var FRAME_START = byteToChar('00'),
@@ -187,7 +183,7 @@ Faye.extend(Faye.WebSocket, {
         socket.write('\r\n');
       } catch (e) {
         // socket closed while writing
-        // TODO client should switch transports
+        // no handshake sent; client will stop using WebSocket
       }
     },
     
@@ -220,7 +216,7 @@ Faye.extend(Faye.WebSocket, {
         socket.write(MD5.digest('binary'), 'binary');
       } catch (e) {
         // socket closed while writing
-        // TODO client should switch transports
+        // no handshake sent; client will stop using WebSocket
       }
     },
     

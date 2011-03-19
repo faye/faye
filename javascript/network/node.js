@@ -37,8 +37,8 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
   }
 });
 
-Faye.NodeHttpTransport.isUsable = function(endpoint) {
-  return typeof endpoint === 'string';
+Faye.NodeHttpTransport.isUsable = function(endpoint, callback, scope) {
+  callback.call(scope, typeof endpoint === 'string');
 };
 
 Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
@@ -49,8 +49,8 @@ Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
   }
 });
 
-Faye.NodeLocalTransport.isUsable = function(endpoint) {
-  return endpoint instanceof Faye.Server;
+Faye.NodeLocalTransport.isUsable = function(endpoint, callback, scope) {
+  callback.call(scope, endpoint instanceof Faye.Server);
 };
 
 Faye.Transport.register('in-process', Faye.NodeLocalTransport);

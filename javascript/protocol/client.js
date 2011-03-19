@@ -20,7 +20,10 @@ Faye.Client = Faye.Class({
     this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
     this._options   = options || {};
     
-    this._transport = Faye.Transport.get(this, Faye.MANDATORY_CONNECTION_TYPES);
+    Faye.Transport.get(this, Faye.MANDATORY_CONNECTION_TYPES, function(transport) {
+      this._transport = transport;
+    }, this);
+    
     this._state     = this.UNCONNECTED;
     this._outbox    = [];
     this._channels  = new Faye.Channel.Tree();
@@ -76,7 +79,10 @@ Faye.Client = Faye.Class({
       if (response.successful) {
         this._state     = this.CONNECTED;
         this._clientId  = response.clientId;
-        this._transport = Faye.Transport.get(this, response.supportedConnectionTypes);
+        
+        Faye.Transport.get(this, response.supportedConnectionTypes, function(transport) {
+          this._transport = transport;
+        }, this);
         
         this.info('Handshake successful: ?', this._clientId);
         

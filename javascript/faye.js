@@ -107,6 +107,33 @@ Faye.extend(Faye, {
     }
   },
   
+  asyncEach: function(list, iterator) {
+    var n       = list.length,
+        i       = -1,
+        calls   = 0,
+        looping = false;
+
+    var iterate = function() {
+      calls -= 1;
+      i += 1;
+      if (i === n) return;
+      iterator(list[i], resume);
+    };
+
+    var loop = function() {
+      if (looping) return;
+      looping = true;
+      while (calls > 0) iterate();
+      looping = false;
+    };
+
+    var resume = function() {
+      calls += 1;
+      loop();
+    };
+    resume();
+  },
+  
   // http://assanka.net/content/tech/2009/09/02/json2-js-vs-prototype/
   toJSON: function(object) {
     if (this.stringify)

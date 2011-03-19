@@ -17,17 +17,13 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
     this.connect();
   },
   
-  getSocketUrl: function() {
-    return Faye.URI.parse(this._endpoint).toURL().replace(/^http(s?):/ig, 'ws$1:');
-  },
-  
   connect: function() {
     this._state = this._state || this.UNCONNECTED;
     if (this._state !== this.UNCONNECTED) return;
     
     this._state = this.CONNECTING;
     
-    this._socket = new WebSocket(this.getSocketUrl());
+    this._socket = new WebSocket(Faye.WebSocketTransport.getSocketUrl(this._endpoint));
     var self = this;
     
     this._socket.onopen = function() {
@@ -63,12 +59,36 @@ Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
   }
 });
 
+Faye.WebSocketTransport.getSocketUrl = function(endpoint) {
+  return Faye.URI.parse(endpoint).toURL().replace(/^http(s?):/ig, 'ws$1:');
+};
+
 Faye.extend(Faye.WebSocketTransport.prototype, Faye.Deferrable);
 
 
-Faye.WebSocketTransport.isUsable = function(endpoint) {
-  return !!Faye.ENV.WebSocket;
+Faye.WebSocketTransport.isUsable = function(endpoint, callback, scope) {
+  if (!Faye.ENV.WebSocket) return callback.call(scope, false);
+  
+  var connected = false,
+      socketUrl = this.getSocketUrl(endpoint),
+      socket    = new WebSocket(socketUrl);
+  
+  socket.onopen = function() {
+    connected = true;
+    socket.close();
+    callback.call(scope, true);
+    socket = null;
+  };
+  
+  var notconnected = function() {
+    if (!connected) callback.call(scope, false);
+  };
+  
+  socket.onclose = socket.onerror = notconnected;
+  setTimeout(notconnected, this.WEBSOCKET_TIMEOUT);
 };
+
+Faye.WebSocketTransport.WEBSOCKET_TIMEOUT = 1000;
 
 Faye.Transport.register('websocket', Faye.WebSocketTransport);
 
@@ -90,8 +110,8 @@ Faye.XHRTransport = Faye.Class(Faye.Transport, {
   }
 });
 
-Faye.XHRTransport.isUsable = function(endpoint) {
-  return Faye.URI.parse(endpoint).isLocal();
+Faye.XHRTransport.isUsable = function(endpoint, callback, scope) {
+  callback.call(scope, Faye.URI.parse(endpoint).isLocal());
 };
 
 Faye.Transport.register('long-polling', Faye.XHRTransport);
@@ -139,8 +159,8 @@ Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
   }
 });
 
-Faye.JSONPTransport.isUsable = function(endpoint) {
-  return true;
+Faye.JSONPTransport.isUsable = function(endpoint, callback, scope) {
+  callback.call(scope, true);
 };
 
 Faye.Transport.register('callback-polling', Faye.JSONPTransport);

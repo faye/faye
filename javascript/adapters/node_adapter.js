@@ -89,34 +89,33 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   handle: function(request, response) {
-    var requestUrl = url.parse(request.url, true),
-        self = this, data;
+    var requestUrl    = url.parse(request.url, true),
+        requestMethod = request.method,
+        self          = this;
     
-    if (/\.js$/.test(requestUrl.pathname)) {
-      this.loadClientScript(function(content) {
+    if (/\.js$/.test(requestUrl.pathname))
+      return this.loadClientScript(function(content) {
         response.writeHead(200, self.TYPE_SCRIPT);
         response.write(content);
         response.end();
       });
+    
+    if (requestMethod === 'GET') {
+      this._callWithParams(request, response, requestUrl.query);
+      
+    } else if (requestMethod === 'POST') {
+      Faye.withDataFor(request, function(data) {
+        var type   = (request.headers['content-type'] || '').split(';')[0],
+            params = (type === 'application/json')
+                   ? {message: data}
+                   : querystring.parse(data);
+        
+        self._callWithParams(request, response, params);
+      });
       
     } else {
-      var isGet = (request.method === 'GET');
-      
-      if (isGet)
-        this._callWithParams(request, response, requestUrl.query);
-      
-      else
-        Faye.withDataFor(request, function(data) {
-          var type   = request.headers['content-type'].split(';')[0],
-              
-              params = (type === 'application/json')
-                     ? {message: data}
-                     : querystring.parse(data);
-          
-          self._callWithParams(request, response, params);
-        });
+      this._returnError(response);
     }
-    return true;
   },
   
   handleUpgrade: function(request, socket, head) {
@@ -156,7 +155,7 @@ Faye.NodeAdapter = Faye.Class({
           jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
           type    = isGet ? this.TYPE_SCRIPT : this.TYPE_JSON;
-      
+          
       if (isGet) this._server.flushConnection(message);
       
       this._server.process(message, false, function(replies) {
@@ -167,10 +166,14 @@ Faye.NodeAdapter = Faye.Class({
         response.end();
       });
     } catch (e) {
-      response.writeHead(400, this.TYPE_TEXT);
-      response.write('Bad request');
-      response.end();
+      this._returnError(response);
     }
+  },
+  
+  _returnError: function(response) {
+    response.writeHead(400, this.TYPE_TEXT);
+    response.write('Bad request');
+    response.end();
   }
 });
 
