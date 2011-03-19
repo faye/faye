@@ -1,10 +1,19 @@
 JS.ENV.EngineSteps = JS.Test.asyncSteps({
   create_client: function(name, resume) {
+    var inboxes = this._inboxes = this._inboxes || {}
     var clients = this._clients = this._clients || {}
     this.engine.createClient(function(clientId) {
       clients[name] = clientId
+      inboxes[name] = inboxes[name] || []
       resume()
     })
+  },
+  
+  connect: function(name, engine, resume) {
+    var clientId = this._clients[name]
+    var inboxes  = this._inboxes
+    engine.connect(clientId, {}, function(m) { inboxes[name] = inboxes[name].concat(m) })
+    setTimeout(resume, 10)
   },
   
   destroy_client: function(name, resume) {
@@ -42,7 +51,7 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   
   publish: function(message, resume) {
     this.engine.publish(message)
-    resume()
+    setTimeout(resume, 10)
   },
   
   ping: function(name, resume) {
@@ -51,22 +60,16 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   },
   
   clock_tick: function(time, resume) {
-    this.clock.tick(time)
+    setTimeout(resume, time)
+  },
+  
+  expect_message: function(name, messages, resume) {
+    this.assertEqual(messages, this._inboxes[name])
     resume()
   },
   
-  expect_disconnect: function(name, resume) {
-    this.expect(this.engine, "publishEvent").given("disconnect", this._clients[name])
-    resume()
-  },
-  
-  expect_announce: function(name, message, resume) {
-    this.expect(this.engine, "announce").given(this._clients[name], message)
-    resume()
-  },
-  
-  expect_no_announce: function(name, message, resume) {
-    this.expect(this.engine, "announce").given(this._clients[name], message).exactly(0)
+  expect_no_message: function(name, resume) {
+    this.assertEqual([], this._inboxes[name])
     resume()
   }
 })
@@ -75,20 +78,14 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
   include(JS.Test.Helpers)
   
   sharedExamplesFor("faye engine", function() { with(this) {
-    include(JS.Test.FakeClock)
     include(EngineSteps)
     
-    define("options", function() { return {} })
+    define("options", function() { return {timeout: 1} })
     
     before(function() { with(this) {
-      clock.stub()
       create_client("alice")
       create_client("bob")
       create_client("carol")
-    }})
-    
-    after(function() { with(this) {
-      sync(clock.method("reset"))
     }})
     
     describe("createClient", function() { with(this) {
@@ -114,19 +111,17 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     }})
     
     describe("ping", function() { with(this) {
-      define("options", function() { return {timeout: 1} })
-      
       it("removes a client if it does not ping often enough", function() { with(this) {
-        clock_tick(2000)
+        clock_tick(2200)
         check_client_exists("alice", false)
       }})
       
       it("prolongs the life of a client", function() { with(this) {
-        clock_tick(1000)
+        clock_tick(1100)
         ping("alice")
-        clock_tick(1000)
+        clock_tick(1100)
         check_client_exists("alice", true)
-        clock_tick(1000)
+        clock_tick(1100)
         check_client_exists("alice", false)
       }})
     }})
@@ -136,11 +131,6 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         destroy_client("alice")
         check_client_exists("alice", false)
       }})
-      
-      it("notifies listeners of the destroyed client", function() { with(this) {
-        expect_disconnect("alice")
-        destroy_client("alice")
-      }})
 
       describe("when the client has subscriptions", function() { with(this) {
         before(function() { with(this) {
@@ -149,9 +139,10 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("stops the client receiving messages", function() { with(this) {
-          expect(engine, "announce").exactly(0)
+          connect("alice", engine)
           destroy_client("alice")
           publish(message)
+          expect_no_message("alice")
         }})
       }})
     }})
@@ -159,12 +150,17 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     describe("publish", function() { with(this) {
       before(function() { with(this) {
         this.message = {"channel": "/messages/foo", "data": "ok"}
+        connect("alice", engine)
+        connect("bob", engine)
+        connect("carol", engine)
       }})
       
       describe("with no subscriptions", function() { with(this) {
         it("delivers no messages", function() { with(this) {
-          expect(engine, "announce").exactly(0)
-          engine.publish(message)
+          publish(message)
+          expect_no_message("alice")
+          expect_no_message("bob")
+          expect_no_message("carol")
         }})
       }})
       
@@ -174,8 +170,8 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("delivers messages to the subscribed client", function() { with(this) {
-          expect_announce("alice", message)
           publish(message)
+          expect_message("alice", [message])
         }})
       }})
       
@@ -186,8 +182,10 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("does not deliver messages to unsubscribed clients", function() { with(this) {
-          expect(engine, "announce").exactly(0)
-          engine.publish(message)
+          publish(message)
+          expect_no_message("alice")
+          expect_no_message("bob")
+          expect_no_message("carol")
         }})
       }})
       
@@ -199,10 +197,10 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("delivers messages to the subscribed clients", function() { with(this) {
-          expect_announce("alice", message)
-          expect_no_announce("bob", message)
-          expect_announce("carol", message)
           publish(message)
+          expect_message("alice", [message])
+          expect_no_message("bob")
+          expect_message("carol", [message])
         }})
       }})
       
@@ -214,10 +212,10 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("delivers messages to matching subscriptions", function() { with(this) {
-          expect_announce("alice", message)
-          expect_no_announce("bob", message)
-          expect_no_announce("carol", message)
           publish(message)
+          expect_message("alice", [message])
+          expect_no_message("bob")
+          expect_no_message("carol")
         }})
       }})
       
@@ -229,10 +227,10 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         }})
         
         it("delivers messages to matching subscriptions", function() { with(this) {
-          expect_announce("alice", message)
-          expect_no_announce("bob", message)
-          expect_announce("carol", message)
           publish(message)
+          expect_message("alice", [message])
+          expect_no_message("bob")
+          expect_message("carol", [message])
         }})
       }})
     }})

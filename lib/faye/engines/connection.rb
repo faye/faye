@@ -5,7 +5,7 @@ module Faye
       include EventMachine::Deferrable
       include Timeouts
       
-      attr_reader :id, :interval, :timeout
+      attr_reader :id
       
       def initialize(engine, id, options = {})
         @engine  = engine

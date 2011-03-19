@@ -6,8 +6,7 @@ EngineSteps = EM::RSpec.async_steps do
     @clients ||= {}
     engine.create_client do |client_id|
       @clients[name] = client_id
-      @inboxes[name] = []
-      engine.connect(client_id) { |m| @inboxes[name] += m }
+      @inboxes[name] ||= []
       resume.call
     end
   end
@@ -84,7 +83,7 @@ describe "Pub/sub engines" do
   shared_examples_for "faye engine" do
     include EngineSteps
     
-    let(:options) { {} }
+    let(:options) { {:timeout => 1} }
     let(:engine) { engine_klass.new options }
     
     before do
@@ -117,8 +116,6 @@ describe "Pub/sub engines" do
     end
 =begin
     describe :ping do
-      let(:options) { {:timeout => 1} }
-      
       it "removes a client if it does not ping often enough" do
         clock_tick 2
         check_client_exists :alice, false
@@ -147,6 +144,7 @@ describe "Pub/sub engines" do
         end
         
         it "stops the client receiving messages" do
+          connect :alice, engine
           destroy_client :alice
           publish @message
           expect_no_message :alice
@@ -157,6 +155,9 @@ describe "Pub/sub engines" do
     describe :publish do
       before do
         @message = {"channel" => "/messages/foo", "data" => "ok"}
+        connect :alice, engine
+        connect :bob,   engine
+        connect :carol, engine
       end
       
       describe "with no subscriptions" do
@@ -251,6 +252,8 @@ describe "Pub/sub engines" do
       Faye.ensure_reactor_running!
       create_client :alice
       create_client :bob
+      
+      connect :alice, left
     end
     
     describe :publish do

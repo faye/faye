@@ -2,6 +2,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
   initialize: function(options) {
     this._clients   = {};
     this._channels  = {};
+    this._messages  = {};
     this._namespace = new Faye.Namespace();
     
     Faye.Engine.Base.prototype.initialize.call(this, options);
@@ -14,7 +15,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     callback.call(scope, clientId);
   },
   
-  destroyClient: function(clientId) {
+  destroyClient: function(clientId, callback, scope) {
     var clients = this._clients;
     if (!clients.hasOwnProperty(clientId)) return;
     clients[clientId].forEach(function(channel) {
@@ -22,7 +23,8 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     }, this);
     this.removeTimeout(clientId);
     delete clients[clientId];
-    this.publishEvent('disconnect', clientId);
+    delete this._messages[clientId];
+    if (callback) callback.call(scope);
   },
   
   clientExists: function(clientId, callback, scope) {
@@ -55,14 +57,26 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
   },
   
   publish: function(message) {
-    if (message.error) return;
-    var channels = Faye.Channel.expand(message.channel);
+    var channels = Faye.Channel.expand(message.channel),
+        messages = this._messages;
+    
     Faye.each(channels, function(channel) {
       var clients = this._channels[channel];
       if (!clients) return;
       clients.forEach(function(clientId) {
-        this.announce(clientId, message);
+        messages[clientId] = messages[clientId] || new Faye.Set();
+        messages[clientId].add(message);
+        this.flush(clientId);
       }, this);
     }, this);
+  },
+  
+  flush: function(clientId) {
+    var conn = this.connection(clientId, false),
+        messages = this._messages[clientId];
+    
+    if (!conn || !messages) return;
+    delete this._messages[clientId];
+    messages.forEach(conn.deliver, conn);
   }
 });

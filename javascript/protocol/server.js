@@ -1,47 +1,11 @@
 Faye.Server = Faye.Class({
   initialize: function(options) {
-    this._options     = options || {};
-    this._connections = {};
-    this._engine      = Faye.Engine.get('memory', options);
-    
-    this._engine.addSubscriber('message', function(clientId, message) {
-      var connection = this._connection(clientId);
-      connection.deliver(message);
-    }, this);
-    
-    this._engine.addSubscriber('disconnect', function(clientId) {
-      var connection = this._connections[clientId];
-      this._destroyConnection(connection);
-    }, this);
-  },
-  
-  _connection: function(id) {
-    if (this._connections.hasOwnProperty(id)) return this._connections[id];
-    var connection = new Faye.Connection(id, this._options);
-    connection.addSubscriber('staleConnection', this._destroyConnection, this);
-    return this._connections[id] = connection;
-  },
-  
-  _destroyConnection: function(connection) {
-    if (!connection) return;
-    connection.flush();
-    connection.removeSubscribers();
-    delete this._connections[connection.id];
-  },
-  
-  _acceptConnection: function(options, response, socket, callback, scope) {
-    var connection = this._connection(response.clientId);
-    connection.connect(options, function(events) {
-      callback.call(scope, [response].concat(events));
-    }, this);
+    this._options = options || {};
+    this._engine  = Faye.Engine.get('memory', options);
   },
   
   flushConnection: function(messages) {
-    messages = [].concat(messages);
-    Faye.each(messages, function(message) {
-      var connection = this._connections[message.clientId];
-      if (connection) connection.flush();
-    }, this);
+    // TODO
   },
   
   determineClient: function(messages) {
@@ -106,7 +70,7 @@ Faye.Server = Faye.Class({
   _handle: function(message, socket, local, callback, scope) {
     if (!message) return callback.call(scope, []);
     
-    this._engine.publish(message);
+    if (!message.error) this._engine.publish(message);
     var channelName = message.channel, response;
     
     if (Faye.Channel.isMeta(channelName)) {
@@ -127,25 +91,23 @@ Faye.Server = Faye.Class({
       this._advize(response);
       
       if (response.channel === Faye.Channel.CONNECT && response.successful === true)
-        return this._acceptConnection(message.advice, response, socket, callback, scope);
+        return this._engine.connect(response.clientId, message.advice, function(events) {
+          callback.call(scope, [response].concat(events));
+        });
       
       callback.call(scope, [response]);
     }, this);
   },
   
   _advize: function(response) {
-    var connection = response.clientId && this._connection(response.clientId);
-    
     response.advice = response.advice || {};
-    if (connection) {
-      Faye.extend(response.advice, {
-        reconnect:  'retry',
-        interval:   Math.floor(connection.interval * 1000),
-        timeout:    Math.floor(connection.timeout * 1000)
-      }, false);
+    if (response.error) {
+      Faye.extend(response.advice, {reconnect:  'handshake'}, false);
     } else {
       Faye.extend(response.advice, {
-        reconnect:  'handshake'
+        reconnect:  'retry',
+        interval:   Math.floor(this._engine.interval * 1000),
+        timeout:    Math.floor(this._engine.timeout * 1000)
       }, false);
     }
   },

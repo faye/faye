@@ -34,9 +34,9 @@ packages:
       - util/node/web_socket
       - error
       - engines/base
+      - engines/connection
       - engines/memory
       - protocol/server
-      - protocol/connection
       - network/node
       - adapters/node_adapter
 

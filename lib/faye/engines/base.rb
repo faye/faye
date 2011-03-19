@@ -28,12 +28,12 @@ module Faye
       end
       
       def connect(client_id, options = {}, &callback)
-        conn = connection(client_id)
+        conn = connection(client_id, true)
         conn.connect(options, &callback)
         flush(client_id)
       end
       
-      def connection(client_id, create = true)
+      def connection(client_id, create)
         conn = @connections[client_id]
         return conn if conn or not create
         @connections[client_id] = Connection.new(self, client_id)
