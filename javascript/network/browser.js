@@ -117,6 +117,36 @@ Faye.XHRTransport.isUsable = function(endpoint, callback, scope) {
 Faye.Transport.register('long-polling', Faye.XHRTransport);
 
 
+Faye.CORSTransport = Faye.Class(Faye.Transport, {
+  request: function(message, timeout) {
+    var self  = this,
+        retry = this.retry(message, timeout),
+        xhr   = new (Faye.ENV.XDomainRequest 
+                  ? Faye.ENV.XDomainRequest 
+                  : Faye.ENV.XMLHttpRequest)(),
+        url   = Faye.URI.parse(this._endpoint).toURL();
+        
+    xhr.open('POST', url, true);
+    if (xhr.setRequestHeader) xhr.setRequestHeader('Content-Type', 'text/plain');
+    xhr.onload = function() {
+      try {
+        self.receive(JSON.parse(xhr.responseText));
+      } catch(e) {
+        retry();
+      }
+    };
+    xhr.onerror = retry;
+    xhr.send(Faye.toJSON(message));
+  }
+});
+
+Faye.CORSTransport.isUsable = function(endpoint, callback, scope) {
+  callback.call(scope, !!(Faye.ENV.XMLHttpRequest || Faye.ENV.XDomainRequest));
+};
+
+Faye.Transport.register('cross-origin-long-polling', Faye.CORSTransport);
+
+
 Faye.JSONPTransport = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
     var params       = {message: Faye.toJSON(message)},
