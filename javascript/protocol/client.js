@@ -11,8 +11,8 @@ Faye.Client = Faye.Class({
   CONNECTION_TIMEOUT:   <%= Faye::Client::CONNECTION_TIMEOUT %>,
   
   DEFAULT_ENDPOINT:     '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
-  MAX_DELAY:            <%= Faye::Connection::MAX_DELAY %>,
-  INTERVAL:             <%= Faye::Connection::INTERVAL %>,
+  MAX_DELAY:            <%= Faye::Engine::MAX_DELAY %>,
+  INTERVAL:             <%= Faye::Engine::INTERVAL %>,
   
   initialize: function(endpoint, options) {
     this.info('New client created for ?', endpoint);

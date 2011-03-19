@@ -1,7 +1,7 @@
 Faye.Connection = Faye.Class({
-  MAX_DELAY:  <%= Faye::Connection::MAX_DELAY %>,
-  INTERVAL:   <%= Faye::Connection::INTERVAL %>,
-  TIMEOUT:    <%= Faye::Connection::TIMEOUT %>,
+  MAX_DELAY:  <%= Faye::Engine::MAX_DELAY %>,
+  INTERVAL:   <%= Faye::Engine::INTERVAL %>,
+  TIMEOUT:    <%= Faye::Engine::TIMEOUT %>,
   
   initialize: function(id, options) {
     this.id         = id;
