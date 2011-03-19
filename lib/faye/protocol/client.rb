@@ -35,8 +35,8 @@ module Faye
       
       @advice = {
         'reconnect' => RETRY,
-        'interval'  => 1000.0 * (@options[:interval] || Connection::INTERVAL),
-        'timeout'   => 1000.0 * (@options[:timeout] || CONNECTION_TIMEOUT)
+        'interval'  => 1000.0 * (@options[:interval] || Engine::INTERVAL),
+        'timeout'   => 1000.0 * (@options[:timeout]  || CONNECTION_TIMEOUT)
       }
     end
     
@@ -313,7 +313,7 @@ module Faye
               @connect_message = message
             end
             
-            add_timeout(:publish, Connection::MAX_DELAY) { flush! }
+            add_timeout(:publish, Engine::MAX_DELAY) { flush! }
           end
         end
       end

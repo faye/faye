@@ -9,12 +9,6 @@ describe Faye::Server do
     engine.stub(:add_subscriber)
   end
   
-  it "listens for notifications from Engine" do
-    engine.should_receive(:add_subscriber).with(:message, anything)
-    engine.should_receive(:add_subscriber).with(:disconnect, anything)
-    Faye::Server.new
-  end
-  
   describe :handshake do
     let(:message) {{"channel" => "/meta/handshake",
                     "version" => "1.0",

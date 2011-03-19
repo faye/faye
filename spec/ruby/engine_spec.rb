@@ -2,11 +2,19 @@ require "spec_helper"
 
 EngineSteps = EM::RSpec.async_steps do
   def create_client(name, &resume)
+    @inboxes ||= {}
     @clients ||= {}
     engine.create_client do |client_id|
       @clients[name] = client_id
+      @inboxes[name] = []
+      engine.connect(client_id) { |m| @inboxes[name] += m }
       resume.call
     end
+  end
+  
+  def connect(name, engine, &resume)
+    engine.connect(@clients[name]) { |m| @inboxes[name] += m }
+    EM.add_timer(0.01, &resume)
   end
   
   def destroy_client(name, &resume)
@@ -55,18 +63,13 @@ EngineSteps = EM::RSpec.async_steps do
     resume.call
   end
   
-  def expect_disconnect(name, &resume)
-    engine.should_receive(:publish_event).with(:disconnect, @clients[name])
+  def expect_message(name, messages, &resume)
+    @inboxes[name].should == messages
     resume.call
   end
   
-  def expect_announce(name, message, &resume)
-    engine.should_receive(:publish_event).with(:message, @clients[name], message)
-    resume.call
-  end
-  
-  def expect_no_announce(name, message, &resume)
-    engine.should_not_receive(:pubish_event).with(:message, @clients[name], message)
+  def expect_no_message(name, &resume)
+    @inboxes[name].should == []
     resume.call
   end
   
@@ -82,6 +85,7 @@ describe "Pub/sub engines" do
     include EngineSteps
     
     let(:options) { {} }
+    let(:engine) { engine_klass.new options }
     
     before do
       Faye.ensure_reactor_running!
@@ -136,11 +140,6 @@ describe "Pub/sub engines" do
         check_client_exists :alice, false
       end
       
-      it "notifies listeners of the destroyed client" do
-        expect_disconnect :alice
-        destroy_client :alice
-      end
-      
       describe "when the client has subscriptions" do
         before do
           @message = {"channel" => "/messages/foo", "data" => "ok"}
@@ -148,9 +147,9 @@ describe "Pub/sub engines" do
         end
         
         it "stops the client receiving messages" do
-          engine.should_receive(:unsubscribe)
           destroy_client :alice
           publish @message
+          expect_no_message :alice
         end
       end
     end
@@ -162,8 +161,10 @@ describe "Pub/sub engines" do
       
       describe "with no subscriptions" do
         it "delivers no messages" do
-          engine.should_not_receive(:announce)
-          engine.publish(@message)
+          publish @message
+          expect_no_message :alice
+          expect_no_message :bob
+          expect_no_message :carol
         end
       end
       
@@ -171,8 +172,8 @@ describe "Pub/sub engines" do
         before { subscribe :alice, "/messages/foo" }
         
         it "delivers messages to the subscribed client" do
-          expect_announce :alice, @message
           publish @message
+          expect_message :alice, [@message]
         end
       end
       
@@ -183,8 +184,10 @@ describe "Pub/sub engines" do
         end
         
         it "does not deliver messages to unsubscribed clients" do
-          engine.should_not_receive(:announce)
-          engine.publish(@message)
+          publish @message
+          expect_no_message :alice
+          expect_no_message :bob
+          expect_no_message :carol
         end
       end
       
@@ -196,11 +199,10 @@ describe "Pub/sub engines" do
         end
         
         it "delivers messages to the subscribed clients" do
-          expect_announce    :alice, @message
-          expect_no_announce :bob,   @message
-          expect_announce    :carol, @message
-          
           publish @message
+          expect_message    :alice, [@message]
+          expect_no_message :bob
+          expect_message    :carol, [@message]
         end
       end
       
@@ -212,11 +214,10 @@ describe "Pub/sub engines" do
         end
         
         it "delivers messages to matching subscriptions" do
-          expect_announce    :alice, @message
-          expect_no_announce :bob,   @message
-          expect_no_announce :carol, @message
-          
           publish @message
+          expect_message    :alice, [@message]
+          expect_no_message :bob
+          expect_no_message :carol
         end
       end
       
@@ -228,25 +229,55 @@ describe "Pub/sub engines" do
         end
         
         it "delivers messages to matching subscriptions" do
-          expect_announce    :alice, @message
-          expect_no_announce :bob,   @message
-          expect_announce    :carol, @message
-          
           publish @message
+          expect_message    :alice, [@message]
+          expect_no_message :bob
+          expect_message    :carol, [@message]
         end
       end
     end
   end
   
+  shared_examples_for "distributed engine" do
+    include EngineSteps
+    
+    let(:options) { {} }
+    let(:left)  { engine_klass.new options }
+    let(:right) { engine_klass.new options }
+    
+    alias :engine :left
+    
+    before do
+      Faye.ensure_reactor_running!
+      create_client :alice
+      create_client :bob
+    end
+    
+    describe :publish do
+      before do
+        subscribe :alice, "/foo"
+        publish "channel" => "/foo", "data" => "first"
+      end
+      
+      it "only delivers each message once" do
+        expect_message :alice, ["channel" => "/foo", "data" => "first"]
+        publish "channel" => "/foo", "data" => "second"
+        connect :alice, right
+        expect_message :alice, [{"channel" => "/foo", "data" => "first"}, {"channel" => "/foo", "data" => "second"}]
+      end
+    end
+  end
+  
   describe Faye::Engine::Memory do
-    let(:engine) { Faye::Engine::Memory.new(options) }
+    let(:engine_klass) { Faye::Engine::Memory }
     it_should_behave_like "faye engine"
   end
   
   describe Faye::Engine::Redis do
-    let(:engine) { Faye::Engine::Redis.new(options) }
+    let(:engine_klass) { Faye::Engine::Redis }
     after { clean_redis_db }
     it_should_behave_like "faye engine"
+    it_should_behave_like "distributed engine"
   end
 end
 

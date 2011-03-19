@@ -7,15 +7,15 @@ module Faye
       def init
         return if @redis
         
-        @redis      = EM::Hiredis::Client.connect
-        @subscriber = EM::Hiredis::Client.connect
+        @redis      = EventMachine::Hiredis::Client.connect
+        @subscriber = EventMachine::Hiredis::Client.connect
         
-        @subscriber.subscribe('/messages')
+        @subscriber.subscribe('/notifications')
         @subscriber.on(:message, &method(:on_message))
       end
       
       def disconnect
-        @subscriber.unsubscribe('/messages')
+        @subscriber.unsubscribe('/notifications')
       end
       
       def create_client(&callback)
@@ -34,11 +34,11 @@ module Faye
       def destroy_client(client_id, &callback)
         init
         @redis.srem('/clients', client_id)
-        @redis.smembers("/clients/#{client_id}") do |channels|
+        @redis.del("/clients/#{client_id}/messages")
+        @redis.smembers("/clients/#{client_id}/channels") do |channels|
           channels.each { |channel| unsubscribe(client_id, channel) }
           callback.call if callback
         end
-        publish_event(:disconnect, client_id) # TODO distribute this through Redis
       end
       
       def client_exists(client_id, &callback)
@@ -54,29 +54,47 @@ module Faye
       
       def subscribe(client_id, channel, &callback)
         init
-        @redis.sadd("/clients/#{client_id}", channel)
+        @redis.sadd("/clients/#{client_id}/channels", channel)
         @redis.sadd("/channels#{channel}", client_id, &callback)
       end
       
       def unsubscribe(client_id, channel, &callback)
         init
-        @redis.srem("/clients/#{client_id}", channel)
+        @redis.srem("/clients/#{client_id}/channels", channel)
         @redis.srem("/channels#{channel}", client_id, &callback)
       end
       
       def publish(message)
         init
-        @redis.publish('/messages', JSON.dump(message))
-      end
-      
-      def on_message(key, message)
-        message = JSON.parse(message)
+        json_message = JSON.dump(message)
         channels = Channel.expand(message['channel'])
         channels.each do |channel|
           @redis.smembers("/channels#{channel}") do |clients|
-            announce(clients, message)
+            clients.each do |client_id|
+              @redis.sadd("/clients/#{client_id}/messages", json_message)
+              @redis.publish('/notifications', client_id)
+            end
           end
         end
+      end
+      
+    private
+      
+      def flush(client_id)
+        return unless conn = connection(client_id, false)
+        init
+        
+        key = "/clients/#{client_id}/messages"
+        @redis.smembers(key) do |json_messages|
+          json_messages.each do |json_message|
+            @redis.srem(key, json_message)
+            conn.deliver(JSON.parse(json_message))
+          end
+        end
+      end
+      
+      def on_message(topic, message)
+        flush(message) if topic == '/notifications'
       end
     end
     

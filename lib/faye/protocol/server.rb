@@ -5,54 +5,12 @@ module Faye
     include Extensible
     
     def initialize(options = {})
-      @options     = options
-      @connections = {}
-      @engine      = Faye::Engine.get(options)
-      
-      @engine.add_subscriber(:message, method(:on_message))
-      @engine.add_subscriber(:disconnect, method(:on_disconnect))
+      @options = options
+      @engine  = Faye::Engine.get(options)
     end
-    
-  private
-    
-    def on_message(client_id, message)
-      conn = connection(client_id)
-      conn.deliver(message)
-    end
-    
-    def on_disconnect(client_id)
-      conn = @connections[client_id]
-      destroy_connection(conn)
-    end
-    
-    def connection(id)
-      return @connections[id] if @connections.has_key?(id)
-      connection = Connection.new(id, @options)
-      connection.add_subscriber(:stale_connection, method(:destroy_connection))
-      @connections[id] = connection
-    end
-    
-    def destroy_connection(connection)
-      return unless connection
-      connection.flush!
-      connection.remove_subscribers
-      @connections.delete(connection.id)
-    end
-    
-    def accept_connection(options, response, socket, &callback)
-      connection = connection(response['clientId'])
-      connection.connect(options) do |events|
-        callback.call([response] + events)
-      end
-    end
-    
-  public
     
     def flush_connection(messages)
-      [messages].flatten.each do |message|
-        connection = @connections[message['clientId']]
-        connection.flush! if connection
-      end
+      # TODO
     end
     
     def process(messages, local_or_remote = false, &callback)
@@ -123,7 +81,9 @@ module Faye
         advize(response)
         
         if response['channel'] == Channel::CONNECT and response['successful'] == true
-          accept_connection(message['advice'], response, socket, &callback)
+          @engine.connect(response['clientId'], message['advice']) do |events|
+            callback.call([response] + events)
+          end
         else
           callback.call([response])
         end
@@ -131,15 +91,13 @@ module Faye
     end
     
     def advize(response)
-      connection = response['clientId'] && connection(response['clientId'])
-      
       advice = response['advice'] ||= {}
-      if connection
-        advice['reconnect'] ||= 'retry'
-        advice['interval']  ||= (connection.interval * 1000).floor
-        advice['timeout']   ||= (connection.timeout * 1000).floor
-      else
+      if response['error']
         advice['reconnect'] ||= 'handshake'
+      else
+        advice['reconnect'] ||= 'retry'
+        advice['interval']  ||= (@engine.interval * 1000).floor
+        advice['timeout']   ||= (@engine.timeout * 1000).floor
       end
     end
     

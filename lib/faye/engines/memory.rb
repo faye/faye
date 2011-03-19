@@ -5,6 +5,7 @@ module Faye
       def initialize(options)
         @clients   = {}
         @channels  = {}
+        @messages  = {}
         @namespace = Namespace.new
         super
       end
@@ -23,7 +24,7 @@ module Faye
         end
         remove_timeout(client_id)
         @clients.delete(client_id)
-        publish_event(:disconnect, client_id)
+        @messages.delete(client_id)
         callback.call if callback
       end
       
@@ -56,8 +57,21 @@ module Faye
         channels = Channel.expand(message['channel'])
         channels.each do |channel|
           next unless clients = @channels[channel]
-          announce(clients, message)
+          clients.each do |client_id|
+            @messages[client_id] ||= Set.new
+            @messages[client_id].add(message)
+            flush(client_id)
+          end
         end
+      end
+      
+    private
+      
+      def flush(client_id)
+        return unless conn = connection(client_id, false) and
+               messages = @messages.delete(client_id)
+        
+        messages.each(&conn.method(:deliver))
       end
     end
     

@@ -21,6 +21,7 @@ module Faye
       mixins/logging
       util/namespace
       engines/base
+      engines/connection
       engines/memory
       engines/redis
       protocol/grammar
@@ -29,7 +30,6 @@ module Faye
       protocol/subscription
       protocol/client
       protocol/server
-      protocol/connection
       network/transport
       error
       

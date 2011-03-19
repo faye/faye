@@ -1,5 +1,10 @@
 module Faye
   module Engine
+    
+    MAX_DELAY = 0.0
+    INTERVAL  = 0.0
+    TIMEOUT   = 60.0
+    
     def self.register(type, klass)
       @backends ||= {}
       @backends[type] = klass
@@ -11,19 +16,34 @@ module Faye
     end
     
     class Base
-      include Publisher
       include Timeouts
       
+      attr_reader :interval, :timeout
+      
       def initialize(options)
-        @options = options
+        @options     = options
+        @connections = {}
+        @interval    = @options[:interval] || INTERVAL
+        @timeout     = @options[:timeout]  || TIMEOUT
       end
       
-      def announce(client_ids, message)
-        client_ids.each do |client_id|
-          publish_event(:message, client_id, message)
-        end
+      def connect(client_id, options = {}, &callback)
+        conn = connection(client_id)
+        conn.connect(options, &callback)
+        flush(client_id)
+      end
+      
+      def connection(client_id, create = true)
+        conn = @connections[client_id]
+        return conn if conn or not create
+        @connections[client_id] = Connection.new(self, client_id)
+      end
+      
+      def close_connection(client_id)
+        @connections.delete(client_id)
       end
     end
+    
   end
 end
 
