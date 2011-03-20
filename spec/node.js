@@ -15,6 +15,7 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
   })
   
   JS.require( 'FayeSpec',
+              'GrammarSpec',
               'ChannelSpec',
               'EngineSpec',
               'ServerSpec',
