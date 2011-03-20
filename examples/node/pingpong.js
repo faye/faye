@@ -1,4 +1,4 @@
-var faye = require('faye'),
+var faye = require('../../build/faye-node'),
     sys  = require('sys');
 
 ENDPOINT = 'http://localhost:8000/bayeux';
