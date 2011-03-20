@@ -6,3 +6,4 @@ examples/node/faye*
 lib/*.js
 README.txt
 pkg
+dump.rdb
