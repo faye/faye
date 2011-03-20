@@ -17,8 +17,7 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   },
   
   destroy_client: function(name, resume) {
-    this.engine.destroyClient(this._clients[name])
-    resume()
+    this.engine.destroyClient(this._clients[name], resume)
   },
   
   check_client_id: function(name, pattern, resume) {
@@ -51,7 +50,7 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   
   publish: function(message, resume) {
     this.engine.publish(message)
-    setTimeout(resume, 10)
+    setTimeout(resume, 20)
   },
   
   ping: function(name, resume) {
@@ -71,6 +70,12 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   expect_no_message: function(name, resume) {
     this.assertEqual([], this._inboxes[name])
     resume()
+  },
+  
+  clean_redis_db: function(resume) {
+    this.engine.disconnect()
+    var redis = require('redis-node').createClient()
+    redis.flushall(resume)
   }
 })
 
@@ -83,6 +88,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     define("options", function() { return {timeout: 1} })
     
     before(function() { with(this) {
+      this.engine = new engineKlass(options())
       create_client("alice")
       create_client("bob")
       create_client("carol")
@@ -111,17 +117,19 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     }})
     
     describe("ping", function() { with(this) {
+      define("options", function() { return {timeout: 0.3} })
+      
       it("removes a client if it does not ping often enough", function() { with(this) {
-        clock_tick(2200)
+        clock_tick(700)
         check_client_exists("alice", false)
       }})
       
       it("prolongs the life of a client", function() { with(this) {
-        clock_tick(1100)
+        clock_tick(330)
         ping("alice")
-        clock_tick(1100)
+        clock_tick(330)
         check_client_exists("alice", true)
-        clock_tick(1100)
+        clock_tick(330)
         check_client_exists("alice", false)
       }})
     }})
@@ -236,8 +244,47 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     }})
   }})
   
+  sharedBehavior("distributed engine", function() { with(this) {
+    include(EngineSteps)
+    define("options", function() { return {timeout: 1} })
+    
+    before(function() { with(this) {
+      this.left   = new engineKlass(options())
+      this.right  = new engineKlass(options())
+      this.engine = left
+      
+      create_client("alice")
+      create_client("bob")
+      
+      connect("alice", left)
+    }})
+    
+    describe("publish", function() { with(this) {
+      before(function() { with(this) {
+        subscribe("alice", "/foo")
+        publish({channel: "/foo", data: "first"})
+      }})
+      
+      it("only delivers each message once", function() { with(this) {
+        expect_message("alice", [{channel: "/foo", data: "first"}])
+        publish({channel: "/foo", data: "second"})
+        connect("alice", right)
+        expect_message("alice", [{channel: "/foo", data: "first"}, {channel: "/foo", data: "second"}])
+      }})
+    }})
+  }})
+  
   describe("Faye.Engine.Memory", function() { with(this) {
-    before(function() { this.engine = new Faye.Engine.Memory(this.options()) })
+    before(function() { this.engineKlass = Faye.Engine.Memory })
     itShouldBehaveLike("faye engine")
+  }})
+  
+  describe("Faye.Engine.Redis", function() { with(this) {
+    before(function() { this.engineKlass = Faye.Engine.Redis })
+    after(function() { this.clean_redis_db() })
+    itShouldBehaveLike("faye engine")
+    describe("distribution", function() { with(this) {
+      itShouldBehaveLike("distributed engine")
+    }})
   }})
 }})

@@ -36,8 +36,17 @@ module Faye
         @redis.srem('/clients', client_id)
         @redis.del("/clients/#{client_id}/messages")
         @redis.smembers("/clients/#{client_id}/channels") do |channels|
-          channels.each { |channel| unsubscribe(client_id, channel) }
-          callback.call if callback
+          n, i = channels.size, 0
+          if n == 0
+            callback.call if callback
+          else
+            channels.each do |channel|
+              unsubscribe(client_id, channel) do
+                i += 1
+                callback.call if callback and i == n
+              end
+            end
+          end
         end
       end
       
@@ -49,7 +58,18 @@ module Faye
       end
       
       def ping(client_id)
-        # TODO
+        timeout = @options[:timeout]
+        time    = Time.now.to_i.to_s
+        
+        return unless Numeric === timeout
+        
+        remove_timeout(client_id)
+        @redis.set("/clients/#{client_id}/ping", time)
+        add_timeout(client_id, 2 * timeout) do
+          @redis.get("/clients/#{client_id}/ping") do |ping|
+            destroy_client(client_id) if ping == time
+          end
+        end
       end
       
       def subscribe(client_id, channel, &callback)

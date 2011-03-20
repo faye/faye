@@ -80,3 +80,5 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     messages.forEach(conn.deliver, conn);
   }
 });
+
+Faye.Engine.register('memory', Faye.Engine.Memory);

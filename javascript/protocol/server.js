@@ -1,7 +1,7 @@
 Faye.Server = Faye.Class({
   initialize: function(options) {
     this._options = options || {};
-    this._engine  = Faye.Engine.get('memory', options);
+    this._engine  = Faye.Engine.get(this._options);
   },
   
   flushConnection: function(messages) {

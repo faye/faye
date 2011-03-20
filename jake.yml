@@ -36,6 +36,7 @@ packages:
       - engines/base
       - engines/connection
       - engines/memory
+      - engines/redis
       - protocol/server
       - network/node
       - adapters/node_adapter

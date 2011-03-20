@@ -1,6 +1,12 @@
 Faye.Engine = {
-  get: function(type, options) {
-    return new Faye.Engine.Memory(options);
+  register: function(type, klass) {
+    this._backends = this._backends || {};
+    this._backends[type] = klass;
+  },
+  
+  get: function(options) {
+    var klass = this._backends[options.engine] || Faye.Engine.Memory;
+    return new klass(options);
   }
 };
 

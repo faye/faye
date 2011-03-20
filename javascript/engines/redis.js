@@ -1,0 +1,112 @@
+var redis = require('redis-node');
+
+Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
+  initialize: function(options) {
+    this._redis = redis.createClient();
+    this._subscriber = redis.createClient();
+    
+    var self = this;
+    this._subscriber.subscribeTo('/notifications', function(topic, message) {
+      if (!self._inactive) self.flush(message);
+    });
+    
+    Faye.Engine.Base.prototype.initialize.call(this, options);
+  },
+  
+  disconnect: function() {
+    this._inactive = true;
+    // this._subscriber.unsubscribeFrom('/notifications');
+  },
+  
+  createClient: function(callback, scope) {
+    var clientId = Faye.random(), self = this;
+    this._redis.sadd('/clients', clientId, function(error, added) {
+      if (added === 0) return self.createClient(callback, scope);
+      self.ping(clientId);
+      callback.call(scope, clientId);
+    });
+  },
+  
+  destroyClient: function(clientId, callback, scope) {
+    var self = this;
+    this._redis.srem('/clients', clientId);
+    this._redis.del('/clients/' + clientId + '/messages');
+    this._redis.smembers('/clients/' + clientId + '/channels', function(error, channels) {
+      var n = channels.length, i = 0;
+      if (n === 0) return callback && callback.call(scope);
+      
+      Faye.each(channels, function(channel) {
+        self.unsubscribe(clientId, channel, function() {
+          i += 1;
+          if (i === n) callback && callback.call(scope);
+        });
+      });
+    });
+  },
+  
+  clientExists: function(clientId, callback, scope) {
+    this._redis.sismember('/clients', clientId, function(error, exists) {
+      callback.call(scope, exists !== 0);
+    });
+  },
+  
+  ping: function(clientId) {
+    var timeout = this._options.timeout,
+        time    = new Date().getTime().toString(),
+        self    = this;
+    
+    if (typeof timeout !== 'number') return;
+    
+    this.removeTimeout(clientId);
+    this._redis.set('/clients/' + clientId + '/ping', time);
+    this.addTimeout(clientId, 2 * timeout, function() {
+      this._redis.get('/clients/' + clientId + '/ping', function(error, ping) {
+        if (ping === time) self.destroyClient(clientId);
+      });
+    }, this);
+  },
+  
+  subscribe: function(clientId, channel, callback, scope) {
+    this._redis.sadd('/clients/' + clientId + '/channels', channel);
+    this._redis.sadd('/channels' + channel, clientId, function() {
+      if (callback) callback.call(scope);
+    });
+  },
+  
+  unsubscribe: function(clientId, channel, callback, scope) {
+    this._redis.srem('/clients/' + clientId + '/channels', channel);
+    this._redis.srem('/channels' + channel, clientId, function() {
+      if (callback) callback.call(scope);
+    });
+  },
+  
+  publish: function(message) {
+    var jsonMessage = JSON.stringify(message),
+        channels = Faye.Channel.expand(message.channel),
+        self = this;
+    
+    Faye.each(channels, function(channel) {
+      self._redis.smembers('/channels' + channel, function(error, clients) {
+        Faye.each(clients, function(clientId) {
+          self._redis.sadd('/clients/' + clientId + '/messages', jsonMessage);
+          self._redis.publish('/notifications', clientId);
+        });
+      });
+    });
+  },
+  
+  flush: function(clientId) {
+    var conn = this.connection(clientId, false);
+    if (!conn) return;
+    
+    var key = '/clients/' + clientId + '/messages', self = this;
+    this._redis.smembers(key, function(error, jsonMessages) {
+      Faye.each(jsonMessages, function(jsonMessage) {
+        self._redis.srem(key, jsonMessage);
+        conn.deliver(JSON.parse(jsonMessage));
+      });
+    });
+  }
+});
+
+Faye.Engine.register('redis', Faye.Engine.Redis);
