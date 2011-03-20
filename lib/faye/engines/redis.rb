@@ -11,7 +11,9 @@ module Faye
         @subscriber = EventMachine::Hiredis::Client.connect
         
         @subscriber.subscribe('/notifications')
-        @subscriber.on(:message, &method(:on_message))
+        @subscriber.on(:message) do |topic, message|
+          flush(message) if topic == '/notifications'
+        end
       end
       
       def disconnect
@@ -111,10 +113,6 @@ module Faye
             conn.deliver(JSON.parse(json_message))
           end
         end
-      end
-      
-      def on_message(topic, message)
-        flush(message) if topic == '/notifications'
       end
     end
     
