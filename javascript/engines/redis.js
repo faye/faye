@@ -82,8 +82,8 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   
   publish: function(message) {
     var jsonMessage = JSON.stringify(message),
-        channels = Faye.Channel.expand(message.channel),
-        self = this;
+        channels    = Faye.Channel.expand(message.channel),
+        self        = this;
     
     Faye.each(channels, function(channel) {
       self._redis.smembers('/channels' + channel, function(error, clients) {
