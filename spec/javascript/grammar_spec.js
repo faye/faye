@@ -1,4 +1,4 @@
-JS.ENV.GrammarSpec = JS.Test.describe("Faye.Grammar", function() { with(this) {
+JS.ENV.GrammarSpec = JS.Test.describe("Grammar", function() { with(this) {
   describe("CHANNEL_NAME", function() { with(this) {
     it("matches valid channel names", function() { with(this) {
       assertMatch( Faye.Grammar.CHANNEL_NAME, "/fo_o/$@()bar" )
