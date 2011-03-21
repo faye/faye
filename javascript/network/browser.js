@@ -141,7 +141,16 @@ Faye.CORSTransport = Faye.Class(Faye.Transport, {
 });
 
 Faye.CORSTransport.isUsable = function(endpoint, callback, scope) {
-  callback.call(scope, !!(Faye.ENV.XMLHttpRequest || Faye.ENV.XDomainRequest));
+  var isUsable = false;
+  if(!Faye.URI.parse(endpoint).isLocal()) {
+    if (Faye.ENV.XDomainRequest) {
+      isUsable = true;
+    } else if (Faye.ENV.XMLHttpRequest) {
+      var xhr = new Faye.ENV.XMLHttpRequest();
+      isUsable = "withCredentials" in xhr;
+    }
+  }
+  callback.call(scope, isUsable);
 };
 
 Faye.Transport.register('cross-origin-long-polling', Faye.CORSTransport);
