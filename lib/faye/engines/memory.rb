@@ -75,7 +75,7 @@ module Faye
       end
     end
     
-    register :memory, Memory
+    register 'memory', Memory
     
   end
 end

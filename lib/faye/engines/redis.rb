@@ -7,8 +7,11 @@ module Faye
       def init
         return if @redis
         
-        @redis      = EventMachine::Hiredis::Client.connect
-        @subscriber = EventMachine::Hiredis::Client.connect
+        host = @options[:host] || 'localhost'
+        port = @options[:port] || 6379
+        
+        @redis      = EventMachine::Hiredis::Client.connect(host, port)
+        @subscriber = EventMachine::Hiredis::Client.connect(host, port)
         
         @subscriber.subscribe('/notifications')
         @subscriber.on(:message) do |topic, message|
@@ -116,7 +119,7 @@ module Faye
       end
     end
     
-    register :redis, Redis
+    register 'redis', Redis
     
   end
 end

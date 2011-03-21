@@ -1,7 +1,9 @@
 Faye.Server = Faye.Class({
   initialize: function(options) {
-    this._options = options || {};
-    this._engine  = Faye.Engine.get(this._options);
+    this._options  = options || {};
+    var engineOpts = this._options.engine || {};
+    engineOpts.timeout = this._options.timeout;
+    this._engine   = Faye.Engine.get(engineOpts);
   },
   
   flushConnection: function(messages) {

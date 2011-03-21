@@ -5,8 +5,10 @@ module Faye
     include Extensible
     
     def initialize(options = {})
-      @options = options
-      @engine  = Faye::Engine.get(options)
+      @options    = options || {}
+      engine_opts = @options[:engine] || {}
+      engine_opts[:timeout] = @options[:timeout]
+      @engine     = Faye::Engine.get(engine_opts)
     end
     
     def flush_connection(messages)

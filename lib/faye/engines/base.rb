@@ -11,7 +11,8 @@ module Faye
     end
     
     def self.get(options)
-      klass = @backends[options[:engine]] || Memory
+      options ||= {}
+      klass = @backends[options[:type]] || Memory
       klass.new(options)
     end
     

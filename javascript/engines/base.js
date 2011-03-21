@@ -5,7 +5,8 @@ Faye.Engine = {
   },
   
   get: function(options) {
-    var klass = this._backends[options.engine] || Faye.Engine.Memory;
+    options = options || {};
+    var klass = this._backends[options.type] || Faye.Engine.Memory;
     return new klass(options);
   }
 };

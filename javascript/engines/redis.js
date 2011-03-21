@@ -2,15 +2,18 @@ var redis = require('redis-node');
 
 Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   initialize: function(options) {
-    this._redis = redis.createClient();
-    this._subscriber = redis.createClient();
+    Faye.Engine.Base.prototype.initialize.call(this, options);
+    
+    var host = this._options.host || 'localhost',
+        port = this._options.port || 6379;
+    
+    this._redis = redis.createClient(port, host);
+    this._subscriber = redis.createClient(port, host);
     
     var self = this;
     this._subscriber.subscribeTo('/notifications', function(topic, message) {
       if (!self._inactive) self.flush(message);
     });
-    
-    Faye.Engine.Base.prototype.initialize.call(this, options);
   },
   
   disconnect: function() {
