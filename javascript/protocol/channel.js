@@ -70,130 +70,31 @@ Faye.extend(Faye.Channel, {
     return !this.isMeta(name) && !this.isService(name);
   },
   
-  Tree: Faye.Class({
-    initialize: function(parent, value) {
-      this._parent   = parent;
-      this._value    = value;
-      this._children = {};
-    },
-    
-    eachChild: function(block, context) {
-      Faye.each(this._children, function(key, subtree) {
-        block.call(context, key, subtree);
-      });
-    },
-    
-    each: function(prefix, block, context) {
-      this.eachChild(function(path, subtree) {
-        path = prefix.concat(path);
-        subtree.each(path, block, context);
-      });
-      if (this._value !== undefined) block.call(context, prefix, this._value);
+  Set: Faye.Class({
+    initialize: function() {
+      this._channels = {};
     },
     
     getKeys: function() {
-      return this.map(function(key, value) { return '/' + key.join('/') });
-    },
-    
-    map: function(block, context) {
-      var result = [];
-      this.each([], function(path, value) {
-        result.push(block.call(context, path, value));
-      });
-      return result;
-    },
-    
-    get: function(name) {
-      var tree = this.traverse(name);
-      return tree ? tree._value : null;
-    },
-    
-    set: function(name, value) {
-      var subtree = this.traverse(name, true);
-      if (subtree) subtree._value = value;
+      var keys = [];
+      Faye.each(this._channels, function(k,v) { keys.push(k) });
+      return keys;
     },
     
     remove: function(name) {
-      if (name) {
-        var subtree = this.traverse(name);
-        if (subtree) subtree.remove();
-      } else {
-        if (!this._parent) return;
-        this._parent.removeChild(this);
-        this._parent = this._value = undefined;
-      }
-    },
-    
-    removeChild: function(subtree) {
-      this.eachChild(function(key, child) {
-        if (child === subtree) delete this._children[key];
-      }, this);
-      if (Faye.size(this._children) === 0 && this._value === undefined)
-        this.remove();
-    },
-    
-    traverse: function(path, createIfAbsent) {
-      if (typeof path === 'string') path = Faye.Channel.parse(path);
-      
-      if (path === null) return null;
-      if (path.length === 0) return this;
-      
-      var subtree = this._children[path[0]];
-      if (!subtree && !createIfAbsent) return null;
-      if (!subtree) subtree = this._children[path[0]] = new Faye.Channel.Tree(this);
-      
-      return subtree.traverse(path.slice(1), createIfAbsent);
-    },
-    
-    findOrCreate: function(channel) {
-      var existing = this.get(channel);
-      if (existing) return existing;
-      existing = new Faye.Channel(channel);
-      this.set(channel, existing);
-      return existing;
-    },
-    
-    glob: function(path) {
-      if (typeof path === 'string') path = Faye.Channel.parse(path);
-      
-      if (path === null) return [];
-      if (path.length === 0) return (this._value === undefined) ? [] : [this._value];
-      
-      var list = [];
-      
-      if (Faye.enumEqual(path, ['*'])) {
-        Faye.each(this._children, function(key, subtree) {
-          if (subtree._value !== undefined) list.push(subtree._value);
-        });
-        return list;
-      }
-      
-      if (Faye.enumEqual(path, ['**'])) {
-        list = this.map(function(key, value) { return value });
-        if (this._value !== undefined) list.pop();
-        return list;
-      }
-      
-      Faye.each(this._children, function(key, subtree) {
-        if (key !== path[0] && key !== '*') return;
-        var sublist = subtree.glob(path.slice(1));
-        Faye.each(sublist, function(channel) { list.push(channel) });
-      });
-      
-      if (this._children['**']) list.push(this._children['**']._value);
-      return list;
+      delete this._channels[name];
     },
     
     subscribe: function(names, callback, scope) {
       if (!callback) return;
       Faye.each(names, function(name) {
-        var channel = this.findOrCreate(name);
+        var channel = this._channels[name] = this._channels[name] || new Faye.Channel(name);
         channel.addSubscriber('message', callback, scope);
       }, this);
     },
     
     unsubscribe: function(name, callback, scope) {
-      var channel = this.get(name);
+      var channel = this._channels[name];
       if (!channel) return false;
       channel.removeSubscriber('message', callback, scope);
       
@@ -206,10 +107,11 @@ Faye.extend(Faye.Channel, {
     },
     
     distributeMessage: function(message) {
-      var channels = this.glob(message.channel);
-      Faye.each(channels, function(channel) {
-        channel.publishEvent('message', message.data);
-      });
+      var channels = Faye.Channel.expand(message.channel);
+      Faye.each(channels, function(name) {
+        var channel = this._channels[name];
+        if (channel) channel.publishEvent('message', message.data);
+      }, this);
     }
   })
 });

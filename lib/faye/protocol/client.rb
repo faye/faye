@@ -28,7 +28,7 @@ module Faye
       @transport = Transport.get(self, MANDATORY_CONNECTION_TYPES)
       @state     = UNCONNECTED
       @outbox    = []
-      @channels  = Channel::Tree.new
+      @channels  = Channel::Set.new
       
       @namespace = Namespace.new
       @response_callbacks = {}
@@ -148,7 +148,7 @@ module Faye
       })
       
       info('Clearing channel listeners for ?', @client_id)
-      @channels = Channel::Tree.new
+      @channels = Channel::Set.new
     end
     
     # Request                              Response

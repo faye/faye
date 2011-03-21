@@ -73,107 +73,29 @@ module Faye
       end
     end
     
-    class Tree
-      include Enumerable
-      attr_accessor :value
-      
+    class Set
       def initialize(parent = nil, value = nil)
-        @parent   = parent
-        @value    = value
-        @children = {}
-      end
-      
-      def each_child
-        @children.each { |key, subtree| yield(key, subtree) }
-      end
-      
-      def each(prefix = [], &block)
-        each_child { |path, subtree| subtree.each(prefix + [path], &block) }
-        yield(prefix, @value) unless @value.nil?
+        @channels = {}
       end
       
       def keys
-        map { |key, value| '/' + key * '/' }
+        @channels.keys
       end
       
-      def [](name)
-        subtree = traverse(name)
-        subtree ? subtree.value : nil
-      end
-      
-      def []=(name, value)
-        subtree = traverse(name, true)
-        subtree.value = value unless subtree.nil?
-      end
-      
-      def remove(name = nil)
-        if name
-          subtree = traverse(name)
-          subtree.remove unless subtree.nil?
-        else
-          return unless @parent
-          @parent.remove_child(self)
-          @parent = @value = nil
-        end
-      end
-      
-      def remove_child(subtree)
-        each_child do |key, child|
-          @children.delete(key) if child == subtree
-        end
-        remove if @children.empty? and @value.nil?
-      end
-      
-      def traverse(path, create_if_absent = false)
-        path = Channel.parse(path) if String === path
-        
-        return nil if path.nil?
-        return self if path.empty?
-        
-        subtree = @children[path.first]
-        return nil if subtree.nil? and not create_if_absent
-        subtree = @children[path.first] = Tree.new(self) if subtree.nil?
-        
-        subtree.traverse(path[1..-1], create_if_absent)
-      end
-      
-      def glob(path = [])
-        path = Channel.parse(path) if String === path
-        
-        return [] if path.nil?
-        return @value.nil? ? [] : [@value] if path.empty?
-        
-        if path == [:*]
-          return @children.inject([]) do |list, (key, subtree)|
-            list << subtree.value unless subtree.value.nil?
-            list
-          end
-        end
-        
-        if path == [:**]
-          list = map { |key, value| value }
-          list.pop unless @value.nil?
-          return list
-        end
-        
-        list = @children.values_at(path.first, :*).
-                         compact.
-                         map { |t| t.glob(path[1..-1]) }
-        
-        list << @children[:**].value if @children[:**]
-        list.flatten
+      def remove(name)
+        @channels.delete(name)
       end
       
       def subscribe(names, callback)
         return unless callback
         names.each do |name|
-          channel = self[name] ||= Channel.new(name)
+          channel = @channels[name] ||= Channel.new(name)
           channel.add_subscriber(:message, callback)
         end
       end
       
       def unsubscribe(name, callback)
-        channel = self[name]
+        channel = @channels[name]
         return false unless channel
         channel.remove_subscriber(:message, callback)
         
@@ -186,8 +108,10 @@ module Faye
       end
       
       def distribute_message(message)
-        glob(message['channel']).each do |channel|
-          channel.publish_event(:message, message['data'])
+        channels = Channel.expand(message['channel'])
+        channels.each do |name|
+          channel = @channels[name]
+          channel.publish_event(:message, message['data']) if channel
         end
       end
     end

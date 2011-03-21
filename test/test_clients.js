@@ -2,27 +2,6 @@ var Scenario = require('./scenario'),
     faye     = require('../build/faye-node'),
     assert   = require('assert');
 
-(function() {
-  var tree = new Faye.Channel.Tree();
-  var list = '/foo/bar /foo/boo /foo /foobar /foo/bar/boo /foobar/boo /foo/* /foo/**'.split(' ');
-  
-  Faye.each(list, function(c, i) { tree.set(c, i + 1) });
-  
-  assert.deepEqual(tree.glob('/foo/*').sort(),        [1,2,7,8]);
-  assert.deepEqual(tree.glob('/foo/bar').sort(),      [1,7,8]);
-  assert.deepEqual(tree.glob('/foo/**').sort(),       [1,2,5,7,8]);
-  assert.deepEqual(tree.glob('/foo/bar/boo').sort(),  [5,8]);
-  
-  tree.remove('/foo/bar/boo');
-  assert.equal(-1, tree.getKeys().indexOf('/foo/bar/boo'));
-  
-  tree.set('/channels/hello', 'A');
-  tree.set('/channels/name', 'B');
-  tree.set('/channels/nested/hello', 'C');
-  
-  assert.deepEqual(tree.glob('/channels/**').sort(), ['A','B','C']);
-})();
-
 Scenario.run("Client modifies incoming messages",
 function() { with(this) {
   server(8000);
@@ -336,12 +315,13 @@ function() { with(this) {
 Scenario.run("Two HTTP clients, single wildcard on receiver",
 function() { with(this) {
   server(8000);
-  httpClient('A', ['/channels/*']);
+  httpClient('A', ['/channels/*', '/channels/anything']);
   httpClient('B', []);
   publish('B', '/channels/anything', {msg: 'hey'});
   checkInbox({
       A: {
-        '/channels/*': [{msg: 'hey'}]
+        '/channels/*': [{msg: 'hey'}],
+        '/channels/anything': [{msg: 'hey'}]
       },
       B: {}
   });

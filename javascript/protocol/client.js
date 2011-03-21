@@ -26,7 +26,7 @@ Faye.Client = Faye.Class({
     
     this._state     = this.UNCONNECTED;
     this._outbox    = [];
-    this._channels  = new Faye.Channel.Tree();
+    this._channels  = new Faye.Channel.Set();
     
     this._namespace = new Faye.Namespace();
     this._responseCallbacks = {};
@@ -152,7 +152,7 @@ Faye.Client = Faye.Class({
     });
     
     this.info('Clearing channel listeners for ?', this._clientId);
-    this._channels = new Faye.Channel.Tree();
+    this._channels = new Faye.Channel.Set();
   },
   
   // Request                              Response
