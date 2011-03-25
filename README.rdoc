@@ -42,12 +42,7 @@ to install:
 Refactoring:
 
 * Refactor tests, put more unit tests in place for both versions
-* Separate protocol server from pub/sub engine to allow for alternate backends
 * Examine Client vs. Transport responsibilities, e.g. make message batching transport-dependent
-
-Fault tolerance:
-
-* Detect failed WebSocket connection and fall back to polling transports
 
 Notification API:
 
@@ -58,12 +53,6 @@ Notification API:
 Sugar:
 
 * Add sugar for authentication extensions for protected subscribe + publish
-
-Performance:
-
-* Optimise channel unsubscription -- currently O(N) where N = clients
-* Provide hubs to connect multiple servers together in a network
-* (maybe) provide a backend based on Redis or AMQP
 
 Missing protocol features:
 
