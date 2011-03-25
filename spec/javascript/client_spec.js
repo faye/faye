@@ -51,13 +51,11 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
 
     describe("on successful response", function() { with(this) {
       before(function() { with(this) {
-        stubResponse({
-          channel:    "/meta/handshake",
-          successful: true,
-          version:    "1.0",
-          supportedConnectionTypes: ["websocket"],
-          clientId:   "fakeid"
-        })
+        stubResponse({channel:    "/meta/handshake",
+                      successful: true,
+                      version:    "1.0",
+                      supportedConnectionTypes: ["websocket"],
+                      clientId:   "fakeid" })
       }})
 
       it("stores the clientId", function() { with(this) {
@@ -82,14 +80,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
     }})
 
-    describe("on successful response", function() { with(this) {
+    describe("on unsuccessful response", function() { with(this) {
       before(function() { with(this) {
-        stubResponse({
-          channel:    "/meta/handshake",
-          successful: false,
-          version:    "1.0",
-          supportedConnectionTypes: ["websocket"]
-        })
+        stubResponse({channel:    "/meta/handshake",
+                      successful: false,
+                      version:    "1.0",
+                      supportedConnectionTypes: ["websocket"] })
       }})
 
       it("schedules a retry", function() { with(this) {

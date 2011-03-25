@@ -40,6 +40,15 @@ module Faye
       }
     end
     
+    def state
+      case @state
+      when UNCONNECTED  then :UNCONNECTED
+      when CONNECTING   then :CONNECTING
+      when CONNECTED    then :CONNECTED
+      when DISCONNECTED then :DISCONNECTED
+      end
+    end
+
     # Request
     # MUST include:  * channel
     #                * version
