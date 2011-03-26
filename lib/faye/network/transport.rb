@@ -6,21 +6,51 @@ module Faye
   class Transport
     
     include Logging
+    include Timeouts
     
     def initialize(client, endpoint)
       debug('Created new ? transport for ?', connection_type, endpoint)
-      @client    = client
-      @endpoint  = endpoint
+      @client   = client
+      @endpoint = endpoint
+      @outbox   = []
+    end
+
+    def batching?
+      true
     end
     
     def connection_type
       self.class.connection_type
     end
     
-    def send(messages, timeout)
-      messages = [messages].flatten
-      debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, messages)
-      request(messages, timeout)
+    def send(message, timeout)
+      debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, message)
+
+      return request(message, timeout) unless batching?
+
+      @outbox << message
+      @timeout = timeout
+
+      return flush if message['channel'] == Channel::HANDSHAKE
+
+      if message['channel'] == Channel::CONNECT
+        @connection_message = message
+      end
+
+      add_timeout(:publish, Engine::MAX_DELAY) { flush }
+    end
+
+    def flush
+      remove_timeout(:publish)
+
+      if @outbox.size > 1 and @connection_message
+        @connection_message['advice'] = {'timeout' => 0}
+      end
+
+      request(@outbox, @timeout)
+
+      @connection_message = nil
+      @outbox = []
     end
     
     def receive(responses)

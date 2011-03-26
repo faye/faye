@@ -1,17 +1,42 @@
 Faye.Transport = Faye.extend(Faye.Class({
+  MAX_DELAY: <%= Faye::Engine::MAX_DELAY %>,
+  batching:  true,
+
   initialize: function(client, endpoint) {
     this.debug('Created new ? transport for ?', this.connectionType, endpoint);
-    this._client    = client;
-    this._endpoint  = endpoint;
+    this._client   = client;
+    this._endpoint = endpoint;
+    this._outbox   = [];
   },
   
-  send: function(messages, timeout) {
-    messages = [].concat(messages);
-    
+  send: function(message, timeout) {
     this.debug('Client ? sending message to ?: ?',
-               this._client._clientId, this._endpoint, messages);
+               this._client._clientId, this._endpoint, message);
+
+    if (!this.batching) return this.request(message, timeout);
+
+    this._outbox.push(message);
+    this._timeout = timeout;
+
+    if (message.channel === Faye.Channel.HANDSHAKE)
+      return this.flush();
+
+    if (message.channel === Faye.Channel.CONNECT)
+      this._connectMessage = message;
+
+    this.addTimeout('publish', this.MAX_DELAY, this.flush, this);
+  },
+
+  flush: function() {
+    this.removeTimeout('publish');
+
+    if (this._outbox.length > 1 && this._connectMessage)
+      this._connectMessage.advice = {timeout: 0};
+
+    this.request(this._outbox, this._timeout);
     
-    return this.request(messages, timeout);
+    this._connectMessage = null;
+    this._outbox = [];
   },
   
   receive: function(responses) {
@@ -59,4 +84,5 @@ Faye.Transport = Faye.extend(Faye.Class({
 });
 
 Faye.extend(Faye.Transport.prototype, Faye.Logging);
+Faye.extend(Faye.Transport.prototype, Faye.Timeouts);
 

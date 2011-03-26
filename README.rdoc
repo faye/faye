@@ -42,7 +42,6 @@ to install:
 Refactoring:
 
 * Refactor tests, put more unit tests in place for both versions
-* Examine Client vs. Transport responsibilities, e.g. make message batching transport-dependent
 
 Notification API:
 

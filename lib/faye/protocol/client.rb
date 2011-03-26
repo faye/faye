@@ -2,7 +2,6 @@ module Faye
   class Client
     
     include EventMachine::Deferrable
-    include Timeouts
     include Logging
     include Extensible
     
@@ -27,7 +26,6 @@ module Faye
       
       @transport = Transport.get(self, MANDATORY_CONNECTION_TYPES)
       @state     = UNCONNECTED
-      @outbox    = []
       @channels  = Channel::Set.new
       
       @namespace = Namespace.new
@@ -280,6 +278,15 @@ module Faye
     
   private
     
+    def send(message, &callback)
+      message['id'] = @namespace.generate
+      @response_callbacks[message['id']] = callback if callback
+
+      pipe_through_extensions(:outgoing, message) do |message|
+        @transport.send(message, @advice['timeout'] / 1000.0) if message
+      end
+    end
+
     def handle_advice(advice)
       @advice.update(advice)
       
@@ -305,40 +312,6 @@ module Faye
     def cycle_connection
       teardown_connection
       EventMachine.add_timer(@advice['interval'] / 1000.0) { connect }
-    end
-    
-    def send(message, &callback)
-      message['id'] = @namespace.generate
-      @response_callbacks[message['id']] = callback if callback
-      
-      pipe_through_extensions(:outgoing, message) do |message|
-        if message
-          if message['channel'] == Channel::HANDSHAKE
-            @transport.send(message, @advice['timeout'] / 1000.0)
-          else
-            @outbox << message
-            
-            if message['channel'] == Channel::CONNECT
-              @connect_message = message
-            end
-            
-            add_timeout(:publish, Engine::MAX_DELAY) { flush! }
-          end
-        end
-      end
-    end
-    
-    def flush!
-      remove_timeout(:publish)
-      
-      if @outbox.size > 1 and @connect_message
-        @connect_message['advice'] = {'timeout' => 0}
-      end
-      
-      @connect_message = nil
-      
-      @transport.send(@outbox, @advice['timeout'] / 1000.0)
-      @outbox = []
     end
     
     def validate_channel(channel)

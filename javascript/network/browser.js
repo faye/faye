@@ -1,7 +1,9 @@
 Faye.WebSocketTransport = Faye.Class(Faye.Transport, {
-  UNCONNECTED:    1,
-  CONNECTING:     2,
-  CONNECTED:      3,
+  UNCONNECTED:  1,
+  CONNECTING:   2,
+  CONNECTED:    3,
+
+  batching:     false,
   
   request: function(messages, timeout) {
     this._timeout = this._timeout || timeout;

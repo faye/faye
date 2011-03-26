@@ -11,7 +11,6 @@ Faye.Client = Faye.Class({
   CONNECTION_TIMEOUT:   <%= Faye::Client::CONNECTION_TIMEOUT %>,
   
   DEFAULT_ENDPOINT:     '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
-  MAX_DELAY:            <%= Faye::Engine::MAX_DELAY %>,
   INTERVAL:             <%= Faye::Engine::INTERVAL %>,
   
   initialize: function(endpoint, options) {
@@ -25,7 +24,6 @@ Faye.Client = Faye.Class({
     }, this);
     
     this._state     = this.UNCONNECTED;
-    this._outbox    = [];
     this._channels  = new Faye.Channel.Set();
     
     this._namespace = new Faye.Namespace();
@@ -285,6 +283,16 @@ Faye.Client = Faye.Class({
     }, this);
   },
   
+  _send: function(message, callback, scope) {
+    message.id = this._namespace.generate();
+    if (callback) this._responseCallbacks[message.id] = [callback, scope];
+
+    this.pipeThroughExtensions('outgoing', message, function(message) {
+      if (!message) return;
+      this._transport.send(message, this._advice.timeout / 1000);
+    }, this);
+  },
+
   _handleAdvice: function(advice) {
     Faye.extend(this._advice, advice);
     
@@ -313,37 +321,6 @@ Faye.Client = Faye.Class({
     setTimeout(function() { self.connect() }, this._advice.interval);
   },
   
-  _send: function(message, callback, scope) {
-    message.id = this._namespace.generate();
-    if (callback) this._responseCallbacks[message.id] = [callback, scope];
-    
-    this.pipeThroughExtensions('outgoing', message, function(message) {
-      if (!message) return;
-      
-      if (message.channel === Faye.Channel.HANDSHAKE)
-        return this._transport.send(message, this._advice.timeout / 1000);
-      
-      this._outbox.push(message);
-      
-      if (message.channel === Faye.Channel.CONNECT)
-        this._connectMessage = message;
-      
-      this.addTimeout('publish', this.MAX_DELAY, this._flush, this);
-    }, this);
-  },
-  
-  _flush: function() {
-    this.removeTimeout('publish');
-    
-    if (this._outbox.length > 1 && this._connectMessage)
-      this._connectMessage.advice = {timeout: 0};
-    
-    this._connectMessage = null;
-    
-    this._transport.send(this._outbox, this._advice.timeout / 1000);
-    this._outbox = [];
-  },
-  
   _validateChannel: function(channel) {
     if (!Faye.Channel.isValid(channel))
       throw '"' + channel + '" is not a valid channel name';
@@ -353,7 +330,6 @@ Faye.Client = Faye.Class({
 });
 
 Faye.extend(Faye.Client.prototype, Faye.Deferrable);
-Faye.extend(Faye.Client.prototype, Faye.Timeouts);
 Faye.extend(Faye.Client.prototype, Faye.Logging);
 Faye.extend(Faye.Client.prototype, Faye.Extensible);
 
