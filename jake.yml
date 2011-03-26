@@ -25,7 +25,7 @@ packages:
     - protocol/channel
     - protocol/subscription
     - protocol/client
-    - network/transport
+    - transport/transport
 
   faye-node:
     extends: core
@@ -38,7 +38,8 @@ packages:
       - engines/memory
       - engines/redis
       - protocol/server
-      - network/node
+      - transport/node_local
+      - transport/node_http
       - adapters/node_adapter
 
   faye-browser:
@@ -48,5 +49,6 @@ packages:
       - util/browser/uri
       - util/browser/xhr
       - util/browser/json
-      - network/browser
-
+      - transport/web_socket
+      - transport/xhr
+      - transport/jsonp

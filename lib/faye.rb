@@ -30,7 +30,9 @@ module Faye
       protocol/subscription
       protocol/client
       protocol/server
-      network/transport
+      transport/transport
+      transport/local
+      transport/http
       error
       
   ].each do |lib|

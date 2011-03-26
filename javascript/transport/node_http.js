@@ -1,4 +1,4 @@
-Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
+Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
     var uri      = url.parse(this._endpoint),
         secure   = (uri.protocol === 'https:'),
@@ -35,23 +35,10 @@ Faye.NodeHttpTransport = Faye.Class(Faye.Transport, {
     request.write(content);
     request.end();
   }
-});
-
-Faye.NodeHttpTransport.isUsable = function(endpoint, callback, scope) {
-  callback.call(scope, typeof endpoint === 'string');
-};
-
-Faye.Transport.register('long-polling', Faye.NodeHttpTransport);
-
-Faye.NodeLocalTransport = Faye.Class(Faye.Transport, {
-  request: function(message, timeout) {
-    this._endpoint.process(message, true, this.receive, this);
+}), {
+  isUsable: function(endpoint, callback, scope) {
+    callback.call(scope, typeof endpoint === 'string');
   }
 });
 
-Faye.NodeLocalTransport.isUsable = function(endpoint, callback, scope) {
-  callback.call(scope, endpoint instanceof Faye.Server);
-};
-
-Faye.Transport.register('in-process', Faye.NodeLocalTransport);
-
+Faye.Transport.register('long-polling', Faye.Transport.NodeHttp);
