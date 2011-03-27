@@ -11,6 +11,9 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
         self.receive(JSON.parse(xhr.responseText));
       } catch(e) {
         retry();
+      } finally {
+        xhr.onload = xhr.onerror = null;
+        xhr = null;
       }
     };
     xhr.onerror = retry;
@@ -18,14 +21,17 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
   }
 }), {
   isUsable: function(endpoint, callback, scope) {
-    if (Faye.URI.parse(endpoint).isLocal()) return callback.call(scope, false);
+    if (Faye.URI.parse(endpoint).isLocal())
+      return callback.call(scope, false);
     
-    if (Faye.ENV.XDomainRequest) {
-      callback.call(scope, true);
-    } else if (Faye.ENV.XMLHttpRequest) {
+    if (Faye.ENV.XDomainRequest)
+      return callback.call(scope, true);
+    
+    if (Faye.ENV.XMLHttpRequest) {
       var xhr = new Faye.ENV.XMLHttpRequest();
-      callback.call(scope, xhr.withCredentials !== undefined);
+      return callback.call(scope, xhr.withCredentials !== undefined);
     }
+    return callback.call(scope, false);
   }
 });
 
