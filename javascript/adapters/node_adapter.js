@@ -111,11 +111,7 @@ Faye.NodeAdapter = Faye.Class({
     } else if (requestMethod === 'POST') {
       Faye.withDataFor(request, function(data) {
         var type   = (request.headers['content-type'] || '').split(';')[0],
-            params = (
-                      (type === 'application/json') ||
-                      (type === 'text/plain')       ||
-                      (type === '')
-                     )
+            params = (type === 'application/json')
                    ? {message: data}
                    : querystring.parse(data);
         
@@ -168,12 +164,14 @@ Faye.NodeAdapter = Faye.Class({
       if (isGet) this._server.flushConnection(message);
       
       this._server.process(message, false, function(replies) {
-        var body = JSON.stringify(replies);
-        if (isGet) body = jsonp + '(' + body + ');';
-        var headers = type,
-            origin  = request.headers.origin;
-        if (origin) headers['Access-Control-Allow-Origin'] = origin 
-        response.writeHead(200, headers);
+        var body   = JSON.stringify(replies),
+            head   = Faye.extend({}, type),
+            origin = request.headers.origin;
+        
+        if (isGet)  body = jsonp + '(' + body + ');';
+        if (origin) head['Access-Control-Allow-Origin'] = origin;
+        
+        response.writeHead(200, head);
         response.write(body);
         response.end();
       });

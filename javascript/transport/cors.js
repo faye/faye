@@ -1,14 +1,11 @@
 Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
-    var self  = this,
-        retry = this.retry(message, timeout),
-        xhr   = new (Faye.ENV.XDomainRequest 
-                  ? Faye.ENV.XDomainRequest 
-                  : Faye.ENV.XMLHttpRequest)(),
-        url   = Faye.URI.parse(this._endpoint).toURL();
-        
-    xhr.open('POST', url, true);
-    if (xhr.setRequestHeader) xhr.setRequestHeader('Content-Type', 'text/plain');
+    var xhrClass = Faye.ENV.XDomainRequest ? XDomainRequest : XMLHttpRequest,
+        xhr      = new xhrClass(),
+        retry    = this.retry(message, timeout),
+        self     = this;
+    
+    xhr.open('POST', this._endpoint, true);
     xhr.onload = function() {
       try {
         self.receive(JSON.parse(xhr.responseText));
@@ -17,20 +14,18 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
       }
     };
     xhr.onerror = retry;
-    xhr.send(Faye.toJSON(message));
+    xhr.send('message=' + encodeURIComponent(Faye.toJSON(message)));
   }
 }), {
   isUsable: function(endpoint, callback, scope) {
-    var isUsable = false;
-    if(!Faye.URI.parse(endpoint).isLocal()) {
-      if (Faye.ENV.XDomainRequest) {
-        isUsable = true;
-      } else if (Faye.ENV.XMLHttpRequest) {
-        var xhr = new Faye.ENV.XMLHttpRequest();
-        isUsable = "withCredentials" in xhr;
-      }
+    if (Faye.URI.parse(endpoint).isLocal()) return callback.call(scope, false);
+    
+    if (Faye.ENV.XDomainRequest) {
+      callback.call(scope, true);
+    } else if (Faye.ENV.XMLHttpRequest) {
+      var xhr = new Faye.ENV.XMLHttpRequest();
+      callback.call(scope, xhr.withCredentials !== undefined);
     }
-    callback.call(scope, isUsable);
   }
 });
 
