@@ -1,4 +1,4 @@
-var redis = require('redis-node');
+var redis = require('redis');
 
 Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   initialize: function(options) {
@@ -11,14 +11,16 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     this._subscriber = redis.createClient(port, host);
     
     var self = this;
-    this._subscriber.subscribeTo('/notifications', function(topic, message) {
-      if (!self._inactive) self.flush(message);
+    this._subscriber.subscribe('/notifications');
+    this._subscriber.on('message', function(topic, message) {
+      self.flush(message);
     });
   },
   
   disconnect: function() {
-    this._inactive = true;
-    // this._subscriber.unsubscribeFrom('/notifications');
+    this._redis.end();
+    this._subscriber.unsubscribe();
+    this._subscriber.end();
   },
   
   createClient: function(callback, scope) {
