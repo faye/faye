@@ -47,7 +47,6 @@ packages:
     files:
       - util/browser/event
       - util/browser/uri
-      - util/browser/xhr
       - util/browser/json
       - transport/web_socket
       - transport/xhr
