@@ -320,6 +320,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           client.receiveMessage({channel: "/bar", data: "hi"})
           assertEqual( undefined, message )
         }})
+        
+        it("activates the subscription", function() { with(this) {
+          var active = false
+          client.subscribe("/foo/*").callback(function() { active = true })
+          assert( active )
+        }})
       }})
       
       describe("on unsuccessful response", function() { with(this) {
@@ -335,6 +341,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           client.subscribe("/foo/*", function(m) { message = m })
           client.receiveMessage({channel: "/foo/bar", data: "hi"})
           assertEqual( undefined, message )
+        }})
+        
+        it("does not activate the subscription", function() { with(this) {
+          var active = false
+          client.subscribe("/foo/*").callback(function() { active = true })
+          assert( !active )
         }})
       }})
     }})
@@ -353,6 +365,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         client.subscribe("/foo/*", function() { subsCalled += 1 })
         client.receiveMessage({channel: "/foo/bar", data: "hi"})
         assertEqual( 2, subsCalled )
+      }})
+      
+      it("activates the subscription", function() { with(this) {
+        var active = false
+        client.subscribe("/foo/*").callback(function() { active = true })
+        assert( active )
       }})
     }})
   }})

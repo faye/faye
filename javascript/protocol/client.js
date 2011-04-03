@@ -189,6 +189,7 @@ Faye.Client = Faye.Class({
     
     if (!force && this._channels.hasSubscription(channels)) {
       this._channels.subscribe([channels], callback, scope);
+      subscription.setDeferredStatus('succeeded');
       return subscription;
     }
     

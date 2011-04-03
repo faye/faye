@@ -327,6 +327,12 @@ describe Faye::Client do
           @client.receive_message("channel" => "/bar", "data" => "hi")
           @message.should be_nil
         end
+        
+        it "activates the subscription" do
+          active = false
+          @client.subscribe("/foo/*").callback { active = true }
+          active.should be_true
+        end
       end
       
       describe "on unsuccessful response" do
@@ -342,6 +348,12 @@ describe Faye::Client do
           @client.subscribe("/foo/*") { |m| @message = m }
           @client.receive_message("channel" => "/foo/bar", "data" => "hi")
           @message.should be_nil
+        end
+        
+        it "does not activate the subscription" do
+          active = false
+          @client.subscribe("/foo/*").callback { active = true }
+          active.should be_false
         end
       end
     end
@@ -360,6 +372,12 @@ describe Faye::Client do
         @client.subscribe("/foo/*") { @subs_called += 1 }
         @client.receive_message("channel" => "/foo/bar", "data" => "hi")
         @subs_called.should == 2
+      end
+      
+      it "activates the subscription" do
+        active = false
+        @client.subscribe("/foo/*").callback { active = true }
+        active.should be_true
       end
     end
   end

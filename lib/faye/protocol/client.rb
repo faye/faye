@@ -180,6 +180,7 @@ module Faye
       
       if not force and @channels.has_subscription?(channels)
         @channels.subscribe([channels], block)
+        subscription.set_deferred_status(:succeeded)
         return subscription
       end
       
