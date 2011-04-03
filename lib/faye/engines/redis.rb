@@ -1,11 +1,10 @@
-require 'em-hiredis'
-
 module Faye
   module Engine
     
     class Redis < Base
       def init
         return if @redis
+        require 'em-hiredis'
         
         host = @options[:host] || 'localhost'
         port = @options[:port] || 6379

@@ -4,8 +4,9 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   initialize: function(options) {
     Faye.Engine.Base.prototype.initialize.call(this, options);
     
-    var host = this._options.host || 'localhost',
-        port = this._options.port || 6379;
+    var redis = require('redis'),
+        host  = this._options.host || 'localhost',
+        port  = this._options.port || 6379;
     
     this._redis = redis.createClient(port, host);
     this._subscriber = redis.createClient(port, host);
