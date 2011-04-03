@@ -185,6 +185,11 @@ Faye.Client = Faye.Class({
     this._validateChannel(channels);
     var subscription = new Faye.Subscription(this, channels, callback, scope);
     
+    if (this._channels.hasSubscription(channels)) {
+      this._channels.subscribe([channels], callback, scope);
+      return subscription;
+    }
+    
     this.connect(function() {
       this.info('Client ? attempting to subscribe to ?', this._clientId, channels);
       

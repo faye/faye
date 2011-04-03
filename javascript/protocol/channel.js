@@ -85,6 +85,10 @@ Faye.extend(Faye.Channel, {
       delete this._channels[name];
     },
     
+    hasSubscription: function(name) {
+      return this._channels.hasOwnProperty(name);
+    },
+    
     subscribe: function(names, callback, scope) {
       if (!callback) return;
       Faye.each(names, function(name) {
