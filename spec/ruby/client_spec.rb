@@ -335,4 +335,18 @@ describe Faye::Client do
       @client.state.should == :DISCONNECTED
     end
   end
+  
+  describe :publish do
+    before { create_connected_client }
+    
+    it "sends the message to the server with an ID" do
+      transport.should_receive(:send).with({
+        "channel"  => "/messages/foo",
+        "clientId" => "fakeid",
+        "data"     => {"hello" => "world"},
+        "id"       => instance_of(String)
+      }, 60)
+      @client.publish("/messages/foo", "hello" => "world")
+    end
+  end
 end

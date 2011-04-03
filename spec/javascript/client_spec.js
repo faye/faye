@@ -328,4 +328,18 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       assertEqual( "DISCONNECTED", client.getState() )
     }})
   }})
+  
+  describe("publish", function() { with(this) {
+    before(function() { this.createConnectedClient() })
+    
+    it("sends the message to the server with an ID", function() { with(this) {
+      expect(transport, "send").given({
+        channel:  "/messages/foo",
+        clientId: "fakeid",
+        data:     {hello: "world"},
+        id:       instanceOf("string")
+      }, 60)
+      client.publish("/messages/foo", {hello: "world"})
+    }})
+  }})
 }})
