@@ -146,6 +146,75 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     }})
   }})
   
+  describe("connect", function() { with(this) {
+    describe("with an unconnected client", function() { with(this) {
+      before(function() { with(this) {
+        stubResponse({channel:    "/meta/handshake",
+                      successful: true,
+                      version:    "1.0",
+                      supportedConnectionTypes: ["websocket"],
+                      clientId:   "handshakeid" })
+        
+        createClient()
+      }})
+      
+      it("handshakes before connecting", function() { with(this) {
+        expect(transport, "send").given({
+          channel:        "/meta/connect",
+          clientId:       "handshakeid",
+          connectionType: "fake",
+          id:             instanceOf("string")
+        }, 60)
+        client.connect()
+      }})
+    }})
+    
+    describe("with a connected client", function() { with(this) {
+      before(function() { this.createConnectedClient() })
+      
+      it("sends a connect message to the server", function() { with(this) {
+        expect(transport, "send").given({
+          channel:        "/meta/connect",
+          clientId:       "fakeid",
+          connectionType: "fake",
+          id:             instanceOf("string")
+        }, 60)
+        client.connect()
+      }})
+      
+      it("only opens one connect request at a time", function() { with(this) {
+        expect(transport, "send").given({
+          channel:        "/meta/connect",
+          clientId:       "fakeid",
+          connectionType: "fake",
+          id:             instanceOf("string")
+        }, 60)
+        .exactly(1)
+        
+        client.connect()
+        client.connect()
+      }})
+    }})
+  }})
+  
+  describe("disconnect", function() { with(this) {
+    before(function() { this.createConnectedClient() })
+    
+    it("sends a disconnect message to the server", function() { with(this) {
+      expect(transport, "send").given({
+        channel:  "/meta/disconnect",
+        clientId: "fakeid",
+        id:       instanceOf("string")
+      }, 60)
+      client.disconnect()
+    }})
+    
+    it("puts the client in the DISCONNECTED state", function() { with(this) {
+      client.disconnect()
+      assertEqual( "DISCONNECTED", client.getState() )
+    }})
+  }})
+  
   describe("subscribe", function() { with(this) {
     before(function() { with(this) {
       createConnectedClient()
@@ -331,24 +400,6 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         }, 60)
         client.unsubscribe(["/foo", "/bar"])
       }})
-    }})
-  }})
-  
-  describe("disconnect", function() { with(this) {
-    before(function() { this.createConnectedClient() })
-    
-    it("sends a disconnect message to the server", function() { with(this) {
-      expect(transport, "send").given({
-        channel:  "/meta/disconnect",
-        clientId: "fakeid",
-        id:       instanceOf("string")
-      }, 60)
-      client.disconnect()
-    }})
-    
-    it("puts the client in the DISCONNECTED state", function() { with(this) {
-      client.disconnect()
-      assertEqual( "DISCONNECTED", client.getState() )
     }})
   }})
   

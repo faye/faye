@@ -153,6 +153,76 @@ describe Faye::Client do
     end
   end
   
+  describe :connect do
+    describe "with an unconnected client" do
+      before do
+        stub_response "channel"    => "/meta/handshake",
+                      "successful" => true,
+                      "version"    => "1.0",
+                      "supportedConnectionTypes" => ["websocket"],
+                      "clientId"   => "handshakeid"
+        
+        create_client
+      end
+      
+      it "handshakes before connecting" do
+        transport.should_receive(:send).with({
+          "channel"        => "/meta/connect",
+          "clientId"       => "handshakeid",
+          "connectionType" => "fake",
+          "id"             => instance_of(String)
+        }, 60)
+        @client.connect
+      end
+    end
+    
+    describe "with a connected client" do
+      before { create_connected_client }
+      
+      it "sends a connect message to the server" do
+        transport.should_receive(:send).with({
+          "channel"        => "/meta/connect",
+          "clientId"       => "fakeid",
+          "connectionType" => "fake",
+          "id"             => instance_of(String)
+        }, 60)
+        @client.connect
+      end
+      
+      it "only opens one connect request at a time" do
+        transport.should_receive(:send).with({
+          "channel"        => "/meta/connect",
+          "clientId"       => "fakeid",
+          "connectionType" => "fake",
+          "id"             => instance_of(String)
+        }, 60).
+        exactly(1).
+        and_return # override stub implementation
+        
+        @client.connect
+        @client.connect
+      end
+    end
+  end
+  
+  describe :disconnect do
+    before { create_connected_client }
+    
+    it "sends a disconnect message to the server" do
+      transport.should_receive(:send).with({
+        "channel"  => "/meta/disconnect",
+        "clientId" => "fakeid",
+        "id"       => instance_of(String)
+      }, 60)
+      @client.disconnect
+    end
+    
+    it "puts the client in the DISCONNECTED state" do
+      @client.disconnect
+      @client.state.should == :DISCONNECTED
+    end
+  end
+  
   describe :subscribe do
     before do
       create_connected_client
@@ -338,24 +408,6 @@ describe Faye::Client do
         }, 60)
         @client.unsubscribe(["/foo", "/bar"])
       end
-    end
-  end
-  
-  describe :disconnect do
-    before { create_connected_client }
-    
-    it "sends a disconnect message to the server" do
-      transport.should_receive(:send).with({
-        "channel"  => "/meta/disconnect",
-        "clientId" => "fakeid",
-        "id"       => instance_of(String)
-      }, 60)
-      @client.disconnect
-    end
-    
-    it "puts the client in the DISCONNECTED state" do
-      @client.disconnect
-      @client.state.should == :DISCONNECTED
     end
   end
   
