@@ -12,7 +12,12 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   connect: function(name, engine, resume) {
     var clientId = this._clients[name]
     var inboxes  = this._inboxes
-    engine.connect(clientId, {}, function(m) { inboxes[name] = inboxes[name].concat(m) })
+    engine.connect(clientId, {}, function(m) {
+      Faye.each(m, function(message) {
+        delete message.id
+        inboxes[name].push(message)
+      })
+    })
     setTimeout(resume, 10)
   },
   
@@ -48,8 +53,12 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
     this.engine.unsubscribe(this._clients[name], channel, resume)
   },
   
-  publish: function(message, resume) {
-    this.engine.publish(message)
+  publish: function(messages, resume) {
+    messages = [].concat(messages)
+    Faye.each(messages, function(message) {
+      message = Faye.extend({id: Faye.random()}, message)
+      this.engine.publish(message)
+    }, this)
     setTimeout(resume, 20)
   },
   
@@ -242,6 +251,23 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
           expect_message("alice", [message])
           expect_no_message("bob")
           expect_message("carol", [message])
+        }})
+      }})
+      
+      describe("with multiple matching subscriptions for the same client", function() { with(this) {
+        before(function() { with(this) {
+          subscribe("alice", "/messages/*")
+          subscribe("alice", "/messages/foo")
+        }})
+        
+        it("delivers each message once to each client", function() { with(this) {
+          publish(message)
+          expect_message("alice", [message])
+        }})
+        
+        it("delivers the message as many times as it is published", function() { with(this) {
+          publish([message, message])
+          expect_message("alice", [message, message])
         }})
       }})
     }})

@@ -12,7 +12,12 @@ EngineSteps = EM::RSpec.async_steps do
   end
   
   def connect(name, engine, &resume)
-    engine.connect(@clients[name]) { |m| @inboxes[name] += m }
+    engine.connect(@clients[name]) do |m|
+      m.each do |message|
+        message.delete("id")
+        @inboxes[name] << message
+      end
+    end
     EM.add_timer(0.01, &resume)
   end
   
@@ -47,8 +52,12 @@ EngineSteps = EM::RSpec.async_steps do
     engine.unsubscribe(@clients[name], channel, &resume)
   end
   
-  def publish(message, &resume)
-    engine.publish(message)
+  def publish(messages, &resume)
+    messages = [messages].flatten
+    messages.each do |message|
+      message = {"id" => Faye.random}.merge(message)
+      engine.publish(message)
+    end
     EM.add_timer(0.01, &resume)
   end
   
@@ -234,6 +243,23 @@ describe "Pub/sub engines" do
           expect_message    :alice, [@message]
           expect_no_message :bob
           expect_message    :carol, [@message]
+        end
+      end
+      
+      describe "with multiple matching subscriptions for the same client" do
+        before do
+          subscribe :alice, "/messages/foo"
+          subscribe :alice, "/messages/*"
+        end
+        
+        it "delivers each message once to each client" do
+          publish @message
+          expect_message :alice, [@message]
+        end
+        
+        it "delivers the message as many times as it is published" do
+          publish [@message, @message]
+          expect_message :alice, [@message, @message]
         end
       end
     end
