@@ -9,19 +9,65 @@ describe Faye::RackAdapter do
   
   after { app.stop }
   
-  let(:content_type) { last_response["Content-Type"] }
-  let(:json)         { JSON.parse(body) }
-  let(:body)         { last_response.body }
-  let(:status)       { last_response.status.to_i }
+  let(:content_type)          { last_response["Content-Type"] }
+  let(:access_control_origin) { last_response["Access-Control-Allow-Origin"] }
+  let(:json)                  { JSON.parse(body) }
+  let(:body)                  { last_response.body }
+  let(:status)                { last_response.status.to_i }
   
   before do
     Faye::Server.should_receive(:new).with(options).and_return server
   end
   
   describe "POST requests" do
+    describe "with cross-origin access control" do
+      before do
+        header "Origin", "http://example.com"
+      end
+      
+      it "returns a matching cross-origin access control header" do
+        server.stub(:process).and_yield []
+        post "/bayeux", :message => '[]'
+        access_control_origin.should == "http://example.com"
+      end
+      
+      it "forwards the message param onto the server" do
+        server.should_receive(:process).with({"channel" => "/foo"}, false).and_yield []
+        post "/bayeux", :message => '{"channel":"/foo"}'
+      end
+      
+      it "returns the server's response as JSON" do
+        server.stub(:process).and_yield ["channel" => "/meta/handshake"]
+        post "/bayeux", :message => '[]'
+        status.should == 200
+        content_type.should == "application/json"
+        json.should == ["channel" => "/meta/handshake"]
+      end
+      
+      it "returns a 400 response if malformed JSON is given" do
+        server.should_not_receive(:process)
+        post "/bayeux", :message => "[}"
+        status.should == 400
+        content_type.should == "text/plain"
+      end
+      
+      it "returns a 404 if the path is not matched" do
+        server.should_not_receive(:process)
+        post "/blaf", :message => "[]"
+        status.should == 404
+        content_type.should == "text/plain"
+      end
+    end
+    
     describe "with application/json" do
       before do
         header "Content-Type", "application/json"
+      end
+      
+      it "does not return an access control header" do
+        server.stub(:process).and_yield []
+        post "/bayeux", :message => '[]'
+        access_control_origin.should be_nil
       end
       
       it "forwards the POST body onto the server" do

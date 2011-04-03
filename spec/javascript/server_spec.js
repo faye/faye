@@ -26,7 +26,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               channel:    "/meta/handshake",
               successful: true,
               version:    "1.0",
-              supportedConnectionTypes: ["long-polling", "callback-polling", "websocket"],
+              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"],
               clientId:   "clientid"
             }, response)
         })
@@ -42,7 +42,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
                 channel:    "/meta/handshake",
                 successful: true,
                 version:    "1.0",
-                supportedConnectionTypes: ["long-polling", "callback-polling", "websocket"],
+                supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"],
                 clientId:   "clientid",
                 id:         "foo"
               }, response)
@@ -66,7 +66,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               successful: false,
               error:      "402:version:Missing required parameter",
               version:    "1.0",
-              supportedConnectionTypes: ["long-polling", "callback-polling", "websocket"]
+              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"]
             }, response)
         })
       }})
@@ -87,7 +87,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               successful: false,
               error:      "402:supportedConnectionTypes:Missing required parameter",
               version:    "1.0",
-              supportedConnectionTypes: ["long-polling", "callback-polling", "websocket"]
+              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"]
             }, response)
         })
       }})
@@ -122,7 +122,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               successful: false,
               error:      "301:iframe,flash:Connection types not supported",
               version:    "1.0",
-              supportedConnectionTypes: ["long-polling", "callback-polling", "websocket"]
+              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"]
             }, response)
         })
       }})

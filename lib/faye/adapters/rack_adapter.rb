@@ -67,13 +67,15 @@ module Faye
         json_msg = message_from_request(request)
         message  = JSON.parse(json_msg)
         jsonp    = request.params['jsonp'] || JSONP_CALLBACK
-        type     = request.get? ? TYPE_SCRIPT : TYPE_JSON
+        head     = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
+        origin   = request.env['HTTP_ORIGIN']
         callback = env['async.callback']
         body     = DeferredBody.new
         
         @server.flush_connection(message) if request.get?
         
-        callback.call [200, type, body]
+        head['Access-Control-Allow-Origin'] = origin if origin
+        callback.call [200, head, body]
         
         @server.process(message, false) do |replies|
           response = JSON.unparse(replies)

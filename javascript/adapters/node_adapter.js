@@ -164,9 +164,14 @@ Faye.NodeAdapter = Faye.Class({
       if (isGet) this._server.flushConnection(message);
       
       this._server.process(message, false, function(replies) {
-        var body = JSON.stringify(replies);
-        if (isGet) body = jsonp + '(' + body + ');';
-        response.writeHead(200, type);
+        var body   = JSON.stringify(replies),
+            head   = Faye.extend({}, type),
+            origin = request.headers.origin;
+        
+        if (isGet)  body = jsonp + '(' + body + ');';
+        if (origin) head['Access-Control-Allow-Origin'] = origin;
+        
+        response.writeHead(200, head);
         response.write(body);
         response.end();
       });

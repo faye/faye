@@ -28,7 +28,7 @@ describe Faye::Server do
             "channel"    => "/meta/handshake",
             "successful" => true,
             "version"    => "1.0",
-            "supportedConnectionTypes" => ["long-polling","callback-polling","websocket"],
+            "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket"],
             "clientId"   => "clientid"
           }
         end
@@ -44,7 +44,7 @@ describe Faye::Server do
               "channel"    => "/meta/handshake",
               "successful" => true,
               "version"    => "1.0",
-              "supportedConnectionTypes" => ["long-polling","callback-polling","websocket"],
+              "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket"],
               "clientId"   => "clientid",
               "id"         => "foo"
             }
@@ -68,7 +68,7 @@ describe Faye::Server do
             "successful" => false,
             "error"      => "402:version:Missing required parameter",
             "version"    => "1.0",
-            "supportedConnectionTypes" => ["long-polling","callback-polling","websocket"]
+            "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket"]
           }
         end
       end
@@ -89,7 +89,7 @@ describe Faye::Server do
             "successful" => false,
             "error"      => "402:supportedConnectionTypes:Missing required parameter",
             "version"    => "1.0",
-            "supportedConnectionTypes" => ["long-polling","callback-polling","websocket"]
+            "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket"]
           }
         end
       end
@@ -122,7 +122,7 @@ describe Faye::Server do
             "successful" => false,
             "error"      => "301:iframe,flash:Connection types not supported",
             "version"    => "1.0",
-            "supportedConnectionTypes" => ["long-polling","callback-polling","websocket"]
+            "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket"]
           }
         end
       end
