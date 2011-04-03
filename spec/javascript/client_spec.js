@@ -256,11 +256,18 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     
     describe("with multiple subscriptions to the same channel", function() { with(this) {
       before(function() { with(this) {
-        var messages = []
-        this.hey = function(msg) { messages.push("hey " + message.text) }
-        this.bye = function(msg) { messages.push("bye " + message.text) }
+        this.messages = []
+        this.hey = function(m) { messages.push("hey " + m.text) }
+        this.bye = function(m) { messages.push("bye " + m.text) }
         subscribe(client, "/foo/*", hey)
         subscribe(client, "/foo/*", bye)
+      }})
+      
+      it("removes one of the listeners from the channel", function() { with(this) {
+        client.receiveMessage({channel: "/foo/bar", data: {text: "you"}})
+        client.unsubscribe("/foo/*", hey)
+        client.receiveMessage({channel: "/foo/bar", data: {text: "you"}})
+        assertEqual( ["hey you", "bye you", "bye you"], messages)
       }})
       
       it("does not send an unsubscribe message if one listener is removed", function() { with(this) {

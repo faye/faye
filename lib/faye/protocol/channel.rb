@@ -86,6 +86,10 @@ module Faye
         @channels.delete(name)
       end
       
+      def has_subscription?(name)
+        @channels.has_key?(name)
+      end
+      
       def subscribe(names, callback)
         return unless callback
         names.each do |name|
@@ -98,7 +102,6 @@ module Faye
         channel = @channels[name]
         return false unless channel
         channel.remove_subscriber(:message, callback)
-        
         if channel.unused?
           remove(name)
           true

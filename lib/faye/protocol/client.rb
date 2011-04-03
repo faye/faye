@@ -178,6 +178,11 @@ module Faye
       validate_channel(channels)
       subscription = Subscription.new(self, channels, block)
       
+      if @channels.has_subscription?(channels)
+        @channels.subscribe([channels], block)
+        return subscription
+      end
+      
       connect {
         info('Client ? attempting to subscribe to ?', @client_id, channels)
         

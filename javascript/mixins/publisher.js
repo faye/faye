@@ -13,11 +13,15 @@ Faye.Publisher = {
   removeSubscriber: function(eventType, listener, context) {
     if (!this._subscribers || !this._subscribers[eventType]) return;
     
+    if (!listener) {
+      delete this._subscribers[eventType];
+      return;
+    }
     var list = this._subscribers[eventType],
         i    = list.length;
     
     while (i--) {
-      if (listener && list[i][0] !== listener) continue;
+      if (listener !== list[i][0]) continue;
       if (context && list[i][1] !== context) continue;
       list.splice(i,1);
     }

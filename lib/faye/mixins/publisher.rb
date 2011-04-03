@@ -14,6 +14,8 @@ module Faye
     
     def remove_subscriber(event_type, listener)
       return unless @subscribers and @subscribers[event_type]
+      return @subscribers.delete(event_type) unless listener
+      
       @subscribers[event_type].delete_if(&listener.method(:==))
     end
     
