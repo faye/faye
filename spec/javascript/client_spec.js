@@ -70,6 +70,29 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       client.handshake()
       assertEqual( "CONNECTING", client.getState() )
     }})
+    
+    describe("with an outgoing extension installed", function() { with(this) {
+      before(function() { with(this) {
+        var extension = {
+          outgoing: function(message, callback) {
+            message.ext = {auth: "password"}
+            callback(message)
+          }
+        }
+        client.addExtension(extension)
+      }})
+      
+      it("passes the handshake message through the extension", function() { with(this) {
+        expect(transport, "send").given({
+          channel:  "/meta/handshake",
+          version:  "1.0",
+          supportedConnectionTypes: ["fake"],
+          id:       instanceOf("string"),
+          ext:      {auth: "password"}
+        }, 60)
+        client.handshake()
+      }})
+    }})
 
     describe("on successful response", function() { with(this) {
       before(function() { with(this) {
@@ -340,6 +363,51 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         id:       instanceOf("string")
       }, 60)
       client.publish("/messages/foo", {hello: "world"})
+    }})
+    
+    describe("with an outgoing extension installed", function() { with(this) {
+      before(function() { with(this) {
+        var extension = {
+          outgoing: function(message, callback) {
+            message.ext = {auth: "password"}
+            callback(message)
+          }
+        }
+        client.addExtension(extension)
+      }})
+      
+      it("passes messages through the extension", function() { with(this) {
+        expect(transport, "send").given({
+          channel:  "/messages/foo",
+          clientId: "fakeid",
+          data:     {hello: "world"},
+          id:       instanceOf("string"),
+          ext:      {auth: "password"}
+        }, 60)
+        client.publish("/messages/foo", {hello: "world"})
+      }})
+    }})
+    
+    describe("with an incoming extension installed", function() { with(this) {
+      before(function() { with(this) {
+        var extension = {
+          incoming: function(message, callback) {
+            message.ext = {auth: "password"}
+            callback(message)
+          }
+        }
+        client.addExtension(extension)
+      }})
+      
+      it("leaves the message unchanged", function() { with(this) {
+        expect(transport, "send").given({
+          channel:  "/messages/foo",
+          clientId: "fakeid",
+          data:     {hello: "world"},
+          id:       instanceOf("string")
+        }, 60)
+        client.publish("/messages/foo", {hello: "world"})
+      }})
     }})
   }})
 }})

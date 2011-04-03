@@ -78,6 +78,29 @@ describe Faye::Client do
       @client.state.should == :CONNECTING
     end
 
+    describe "with an outgoing extension installed" do
+      before do
+        extension = Class.new do
+          def outgoing(message, callback)
+            message["ext"] = {"auth" => "password"}
+            callback.call(message)
+          end
+        end
+        @client.add_extension(extension.new)
+      end
+      
+      it "passes the handshake message through the extension" do
+        transport.should_receive(:send).with({
+          "channel" => "/meta/handshake",
+          "version" => "1.0",
+          "supportedConnectionTypes" => ["fake"],
+          "id"      => instance_of(String),
+          "ext"     => {"auth" => "password"}
+        }, 60)
+        @client.handshake
+      end
+    end
+
     describe "on successful response" do
       before do
         stub_response "channel"    => "/meta/handshake",
@@ -347,6 +370,51 @@ describe Faye::Client do
         "id"       => instance_of(String)
       }, 60)
       @client.publish("/messages/foo", "hello" => "world")
+    end
+    
+    describe "with an outgoing extension installed" do
+      before do
+        extension = Class.new do
+          def outgoing(message, callback)
+            message["ext"] = {"auth" => "password"}
+            callback.call(message)
+          end
+        end
+        @client.add_extension(extension.new)
+      end
+      
+      it "passes messages through the extension" do
+        transport.should_receive(:send).with({
+          "channel"  => "/messages/foo",
+          "clientId" => "fakeid",
+          "data"     => {"hello" => "world"},
+          "id"       => instance_of(String),
+          "ext"      => {"auth" => "password"}
+        }, 60)
+        @client.publish("/messages/foo", "hello" => "world")
+      end
+    end
+    
+    describe "with an incoming extension installed" do
+      before do
+        extension = Class.new do
+          def incoming(message, callback)
+            message["ext"] = {"auth" => "password"}
+            callback.call(message)
+          end
+        end
+        @client.add_extension(extension.new)
+      end
+      
+      it "leaves the message unchanged" do
+        transport.should_receive(:send).with({
+          "channel"  => "/messages/foo",
+          "clientId" => "fakeid",
+          "data"     => {"hello" => "world"},
+          "id"       => instance_of(String)
+        }, 60)
+        @client.publish("/messages/foo", "hello" => "world")
+      end
     end
   end
 end
