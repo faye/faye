@@ -88,7 +88,7 @@ module Faye
           
           info('Handshake successful: ?', @client_id)
           
-          subscribe(@channels.keys)
+          subscribe(@channels.keys, true)
           block.call if block_given?
           
         else
@@ -168,17 +168,17 @@ module Faye
     #                                                     * ext
     #                                                     * id
     #                                                     * timestamp
-    def subscribe(channels, &block)
+    def subscribe(channels, force = false, &block)
       if Array === channels
         return channels.each do |channel|
-          subscribe(channel, &block)
+          subscribe(channel, force, &block)
         end
       end
       
       validate_channel(channels)
       subscription = Subscription.new(self, channels, block)
       
-      if @channels.has_subscription?(channels)
+      if not force and @channels.has_subscription?(channels)
         @channels.subscribe([channels], block)
         return subscription
       end

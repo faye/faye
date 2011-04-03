@@ -97,7 +97,7 @@ Faye.Client = Faye.Class({
         
         this.info('Handshake successful: ?', this._clientId);
         
-        this.subscribe(this._channels.getKeys());
+        this.subscribe(this._channels.getKeys(), true);
         if (callback) callback.call(scope);
         
       } else {
@@ -185,7 +185,9 @@ Faye.Client = Faye.Class({
     this._validateChannel(channels);
     var subscription = new Faye.Subscription(this, channels, callback, scope);
     
-    if (this._channels.hasSubscription(channels)) {
+    var force = (callback === true);
+    
+    if (!force && this._channels.hasSubscription(channels)) {
       this._channels.subscribe([channels], callback, scope);
       return subscription;
     }

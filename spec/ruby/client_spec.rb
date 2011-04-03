@@ -127,7 +127,7 @@ describe Faye::Client do
       end
 
       it "registers any pre-existing subscriptions" do
-        @client.should_receive(:subscribe).with([])
+        @client.should_receive(:subscribe).with([], true)
         @client.handshake
       end
     end
@@ -149,6 +149,54 @@ describe Faye::Client do
         EM.stub(:add_timer)
         @client.handshake
         @client.state.should == :UNCONNECTED
+      end
+    end
+    
+    describe "with existing subscriptions after a server restart" do
+      before do
+        create_connected_client
+        
+        @message = nil
+        subscribe @client, "/messages/foo", lambda { |m| @message = m }
+        
+        @client.receive_message "advice" => {"reconnect" => "handshake"}
+        
+        stub_response "channel"    => "/meta/handshake",
+                      "successful" => true,
+                      "version"    => "1.0",
+                      "supportedConnectionTypes" => ["websocket"],
+                      "clientId"   => "reconnectid"
+      end
+      
+      it "resends the subscriptions to the server" do
+        transport.should_receive(:send).with(hash_including("channel" => "/meta/handshake"), 60)
+        transport.should_receive(:send).with({
+          "channel"      => "/meta/subscribe",
+          "clientId"     => "reconnectid",
+          "subscription" => "/messages/foo",
+          "id"           => instance_of(String)
+        }, 60)
+        @client.handshake
+      end
+      
+      it "retains the listeners for the subscriptions" do
+        @client.handshake
+        @client.receive_message("channel" => "/messages/foo", "data" => "ok")
+        @message.should == "ok"
+      end
+    end
+    
+    describe "with a connected client" do
+      before { create_connected_client }
+      
+      it "does not send a handshake message to the server" do
+        transport.should_not_receive(:send).with({
+          "channel" => "/meta/handshake",
+          "version" => "1.0",
+          "supportedConnectionTypes" => ["fake"],
+          "id"      => instance_of(String)
+        }, 60)
+        @client.handshake
       end
     end
   end

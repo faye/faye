@@ -120,7 +120,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("registers any pre-existing subscriptions", function() { with(this) {
-        expect(client, "subscribe").given([])
+        expect(client, "subscribe").given([], true)
         client.handshake()
       }})
     }})
@@ -142,6 +142,55 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         stub("setTimeout")
         client.handshake()
         assertEqual( "UNCONNECTED", client.getState() )
+      }})
+    }})
+    
+    describe("with existing subscriptions after a server restart", function() { with(this) {
+      before(function() { with(this) {
+        createConnectedClient()
+        
+        this.message = null
+        subscribe(client, "/messages/foo", function(m) { message = m })
+        
+        client.receiveMessage({advice: {reconnect: "handshake"}})
+        
+        stubResponse({channel:    "/meta/handshake",
+                      successful: true,
+                      version:    "1.0",
+                      supportedConnectionTypes: ["websocket"],
+                      clientId:   "reconnectid" })
+      }})
+      
+      it("resends the subscriptions to the server", function() { with(this) {
+        expect(transport, "send").given({
+          channel:      "/meta/subscribe",
+          clientId:     "reconnectid",
+          subscription: "/messages/foo",
+          id:           instanceOf("string")
+        }, 60)
+        client.handshake()
+      }})
+      
+      it("retains the listeners for the subscriptions", function() { with(this) {
+        client.handshake()
+        client.receiveMessage({channel: "/messages/foo", "data": "ok"})
+        assertEqual( "ok", message )
+      }})
+    }})
+    
+    describe("with a connected client", function() { with(this) {
+      before(function() { this.createConnectedClient() })
+      
+      it("does not send a handshake message to the server", function() { with(this) {
+        expect(transport, "send").given({
+          channel:  "/meta/handshake",
+          version:  "1.0",
+          supportedConnectionTypes: ["fake"],
+          id:       instanceOf("string")
+        }, 60)
+        .exactly(0)
+        
+        client.handshake()
       }})
     }})
   }})
