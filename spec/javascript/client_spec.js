@@ -3,7 +3,11 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     this.transport = {connectionType: "fake", send: function() {}}
     stub(Faye.Transport, "get").yields([transport])
   }})
-
+  
+  before(function() { with(this) {
+    stub("setTimeout")
+  }})
+  
   define("stubResponse", function(response) { with(this) {
     stub(transport, "send", function(message) {
       response.id = message.id
