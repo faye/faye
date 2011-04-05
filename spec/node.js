@@ -21,5 +21,6 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
               'ServerSpec',
               'NodeAdapterSpec',
               'ClientSpec',
+              'TransportSpec',
               JS.Test.method('autorun'))
 })

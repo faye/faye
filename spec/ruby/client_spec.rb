@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Faye::Client do
   let :transport do
-    transport = Object.new
+    transport = mock("transport")
     transport.stub(:connection_type).and_return "fake"
     transport.stub(:send)
     transport

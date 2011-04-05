@@ -111,7 +111,7 @@ Faye.extend(Faye, {
     }
   },
   
-  asyncEach: function(list, iterator) {
+  asyncEach: function(list, iterator, callback, scope) {
     var n       = list.length,
         i       = -1,
         calls   = 0,
@@ -120,7 +120,7 @@ Faye.extend(Faye, {
     var iterate = function() {
       calls -= 1;
       i += 1;
-      if (i === n) return;
+      if (i === n) return callback && callback.call(scope);
       iterator(list[i], resume);
     };
 

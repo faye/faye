@@ -16,7 +16,7 @@ Faye.Client = Faye.Class({
   initialize: function(endpoint, options) {
     this.info('New client created for ?', endpoint);
     
-    this._endpoint  = endpoint || this.DEFAULT_ENDPOINT;
+    this.endpoint   = endpoint || this.DEFAULT_ENDPOINT;
     this._options   = options || {};
     
     Faye.Transport.get(this, Faye.MANDATORY_CONNECTION_TYPES, function(transport) {
@@ -78,7 +78,7 @@ Faye.Client = Faye.Class({
     this._state = this.CONNECTING;
     var self = this;
     
-    this.info('Initiating handshake with ?', this._endpoint);
+    this.info('Initiating handshake with ?', this.endpoint);
     
     this._send({
       channel:      Faye.Channel.HANDSHAKE,

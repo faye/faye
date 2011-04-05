@@ -55,7 +55,7 @@ Faye.Transport = Faye.extend(Faye.Class({
   
 }), {
   get: function(client, connectionTypes, callback, scope) {
-    var endpoint = client._endpoint;
+    var endpoint = client.endpoint;
     if (connectionTypes === undefined) connectionTypes = this.supportedConnectionTypes();
     
     Faye.asyncEach(this._transports, function(pair, resume) {
@@ -67,7 +67,7 @@ Faye.Transport = Faye.extend(Faye.Class({
         else resume();
       });
     }, function() {
-      throw 'Could not find a usable connection type for ' + endpoint;
+      throw new Error('Could not find a usable connection type for ' + endpoint);
     });
   },
   
