@@ -191,7 +191,7 @@ module Faye
         response['error'] = Error.parameter_missing('clientId') if client_id.nil?
         response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
         
-        response['subscription'] = subscription.compact
+        response['subscription'] = message['subscription'] || []
         
         subscription.each do |channel|
           next if response['error']
@@ -221,7 +221,7 @@ module Faye
         response['error'] = Error.parameter_missing('clientId') if client_id.nil?
         response['error'] = Error.parameter_missing('subscription') if message['subscription'].nil?
         
-        response['subscription'] = subscription.compact
+        response['subscription'] = message['subscription'] || []
         
         subscription.each do |channel|
           next if response['error']

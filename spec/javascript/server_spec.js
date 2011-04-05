@@ -359,7 +359,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               channel:      "/meta/subscribe",
               successful:   true,
               clientId:     clientId,
-              subscription: ["/foo"]
+              subscription: "/foo"
             }, response)
         })
       }})
@@ -405,7 +405,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
                 channel:      "/meta/subscribe",
                 successful:   true,
                 clientId:     clientId,
-                subscription: ["/foo/**"]
+                subscription: "/foo/**"
               }, response)
           })
         }})
@@ -429,7 +429,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               successful:   false,
               error:        "401:fakeclientid:Unknown client",
               clientId:     clientId,
-              subscription: ["/foo"]
+              subscription: "/foo"
             }, response)
         })
       }})
@@ -452,7 +452,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               channel:      "/meta/subscribe",
               successful:   false,
               error:        "402:clientId:Missing required parameter",
-              subscription: ["/foo"]
+              subscription: "/foo"
             }, response)
         })
       }})
@@ -500,7 +500,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               successful:   false,
               error:        "405:foo:Invalid channel",
               clientId:     clientId,
-              subscription: ["foo"]
+              subscription: "foo"
             }, response)
         })
       }})
@@ -524,7 +524,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               successful:   false,
               error:        "403:/meta/foo:Forbidden channel",
               clientId:     clientId,
-              subscription: ["/meta/foo"]
+              subscription: "/meta/foo"
             }, response)
         })
       }})
@@ -541,7 +541,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               channel:      "/meta/subscribe",
               successful:   true,
               clientId:     clientId,
-              subscription: ["/meta/foo"]
+              subscription: "/meta/foo"
             }, response)
         })
       }})
@@ -573,7 +573,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               channel:      "/meta/unsubscribe",
               successful:   true,
               clientId:     clientId,
-              subscription: ["/foo"]
+              subscription: "/foo"
             }, response)
         })
       }})
@@ -619,7 +619,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
                 channel:      "/meta/unsubscribe",
                 successful:   true,
                 clientId:     clientId,
-                subscription: ["/foo/**"]
+                subscription: "/foo/**"
               }, response)
           })
         }})
@@ -643,7 +643,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               successful:   false,
               error:        "401:fakeclientid:Unknown client",
               clientId:     clientId,
-              subscription: ["/foo"]
+              subscription: "/foo"
             }, response)
         })
       }})
@@ -666,7 +666,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               channel:      "/meta/unsubscribe",
               successful:   false,
               error:        "402:clientId:Missing required parameter",
-              subscription: ["/foo"]
+              subscription: "/foo"
             }, response)
         })
       }})
@@ -714,7 +714,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               successful:   false,
               error:        "405:foo:Invalid channel",
               clientId:     clientId,
-              subscription: ["foo"]
+              subscription: "foo"
             }, response)
         })
       }})
@@ -738,7 +738,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               successful:   false,
               error:        "403:/meta/foo:Forbidden channel",
               clientId:     clientId,
-              subscription: ["/meta/foo"]
+              subscription: "/meta/foo"
             }, response)
         })
       }})
@@ -755,7 +755,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               channel:      "/meta/unsubscribe",
               successful:   true,
               clientId:     clientId,
-              subscription: ["/meta/foo"]
+              subscription: "/meta/foo"
             }, response)
         })
       }})

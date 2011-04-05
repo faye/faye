@@ -354,7 +354,7 @@ describe Faye::Server do
             "channel"      => "/meta/subscribe",
             "successful"   => true,
             "clientId"     => client_id,
-            "subscription" => ["/foo"]
+            "subscription" => "/foo"
           }
         end
       end
@@ -400,7 +400,7 @@ describe Faye::Server do
               "channel"      => "/meta/subscribe",
               "successful"   => true,
               "clientId"     => client_id,
-              "subscription" => ["/foo/**"]
+              "subscription" => "/foo/**"
             }
           end
         end
@@ -424,7 +424,7 @@ describe Faye::Server do
             "successful"   => false,
             "error"        => "401:fakeclientid:Unknown client",
             "clientId"     => client_id,
-            "subscription" => ["/foo"]
+            "subscription" => "/foo"
           }
         end
       end
@@ -447,7 +447,7 @@ describe Faye::Server do
             "channel"      => "/meta/subscribe",
             "successful"   => false,
             "error"        => "402:clientId:Missing required parameter",
-            "subscription" => ["/foo"]
+            "subscription" => "/foo"
           }
         end
       end
@@ -495,7 +495,7 @@ describe Faye::Server do
             "successful"   => false,
             "error"        => "405:foo:Invalid channel",
             "clientId"     => client_id,
-            "subscription" => ["foo"]
+            "subscription" => "foo"
           }
         end
       end
@@ -519,7 +519,7 @@ describe Faye::Server do
             "successful"   => false,
             "error"        => "403:/meta/foo:Forbidden channel",
             "clientId"     => client_id,
-            "subscription" => ["/meta/foo"]
+            "subscription" => "/meta/foo"
           }
         end
       end
@@ -536,7 +536,7 @@ describe Faye::Server do
             "channel"      => "/meta/subscribe",
             "successful"   => true,
             "clientId"     => client_id,
-            "subscription" => ["/meta/foo"]
+            "subscription" => "/meta/foo"
           }
         end
       end
@@ -567,7 +567,7 @@ describe Faye::Server do
             "channel"      => "/meta/unsubscribe",
             "successful"   => true,
             "clientId"     => client_id,
-            "subscription" => ["/foo"]
+            "subscription" => "/foo"
           }
         end
       end
@@ -613,7 +613,7 @@ describe Faye::Server do
               "channel"      => "/meta/unsubscribe",
               "successful"   => true,
               "clientId"     => client_id,
-              "subscription" => ["/foo/**"]
+              "subscription" => "/foo/**"
             }
           end
         end
@@ -637,7 +637,7 @@ describe Faye::Server do
             "successful"   => false,
             "error"        => "401:fakeclientid:Unknown client",
             "clientId"     => client_id,
-            "subscription" => ["/foo"]
+            "subscription" => "/foo"
           }
         end
       end
@@ -660,7 +660,7 @@ describe Faye::Server do
             "channel"      => "/meta/unsubscribe",
             "successful"   => false,
             "error"        => "402:clientId:Missing required parameter",
-            "subscription" => ["/foo"]
+            "subscription" => "/foo"
           }
         end
       end
@@ -708,7 +708,7 @@ describe Faye::Server do
             "successful"   => false,
             "error"        => "405:foo:Invalid channel",
             "clientId"     => client_id,
-            "subscription" => ["foo"]
+            "subscription" => "foo"
           }
         end
       end
@@ -732,7 +732,7 @@ describe Faye::Server do
             "successful"   => false,
             "error"        => "403:/meta/foo:Forbidden channel",
             "clientId"     => client_id,
-            "subscription" => ["/meta/foo"]
+            "subscription" => "/meta/foo"
           }
         end
       end
@@ -749,7 +749,7 @@ describe Faye::Server do
             "channel"      => "/meta/unsubscribe",
             "successful"   => true,
             "clientId"     => client_id,
-            "subscription" => ["/meta/foo"]
+            "subscription" => "/meta/foo"
           }
         end
       end

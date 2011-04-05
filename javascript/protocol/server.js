@@ -209,7 +209,7 @@ Faye.Server = Faye.Class({
       if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
       if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
       
-      response.subscription = subscription;
+      response.subscription = message.subscription || [];
       
       Faye.each(subscription, function(channel) {
         if (response.error) return;
@@ -241,7 +241,7 @@ Faye.Server = Faye.Class({
       if (!clientId)             response.error = Faye.Error.parameterMissing('clientId');
       if (!message.subscription) response.error = Faye.Error.parameterMissing('subscription');
       
-      response.subscription = subscription;
+      response.subscription = message.subscription || [];
       
       Faye.each(subscription, function(channel) {
         if (response.error) return;
