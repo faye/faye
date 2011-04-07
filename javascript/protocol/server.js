@@ -89,15 +89,10 @@ Faye.Server = Faye.Class({
   _handleMeta: function(message, socket, local, callback, scope) {
     var method = Faye.Channel.parse(message.channel)[1];
     
-    this[method](message, local, function(response) {
-      this._advize(response);
-      
-      if (response.channel === Faye.Channel.CONNECT && response.successful === true)
-        return this._engine.connect(response.clientId, message.advice, function(events) {
-          callback.call(scope, [response].concat(events));
-        });
-      
-      callback.call(scope, [response]);
+    this[method](message, local, function(responses) {
+      responses = [].concat(responses);
+      Faye.each(responses, this._advize, this);
+      callback.call(scope, responses);
     }, this);
   },
   
@@ -167,10 +162,15 @@ Faye.Server = Faye.Class({
       if (!connectionType) response.error = Faye.Error.parameterMissing('connectionType');
       
       response.successful = !response.error;
-      if (!response.successful) delete response.clientId;
       
-      if (response.successful) this._engine.ping(clientId);
-      callback.call(scope, response);
+      if (!response.successful) {
+        delete response.clientId;
+        return callback.call(scope, response);
+      }
+      
+      this._engine.connect(response.clientId, message.advice, function(events) {
+        callback.call(scope, [response].concat(events));
+      });
     }, this);
   },
   

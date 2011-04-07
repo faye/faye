@@ -79,16 +79,10 @@ module Faye
     def handle_meta(message, socket, local, &callback)
       method = Channel.parse(message['channel'])[1]
       
-      __send__(method, message, local) do |response|
-        advize(response)
-        
-        if response['channel'] == Channel::CONNECT and response['successful'] == true
-          @engine.connect(response['clientId'], message['advice']) do |events|
-            callback.call([response] + events)
-          end
-        else
-          callback.call([response])
-        end
+      __send__(method, message, local) do |responses|
+        responses = [responses].flatten
+        responses.each(&method(:advize))
+        callback.call(responses)
       end
     end
     
@@ -151,10 +145,15 @@ module Faye
         response['error'] = Error.parameter_missing('connectionType') if connection_type.nil?
         
         response['successful'] = response['error'].nil?
-        response.delete('clientId') unless response['successful']
         
-        @engine.ping(client_id) if response['successful']
-        callback.call(response)
+        if response['successful']
+          @engine.connect(response['clientId'], message['advice']) do |events|
+            callback.call([response] + events)
+          end
+        else
+          response.delete('clientId')
+          callback.call(response)
+        end
       end
     end
     

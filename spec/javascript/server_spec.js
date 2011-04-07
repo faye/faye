@@ -139,22 +139,27 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
     
     describe("with valid parameters", function() { with(this) {
       before(function() { with(this) {
+        message.advice = {timeout: 60}
         expect(engine, "clientExists").given(clientId).yielding([true])
       }})
       
-      it("pings the engine to say the client is active", function() { with(this) {
-        expect(engine, "ping").given(clientId)
+      it("connects to the engine to wait for new messages", function() { with(this) {
+        expect(engine, "connect").given(clientId, {timeout: 60}).yielding([[]])
         server.connect(message, false, function() {})
       }})
       
-      it("returns a successful response", function() { with(this) {
-        stub(engine, "ping")
+      it("returns a successful response and any queued messages", function() { with(this) {
+        stub(engine, "connect").yields([{channel: "/x", data: "hello"}])
         server.connect(message, false, function(response) {
-          assertEqual({
-              channel:    "/meta/connect",
+          assertEqual([
+            { channel:    "/meta/connect",
               successful: true,
               clientId:   clientId
-            }, response)
+            },
+            { channel: "/x",
+              data:    "hello"
+            }
+          ], response)
         })
       }})
       
@@ -162,7 +167,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         before(function() { this.message.id = "foo" })
         
         it("returns the same id", function() { with(this) {
-          stub(engine, "ping")
+          stub(engine, "connect")
           server.connect(message, false, function(response) {
             assertEqual({
                 channel:    "/meta/connect",
@@ -180,8 +185,8 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         expect(engine, "clientExists").given(clientId).yielding([false])
       }})
       
-      it("does not ping the engine", function() { with(this) {
-        expect(engine, "ping").exactly(0)
+      it("does not connect to the engine", function() { with(this) {
+        expect(engine, "connect").exactly(0)
         server.connect(message, false, function() {})
       }})
       
@@ -202,8 +207,8 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         expect(engine, "clientExists").given(undefined).yielding([false])
       }})
       
-      it("does not ping the engine", function() { with(this) {
-        expect(engine, "ping").exactly(0)
+      it("does not connect to the engine", function() { with(this) {
+        expect(engine, "connect").exactly(0)
         server.connect(message, false, function() {})
       }})
       
@@ -224,8 +229,8 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         expect(engine, "clientExists").given(clientId).yielding([true])
       }})
       
-      it("does not ping the engine", function() { with(this) {
-        expect(engine, "ping").exactly(0)
+      it("does not connect to the engine", function() { with(this) {
+        expect(engine, "connect").exactly(0)
         server.connect(message, false, function() {})
       }})
       

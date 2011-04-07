@@ -24,6 +24,7 @@ Faye.Engine.Base = Faye.Class({
   },
   
   connect: function(clientId, options, callback, scope) {
+    this.ping(clientId);
     var conn = this.connection(clientId, true);
     conn.connect(options, callback, scope);
     this.flush(clientId);

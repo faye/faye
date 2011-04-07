@@ -138,22 +138,27 @@ describe Faye::Server do
     
     describe "with valid paramters" do
       before do
+        message["advice"] = {"timeout" => 60}
         engine.should_receive(:client_exists).with(client_id).and_yield true
       end
       
-      it "pings the engine to say the client is active" do
-        engine.should_receive(:ping).with(client_id)
+      it "connects to the engine to wait for new messages" do
+        engine.should_receive(:connect).with(client_id, {"timeout" => 60})
         server.connect(message) {}
       end
       
-      it "returns a successful response" do
-        engine.stub(:ping)
+      it "returns a successful response and any queued messages" do
+        engine.stub(:connect).and_yield([{"channel" => "/x", "data" => "hello"}])
         server.connect(message) do |response|
-          response.should == {
-            "channel"    => "/meta/connect",
-            "successful" => true,
-            "clientId"   => client_id
-          }
+          response.should == [
+            { "channel"    => "/meta/connect",
+              "successful" => true,
+              "clientId"   => client_id
+            }, {
+              "channel" => "/x",
+              "data"    => "hello"
+            }
+          ]
         end
       end
       
@@ -161,7 +166,7 @@ describe Faye::Server do
         before { message["id"] = "foo" }
         
         it "returns the same id" do
-          engine.stub(:ping)
+          engine.stub(:connect)
           server.connect(message) do |response|
             response.should == {
               "channel"    => "/meta/connect",
@@ -179,8 +184,8 @@ describe Faye::Server do
         engine.should_receive(:client_exists).with(client_id).and_yield false
       end
       
-      it "does not ping the engine" do
-        engine.should_not_receive(:ping)
+      it "does not connect to the engine" do
+        engine.should_not_receive(:connect)
         server.connect(message) {}
       end
       
@@ -201,8 +206,8 @@ describe Faye::Server do
         engine.should_receive(:client_exists).with(nil).and_yield false
       end
       
-      it "does not ping the engine" do
-        engine.should_not_receive(:ping)
+      it "does not connect to the engine" do
+        engine.should_not_receive(:connect)
         server.connect(message) {}
       end
       
@@ -223,8 +228,8 @@ describe Faye::Server do
         engine.should_receive(:client_exists).with(client_id).and_yield true
       end
       
-      it "does not ping the engine" do
-        engine.should_not_receive(:ping)
+      it "does not connect to the engine" do
+        engine.should_not_receive(:connect)
         server.connect(message) {}
       end
       

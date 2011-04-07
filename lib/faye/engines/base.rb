@@ -29,6 +29,7 @@ module Faye
       end
       
       def connect(client_id, options = {}, &callback)
+        ping(client_id)
         conn = connection(client_id, true)
         conn.connect(options, &callback)
         flush(client_id)
