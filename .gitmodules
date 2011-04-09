@@ -4,3 +4,6 @@
 [submodule "vendor/em-rspec"]
 	path = vendor/em-rspec
 	url = git://github.com/jcoglan/em-rspec.git
+[submodule "vendor/terminus"]
+	path = vendor/terminus
+	url = http://github.com/jcoglan/terminus
