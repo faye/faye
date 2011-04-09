@@ -20,7 +20,9 @@ BROWSERS = {}
 Terminus.ensure_browsers 2
 
 Terminus.browsers.each_with_index do |browser, i|
-  BROWSERS[NAMES[i]] = browser
+  name = NAMES[i]
+  puts "#{name} is using #{browser}"
+  BROWSERS[name] = browser
   Terminus.browser = browser
   visit '/'
   fill_in 'username', :with => NAMES[i]
