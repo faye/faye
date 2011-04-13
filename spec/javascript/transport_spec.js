@@ -122,7 +122,7 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
       }})
       
       it("makes a request immediately", function() { with(this) {
-        expect(transport, "request").given({no: "batch"}, 60)
+        expect(transport, "request").given([{no: "batch"}], 60)
         transport.send({no: "batch"}, 60)
       }})
     }})

@@ -13,7 +13,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     this.debug('Client ? sending message to ?: ?',
                this._client._clientId, this._endpoint, message);
 
-    if (!this.batching) return this.request(message, timeout);
+    if (!this.batching) return this.request([message], timeout);
 
     this._outbox.push(message);
     this._timeout = timeout;

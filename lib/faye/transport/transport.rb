@@ -26,7 +26,7 @@ module Faye
     def send(message, timeout)
       debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, message)
 
-      return request(message, timeout) unless batching?
+      return request([message], timeout) unless batching?
 
       @outbox << message
       @timeout = timeout

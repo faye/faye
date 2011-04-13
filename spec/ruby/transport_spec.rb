@@ -120,7 +120,7 @@ describe Faye::Transport do
       end
       
       it "makes a request immediately" do
-        @transport.should_receive(:request).with({"no" => "batch"}, 60)
+        @transport.should_receive(:request).with([{"no" => "batch"}], 60)
         @transport.send({"no" => "batch"}, 60)
       end
     end
