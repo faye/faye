@@ -14,10 +14,10 @@ Capybara.current_driver = :terminus
 Capybara.app = application.to_app
 extend Capybara
 
-NAMES = %w[alice bob carol dan erica]
+NAMES = %w[alice bob carol dan erica frank gemma harold ingrid james]
 BROWSERS = {}
 
-Terminus.ensure_browsers 2
+Terminus.ensure_browsers 10
 
 Terminus.browsers.each_with_index do |browser, i|
   name = NAMES[i]
@@ -39,6 +39,7 @@ BROWSERS.each do |name, sender|
     
     Terminus.browser = target
     unless page.has_content?("#{name}: @#{at} Hello, world!")
+      Terminus.return_to_dock
       raise "Message did not make it from #{sender} to #{target}"
     end
   end
