@@ -1,22 +1,32 @@
-dir = ::File.dirname(__FILE__)
+#================================================================
+# Load Terminus and the example application
+
+dir = ::File.expand_path(::File.dirname(__FILE__))
 $LOAD_PATH.unshift(dir + '/../lib')
+require dir + '/../vendor/terminus/lib/terminus'
+require dir + '/rack/app'
 
-require File.expand_path(dir + '/../vendor/terminus/lib/terminus')
+#================================================================
+# Build the application stack with Faye in front of our app
 
-require File.expand_path(dir + '/rack/app')
 application = Rack::Builder.new {
   use Faye::RackAdapter, :mount => '/bayeux', :timeout => 20
   run Sinatra::Application
 }
+
+#================================================================
+# Load and configure Capybara
 
 require 'capybara/dsl'
 Capybara.current_driver = :terminus
 Capybara.app = application.to_app
 extend Capybara
 
+#================================================================
+# Acquire some browsers and log into each with a username
+
 NAMES = %w[alice bob carol dan erica frank gemma harold ingrid james]
 BROWSERS = {}
-
 Terminus.ensure_browsers 10
 
 Terminus.browsers.each_with_index do |browser, i|
@@ -28,6 +38,11 @@ Terminus.browsers.each_with_index do |browser, i|
   fill_in 'username', :with => NAMES[i]
   click_button 'Go'
 end
+
+#================================================================
+# Send a message from each browser to every other browser,
+# and check that it arrived. If it doesn't arrive, send all
+# the browsers back to the dock and raise an exception
 
 BROWSERS.each do |name, sender|
   BROWSERS.each do |at, target|
@@ -45,4 +60,8 @@ BROWSERS.each do |name, sender|
   end
 end
 
+#================================================================
+# Re-dock all the browsers when we're finished
+
 Terminus.return_to_dock
+
