@@ -35,7 +35,7 @@ Terminus.browsers.each_with_index do |browser, i|
   BROWSERS[name] = browser
   Terminus.browser = browser
   visit '/'
-  fill_in 'username', :with => NAMES[i]
+  fill_in 'username', :with => name
   click_button 'Go'
 end
 
