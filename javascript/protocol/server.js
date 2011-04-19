@@ -21,10 +21,7 @@ Faye.Server = Faye.Class({
     return null;
   },
   
-  process: function(messages, localOrRemote, callback, scope) {
-    var socket = (localOrRemote instanceof Faye.WebSocket) ? localOrRemote : null,
-        local  = (localOrRemote === true);
-    
+  process: function(messages, local, callback, scope) {
     messages = [].concat(messages);
     var processed = 0, responses = [];
     
@@ -55,7 +52,7 @@ Faye.Server = Faye.Class({
     
     Faye.each(messages, function(message) {
       this.pipeThroughExtensions('incoming', message, function(pipedMessage) {
-        this._handle(pipedMessage, socket, local, handleReply, this);
+        this._handle(pipedMessage, local, handleReply, this);
       }, this);
     }, this);
   },
@@ -69,14 +66,14 @@ Faye.Server = Faye.Class({
     return response;
   },
   
-  _handle: function(message, socket, local, callback, scope) {
+  _handle: function(message, local, callback, scope) {
     if (!message) return callback.call(scope, []);
     
     if (!message.error) this._engine.publish(message);
     var channelName = message.channel, response;
     
     if (Faye.Channel.isMeta(channelName)) {
-      this._handleMeta(message, socket, local, callback, scope);
+      this._handleMeta(message, local, callback, scope);
     } else if (!message.clientId) {
       callback.call(scope, []);
     } else {
@@ -86,7 +83,7 @@ Faye.Server = Faye.Class({
     }
   },
   
-  _handleMeta: function(message, socket, local, callback, scope) {
+  _handleMeta: function(message, local, callback, scope) {
     var method = Faye.Channel.parse(message.channel)[1];
     
     this[method](message, local, function(responses) {

@@ -149,7 +149,7 @@ Faye.NodeAdapter = Faye.Class({
           }
         }
         
-        self._server.process(message, socket, send);
+        self._server.process(message, false, send);
       } catch (e) {}
     };
   },

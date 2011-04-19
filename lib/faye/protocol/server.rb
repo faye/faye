@@ -15,10 +15,7 @@ module Faye
       # TODO
     end
     
-    def process(messages, local_or_remote = false, &callback)
-      socket = local_or_remote.is_a?(WebSocket) ? local_or_remote : nil
-      local  = (local_or_remote == true)
-      
+    def process(messages, local = false, &callback)
       messages = [messages].flatten
       processed, responses = 0, []
       
@@ -43,7 +40,7 @@ module Faye
       
       messages.each do |message|
         pipe_through_extensions(:incoming, message) do |piped_message|
-          handle(piped_message, socket, local, &handle_reply)
+          handle(piped_message, local, &handle_reply)
         end
       end
     end
@@ -59,14 +56,14 @@ module Faye
       response
     end
     
-    def handle(message, socket = nil, local = false, &callback)
+    def handle(message, local = false, &callback)
       return callback.call([]) if !message
       
       @engine.publish(message) unless message['error']
       channel_name = message['channel']
       
       if Channel.meta?(channel_name)
-        handle_meta(message, socket, local, &callback)
+        handle_meta(message, local, &callback)
       elsif message['clientId'].nil?
         callback.call([])
       else
@@ -76,7 +73,7 @@ module Faye
       end
     end
     
-    def handle_meta(message, socket, local, &callback)
+    def handle_meta(message, local, &callback)
       method = Channel.parse(message['channel'])[1]
       
       __send__(method, message, local) do |responses|

@@ -109,7 +109,7 @@ module Faye
       socket.onmessage = lambda do |message|
         begin
           message = JSON.parse(message.data)
-          @server.process(message, socket) do |replies|
+          @server.process(message, false) do |replies|
             socket.send(JSON.unparse(replies))
           end
         rescue
