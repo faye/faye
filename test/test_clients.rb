@@ -1,6 +1,6 @@
 require "test/unit"
-require File.dirname(__FILE__) + "/../lib/faye"
-require "test/scenario"
+require File.expand_path(File.dirname(__FILE__) + "/../lib/faye")
+require "./test/scenario"
 
 class TestClients < Test::Unit::TestCase
   include Faye

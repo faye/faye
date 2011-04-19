@@ -9,7 +9,7 @@ jake_hook :build_complete do |build|
     FileUtils.rm build.package(pkg).build_path(typ)
   end
   
-  %w[package.json README.txt History.txt].each do |doc|
+  %w[package.json README.rdoc History.txt].each do |doc|
     FileUtils.cp doc, File.join(build.build_dir, doc)
   end
 end

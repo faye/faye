@@ -24,17 +24,38 @@ on this.
 
 == Development
 
-To hack on Faye, you'll need Ruby and Jake, which we use to build
-the JavaScript packages. Once you have Ruby installed:
+To hack on Faye, you'll need Ruby in order to build both the Gem and the
+NPM package. There are also a few submodules we use for testing. The following
+should get you up and running:
 
-  sudo gem install jake
-
-Just run `jake` from the root of the project to build the JavaScripts.
-
-The Ruby version depends on the following gems, which you'll need
-to install:
-
-  sudo gem install hoe eventmachine em-http-request rack thin json
+  # Download the code from Git
+  git clone git://github.com/jcoglan/faye.git
+  cd faye
+  git submodule update --init --recursive
+  
+  # Install dependencies
+  gem install bundler
+  bundle install
+  npm install redis
+  
+  # Build test tools and Faye itself
+  cd vendor/js.class
+  jake
+  cd ../../
+  jake
+  
+  # Run tests
+  sudo redis-server &
+  rspec -c spec/
+  node spec/node.js
+  
+  # Build Ruby gem
+  gem build faye.gemspec
+  gem install faye-0.6.0.gem
+  
+  # Build NPM package
+  tar zcvf faye-0.6.0.tgz build/
+  npm install ./faye-0.6.0.tgz
 
 
 == To-do

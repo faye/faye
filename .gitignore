@@ -1,9 +1,10 @@
 .DS_Store
 .redcar
-build
 *.rbc
-examples/node/faye*
-lib/*.js
-README.txt
-pkg
+*.gem
+*.tgz
+build
 dump.rdb
+examples/node/faye*
+Gemfile.lock
+lib/*.js
