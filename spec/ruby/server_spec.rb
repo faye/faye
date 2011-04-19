@@ -6,7 +6,6 @@ describe Faye::Server do
   
   before do
     Faye::Engine.stub(:get).and_return engine
-    engine.stub(:add_subscriber)
   end
   
   describe :handshake do
