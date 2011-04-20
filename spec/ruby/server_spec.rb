@@ -21,6 +21,18 @@ describe Faye::Server do
       engine.stub(:timeout).and_return(60)
     end
     
+    it "returns an empty response for no messages" do
+      response = nil
+      server.process([], false) { |r| response = r }
+      response.should == []
+    end
+    
+    it "ignores invalid messages" do
+      response = nil
+      server.process([{}, {"channel" => "invalid"}], false) { |r| response = r }
+      response.should == []
+    end
+    
     it "routes single messages to appropriate handlers" do
       server.should_receive(:handshake).with(handshake, false)
       engine.should_receive(:publish).with(handshake)

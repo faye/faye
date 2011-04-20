@@ -18,6 +18,18 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       stub(engine, "timeout", 60)
     }})
     
+    it("returns an empty response for no messages", function() { with(this) {
+      var response = null
+      server.process([], false, function(r) { response = r})
+      assertEqual( [], response )
+    }})
+    
+    it("ignores invalid messages", function() { with(this) {
+      var response = null
+      server.process([{}, {channel: "invalid"}], false, function(r) { response = r})
+      assertEqual( [], response )
+    }})
+    
     it("routes single messages to appropriate handlers", function() { with(this) {
       expect(server, "handshake").given(handshake, false).yielding([{}])
       expect(engine, "publish").given(handshake)

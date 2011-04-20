@@ -17,6 +17,7 @@ module Faye
     
     def process(messages, local = false, &callback)
       messages = [messages].flatten
+      return callback.call([]) if messages.size == 0
       processed, responses = 0, []
       
       gather_replies = lambda do |replies|
@@ -59,8 +60,8 @@ module Faye
     def handle(message, local = false, &callback)
       return callback.call([]) if !message
       
-      @engine.publish(message) unless message['error']
       channel_name = message['channel']
+      @engine.publish(message) unless message['error'] or Grammar::CHANNEL_NAME !~ channel_name
       
       if Channel.meta?(channel_name)
         handle_meta(message, local, &callback)

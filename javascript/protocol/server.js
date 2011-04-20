@@ -23,6 +23,7 @@ Faye.Server = Faye.Class({
   
   process: function(messages, local, callback, scope) {
     messages = [].concat(messages);
+    if (messages.length === 0) return callback.call(scope, []);
     var processed = 0, responses = [];
     
     var gatherReplies = function(replies) {
@@ -69,8 +70,8 @@ Faye.Server = Faye.Class({
   _handle: function(message, local, callback, scope) {
     if (!message) return callback.call(scope, []);
     
-    if (!message.error) this._engine.publish(message);
     var channelName = message.channel, response;
+    if (!message.error && Faye.Grammar.CHANNEL_NAME.test(channelName)) this._engine.publish(message);
     
     if (Faye.Channel.isMeta(channelName)) {
       this._handleMeta(message, local, callback, scope);
