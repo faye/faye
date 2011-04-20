@@ -143,6 +143,11 @@ module Faye
       @engine.client_exists(client_id) do |exists|
         response['error'] = Error.client_unknown(client_id) unless exists
         response['error'] = Error.parameter_missing('clientId') if client_id.nil?
+        
+        unless CONNECTION_TYPES.include?(connection_type)
+          response['error'] = Error.conntype_mismatch(connection_type)
+        end
+        
         response['error'] = Error.parameter_missing('connectionType') if connection_type.nil?
         
         response['successful'] = response['error'].nil?

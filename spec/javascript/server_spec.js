@@ -395,6 +395,28 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       }})
     }})
     
+    describe("with an unknown connectionType", function() { with(this) {
+      before(function() { with(this) {
+        message.connectionType = "flash"
+        expect(engine, "clientExists").given(clientId).yielding([true])
+      }})
+      
+      it("does not connect to the engine", function() { with(this) {
+        expect(engine, "connect").exactly(0)
+        server.connect(message, false, function() {})
+      }})
+      
+      it("returns an unsuccessful response", function() { with(this) {
+        server.connect(message, false, function(response) {
+          assertEqual({
+              channel:    "/meta/connect",
+              successful: false,
+              error:      "301:flash:Connection types not supported"
+            }, response)
+        })
+      }})
+    }})
+    
     describe("with an error", function() { with(this) {
       before(function() { with(this) {
         message.error = "invalid"
@@ -416,8 +438,6 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         })
       }})
     }})
-    
-    // TODO fail if connectionType is not recognized
   }})
   
   describe("#disconnect", function() { with(this) {

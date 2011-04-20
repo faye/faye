@@ -383,6 +383,28 @@ describe Faye::Server do
       end
     end
     
+    describe "with an unknown connectionType" do
+      before do
+        message["connectionType"] = "flash"
+        engine.should_receive(:client_exists).with(client_id).and_yield true
+      end
+      
+      it "does not connect to the engine" do
+        engine.should_not_receive(:connect)
+        server.connect(message) {}
+      end
+      
+      it "returns an unsuccessful response" do
+        server.connect(message) do |response|
+          response.should == {
+            "channel"    => "/meta/connect",
+            "successful" => false,
+            "error"      => "301:flash:Connection types not supported"
+          }
+        end
+      end
+    end
+    
     describe "with an error" do
       before do
         message["error"] = "invalid"
@@ -404,8 +426,6 @@ describe Faye::Server do
         end
       end
     end
-    
-    # TODO fail if connectionType is not recognized
   end
   
   describe :disconnect do

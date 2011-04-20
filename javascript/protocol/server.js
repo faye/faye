@@ -130,7 +130,7 @@ Faye.Server = Faye.Class({
       
       if (clientConns) {
         commonConns = Faye.filter(clientConns, function(conn) {
-          return Faye.indexOf(Faye.CONNECTION_TYPES, conn) !== -1;
+          return Faye.indexOf(Faye.CONNECTION_TYPES, conn) >= 0;
         });
         if (commonConns.length === 0)
           response.error = Faye.Error.conntypeMismatch(clientConns);
@@ -160,6 +160,10 @@ Faye.Server = Faye.Class({
     this._engine.clientExists(clientId, function(exists) {
       if (!exists)         response.error = Faye.Error.clientUnknown(clientId);
       if (!clientId)       response.error = Faye.Error.parameterMissing('clientId');
+      
+      if (Faye.indexOf(Faye.CONNECTION_TYPES, connectionType) < 0)
+        response.error = Faye.Error.conntypeMismatch(connectionType);
+      
       if (!connectionType) response.error = Faye.Error.parameterMissing('connectionType');
       
       response.successful = !response.error;
