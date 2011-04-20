@@ -8,6 +8,99 @@ describe Faye::Server do
     Faye::Engine.stub(:get).and_return engine
   end
   
+  describe :process do
+    let(:handshake)   {{"channel" => "/meta/handshake",   "data" => "handshake"  }}
+    let(:connect)     {{"channel" => "/meta/connect",     "data" => "connect"    }}
+    let(:disconnect)  {{"channel" => "/meta/disconnect",  "data" => "disconnect" }}
+    let(:subscribe)   {{"channel" => "/meta/subscribe",   "data" => "subscribe"  }}
+    let(:unsubscribe) {{"channel" => "/meta/unsubscribe", "data" => "unsubscribe"}}
+    let(:publish)     {{"channel" => "/some/channel",     "data" => "publish"    }}
+    
+    before do
+      engine.stub(:interval).and_return(0)
+      engine.stub(:timeout).and_return(60)
+    end
+    
+    it "routes single messages to appropriate handlers" do
+      server.should_receive(:handshake).with(handshake, false)
+      engine.should_receive(:publish).with(handshake)
+      server.process(handshake, false)
+    end
+    
+    it "routes a list of messages to appropriate handlers" do
+      server.should_receive(:handshake).with(handshake, false)
+      server.should_receive(:connect).with(connect, false)
+      server.should_receive(:disconnect).with(disconnect, false)
+      server.should_receive(:subscribe).with(subscribe, false)
+      server.should_receive(:unsubscribe).with(unsubscribe, false)
+      
+      engine.should_receive(:publish).with(handshake)
+      engine.should_receive(:publish).with(connect)
+      engine.should_receive(:publish).with(disconnect)
+      engine.should_receive(:publish).with(subscribe)
+      engine.should_receive(:publish).with(unsubscribe)
+      engine.should_receive(:publish).with(publish)
+      
+      server.process([handshake, connect, disconnect, subscribe, unsubscribe, publish], false)
+    end
+    
+    describe "publishing a message" do
+      it "tells the engine to publish the message" do
+        engine.should_receive(:publish).with(publish)
+        server.process(publish, false) {}
+      end
+      
+      it "returns no response" do
+        engine.stub(:publish)
+        server.process(publish, false) { |r| r.should == [] }
+      end
+      
+      describe "with an error" do
+        before { publish["error"] = "invalid" }
+        
+        it "does not tell the engine to publish the message" do
+          engine.should_not_receive(:publish)
+          server.process(publish, false) {}
+        end
+        
+        it "returns no response" do
+          engine.stub(:publish)
+          server.process(publish, false) { |r| r.should == [] }
+        end
+      end
+    end
+    
+    describe "handshaking" do
+      before do
+        engine.should_receive(:publish).with(handshake)
+        server.should_receive(:handshake).with(handshake, false).and_yield({"successful" => true})
+      end
+      
+      it "returns the handshake response with advice" do
+        server.process(handshake, false) do |response|
+          response.should == [
+            { "successful" => true,
+              "advice" => {"reconnect" => "retry", "interval" => 0, "timeout" => 60000}
+            }
+          ]
+        end
+      end
+    end
+    
+    describe "connecting for messages" do
+      let(:messages) { [{"channel" => "/a"}, {"channel" => "/b"}] }
+      
+      before do
+        engine.should_receive(:publish).with(connect)
+        server.should_receive(:connect).with(connect, false).and_yield(messages)
+      end
+      
+      it "returns the new messages" do
+        server.process(connect, false) { |r| r.should == messages }
+      end
+    end
+  end
+  
   describe :handshake do
     let(:message) {{"channel" => "/meta/handshake",
                     "version" => "1.0",
@@ -126,15 +219,15 @@ describe Faye::Server do
         end
       end
     end
-
+    
     describe "with an error" do
       before { message["error"] = "invalid" }
-
+      
       it "does not createa a client" do
         engine.should_not_receive(:create_client)
         server.handshake(message) {}
       end
-
+      
       it "returns an unsuccessful response" do
         server.handshake(message) do |response|
           response.should == {
@@ -269,12 +362,12 @@ describe Faye::Server do
         message["error"] = "invalid"
         engine.should_receive(:client_exists).with(client_id).and_yield true
       end
-
+      
       it "does not connect to the engine" do
         engine.should_not_receive(:connect)
         server.connect(message) {}
       end
-
+      
       it "returns an unsuccessful response" do
         server.connect(message) do |response|
           response.should == {
@@ -285,7 +378,7 @@ describe Faye::Server do
         end
       end
     end
-
+    
     # TODO fail if connectionType is not recognized
   end
   
@@ -375,18 +468,18 @@ describe Faye::Server do
         end
       end
     end
-
+    
     describe "with an error" do
       before do
         message["error"] = "invalid"
         engine.should_receive(:client_exists).with(client_id).and_yield true
       end
-
+      
       it "does not destroy the client" do
         engine.should_not_receive(:destroy_client)
         server.disconnect(message) {}
       end
-
+      
       it "returns an unsuccessful response" do
         server.disconnect(message) do |response|
           response.should == {
@@ -610,18 +703,18 @@ describe Faye::Server do
         end
       end
     end
-
+    
     describe "with an error" do
       before do
         message["error"] = "invalid"
         engine.should_receive(:client_exists).with(client_id).and_yield true
       end
-
+      
       it "does not subscribe the client to the channel" do
         engine.should_not_receive(:subscribe)
         server.subscribe(message) {}
       end
-
+      
       it "returns an unsuccessful response" do
         server.subscribe(message) do |response|
           response.should == {
@@ -847,18 +940,18 @@ describe Faye::Server do
         end
       end
     end
-
+    
     describe "with an error" do
       before do
         message["error"] = "invalid"
         engine.should_receive(:client_exists).with(client_id).and_yield true
       end
-
+      
       it "does not unsubscribe the client from the channel" do
         engine.should_not_receive(:unsubscribe)
         server.unsubscribe(message) {}
       end
-
+      
       it "returns an unsuccessful response" do
         server.unsubscribe(message) do |response|
           response.should == {
