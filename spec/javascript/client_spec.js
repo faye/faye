@@ -368,6 +368,31 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
             assertEqual( {hello: "there"}, message )
           }})
         }})
+        
+        describe("with an incoming extension that invalidates the response", function() { with(this) {
+          before(function() { with(this) {
+            var extension = {
+              incoming: function(message, callback) {
+                if (message.channel === "/meta/subscribe") message.successful = false
+                callback(message)
+              }
+            }
+            client.addExtension(extension)
+          }})
+          
+          it("does not set up a listener for the subscribed channel", function() { with(this) {
+            var message
+            client.subscribe("/foo/*", function(m) { message = m })
+            client.receiveMessage({channel: "/foo/bar", data: "hi"})
+            assertEqual( undefined, message )
+          }})
+          
+          it("does not activate the subscription", function() { with(this) {
+            var active = false
+            client.subscribe("/foo/*").callback(function() { active = true })
+            assert( !active )
+          }})
+        }})
       }})
       
       describe("on unsuccessful response", function() { with(this) {

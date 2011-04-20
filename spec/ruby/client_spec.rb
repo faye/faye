@@ -371,6 +371,31 @@ describe Faye::Client do
             @message.should == {"hello" => "there"}
           end
         end
+        
+        describe "with an incoming extension that invalidates the response" do
+          before do
+            extension = Class.new do
+              def incoming(message, callback)
+                message["successful"] = false if message["channel"] == "/meta/subscribe"
+                callback.call(message)
+              end
+            end
+            @client.add_extension(extension.new)
+          end
+          
+          it "does not set up a listener for the subscribed channel" do
+            @message = nil
+            @client.subscribe("/foo/*") { |m| @message = m }
+            @client.receive_message("channel" => "/foo/bar", "data" => "hi")
+            @message.should be_nil
+          end
+          
+          it "does not activate the subscription" do
+            active = false
+            @client.subscribe("/foo/*").callback { active = true }
+            active.should be_false
+          end
+        end
       end
       
       describe "on unsuccessful response" do
