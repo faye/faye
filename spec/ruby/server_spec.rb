@@ -126,6 +126,27 @@ describe Faye::Server do
         end
       end
     end
+
+    describe "with an error" do
+      before { message["error"] = "invalid" }
+
+      it "does not createa a client" do
+        engine.should_not_receive(:create_client)
+        server.handshake(message) {}
+      end
+
+      it "returns an unsuccessful response" do
+        server.handshake(message) do |response|
+          response.should == {
+            "channel"    => "/meta/handshake",
+            "successful" => false,
+            "error"      => "invalid",
+            "version"    => "1.0",
+            "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket"]
+          }
+        end
+      end
+    end
   end
   
   describe :connect do
@@ -243,6 +264,28 @@ describe Faye::Server do
       end
     end
     
+    describe "with an error" do
+      before do
+        message["error"] = "invalid"
+        engine.should_receive(:client_exists).with(client_id).and_yield true
+      end
+
+      it "does not connect to the engine" do
+        engine.should_not_receive(:connect)
+        server.connect(message) {}
+      end
+
+      it "returns an unsuccessful response" do
+        server.connect(message) do |response|
+          response.should == {
+            "channel"    => "/meta/connect",
+            "successful" => false,
+            "error"      => "invalid"
+          }
+        end
+      end
+    end
+
     # TODO fail if connectionType is not recognized
   end
   
@@ -328,6 +371,28 @@ describe Faye::Server do
             "channel"    => "/meta/disconnect",
             "successful" => false,
             "error"      => "402:clientId:Missing required parameter"
+          }
+        end
+      end
+    end
+
+    describe "with an error" do
+      before do
+        message["error"] = "invalid"
+        engine.should_receive(:client_exists).with(client_id).and_yield true
+      end
+
+      it "does not destroy the client" do
+        engine.should_not_receive(:destroy_client)
+        server.disconnect(message) {}
+      end
+
+      it "returns an unsuccessful response" do
+        server.disconnect(message) do |response|
+          response.should == {
+            "channel"    => "/meta/disconnect",
+            "successful" => false,
+            "error"      => "invalid"
           }
         end
       end
@@ -545,6 +610,30 @@ describe Faye::Server do
         end
       end
     end
+
+    describe "with an error" do
+      before do
+        message["error"] = "invalid"
+        engine.should_receive(:client_exists).with(client_id).and_yield true
+      end
+
+      it "does not subscribe the client to the channel" do
+        engine.should_not_receive(:subscribe)
+        server.subscribe(message) {}
+      end
+
+      it "returns an unsuccessful response" do
+        server.subscribe(message) do |response|
+          response.should == {
+            "channel"      => "/meta/subscribe",
+            "successful"   => false,
+            "error"        => "invalid",
+            "clientId"     => client_id,
+            "subscription" => "/foo"
+          }
+        end
+      end
+    end
   end
   
   describe :unsubscribe do
@@ -754,6 +843,30 @@ describe Faye::Server do
             "successful"   => true,
             "clientId"     => client_id,
             "subscription" => "/meta/foo"
+          }
+        end
+      end
+    end
+
+    describe "with an error" do
+      before do
+        message["error"] = "invalid"
+        engine.should_receive(:client_exists).with(client_id).and_yield true
+      end
+
+      it "does not unsubscribe the client from the channel" do
+        engine.should_not_receive(:unsubscribe)
+        server.unsubscribe(message) {}
+      end
+
+      it "returns an unsuccessful response" do
+        server.unsubscribe(message) do |response|
+          response.should == {
+            "channel"      => "/meta/unsubscribe",
+            "successful"   => false,
+            "error"        => "invalid",
+            "clientId"     => client_id,
+            "subscription" => "/foo"
           }
         end
       end
