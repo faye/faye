@@ -2,12 +2,15 @@ module Faye
   module Engine
     
     class Redis < Base
+      DEFAULT_HOST = 'localhost'
+      DEFAULT_PORT = 6379
+      
       def init
         return if @redis
         require 'em-hiredis'
         
-        host = @options[:host] || 'localhost'
-        port = @options[:port] || 6379
+        host = @options[:host] || DEFAULT_HOST
+        port = @options[:port] || DEFAULT_PORT
         
         @redis      = EventMachine::Hiredis::Client.connect(host, port)
         @subscriber = EventMachine::Hiredis::Client.connect(host, port)

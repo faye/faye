@@ -1,12 +1,13 @@
-var redis = require('redis');
-
 Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
+  DEFAULT_HOST: '<%= Faye::Engine::Redis::DEFAULT_HOST %>',
+  DEFAULT_PORT: <%= Faye::Engine::Redis::DEFAULT_PORT %>,
+  
   initialize: function(options) {
     Faye.Engine.Base.prototype.initialize.call(this, options);
     
     var redis = require('redis'),
-        host  = this._options.host || 'localhost',
-        port  = this._options.port || 6379;
+        host  = this._options.host || this.DEFAULT_HOST,
+        port  = this._options.port || this.DEFAULT_PORT;
     
     this._redis = redis.createClient(port, host);
     this._subscriber = redis.createClient(port, host);
