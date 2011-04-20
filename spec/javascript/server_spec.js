@@ -126,6 +126,29 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         })
       }})
     }})
+    
+    describe("with an error", function() { with(this) {
+      before(function() { with(this) {
+        message.error = "invalid"
+      }})
+      
+      it("does not create a client", function() { with(this) {
+        expect(engine, "createClient").exactly(0)
+        server.handshake(message, false, function() {})
+      }})
+      
+      it("returns an unsuccessful response", function() { with(this) {
+        server.handshake(message, false, function(response) {
+          assertEqual({
+              channel:    "/meta/handshake",
+              successful: false,
+              error:      "invalid",
+              version:    "1.0",
+              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"]
+            }, response)
+        })
+      }})
+    }})
   }})
   
   describe("#connect", function() { with(this) {
@@ -244,6 +267,28 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       }})
     }})
     
+    describe("with an error", function() { with(this) {
+      before(function() { with(this) {
+        message.error = "invalid"
+        expect(engine, "clientExists").given(clientId).yielding([true])
+      }})
+      
+      it("does not connect to the engine", function() { with(this) {
+        expect(engine, "connect").exactly(0)
+        server.connect(message, false, function() {})
+      }})
+      
+      it("returns an unsuccessful response", function() { with(this) {
+        server.connect(message, false, function(response) {
+          assertEqual({
+              channel:    "/meta/connect",
+              successful: false,
+              error:      "invalid"
+            }, response)
+        })
+      }})
+    }})
+    
     // TODO fail if connectionType is not recognized
   }})
   
@@ -332,6 +377,29 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               channel:   "/meta/disconnect",
               successful: false,
               error:      "402:clientId:Missing required parameter"
+            }, response)
+        })
+      }})
+    }})
+    
+    describe("with an error", function() { with(this) {
+      before(function() { with(this) {
+        message.error = "invalid"
+        expect(engine, "clientExists").given(clientId).yielding([true])
+      }})
+      
+      it("does not destroy the client", function() { with(this) {
+        expect(engine, "destroyClient").exactly(0)
+        server.disconnect(message, false, function() {})
+      }})
+      
+      it("returns an unsuccessful response", function() { with(this) {
+        stub(engine, "destroyClient")
+        server.disconnect(message, false, function(response) {
+          assertEqual({
+              channel:   "/meta/disconnect",
+              successful: false,
+              error:      "invalid"
             }, response)
         })
       }})
@@ -550,6 +618,30 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         })
       }})
     }})
+    
+    describe("with an error", function() { with(this) {
+      before(function() { with(this) {
+        message.error = "invalid"
+        expect(engine, "clientExists").given(clientId).yielding([true])
+      }})
+      
+      it("does not subscribe the client to the channel", function() { with(this) {
+        expect(engine, "subscribe").exactly(0)
+        server.subscribe(message, false, function() {})
+      }})
+      
+      it("returns an unsuccessful response", function() { with(this) {
+        server.subscribe(message, false, function(response) {
+          assertEqual({
+              channel:      "/meta/subscribe",
+              successful:   false,
+              error:        "invalid",
+              clientId:     clientId,
+              subscription: "/foo"
+            }, response)
+        })
+      }})
+    }})
   }})
   
   describe("#unsubscribe", function() { with(this) {
@@ -760,6 +852,30 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
               successful:   true,
               clientId:     clientId,
               subscription: "/meta/foo"
+            }, response)
+        })
+      }})
+    }})
+    
+    describe("with an error", function() { with(this) {
+      before(function() { with(this) {
+        message.error = "invalid"
+        expect(engine, "clientExists").given(clientId).yielding([true])
+      }})
+      
+      it("does not unsubscribe the client from the channel", function() { with(this) {
+        expect(engine, "unsubscribe").exactly(0)
+        server.unsubscribe(message, false, function() {})
+      }})
+      
+      it("returns an unsuccessful response", function() { with(this) {
+        server.unsubscribe(message, false, function(response) {
+          assertEqual({
+              channel:      "/meta/unsubscribe",
+              successful:   false,
+              error:        "invalid",
+              clientId:     clientId,
+              subscription: "/foo"
             }, response)
         })
       }})
