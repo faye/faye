@@ -66,12 +66,12 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
       clients.forEach(function(clientId) {
         messages[clientId] = messages[clientId] || new Faye.Set();
         messages[clientId].add(message);
-        this.flush(clientId);
+        this.emptyQueue(clientId);
       }, this);
     }, this);
   },
   
-  flush: function(clientId) {
+  emptyQueue: function(clientId) {
     var conn = this.connection(clientId, false),
         messages = this._messages[clientId];
     

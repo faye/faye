@@ -12,7 +12,10 @@ module Faye
     end
     
     def flush_connection(messages)
-      # TODO
+      [messages].flatten.each do |message|
+        client_id = message["clientId"]
+        @engine.flush(client_id) if client_id
+      end
     end
     
     def process(messages, local = false, &callback)

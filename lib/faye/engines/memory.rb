@@ -60,14 +60,14 @@ module Faye
           clients.each do |client_id|
             @messages[client_id] ||= Set.new
             @messages[client_id].add(message)
-            flush(client_id)
+            empty_queue(client_id)
           end
         end
       end
       
     private
       
-      def flush(client_id)
+      def empty_queue(client_id)
         return unless conn = connection(client_id, false) and
                messages = @messages.delete(client_id)
         

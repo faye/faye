@@ -7,7 +7,10 @@ Faye.Server = Faye.Class({
   },
   
   flushConnection: function(messages) {
-    // TODO
+    Faye.each([].concat(messages), function(message) {
+      var clientId = message.clientId;
+      if (clientId) this._engine.flush(clientId);
+    }, this);
   },
   
   determineClient: function(messages) {

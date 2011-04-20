@@ -27,7 +27,7 @@ Faye.Engine.Base = Faye.Class({
     this.ping(clientId);
     var conn = this.connection(clientId, true);
     conn.connect(options, callback, scope);
-    this.flush(clientId);
+    this.emptyQueue(clientId);
   },
   
   connection: function(clientId, create) {
@@ -38,6 +38,11 @@ Faye.Engine.Base = Faye.Class({
   
   closeConnection: function(clientId) {
     delete this._connections[clientId];
+  },
+  
+  flush: function(clientId) {
+    var conn = this._connections[clientId];
+    if (conn) conn.flush();
   }
 });
 

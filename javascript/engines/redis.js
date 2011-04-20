@@ -15,7 +15,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     var self = this;
     this._subscriber.subscribe('/notifications');
     this._subscriber.on('message', function(topic, message) {
-      self.flush(message);
+      self.emptyQueue(message);
     });
   },
   
@@ -102,7 +102,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     });
   },
   
-  flush: function(clientId) {
+  emptyQueue: function(clientId) {
     var conn = this.connection(clientId, false);
     if (!conn) return;
     

@@ -32,7 +32,7 @@ module Faye
         ping(client_id)
         conn = connection(client_id, true)
         conn.connect(options, &callback)
-        flush(client_id)
+        empty_queue(client_id)
       end
       
       def connection(client_id, create)
@@ -43,6 +43,11 @@ module Faye
       
       def close_connection(client_id)
         @connections.delete(client_id)
+      end
+      
+      def flush(client_id)
+        conn = @connections[client_id]
+        conn.flush! if conn
       end
     end
     

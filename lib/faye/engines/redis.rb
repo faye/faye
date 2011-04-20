@@ -17,7 +17,7 @@ module Faye
         
         @subscriber.subscribe('/notifications')
         @subscriber.on(:message) do |topic, message|
-          flush(message) if topic == '/notifications'
+          empty_queue(message) if topic == '/notifications'
         end
       end
       
@@ -107,7 +107,7 @@ module Faye
       
     private
       
-      def flush(client_id)
+      def empty_queue(client_id)
         return unless conn = connection(client_id, false)
         init
         

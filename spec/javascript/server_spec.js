@@ -117,6 +117,22 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
     }})
   }})
   
+  describe("#flushConnection", function() { with(this) {
+    before(function() { with(this) {
+      this.message = {clientId: "fakeclientid"}
+    }})
+    
+    it("flushes the connection when given one message", function() { with(this) {
+      expect(engine, "flush").given("fakeclientid")
+      server.flushConnection(message)
+    }})
+    
+    it("flushes the connection when given a list of messages", function() { with(this) {
+      expect(engine, "flush").given("fakeclientid")
+      server.flushConnection([message])
+    }})
+  }})
+  
   describe("#handshake", function() { with(this) {
     before(function() { with(this) {
       this.message = {channel: "/meta/handshake",
