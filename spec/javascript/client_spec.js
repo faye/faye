@@ -330,6 +330,44 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           client.subscribe("/foo/*").callback(function() { active = true })
           assert( active )
         }})
+        
+        describe("with an incoming extension installed", function() { with(this) {
+          before(function() { with(this) {
+            var extension = {
+              incoming: function(message, callback) {
+                if (message.data) message.data.changed = true
+                callback(message)
+              }
+            }
+            client.addExtension(extension)
+            this.message = null
+            client.subscribe("/foo/*", function(m) { message = m })
+          }})
+          
+          it("passes delivered messages through the extension", function() { with(this) {
+            client.receiveMessage({channel: "/foo/bar", data: {hello: "there"}})
+            assertEqual( {hello: "there", changed: true}, message )
+          }})
+        }})
+        
+        describe("with an outgoing extension installed", function() { with(this) {
+          before(function() { with(this) {
+            var extension = {
+              outgoing: function(message, callback) {
+                if (message.data) message.data.changed = true
+                callback(message)
+              }
+            }
+            client.addExtension(extension)
+            this.message = null
+            client.subscribe("/foo/*", function(m) { message = m })
+          }})
+          
+          it("leaves messages unchanged", function() { with(this) {
+            client.receiveMessage({channel: "/foo/bar", data: {hello: "there"}})
+            assertEqual( {hello: "there"}, message )
+          }})
+        }})
       }})
       
       describe("on unsuccessful response", function() { with(this) {

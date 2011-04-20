@@ -333,6 +333,44 @@ describe Faye::Client do
           @client.subscribe("/foo/*").callback { active = true }
           active.should be_true
         end
+        
+        describe "with an incoming extension installed" do
+          before do
+            extension = Class.new do
+              def incoming(message, callback)
+                message["data"]["changed"] = true if message["data"]
+                callback.call(message)
+              end
+            end
+            @client.add_extension(extension.new)
+            @message = nil
+            @client.subscribe("/foo/*") { |m| @message = m }
+          end
+          
+          it "passes delivered messages through the extension" do
+            @client.receive_message("channel" => "/foo/bar", "data" => {"hello" => "there"})
+            @message.should == {"hello" => "there", "changed" => true}
+          end
+        end
+        
+        describe "with an outgoing extension installed" do
+          before do
+            extension = Class.new do
+              def outgoing(message, callback)
+                message["data"]["changed"] = true if message["data"]
+                callback.call(message)
+              end
+            end
+            @client.add_extension(extension.new)
+            @message = nil
+            @client.subscribe("/foo/*") { |m| @message = m }
+          end
+          
+          it "leaves messages unchanged" do
+            @client.receive_message("channel" => "/foo/bar", "data" => {"hello" => "there"})
+            @message.should == {"hello" => "there"}
+          end
+        end
       end
       
       describe "on unsuccessful response" do
