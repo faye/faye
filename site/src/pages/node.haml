@@ -4,10 +4,10 @@
     
     h4. Setting up
     
-    All Faye clients need a central messaging server to communicate with;
-    the server records which clients are subscribed to which channels
-    and handles routing of messages between clients. Setting up a server
-    under Node.js is simple:
+    All Faye clients need a central messaging server to communicate with; the
+    server records which clients are subscribed to which channels and handles
+    routing of messages between clients. Setting up a server under Node.js is
+    simple:
     
     <pre class="prettyprint">var http = require('http'),
         faye = require('faye');
@@ -29,38 +29,63 @@
     
     The @NodeAdapter@ class supports these options during setup:
     
-    * @mount@: the path on the host at which the Faye service is available.
-      In this example, clients would connect to @http://localhost:8000/faye@
-      to talk to the server.
-    * @timeout@: the maximum time to hold a connection open before
-      returning the response. This is given in seconds and must be smaller
-      than the timeout on your frontend webserver.
+    * @mount@: the path on the host at which the Faye service is available. In
+      this example, clients would connect to @http://localhost:8000/faye@ to
+      talk to the server.
+    * @timeout@: the maximum time to hold a connection open before returning the
+      response. This is given in seconds and must be smaller than the timeout on
+      your frontend webserver.
     
     h4. Notes
     
-    A note about the mount point: mounting the server at @/faye@ will make
-    the Faye server respond to any request whose path begins @/faye@; this
-    is so that it can interoperate with clients that use different request
-    paths for different channels.
+    A note about the mount point: mounting the server at @/faye@ will make the
+    Faye server respond to any request whose path begins @/faye@; this is so
+    that it can interoperate with clients that use different request paths for
+    different channels.
+    
+    h4. Engines
+    
+    Faye supports pluggable back-end engines that help the service adapt to
+    different use cases. The engines currently available are:
+    
+    * @memory@: (default) all service state is stored in the Faye server process.
+      Only one instance of the server may be run but internal operations are
+      very fast.
+    * @redis@: service state and message distribution is handled by a Redis
+      database server. Operations are slower but multiple instances of the Faye
+      server may be run on top of a single Redis database.
+    
+    To use the Redis engine, pass the @engine@ option when initializing the
+    Faye server:
+    
+    <pre class="prettyprint">faye_server = new faye.NodeAdapter({
+                    mount:    '/faye',
+                    timeout:  45,
+                    engine: {
+                      type:   'redis',
+                      host:   'REDIS_HOST',
+                      port:   'REDIS_PORT'
+                    }
+                  })</pre>
     
     h4. Server-side Node.js clients
     
-    You can use Faye clients on the server side to send messages to
-    in-browser clients or to other server-side processes. The API is
-    identical to the "browser client":/browser.html.
+    You can use Faye clients on the server side to send messages to in-browser
+    clients or to other server-side processes. The API is identical to the
+    "browser client":/browser.html.
     
     To create a client, just supply the host you want to connect to:
     
     <pre class="prettyprint">var client = new faye.Client('http://localhost:8000/faye');</pre>
     
-    You can then use @client.subscribe()@ and @client.publish()@ to
-    send messages to other clients; see the "browser client":/browser.html
+    You can then use @client.subscribe()@ and @client.publish()@ to send
+    messages to other clients; see the "browser client":/browser.html
     documentation for more information.
     
-    The server has its own client attached to it so you can use the
-    server to send messages to browsers. This client has direct access
-    to the server without going over HTTP, and is thus more efficient.
-    To send messages through the server just use the @#getClient()@ method.
+    The server has its own client attached to it so you can use the server to
+    send messages to browsers. This client has direct access to the server
+    without going over HTTP, and is thus more efficient. To send messages
+    through the server just use the @#getClient()@ method.
     
     <pre class="prettyprint">bayeux.getClient().publish('/email/new', {
       text:       'New email has arrived!',
@@ -69,25 +94,23 @@
     
     h4. Extensions
     
-    Both the server and client support an extension mechanism that lets
-    you intercept messages as they pass in and out. This lets you
-    modify messages for any purpose you like, including messages on
-    @/meta/*@ channels that are used by the protocol. An extension is
-    just an object that has either an @incoming()@ or @outgoing()@ method
-    (or both). These methods should accept a message and a callback
-    function, and should call the function with the message once they
-    have made any modifications.
+    Both the server and client support an extension mechanism that lets you
+    intercept messages as they pass in and out. This lets you modify messages
+    for any purpose you like, including messages on @/meta/*@ channels that are
+    used by the protocol. An extension is just an object that has either an
+    @incoming()@ or @outgoing()@ method (or both). These methods should accept a
+    message and a callback function, and should call the function with the
+    message once they have made any modifications.
     
-    Extensions use a callback instead of simply returning the modified
-    message since this allows you to use asynchronous logic to make
-    your modifications.
+    Extensions use a callback instead of simply returning the modified message
+    since this allows you to use asynchronous logic to make your modifications.
     
-    As an example, suppose we want to authenticate subscription messages
-    by checking an authentication token against a list we're keeping
-    in a file on disk. Clients subscribe to channels by sending a
-    message to the @/meta/subscribe@ channel with the channel they want
-    to subscribe in the @subscription@ field. Let's say our authentication
-    file contains a JSON object that maps channels to required tokens:
+    As an example, suppose we want to authenticate subscription messages by
+    checking an authentication token against a list we're keeping in a file on
+    disk. Clients subscribe to channels by sending a message to the
+    @/meta/subscribe@ channel with the channel they want to subscribe in the
+    @subscription@ field. Let's say our authentication file contains a JSON
+    object that maps channels to required tokens:
     
     <pre class="prettyprint">// tokens.json
     
@@ -96,9 +119,9 @@
       "/artists/mclusky/news":  "99taaec"
     }</pre>
     
-    The server can validate subscription messages by checking that
-    they have the right auth token attached. By convention, data
-    added by extensions is stored in the message's @ext@ field.
+    The server can validate subscription messages by checking that they have the
+    right auth token attached. By convention, data added by extensions is stored
+    in the message's @ext@ field.
     
     <pre class="prettyprint">var fs = require('fs');
     
@@ -129,15 +152,15 @@
     
     bayeux.addExtension(serverAuth);</pre>
     
-    If you add an @error@ property to a message, the server will not
-    process the message further and will simply return it to the
-    sender, effectively blocking the subscription attempt. You should
-    always make sure your extension calls the @callback@, as failing
-    to do so could block delivery of other messages in the same request.
+    If you add an @error@ property to a message, the server will not process the
+    message further and will simply return it to the sender, effectively
+    blocking the subscription attempt. You should always make sure your
+    extension calls the @callback@, as failing to do so could block delivery of
+    other messages in the same request.
     
-    On the client side, you'll need to make sure the client sends
-    the right auth token to satisfy the server. We do this by adding
-    an _outgoing_ extension on the client side.
+    On the client side, you'll need to make sure the client sends the right auth
+    token to satisfy the server. We do this by adding an _outgoing_ extension on
+    the client side.
     
     <pre class="prettyprint">var clientAuth = {
       outgoing: function(message, callback) {
@@ -158,13 +181,13 @@
     
     client.addExtension(clientAuth);</pre>
     
-    If an extension has an @added()@ method, that will be called when
-    the extension is added to its host. To remove an extension, call:
+    If an extension has an @added()@ method, that will be called when the
+    extension is added to its host. To remove an extension, call:
     
     <pre class="prettyprint">// Calls extension.removed() if defined
     hostObject.removeExtension(extension);</pre>
     
-    To write extensions you'll need to know what kinds of messages are
-    used by the Bayeux protocol; see "the specification":http://svn.cometd.com/trunk/bayeux/bayeux.html
+    To write extensions you'll need to know what kinds of messages are used by
+    the Bayeux protocol; see "the specification":http://svn.cometd.com/trunk/bayeux/bayeux.html
     for more details.
 
