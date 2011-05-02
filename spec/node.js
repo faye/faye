@@ -14,11 +14,18 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
     }
   })
   
+  JS.ENV.Server = {}
+  
   JS.require( 'FayeSpec',
               'GrammarSpec',
               'ChannelSpec',
               'EngineSpec',
               'ServerSpec',
+              'Server.HandshakeSpec',
+              'Server.ConnectSpec',
+              'Server.DisconnectSpec',
+              'Server.SubscribeSpec',
+              'Server.UnsubscribeSpec',
               'NodeAdapterSpec',
               'ClientSpec',
               'TransportSpec',
