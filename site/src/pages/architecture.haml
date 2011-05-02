@@ -1,0 +1,122 @@
+.content
+  :textile
+    h3. Internal architecture
+    
+    If you're developing Faye, the following gives an overview of the project's
+    architecture. Both the Ruby and JavaScript versions share the same internal
+    structure and their implementations are very similar. Faye is based on the
+    Bayeux protocol, and is compatible with the reference implementation of
+    Bayeux provided by the cometD project.
+    
+    Messages flow through the system according to this diagram:
+    
+    The components that make up the messaging stack are described below. They
+    are designed to be modular such that each layer is easily swappable if the
+    need arises.
+    
+    h4. Storage
+    
+    The storage layer is the base of the whole stack, and as its name suggests
+    it stores the state of the Faye service. This state includes a list of
+    active client IDs, which channels each client is subscribed to, and any
+    queued messages waiting to be delivered to clients.
+    
+    State is stored in the server's memory if using the @memory@ engine (the
+    default), and in a Redis database if using the @redis@ engine.
+    
+    h4. Engine
+    
+    The engine is an object that provides an abstract API on top of the storage
+    layer. It implements all the core operations of the Faye service, such as
+    registering new clients, storing subscriptions and routing messages. Faye
+    currently has two engines available:
+    
+    * @memory@ - stores state in the server process's memory
+    * @redis@ - stores state in a Redis database, can run multiple server
+      instances off one DB
+    
+    All engine types provide the same API so they can be easily swapped out for
+    a different backend implementation. The engine's operations assume that all
+    necessary validation has been done on incoming data further up the stack so
+    the implementations can be kept small and simple.
+    
+    h4. Server
+    
+    The server implements the Bayeux messaging protocol, providing the @handshake@,
+    @connect@, @disconnect@, @subscribe@, @unsubscribe@ and @publish@ operations.
+    It delegates execution of these operations to the Engine; the Server's job
+    is simply to wrap the operations with the Bayeux protocol and validate
+    incoming messages. This separation makes it easy to swap out the backend
+    implementation while keeping the protocol layer consistent.
+    
+    The Server class does not know anything about HTTP or other network
+    transports, it simply provides an object-based implementation of Bayeux.
+    
+    h4. Server-side extensions
+    
+    These are components written by the user that intercept messages that flow
+    in and out of the Server. Incoming extensions apply when a message comes in
+    to the server from the Internet, and outgoing extensions apply when a
+    message is being sent back out to the client. The user can change the
+    messages' data, and add errors to stop the Server processing them.
+    
+    h4. Adapter
+    
+    The Adapter, as implemented by the @NodeAdapter@ and @RackAdapter@ classes,
+    exposes the Server's interface over HTTP. It is responsible for serializing
+    and deserialzing messages as JSON and accepting connections over various
+    flavours of HTTP transport:
+    
+    * Persistent connections using @WebSocket@
+    * Long-polling via HTTP POST
+    * Cross Origin Resource Sharing
+    * Callback-polling via JSON-P
+    
+    h4. Transport
+    
+    The Transport classes implement the client side of the network transports
+    supported by the server-side Adapter. Their job is to accept messages from
+    the Client, serialize them and send them to the server. When responses
+    arrive they are deserialized and given to the Client.
+    
+    Transport objects are also responsible for detecting and recovering from
+    network errors and server restarts using the best strategy available. For
+    example, the @WebSocket@ transport can immediately detect disconnections,
+    whereas the JSON-P transport has to rely on timeouts.
+    
+    h4. Client-side extensions
+    
+    These are components written by the user that intercept messages that flow
+    in and out of the Client. Outgoing extensions apply when a message is sent
+    by the Client, and incoming extensions apply when a message arrives from the
+    server.
+    
+    h4. Client
+    
+    This is the component that the user interacts with the most, and provides
+    the interface through which subscriptions are registered and messages are
+    published. The Client implements the client side of the Bayeux protocol, and
+    presents a slightly higher-level interface to the user. For example, the
+    user does not have to initiate handshakes or connections, this is done
+    automatically.
+    
+    Adding multiple subscriptions to the same channel only results in one
+    @subscribe@ message going to the server, and similarly an @unsubscribe@
+    message is not sent until all listeners have been removed from the channel.
+    The client's @subscribe@/@unsubscribe@ interface deals with managing these
+    subscriptions and distributing messages to the right listeners as new
+    messages arrive from the server.
+    
+    h4. Clustering
+    
+    Some engines provided by Faye (for example the @redis@ engine) support
+    clustering, i.e. they let you run a single Faye service across multiple
+    front-end web servers. These engines are slower since they must perform I/O
+    to external services, but they let you scale your Faye service if you
+    outgrow the network connection limit of one machine.
+    
+    In clustered engines, the Storage layer (for example a Redis database server)
+    is shared and several Engine+Server+Adapter stacks can be run on top of it.
+    The server stacks are stateless: a Client should be able to connect to any
+    of them at any time and it should behave as though interacting with a single
+    service.
