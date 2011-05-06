@@ -21,9 +21,12 @@ Faye.Engine.Base = Faye.Class({
     this._connections = {};
     this.interval     = this._options.interval || this.INTERVAL;
     this.timeout      = this._options.timeout  || this.TIMEOUT;
+
+    this.debug('Created new engine: ?', this._options);
   },
   
   connect: function(clientId, options, callback, scope) {
+    this.debug('Accepting connection from ?', clientId);
     this.ping(clientId);
     var conn = this.connection(clientId, true);
     conn.connect(options, callback, scope);
@@ -37,13 +40,16 @@ Faye.Engine.Base = Faye.Class({
   },
   
   closeConnection: function(clientId) {
+    this.debug('Closing connection for ?', clientId);
     delete this._connections[clientId];
   },
   
   flush: function(clientId) {
+    this.debug('Flushing message queue for ?', clientId);
     var conn = this._connections[clientId];
     if (conn) conn.flush();
   }
 });
 
+Faye.extend(Faye.Engine.Base.prototype, Faye.Logging);
 Faye.extend(Faye.Engine.Base.prototype, Faye.Timeouts);

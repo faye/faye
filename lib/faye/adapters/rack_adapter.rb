@@ -7,6 +7,8 @@ require Faye::ROOT + '/thin_extensions'
 module Faye
   class RackAdapter
     
+    include Logging
+
     # Only supported under Thin
     ASYNC_RESPONSE = [-1, {}, []].freeze
     
@@ -72,6 +74,7 @@ module Faye
         callback = env['async.callback']
         body     = DeferredBody.new
         
+        debug 'Received ?: ?', env['REQUEST_METHOD'], json_msg
         @server.flush_connection(message) if request.get?
         
         head['Access-Control-Allow-Origin'] = origin if origin
@@ -80,6 +83,7 @@ module Faye
         @server.process(message, false) do |replies|
           response = JSON.unparse(replies)
           response = "#{ jsonp }(#{ response });" if request.get?
+          debug 'Returning ?', response
           body.succeed(response)
         end
         
@@ -109,7 +113,9 @@ module Faye
       socket.onmessage = lambda do |message|
         begin
           message = JSON.parse(message.data)
+          debug 'Received via WebSocket: ?', message
           @server.process(message, false) do |replies|
+            debug 'Sending via WebSocket: ?', replies
             socket.send(JSON.unparse(replies))
           end
         rescue

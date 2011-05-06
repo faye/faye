@@ -32,6 +32,7 @@ module Faye
           if added == 0
             create_client(&callback)
           else
+            debug 'Created new client ?', client_id
             ping(client_id)
             callback.call(client_id)
           end
@@ -45,12 +46,16 @@ module Faye
         @redis.smembers("/clients/#{client_id}/channels") do |channels|
           n, i = channels.size, 0
           if n == 0
+            debug 'Destroyed client ?', client_id
             callback.call if callback
           else
             channels.each do |channel|
               unsubscribe(client_id, channel) do
                 i += 1
-                callback.call if callback and i == n
+                if i == n
+                  debug 'Destroyed client ?', client_id
+                  callback.call if callback
+                end
               end
             end
           end
@@ -70,6 +75,7 @@ module Faye
         
         return unless Numeric === timeout
         
+        debug 'Ping ?, ?', client_id, timeout
         remove_timeout(client_id)
         @redis.set("/clients/#{client_id}/ping", time)
         add_timeout(client_id, 2 * timeout) do
@@ -82,22 +88,30 @@ module Faye
       def subscribe(client_id, channel, &callback)
         init
         @redis.sadd("/clients/#{client_id}/channels", channel)
-        @redis.sadd("/channels#{channel}", client_id, &callback)
+        @redis.sadd("/channels#{channel}", client_id) do
+          debug 'Subscribed client ? to channel ?', client_id, channel
+          callback.call if callback
+        end
       end
       
       def unsubscribe(client_id, channel, &callback)
         init
         @redis.srem("/clients/#{client_id}/channels", channel)
-        @redis.srem("/channels#{channel}", client_id, &callback)
+        @redis.srem("/channels#{channel}", client_id) do
+          debug 'Unsubscribed client ? from channel ?', client_id, channel
+          callback.call if callback
+        end
       end
       
       def publish(message)
         init
+        debug 'Publishing message ?', message
         json_message = JSON.dump(message)
         channels = Channel.expand(message['channel'])
         channels.each do |channel|
           @redis.smembers("/channels#{channel}") do |clients|
             clients.each do |client_id|
+              debug 'Queueing for client ?: ?', client_id, message
               @redis.sadd("/clients/#{client_id}/messages", json_message)
               @redis.publish('/notifications', client_id)
             end

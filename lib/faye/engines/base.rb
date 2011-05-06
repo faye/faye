@@ -17,6 +17,7 @@ module Faye
     end
     
     class Base
+      include Logging
       include Timeouts
       
       attr_reader :interval, :timeout
@@ -26,9 +27,12 @@ module Faye
         @connections = {}
         @interval    = @options[:interval] || INTERVAL
         @timeout     = @options[:timeout]  || TIMEOUT
+
+        debug 'Created new engine: ?', @options
       end
       
       def connect(client_id, options = {}, &callback)
+        debug 'Accepting connection from ?', client_id
         ping(client_id)
         conn = connection(client_id, true)
         conn.connect(options, &callback)
@@ -42,10 +46,12 @@ module Faye
       end
       
       def close_connection(client_id)
+        debug 'Closing connection for ?', client_id
         @connections.delete(client_id)
       end
       
       def flush(client_id)
+        debug 'Flushing message queue for ?', client_id
         conn = @connections[client_id]
         conn.flush! if conn
       end

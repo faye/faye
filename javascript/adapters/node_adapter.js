@@ -129,6 +129,7 @@ Faye.NodeAdapter = Faye.Class({
     
     var send = function(messages) {
       try {
+        self.debug('Sending via WebSocket: ?', messages);
         socket.send(JSON.stringify(messages));
       } catch (e) {
         self._failed[socket.clientId] = messages;
@@ -141,6 +142,8 @@ Faye.NodeAdapter = Faye.Class({
             clientId = self._server.determineClient(message),
             failed   = null;
         
+        self.debug('Received via WebSocket: ?', message);
+
         if (clientId) {
           socket.clientId = clientId;
           if (failed = self._failed[clientId]) {
@@ -160,7 +163,8 @@ Faye.NodeAdapter = Faye.Class({
           jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
           type    = isGet ? this.TYPE_SCRIPT : this.TYPE_JSON;
-          
+
+      this.debug('Received ?: ?', request.method, message);
       if (isGet) this._server.flushConnection(message);
       
       this._server.process(message, false, function(replies) {
@@ -171,10 +175,11 @@ Faye.NodeAdapter = Faye.Class({
         if (isGet)  body = jsonp + '(' + body + ');';
         if (origin) head['Access-Control-Allow-Origin'] = origin;
         
+        this.debug('Returning ?', body);
         response.writeHead(200, head);
         response.write(body);
         response.end();
-      });
+      }, this);
     } catch (e) {
       this._returnError(response);
     }
@@ -186,6 +191,8 @@ Faye.NodeAdapter = Faye.Class({
     response.end();
   }
 });
+
+Faye.extend(Faye.NodeAdapter.prototype, Faye.Logging);
 
 exports.NodeAdapter = Faye.NodeAdapter;
 exports.Client = Faye.Client;

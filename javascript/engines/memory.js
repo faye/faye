@@ -1,4 +1,6 @@
 Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
+  className: 'Engine.Memory',
+
   initialize: function(options) {
     this._clients   = {};
     this._channels  = {};
@@ -10,6 +12,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
   
   createClient: function(callback, scope) {
     var clientId = this._namespace.generate();
+    this.debug('Created new client ?', clientId);
     this._clients[clientId] = new Faye.Set();
     this.ping(clientId);
     callback.call(scope, clientId);
@@ -24,6 +27,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     this.removeTimeout(clientId);
     delete clients[clientId];
     delete this._messages[clientId];
+    this.debug('Destroyed client ?', clientId);
     if (callback) callback.call(scope);
   },
   
@@ -34,6 +38,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
   ping: function(clientId) {
     var timeout = this._options.timeout;
     if (typeof timeout !== 'number') return;
+    this.debug('Ping ?, ?', clientId, timeout);
     this.removeTimeout(clientId);
     this.addTimeout(clientId, 2 * timeout, function() {
       this.destroyClient(clientId);
@@ -46,6 +51,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     channels[channel] = channels[channel] || new Faye.Set();
     clients[clientId].add(channel);
     channels[channel].add(clientId);
+    this.debug('Subscribed client ? to channel ?', clientId, channel);
     if (callback) callback.call(scope, true);
   },
   
@@ -53,10 +59,13 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     var clients = this._clients, channels = this._channels;
     if (clients.hasOwnProperty(clientId)) clients[clientId].remove(channel);
     if (channels.hasOwnProperty(channel)) channels[channel].remove(clientId);
+    this.debug('Unsubscribed client ? from channel ?', clientId, channel);
     if (callback) callback.call(scope, true);
   },
   
   publish: function(message) {
+    this.debug('Publishing message ?', message);
+
     var channels = Faye.Channel.expand(message.channel),
         messages = this._messages;
     
@@ -64,6 +73,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
       var clients = this._channels[channel];
       if (!clients) return;
       clients.forEach(function(clientId) {
+        this.debug('Queueing for client ?: ?', clientId, message);
         messages[clientId] = messages[clientId] || new Faye.Set();
         messages[clientId].add(message);
         this.emptyQueue(clientId);

@@ -16,7 +16,7 @@ Faye.Logging = {
     
     var messageArgs = Array.prototype.slice.apply(messageArgs),
         banner = ' [' + level.toUpperCase() + '] [Faye',
-        klass  = null,
+        klass  = this.className,
         
         message = messageArgs.shift().replace(/\?/g, function() {
           try {

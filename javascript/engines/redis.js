@@ -2,6 +2,8 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   DEFAULT_HOST: '<%= Faye::Engine::Redis::DEFAULT_HOST %>',
   DEFAULT_PORT: <%= Faye::Engine::Redis::DEFAULT_PORT %>,
   
+  className: 'Engine.Redis',
+
   initialize: function(options) {
     Faye.Engine.Base.prototype.initialize.call(this, options);
     
@@ -27,6 +29,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   
   createClient: function(callback, scope) {
     var clientId = Faye.random(), self = this;
+    this.debug('Created new client ?', clientId);
     this._redis.sadd('/clients', clientId, function(error, added) {
       if (added === 0) return self.createClient(callback, scope);
       self.ping(clientId);
@@ -45,7 +48,10 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       Faye.each(channels, function(channel) {
         self.unsubscribe(clientId, channel, function() {
           i += 1;
-          if (i === n) callback && callback.call(scope);
+          if (i === n) {
+            self.debug('Destroyed client ?', clientId);
+            if (callback) callback.call(scope);
+          }
         });
       });
     });
@@ -64,6 +70,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     
     if (typeof timeout !== 'number') return;
     
+    this.debug('Ping ?, ?', clientId, timeout);
     this.removeTimeout(clientId);
     this._redis.set('/clients/' + clientId + '/ping', time);
     this.addTimeout(clientId, 2 * timeout, function() {
@@ -74,20 +81,26 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   },
   
   subscribe: function(clientId, channel, callback, scope) {
+    var self = this;
     this._redis.sadd('/clients/' + clientId + '/channels', channel);
     this._redis.sadd('/channels' + channel, clientId, function() {
+      self.debug('Subscribed client ? to channel ?', clientId, channel);
       if (callback) callback.call(scope);
     });
   },
   
   unsubscribe: function(clientId, channel, callback, scope) {
+    var self = this;
     this._redis.srem('/clients/' + clientId + '/channels', channel);
     this._redis.srem('/channels' + channel, clientId, function() {
+      self.debug('Unsubscribed client ? from channel ?', clientId, channel);
       if (callback) callback.call(scope);
     });
   },
   
   publish: function(message) {
+    this.debug('Publishing message ?', message);
+
     var jsonMessage = JSON.stringify(message),
         channels    = Faye.Channel.expand(message.channel),
         self        = this;
@@ -95,6 +108,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     Faye.each(channels, function(channel) {
       self._redis.smembers('/channels' + channel, function(error, clients) {
         Faye.each(clients, function(clientId) {
+          self.debug('Queueing for client ?: ?', clientId, message);
           self._redis.sadd('/clients/' + clientId + '/messages', jsonMessage);
           self._redis.publish('/notifications', clientId);
         });
