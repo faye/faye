@@ -4,11 +4,14 @@ Faye.Server = Faye.Class({
     var engineOpts = this._options.engine || {};
     engineOpts.timeout = this._options.timeout;
     this._engine   = Faye.Engine.get(engineOpts);
+
+    this.info('Created new server: ?', this._options);
   },
   
   flushConnection: function(messages) {
     Faye.each([].concat(messages), function(message) {
       var clientId = message.clientId;
+      this.info('Flushing connection for ?', clientId);
       if (clientId) this._engine.flush(clientId);
     }, this);
   },
@@ -26,8 +29,10 @@ Faye.Server = Faye.Class({
   
   process: function(messages, local, callback, scope) {
     messages = [].concat(messages);
+    this.info('Processing messages: ? (local: ?)', messages, local);
+
     if (messages.length === 0) return callback.call(scope, []);
-    var processed = 0, responses = [];
+    var processed = 0, responses = [], self = this;
     
     var gatherReplies = function(replies) {
       responses = responses.concat(replies);
@@ -38,6 +43,7 @@ Faye.Server = Faye.Class({
       while (n--) {
         if (!responses[n]) responses.splice(n,1);
       }
+      self.info('Returning replies: ?', responses);
       callback.call(scope, responses);
     };
     
@@ -46,6 +52,7 @@ Faye.Server = Faye.Class({
       if (expected === 0) gatherReplies(replies);
       
       Faye.each(replies, function(reply, i) {
+        this.debug('Processing reply: ?', reply);
         this.pipeThroughExtensions('outgoing', reply, function(message) {
           replies[i] = message;
           extended  += 1;
@@ -72,6 +79,7 @@ Faye.Server = Faye.Class({
   
   _handle: function(message, local, callback, scope) {
     if (!message) return callback.call(scope, []);
+    this.info('Handling message: ? (local: ?)', message, local);
     
     var channelName = message.channel, response;
     if (!message.error && Faye.Grammar.CHANNEL_NAME.test(channelName)) this._engine.publish(message);

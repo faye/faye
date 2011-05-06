@@ -9,24 +9,31 @@ module Faye
       engine_opts = @options[:engine] || {}
       engine_opts[:timeout] = @options[:timeout]
       @engine     = Faye::Engine.get(engine_opts)
+
+      info 'Created new server: ?', @options
     end
     
     def flush_connection(messages)
       [messages].flatten.each do |message|
         client_id = message["clientId"]
+        info 'Flushing connection for ?', client_id
         @engine.flush(client_id) if client_id
       end
     end
     
     def process(messages, local = false, &callback)
       messages = [messages].flatten
+      info 'Processing messages: ? (local: ?)', messages, local
+
       return callback.call([]) if messages.size == 0
       processed, responses = 0, []
       
       gather_replies = lambda do |replies|
         responses.concat(replies)
         processed += 1
-        callback.call(responses.compact) if processed == messages.size
+        responses.compact!
+        info 'Returning replies: ?', responses
+        callback.call(responses) if processed == messages.size
       end
       
       handle_reply = lambda do |replies|
@@ -34,6 +41,7 @@ module Faye
         gather_replies.call(replies) if expected == 0
         
         replies.each_with_index do |reply, i|
+          debug 'Processing reply: ?', reply
           pipe_through_extensions(:outgoing, reply) do |message|
             replies[i] = message
             extended  += 1
@@ -62,6 +70,7 @@ module Faye
     
     def handle(message, local = false, &callback)
       return callback.call([]) if !message
+      info 'Handling message: ? (local: ?)', message, local
       
       channel_name = message['channel']
       @engine.publish(message) unless message['error'] or Grammar::CHANNEL_NAME !~ channel_name

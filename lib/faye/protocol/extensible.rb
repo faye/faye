@@ -1,5 +1,6 @@
 module Faye
   module Extensible
+    include Logging
     
     def add_extension(extension)
       @extensions ||= []
@@ -20,6 +21,8 @@ module Faye
     end
     
     def pipe_through_extensions(stage, message, &callback)
+      debug 'Passing through ? extensions: ?', stage, message
+
       return callback.call(message) unless @extensions
       extensions = @extensions.dup
       

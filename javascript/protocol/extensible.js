@@ -16,6 +16,8 @@ Faye.Extensible = {
   },
   
   pipeThroughExtensions: function(stage, message, callback, scope) {
+    this.debug('Passing through ? extensions: ?', stage, message);
+
     if (!this._extensions) return callback.call(scope, message);
     var extensions = this._extensions.slice();
     
@@ -32,3 +34,4 @@ Faye.Extensible = {
   }
 };
 
+Faye.extend(Faye.Extensible, Faye.Logging);
