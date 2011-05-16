@@ -1,4 +1,3 @@
-require 'em-http'
 require 'json'
 require 'uri'
 
@@ -94,6 +93,7 @@ module Faye
         @transports.map { |t| t.first }
       end
     end
+    
   end
 end
 

@@ -1,3 +1,6 @@
+require 'em-http'
+require 'em-http/version'
+
 module Faye
   
   class Transport::Http < Transport
@@ -16,9 +19,16 @@ module Faye
           'Content-Length'  => content.length
         },
         :body    => content,
-        :timeout => -1
+        :timeout => -1  # for em-http-request < 1.0
       }
-      request = EventMachine::HttpRequest.new(@endpoint).post(params)
+      if EventMachine::HttpRequest::VERSION.split('.')[0].to_i >= 1
+        options = {   # for em-http-request >= 1.0
+          :inactivity_timeout => 0,    # connection inactivity (post-setup) timeout (0 = disable timeout)
+        }
+        request = EventMachine::HttpRequest.new(@endpoint, options).post(params)
+      else
+        request = EventMachine::HttpRequest.new(@endpoint).post(params)
+      end
       request.callback do
         begin
           receive(JSON.parse(request.response))
