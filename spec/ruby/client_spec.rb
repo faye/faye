@@ -11,7 +11,7 @@ describe Faye::Client do
   before { EM.stub(:add_timer) }
   
   def stub_response(response)
-    transport.stub(:send) do |message|
+    transport.stub(:send) do |message, *args|
       response["id"] = message["id"]
       @client.receive_message(response)
     end
