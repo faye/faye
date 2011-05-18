@@ -62,9 +62,9 @@
     * @memory@: (default) all service state is stored in the Faye server process.
       Only one instance of the server may be run but internal operations are
       very fast.
-    * @redis@: service state and message distribution is handled by a Redis
-      database server. Operations are slower but multiple instances of the Faye
-      server may be run on top of a single Redis database.
+    * @redis@: (experimental) service state and message distribution is handled
+      by a Redis database server. Operations are slower but multiple instances
+      of the Faye server may be run on top of a single Redis database.
     
     To use the Redis engine, pass the @:engine@ option when initializing the
     Faye server:
