@@ -175,7 +175,6 @@ module Faye
         end
       end
       
-      validate_channel(channels)
       subscription = Subscription.new(self, channels, block)
       
       if not force and @channels.has_subscription?(channels)
@@ -200,6 +199,8 @@ module Faye
             @channels.subscribe(channels, block)
             
             subscription.set_deferred_status(:succeeded)
+          else
+            subscription.set_deferred_status(:failed, Error.parse(response['error']))
           end
         end
       }
@@ -222,8 +223,6 @@ module Faye
           unsubscribe(channel, &block)
         end
       end
-      
-      validate_channel(channels)
       
       dead = @channels.unsubscribe(channels, block)
       return unless dead
@@ -253,8 +252,6 @@ module Faye
     #                * id                                 * error
     #                * ext                                * ext
     def publish(channel, data)
-      validate_channel(channel)
-      
       connect {
         info('Client ? queueing published message to ?: ?', @client_id, channel, data)
         
@@ -318,11 +315,6 @@ module Faye
     def cycle_connection
       teardown_connection
       EventMachine.add_timer(@advice['interval'] / 1000.0) { connect }
-    end
-    
-    def validate_channel(channel)
-      raise "'#{ channel }' is not a valid channel name" unless Channel.valid?(channel)
-      raise "Clients may not subscribe to channel '#{ channel }'" unless Channel.subscribable?(channel)
     end
     
   end

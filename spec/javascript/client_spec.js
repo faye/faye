@@ -399,21 +399,28 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         before(function() { with(this) {
           stubResponse({channel:      "/meta/subscribe",
                         successful:   false,
+                        error:        "403:/meta/foo:Forbidden channel",
                         clientId:     "fakeid",
-                        subscription: "/foo/*" })
+                        subscription: "/meta/foo" })
         }})
         
         it("does not set up a listener for the subscribed channel", function() { with(this) {
           var message
-          client.subscribe("/foo/*", function(m) { message = m })
-          client.receiveMessage({channel: "/foo/bar", data: "hi"})
+          client.subscribe("/meta/foo", function(m) { message = m })
+          client.receiveMessage({channel: "/meta/foo", data: "hi"})
           assertEqual( undefined, message )
         }})
         
         it("does not activate the subscription", function() { with(this) {
           var active = false
-          client.subscribe("/foo/*").callback(function() { active = true })
+          client.subscribe("/meta/foo").callback(function() { active = true })
           assert( !active )
+        }})
+
+        it("reports the error through an errback", function() { with(this) {
+          var error = null
+          client.subscribe("/meta/foo").errback(function(e) { error = e })
+          assertEqual( objectIncluding({code: 403, params: ["/meta/foo"], message: "Forbidden channel"}), error )
         }})
       }})
     }})

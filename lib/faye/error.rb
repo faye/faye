@@ -6,16 +6,28 @@ module Faye
       new(code[0], args, code[1]).to_s
     end
     
-    attr_reader :code, :args, :message
+    def self.parse(message)
+      message ||= ''
+      return new(nil, [], message) unless Grammar::ERROR =~ message
+
+      parts   = message.split(':')
+      code    = parts[0].to_i
+      params  = parts[1].split(',')
+      message = parts[2]
+
+      new(code, params, message)
+    end
+
+    attr_reader :code, :params, :message
     
-    def initialize(code, args, message)
+    def initialize(code, params, message)
       @code     = code
-      @args     = args
+      @params   = params
       @message  = message
     end
     
     def to_s
-      "#{ @code }:#{ @args * ',' }:#{ @message }"
+      "#{ @code }:#{ @params * ',' }:#{ @message }"
     end
     
     # http://code.google.com/p/cometd/wiki/BayeuxCodes

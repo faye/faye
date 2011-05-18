@@ -182,7 +182,6 @@ Faye.Client = Faye.Class({
                 this.subscribe(channel, callback, scope);
               }, this);
     
-    this._validateChannel(channels);
     var subscription = new Faye.Subscription(this, channels, callback, scope);
     
     var force = (callback === true);
@@ -202,7 +201,8 @@ Faye.Client = Faye.Class({
         subscription: channels
         
       }, function(response) {
-        if (!response.successful) return;
+        if (!response.successful)
+          return subscription.setDeferredStatus('failed', Faye.Error.parse(response.error));
         
         var channels = [].concat(response.subscription);
         this.info('Subscription acknowledged for ? to ?', this._clientId, channels);
@@ -232,8 +232,6 @@ Faye.Client = Faye.Class({
                 this.unsubscribe(channel, callback, scope);
               }, this);
     
-    this._validateChannel(channels);
-    
     var dead = this._channels.unsubscribe(channels, callback, scope);
     if (!dead) return;
     
@@ -262,8 +260,6 @@ Faye.Client = Faye.Class({
   //                * id                                 * error
   //                * ext                                * ext
   publish: function(channel, data) {
-    this._validateChannel(channel);
-    
     this.connect(function() {
       this.info('Client ? queueing published message to ?: ?', this._clientId, channel, data);
       
@@ -327,13 +323,6 @@ Faye.Client = Faye.Class({
     this._teardownConnection();
     var self = this;
     setTimeout(function() { self.connect() }, this._advice.interval);
-  },
-  
-  _validateChannel: function(channel) {
-    if (!Faye.Channel.isValid(channel))
-      throw '"' + channel + '" is not a valid channel name';
-    if (!Faye.Channel.isSubscribable(channel))
-      throw 'Clients may not subscribe to channel "' + channel + '"';
   }
 });
 

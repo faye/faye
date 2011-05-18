@@ -401,22 +401,31 @@ describe Faye::Client do
       describe "on unsuccessful response" do
         before do
           stub_response "channel"      => "/meta/subscribe",
+                        "error"        => "403:/meta/foo:Forbidden channel",
                         "successful"   => false,
                         "clientId"     => "fakeid",
-                        "subscription" => "/foo/*"
+                        "subscription" => "/meta/foo"
         end
         
         it "does not set up a listener for the subscribed channel" do
           @message = nil
-          @client.subscribe("/foo/*") { |m| @message = m }
-          @client.receive_message("channel" => "/foo/bar", "data" => "hi")
+          @client.subscribe("/meta/foo") { |m| @message = m }
+          @client.receive_message("channel" => "/meta/foo", "data" => "hi")
           @message.should be_nil
         end
         
         it "does not activate the subscription" do
           active = false
-          @client.subscribe("/foo/*").callback { active = true }
+          @client.subscribe("/meta/foo").callback { active = true }
           active.should be_false
+        end
+
+        it "reports the error through an errback" do
+          error = nil
+          @client.subscribe("/meta/foo").errback { |e| error = e }
+          error.code.should == 403
+          error.params.should == ["/meta/foo"]
+          error.message.should == "Forbidden channel"
         end
       end
     end

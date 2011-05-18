@@ -1,16 +1,28 @@
 Faye.Error = Faye.Class({
-  initialize: function(code, args, message) {
+  initialize: function(code, params, message) {
     this.code    = code;
-    this.args    = Array.prototype.slice.call(args);
+    this.params  = Array.prototype.slice.call(params);
     this.message = message;
   },
   
   toString: function() {
     return this.code + ':' +
-           this.args.join(',') + ':' +
+           this.params.join(',') + ':' +
            this.message;
   }
 });
+
+Faye.Error.parse = function(message) {
+  message = message || '';
+  if (!Faye.Grammar.ERROR.test(message)) return new this(null, [], message);
+
+  var parts   = message.split(':'),
+      code    = parseInt(parts[0]),
+      params  = parts[1].split(','),
+      message = parts[2];
+
+  return new this(code, params, message);
+};
 
 <% %w[ VERSION_MISMATCH
        CONNTYPE_MISMATCH
