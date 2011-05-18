@@ -76,12 +76,23 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
           server.process(publish, false, function() {})
         }})
         
-        it("returns no respons", function() { with(this) {
+        it("returns no response", function() { with(this) {
           stub(engine, "publish")
           server.process(publish, false, function(response) {
             assertEqual( [], response)
           })
-          }})
+        }})
+      }})
+
+      describe("to an invalid channel", function() { with(this) {
+        before(function() { with(this) {
+          publish.channel = "/invalid/*"
+        }})
+
+        it("does not tell the engine to publish the message", function() { with(this) {
+          expect(engine, "publish").exactly(0)
+          server.process(publish, false, function() {})
+        }})
       }})
     }})
     

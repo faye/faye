@@ -80,6 +80,15 @@ describe Faye::Server do
           server.process(publish, false) { |r| r.should == [] }
         end
       end
+
+      describe "to an invalid channel" do
+        before { publish["channel"] = "/invalid/*" }
+
+        it "does not tell the engine to publish the message" do
+          engine.should_not_receive(:publish)
+          server.process(publish, false) {}
+        end
+      end
     end
     
     describe "handshaking" do
