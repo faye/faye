@@ -562,6 +562,11 @@ describe Faye::Client do
       @client.publish("/messages/foo", "hello" => "world")
     end
     
+    it "throws an error when publishing to an invalid channel" do
+      transport.should_not_receive(:send).with(hash_including("channel" => "/messages/*"), 60)
+      lambda { @client.publish("/messages/*", "hello" => "world") }.should raise_error
+    end
+    
     describe "with an outgoing extension installed" do
       before do
         extension = Class.new do
