@@ -119,6 +119,10 @@
     to external services, but they let you scale your Faye service if you
     outgrow the network connection limit of one machine.
     
+    <div class="image">
+      !/images/faye-cluster.png!
+    </div>
+    
     In clustered engines, the Storage layer (for example a Redis database server)
     is shared and several Engine+Server+Adapter stacks can be run on top of it.
     The server stacks are stateless: a Client should be able to connect to any
