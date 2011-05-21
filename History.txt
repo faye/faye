@@ -1,3 +1,17 @@
+=== 0.6.0 / 2011-05-21
+TestSwarm build: http://swarm.jcoglan.com/job/27/
+
+* Extract core logic into the Engine class to support swappable backends
+* Introduce a Redis-backed engine to support clustered web front-ends
+* Use CORS for cross-domain long-polling
+* Make server more resilient against bad requests, including empty message lists
+* Perform subscription validation on the server and use errbacks to signal errors
+* Prohibit publishing to wildcard channels
+* Unsubscribing from a channel is now O(1) instead of O(N)
+* Much more thorough and consistent unit test coverage of both versions
+* Automatic integration tests using Terminus and TestSwarm
+
+
 === 0.5.5 / 2011-01-16
 
 * Open a real socket to check for WebSocket usability, not just object detection
