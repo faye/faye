@@ -102,7 +102,7 @@ Faye.Client = Faye.Class({
         
       } else {
         this.info('Handshake unsuccessful');
-        setTimeout(function() { self.handshake(callback, scope) }, this._advice.interval);
+        Faye.ENV.setTimeout(function() { self.handshake(callback, scope) }, this._advice.interval);
         this._state = this.UNCONNECTED;
       }
     }, this);
@@ -325,7 +325,7 @@ Faye.Client = Faye.Class({
   _cycleConnection: function() {
     this._teardownConnection();
     var self = this;
-    setTimeout(function() { self.connect() }, this._advice.interval);
+    Faye.ENV.setTimeout(function() { self.connect() }, this._advice.interval);
   }
 });
 

@@ -3,7 +3,7 @@ Faye.Timeouts = {
     this._timeouts = this._timeouts || {};
     if (this._timeouts.hasOwnProperty(name)) return;
     var self = this;
-    this._timeouts[name] = setTimeout(function() {
+    this._timeouts[name] = Faye.ENV.setTimeout(function() {
       delete self._timeouts[name];
       callback.call(scope);
     }, 1000 * delay);

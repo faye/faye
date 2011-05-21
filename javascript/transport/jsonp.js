@@ -20,7 +20,7 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
       self.receive(data);
     };
     
-    setTimeout(function() {
+    Faye.ENV.setTimeout(function() {
       if (!Faye.ENV[callbackName]) return;
       removeScript();
       self.request(message, 2 * timeout);

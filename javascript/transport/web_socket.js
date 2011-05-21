@@ -50,7 +50,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
       
       if (wasConnected) return self.resend();
       
-      setTimeout(function() { self.connect() }, 1000 * self._timeout);
+      Faye.ENV.setTimeout(function() { self.connect() }, 1000 * self._timeout);
       self._timeout = self._timeout * 2;
     };
   },
@@ -85,7 +85,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     };
     
     socket.onclose = socket.onerror = notconnected;
-    setTimeout(notconnected, this.WEBSOCKET_TIMEOUT);
+    Faye.ENV.setTimeout(notconnected, this.WEBSOCKET_TIMEOUT);
   }
 });
 
