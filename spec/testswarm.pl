@@ -39,7 +39,7 @@ my $INJECT_FILE = "spec/browser.html";
 
 # Any build commands that need to happen.
 
-my $BUILD = "git submodule update --init && rvm 1.9.2 && bundle install && cd vendor/js.class && jake && cd ../.. && rm -rf build && jake";
+my $BUILD = "git submodule init && git submodule update && rvm 1.9.2 && bundle install && cd vendor/js.class && jake && cd ../.. && rm -rf build && jake";
 
 # The name of the job that will be submitted
 # (pick a descriptive, but short, name to make it easy to search)
