@@ -94,6 +94,13 @@
       alert('Subscription is now active!');
     });</pre>
     
+    If there was an error creating the subscription, you can detect this using
+    an errback:
+    
+    <pre class="prettyprint">subscription.errback(function(error) {
+      alert(error.message);
+    });</pre>
+    
     h4. Sending messages
     
     Clients do not send each other messages directly, instead they send
