@@ -16,6 +16,7 @@ packages:
     - faye
     - util/class
     - util/namespace
+    - error
     - mixins/deferrable
     - mixins/publisher
     - mixins/timeouts
@@ -32,7 +33,6 @@ packages:
     files:
       - util/set
       - util/node/web_socket
-      - error
       - engines/base
       - engines/connection
       - engines/memory
