@@ -7,4 +7,5 @@ build
 dump.rdb
 examples/node/faye*
 Gemfile.lock
+node_modules
 lib/*.js
