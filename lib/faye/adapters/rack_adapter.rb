@@ -98,7 +98,7 @@ module Faye
     
     def message_from_request(request)
       if request.post?
-        content_type = request.env['CONTENT_TYPE'].split(';').first
+        content_type = (request.env['CONTENT_TYPE'] || '').split(';').first
         content_type == 'application/json' ?
             request.body.read :
             request.params['message']
