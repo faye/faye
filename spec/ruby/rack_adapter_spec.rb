@@ -22,6 +22,7 @@ describe Faye::RackAdapter do
   describe "POST requests" do
     describe "with cross-origin access control" do
       before do
+        header "Content-Type", "text/plain"
         header "Origin", "http://example.com"
       end
       
@@ -32,64 +33,25 @@ describe Faye::RackAdapter do
       end
       
       it "forwards the message param onto the server" do
-        server.should_receive(:process).with({"channel" => "/foo"}, false).and_yield []
-        post "/bayeux", :message => '{"channel":"/foo"}'
-      end
-      
-      it "returns the server's response as JSON" do
-        server.stub(:process).and_yield ["channel" => "/meta/handshake"]
-        post "/bayeux", :message => '[]'
-        status.should == 200
-        content_type.should == "application/json"
-        json.should == ["channel" => "/meta/handshake"]
-      end
-      
-      it "returns a 400 response if malformed JSON is given" do
-        server.should_not_receive(:process)
-        post "/bayeux", :message => "[}"
-        status.should == 400
-        content_type.should == "text/plain"
-      end
-      
-      it "returns a 404 if the path is not matched" do
-        server.should_not_receive(:process)
-        post "/blaf", :message => "[]"
-        status.should == 404
-        content_type.should == "text/plain"
-      end
-    end
-
-    describe "with text/plain" do
-      before do
-        header "Content-Type", "text/plain"
-      end
-
-      it "forwards the POST body onto the server" do
         server.should_receive(:process).with({"channel" => "/plain"}, false).and_yield []
         post "/bayeux", "message=%7B%22channel%22%3A%22%2Fplain%22%7D"
       end
-
-      it "does not return an access control header" do
-        server.stub(:process).and_yield []
-        post "/bayeux", 'message=%5B%5D'
-        access_control_origin.should be_nil
-      end
-
+      
       it "returns the server's response as JSON" do
         server.stub(:process).and_yield ["channel" => "/meta/handshake"]
-        post "/bayeux", 'message=%5B%5D'
+        post "/bayeux", "message=%5B%5D"
         status.should == 200
         content_type.should == "application/json"
         json.should == ["channel" => "/meta/handshake"]
       end
-
+      
       it "returns a 400 response if malformed JSON is given" do
         server.should_not_receive(:process)
         post "/bayeux", "message=%7B%5B"
         status.should == 400
         content_type.should == "text/plain"
       end
-
+      
       it "returns a 404 if the path is not matched" do
         server.should_not_receive(:process)
         post "/blaf", 'message=%5B%5D'
