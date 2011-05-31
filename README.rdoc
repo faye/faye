@@ -42,8 +42,8 @@ should get you up and running:
   jake
   
   # Run tests
-  sudo redis-server &
-  rspec -c spec/
+  redis-server
+  bundle exec rspec -c spec/
   node spec/node.js
   
   # Build Ruby gem

@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
   s.add_dependency("rack", ">= 1.0")
 
   s.add_development_dependency("jake")
-  s.add_development_dependency("rspec")
+  s.add_development_dependency("rspec", "~> 2.5.0")
   s.add_development_dependency("rack-proxy")
   s.add_development_dependency("rack-test")
 end
