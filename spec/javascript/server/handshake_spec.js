@@ -25,7 +25,7 @@ JS.ENV.Server.HandshakeSpec = JS.Test.describe("Server handshake", function() { 
               channel:    "/meta/handshake",
               successful: true,
               version:    "1.0",
-              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"],
+              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket","in-process"],
               clientId:   "clientid"
             }, response)
         })
@@ -41,7 +41,7 @@ JS.ENV.Server.HandshakeSpec = JS.Test.describe("Server handshake", function() { 
                 channel:    "/meta/handshake",
                 successful: true,
                 version:    "1.0",
-                supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"],
+                supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket","in-process"],
                 clientId:   "clientid",
                 id:         "foo"
               }, response)
@@ -65,7 +65,7 @@ JS.ENV.Server.HandshakeSpec = JS.Test.describe("Server handshake", function() { 
               successful: false,
               error:      "402:version:Missing required parameter",
               version:    "1.0",
-              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"]
+              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket","in-process"]
             }, response)
         })
       }})
@@ -86,7 +86,7 @@ JS.ENV.Server.HandshakeSpec = JS.Test.describe("Server handshake", function() { 
               successful: false,
               error:      "402:supportedConnectionTypes:Missing required parameter",
               version:    "1.0",
-              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"]
+              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket","in-process"]
             }, response)
         })
       }})
@@ -121,7 +121,7 @@ JS.ENV.Server.HandshakeSpec = JS.Test.describe("Server handshake", function() { 
               successful: false,
               error:      "301:iframe,flash:Connection types not supported",
               version:    "1.0",
-              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"]
+              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket","in-process"]
             }, response)
         })
       }})
@@ -144,7 +144,7 @@ JS.ENV.Server.HandshakeSpec = JS.Test.describe("Server handshake", function() { 
               successful: false,
               error:      "invalid",
               version:    "1.0",
-              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket"]
+              supportedConnectionTypes: ["long-polling", "cross-origin-long-polling", "callback-polling", "websocket","in-process"]
             }, response)
         })
       }})
