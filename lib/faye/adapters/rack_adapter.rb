@@ -98,17 +98,14 @@ module Faye
   private
     
     def message_from_request(request)
-      if request.post?
-        content_type = request.env['CONTENT_TYPE'].split(';').first
-        if content_type == 'application/json'
-          request.body.read
-        elsif content_type == 'text/plain'
-          CGI.parse(request.body.read)['message'][0]
-        else
-          request.params['message']
-        end
-      else
-        request.params['message']
+      return request.params['message'] unless request.post?
+      
+      content_type = request.env['CONTENT_TYPE'].split(';').first
+      
+      case content_type
+      when 'application/json' then request.body.read
+      when 'text/plain' then CGI.parse(request.body.read)['message'][0]
+      else request.params['message']
       end
     end
     
