@@ -2,6 +2,7 @@ require 'rubygems'
 require 'json'
 require 'rack'
 require 'thin'
+require 'cgi'
 require Faye::ROOT + '/thin_extensions'
 
 module Faye
@@ -99,9 +100,13 @@ module Faye
     def message_from_request(request)
       if request.post?
         content_type = request.env['CONTENT_TYPE'].split(';').first
-        content_type == 'application/json' ?
-            request.body.read :
-            request.params['message']
+        if content_type == 'application/json'
+          request.body.read
+        elsif content_type == 'text/plain'
+          CGI.parse(request.body.read)['message'][0]
+        else
+          request.params['message']
+        end
       else
         request.params['message']
       end
