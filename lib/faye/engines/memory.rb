@@ -3,35 +3,36 @@ module Faye
     
     class Memory < Base
       def initialize(options)
+        @namespace = Namespace.new
         @clients   = {}
         @channels  = {}
         @messages  = {}
-        @namespace = Namespace.new
         super
       end
       
       def create_client(&callback)
         client_id = @namespace.generate
         debug 'Created new client ?', client_id
-        @clients[client_id] = Set.new
         ping(client_id)
         callback.call(client_id)
       end
       
       def destroy_client(client_id, &callback)
-        return unless @clients.has_key?(client_id)
-        @clients[client_id].each do |channel|
-          unsubscribe(client_id, channel)
+        return unless @namespace.exists?(client_id)
+        
+        if @clients.has_key?(client_id)
+          @clients[client_id].each { |channel| unsubscribe(client_id, channel) }
         end
+        
         remove_timeout(client_id)
-        @clients.delete(client_id)
+        @namespace.release(client_id)
         @messages.delete(client_id)
         debug 'Destroyed client ?', client_id
         callback.call if callback
       end
       
       def client_exists(client_id, &callback)
-        callback.call(@clients.has_key?(client_id))
+        callback.call(@namespace.exists?(client_id))
       end
       
       def ping(client_id)
@@ -44,16 +45,26 @@ module Faye
       
       def subscribe(client_id, channel, &callback)
         @clients[client_id] ||= Set.new
-        @channels[channel]  ||= Set.new
         @clients[client_id].add(channel)
+        
+        @channels[channel] ||= Set.new
         @channels[channel].add(client_id)
+        
         debug 'Subscribed client ? to channel ?', client_id, channel
         callback.call(true) if callback
       end
       
       def unsubscribe(client_id, channel, &callback)
-        @clients[client_id].delete(channel) if @clients.has_key?(client_id)
-        @channels[channel].delete(client_id) if @channels.has_key?(channel)
+        if @clients.has_key?(client_id)
+          @clients[client_id].delete(channel)
+          @clients.delete(client_id) if @clients[client_id].empty?
+        end
+        
+        if @channels.has_key?(channel)
+          @channels[channel].delete(client_id)
+          @channels.delete(channel) if @channels[channel].empty?
+        end
+        
         debug 'Unsubscribed client ? from channel ?', client_id, channel
         callback.call(true) if callback
       end

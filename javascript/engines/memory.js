@@ -2,10 +2,10 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
   className: 'Engine.Memory',
 
   initialize: function(options) {
+    this._namespace = new Faye.Namespace();
     this._clients   = {};
     this._channels  = {};
     this._messages  = {};
-    this._namespace = new Faye.Namespace();
     
     Faye.Engine.Base.prototype.initialize.call(this, options);
   },
@@ -13,26 +13,26 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
   createClient: function(callback, scope) {
     var clientId = this._namespace.generate();
     this.debug('Created new client ?', clientId);
-    this._clients[clientId] = new Faye.Set();
     this.ping(clientId);
     callback.call(scope, clientId);
   },
   
   destroyClient: function(clientId, callback, scope) {
     var clients = this._clients;
-    if (!clients.hasOwnProperty(clientId)) return;
-    clients[clientId].forEach(function(channel) {
-      this.unsubscribe(clientId, channel);
-    }, this);
+    if (!this._namespace.exists(clientId)) return;
+    
+    if (clients[clientId])
+      clients[clientId].forEach(function(channel) { this.unsubscribe(clientId, channel) }, this);
+    
     this.removeTimeout(clientId);
-    delete clients[clientId];
+    this._namespace.release(clientId);
     delete this._messages[clientId];
     this.debug('Destroyed client ?', clientId);
     if (callback) callback.call(scope);
   },
   
   clientExists: function(clientId, callback, scope) {
-    callback.call(scope, this._clients.hasOwnProperty(clientId));
+    callback.call(scope, this._namespace.exists(clientId));
   },
   
   ping: function(clientId) {
@@ -47,18 +47,30 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
   
   subscribe: function(clientId, channel, callback, scope) {
     var clients = this._clients, channels = this._channels;
+    
     clients[clientId] = clients[clientId] || new Faye.Set();
-    channels[channel] = channels[channel] || new Faye.Set();
     clients[clientId].add(channel);
+    
+    channels[channel] = channels[channel] || new Faye.Set();
     channels[channel].add(clientId);
+    
     this.debug('Subscribed client ? to channel ?', clientId, channel);
     if (callback) callback.call(scope, true);
   },
   
   unsubscribe: function(clientId, channel, callback, scope) {
     var clients = this._clients, channels = this._channels;
-    if (clients.hasOwnProperty(clientId)) clients[clientId].remove(channel);
-    if (channels.hasOwnProperty(channel)) channels[channel].remove(clientId);
+    
+    if (clients[clientId]) {
+      clients[clientId].remove(channel);
+      if (clients[clientId].isEmpty()) delete clients[clientId];
+    }
+    
+    if (channels[channel]) {
+      channels[channel].remove(clientId);
+      if (channels[channel].isEmpty()) delete channels[channel];
+    }
+    
     this.debug('Unsubscribed client ? from channel ?', clientId, channel);
     if (callback) callback.call(scope, true);
   },
