@@ -100,9 +100,11 @@ module Faye
     def message_from_request(request)
       return request.params['message'] unless request.post?
       
-      content_type = request.env['CONTENT_TYPE'].split(';').first
+      # Some clients do not send a content-type, e.g.
+      # Internet Explorer when using cross-origin-long-polling
+      content_type = request.env['CONTENT_TYPE'] || ''
       
-      case content_type
+      case content_type.split(';').first
       when 'application/json' then request.body.read
       when 'text/plain' then CGI.parse(request.body.read)['message'][0]
       else request.params['message']
