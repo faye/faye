@@ -1,3 +1,10 @@
+=== 0.6.1 / 2011-06-06
+TestSwarm build: http://swarm.jcoglan.com/job/37/
+
+* Fix cross-origin-long-polling support in RackAdapter
+* Plug some potential memory leaks in Memory engine
+
+
 === 0.6.0 / 2011-05-21
 TestSwarm build: http://swarm.jcoglan.com/job/27/
 
