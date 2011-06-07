@@ -43,6 +43,10 @@ module Faye
         init
         @redis.srem('/clients', client_id)
         @redis.del("/clients/#{client_id}/messages")
+        
+        remove_timeout(client_id)
+        @redis.del("/clients/#{client_id}/ping")
+        
         @redis.smembers("/clients/#{client_id}/channels") do |channels|
           n, i = channels.size, 0
           if n == 0

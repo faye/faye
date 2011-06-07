@@ -41,6 +41,10 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     var self = this;
     this._redis.srem('/clients', clientId);
     this._redis.del('/clients/' + clientId + '/messages');
+    
+    this.removeTimeout(clientId);
+    this._redis.del('/clients/' + clientId + '/ping');
+    
     this._redis.smembers('/clients/' + clientId + '/channels', function(error, channels) {
       var n = channels.length, i = 0;
       if (n === 0) return callback && callback.call(scope);
