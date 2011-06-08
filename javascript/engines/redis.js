@@ -9,10 +9,16 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     
     var redis = require('redis'),
         host  = this._options.host || this.DEFAULT_HOST,
-        port  = this._options.port || this.DEFAULT_PORT;
+        port  = this._options.port || this.DEFAULT_PORT,
+        auth  = this._options.auth;
     
     this._redis = redis.createClient(port, host);
     this._subscriber = redis.createClient(port, host);
+    
+    if (auth) {
+      this._redis.auth(auth);
+      this._subscriber.auth(auth);
+    }
     
     var self = this;
     this._subscriber.subscribe('/notifications');
