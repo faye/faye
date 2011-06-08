@@ -11,9 +11,11 @@ module Faye
         
         host = @options[:host] || DEFAULT_HOST
         port = @options[:port] || DEFAULT_PORT
+        auth = @options[:auth] ? "#{@options[:auth]}@" : ''
+        url = "redis://#{auth}#{host}:#{port}"
         
-        @redis      = EventMachine::Hiredis::Client.connect(host, port)
-        @subscriber = EventMachine::Hiredis::Client.connect(host, port)
+        @redis      = EventMachine::Hiredis.connect(ENV['REDIS_URL'] || url)
+        @subscriber = EventMachine::Hiredis.connect(ENV['REDIS_URL'] || url)
         
         @subscriber.subscribe('/notifications')
         @subscriber.on(:message) do |topic, message|
