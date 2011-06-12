@@ -42,7 +42,7 @@ should get you up and running:
   jake
   
   # Run tests
-  redis-server
+  redis-server spec/redis.conf
   bundle exec rspec -c spec/
   node spec/node.js
   
