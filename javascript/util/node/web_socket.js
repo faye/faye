@@ -136,7 +136,7 @@ Faye.extend(Faye.WebSocket, {
     if (request.headers['x-forwarded-proto']) {
       return request.headers['x-forwarded-proto'] == 'https';
     } else {
-      return request.socket.secure;
+      return typeof(request.connection.authorized) != 'undefined';
     }
   }
 });
