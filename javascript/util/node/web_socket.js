@@ -134,9 +134,10 @@ Faye.extend(Faye.WebSocket, {
   
   isSecureConnection: function(request) {
     if (request.headers['x-forwarded-proto']) {
-      return request.headers['x-forwarded-proto'] == 'https';
+      return request.headers['x-forwarded-proto'] === 'https';
     } else {
-      return typeof(request.connection.authorized) != 'undefined';
+      return (request.connection && request.connection.authorized !== undefined) ||
+             (request.socket && request.socket.secure);
     }
   }
 });
