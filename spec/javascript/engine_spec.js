@@ -83,7 +83,8 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   
   clean_redis_db: function(resume) {
     this.engine.disconnect()
-    var redis = require('redis').createClient()
+    var redis = require('redis').createClient(6379, 'localhost', {no_ready_check: true})
+    redis.auth(this.engineOpts.auth)
     redis.flushall(function() {
       redis.end()
       resume()
