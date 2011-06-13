@@ -89,11 +89,15 @@ EngineSteps = EM::RSpec.async_steps do
 end
 
 describe "Pub/sub engines" do
+  def create_engine
+    engine_klass.new(options.merge(engine_opts))
+  end
+  
   shared_examples_for "faye engine" do
     include EngineSteps
     
     let(:options) { {:timeout => 1} }
-    let(:engine) { engine_klass.new options }
+    let(:engine) { create_engine }
     
     before do
       Faye.ensure_reactor_running!
@@ -269,8 +273,8 @@ describe "Pub/sub engines" do
     include EngineSteps
     
     let(:options) { {} }
-    let(:left)  { engine_klass.new options }
-    let(:right) { engine_klass.new options }
+    let(:left)  { create_engine }
+    let(:right) { create_engine }
     
     alias :engine :left
     
@@ -299,11 +303,13 @@ describe "Pub/sub engines" do
   
   describe Faye::Engine::Memory do
     let(:engine_klass) { Faye::Engine::Memory }
+    let(:engine_opts)  { {} }
     it_should_behave_like "faye engine"
   end
   
   describe Faye::Engine::Redis do
     let(:engine_klass) { Faye::Engine::Redis }
+    let(:engine_opts)  { {:auth => "foobared"} }
     after { clean_redis_db }
     it_should_behave_like "faye engine"
     it_should_behave_like "distributed engine"
