@@ -10,7 +10,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     var redis = require('redis'),
         host  = this._options.host || this.DEFAULT_HOST,
         port  = this._options.port || this.DEFAULT_PORT,
-        auth  = this._options.auth;
+        auth  = this._options.password;
     
     this._redis = redis.createClient(port, host, {no_ready_check: true});
     this._subscriber = redis.createClient(port, host, {no_ready_check: true});

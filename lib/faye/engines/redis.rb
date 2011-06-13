@@ -11,7 +11,7 @@ module Faye
         
         host = @options[:host] || DEFAULT_HOST
         port = @options[:port] || DEFAULT_PORT
-        auth = @options[:auth]
+        auth = @options[:password]
         
         @redis      = EventMachine::Hiredis::Client.connect(host, port)
         @subscriber = EventMachine::Hiredis::Client.connect(host, port)

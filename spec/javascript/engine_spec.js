@@ -84,7 +84,7 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   clean_redis_db: function(resume) {
     this.engine.disconnect()
     var redis = require('redis').createClient(6379, 'localhost', {no_ready_check: true})
-    redis.auth(this.engineOpts.auth)
+    redis.auth(this.engineOpts.password)
     redis.flushall(function() {
       redis.end()
       resume()
@@ -321,7 +321,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
   describe("Faye.Engine.Redis", function() { with(this) {
     before(function() {
       this.engineKlass = Faye.Engine.Redis
-      this.engineOpts  = {auth: "foobared"}
+      this.engineOpts  = {password: "foobared"}
     })
     after(function() { this.clean_redis_db() })
     
