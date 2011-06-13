@@ -83,7 +83,8 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   
   clean_redis_db: function(resume) {
     this.engine.disconnect()
-    var redis = require('redis').createClient()
+    var redis = require('redis').createClient(6379, 'localhost', {no_ready_check: true})
+    redis.auth(this.engineOpts.password)
     redis.flushall(function() {
       redis.end()
       resume()
@@ -94,13 +95,18 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
 JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) {
   include(JS.Test.Helpers)
   
+  define("create_engine", function() { with(this) {
+    var opts = Faye.extend(options(), engineOpts)
+    return new engineKlass(opts)
+  }})
+  
   sharedExamplesFor("faye engine", function() { with(this) {
     include(EngineSteps)
     
     define("options", function() { return {timeout: 1} })
     
     before(function() { with(this) {
-      this.engine = new engineKlass(options())
+      this.engine = create_engine()
       create_client("alice")
       create_client("bob")
       create_client("carol")
@@ -278,8 +284,8 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     define("options", function() { return {timeout: 1} })
     
     before(function() { with(this) {
-      this.left   = new engineKlass(options())
-      this.right  = new engineKlass(options())
+      this.left   = create_engine()
+      this.right  = create_engine()
       this.engine = left
       
       create_client("alice")
@@ -304,13 +310,21 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
   }})
   
   describe("Faye.Engine.Memory", function() { with(this) {
-    before(function() { this.engineKlass = Faye.Engine.Memory })
+    before(function() {
+      this.engineKlass = Faye.Engine.Memory
+      this.engineOpts  = {}
+    })
+    
     itShouldBehaveLike("faye engine")
   }})
   
   describe("Faye.Engine.Redis", function() { with(this) {
-    before(function() { this.engineKlass = Faye.Engine.Redis })
+    before(function() {
+      this.engineKlass = Faye.Engine.Redis
+      this.engineOpts  = {password: "foobared"}
+    })
     after(function() { this.clean_redis_db() })
+    
     itShouldBehaveLike("faye engine")
     describe("distribution", function() { with(this) {
       itShouldBehaveLike("distributed engine")

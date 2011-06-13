@@ -11,9 +11,15 @@ module Faye
         
         host = @options[:host] || DEFAULT_HOST
         port = @options[:port] || DEFAULT_PORT
+        auth = @options[:password]
         
         @redis      = EventMachine::Hiredis::Client.connect(host, port)
         @subscriber = EventMachine::Hiredis::Client.connect(host, port)
+        
+        if auth
+          @redis.auth(auth)
+          @subscriber.auth(auth)
+        end
         
         @subscriber.subscribe('/notifications')
         @subscriber.on(:message) do |topic, message|
