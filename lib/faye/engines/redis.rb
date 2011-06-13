@@ -12,6 +12,7 @@ module Faye
         host = @options[:host] || DEFAULT_HOST
         port = @options[:port] || DEFAULT_PORT
         auth = @options[:password]
+        @ns  = @options[:namespace] || ''
         
         @redis      = EventMachine::Hiredis::Client.connect(host, port)
         @subscriber = EventMachine::Hiredis::Client.connect(host, port)
@@ -21,20 +22,20 @@ module Faye
           @subscriber.auth(auth)
         end
         
-        @subscriber.subscribe('/notifications')
+        @subscriber.subscribe(@ns + '/notifications')
         @subscriber.on(:message) do |topic, message|
-          empty_queue(message) if topic == '/notifications'
+          empty_queue(message) if topic == @ns + '/notifications'
         end
       end
       
       def disconnect
-        @subscriber.unsubscribe('/notifications')
+        @subscriber.unsubscribe(@ns + '/notifications')
       end
       
       def create_client(&callback)
         init
         client_id = Faye.random
-        @redis.sadd('/clients', client_id) do |added|
+        @redis.sadd(@ns + '/clients', client_id) do |added|
           if added == 0
             create_client(&callback)
           else
@@ -47,13 +48,13 @@ module Faye
       
       def destroy_client(client_id, &callback)
         init
-        @redis.srem('/clients', client_id)
-        @redis.del("/clients/#{client_id}/messages")
+        @redis.srem(@ns + '/clients', client_id)
+        @redis.del(@ns + "/clients/#{client_id}/messages")
         
         remove_timeout(client_id)
-        @redis.del("/clients/#{client_id}/ping")
+        @redis.del(@ns + "/clients/#{client_id}/ping")
         
-        @redis.smembers("/clients/#{client_id}/channels") do |channels|
+        @redis.smembers(@ns + "/clients/#{client_id}/channels") do |channels|
           n, i = channels.size, 0
           if n == 0
             debug 'Destroyed client ?', client_id
@@ -74,7 +75,7 @@ module Faye
       
       def client_exists(client_id, &callback)
         init
-        @redis.sismember('/clients', client_id) do |exists|
+        @redis.sismember(@ns + '/clients', client_id) do |exists|
           callback.call(exists != 0)
         end
       end
@@ -87,9 +88,9 @@ module Faye
         
         debug 'Ping ?, ?', client_id, timeout
         remove_timeout(client_id)
-        @redis.set("/clients/#{client_id}/ping", time)
+        @redis.set(@ns + "/clients/#{client_id}/ping", time)
         add_timeout(client_id, 2 * timeout) do
-          @redis.get("/clients/#{client_id}/ping") do |ping|
+          @redis.get(@ns + "/clients/#{client_id}/ping") do |ping|
             destroy_client(client_id) if ping == time
           end
         end
@@ -97,8 +98,8 @@ module Faye
       
       def subscribe(client_id, channel, &callback)
         init
-        @redis.sadd("/clients/#{client_id}/channels", channel)
-        @redis.sadd("/channels#{channel}", client_id) do
+        @redis.sadd(@ns + "/clients/#{client_id}/channels", channel)
+        @redis.sadd(@ns + "/channels#{channel}", client_id) do
           debug 'Subscribed client ? to channel ?', client_id, channel
           callback.call if callback
         end
@@ -106,8 +107,8 @@ module Faye
       
       def unsubscribe(client_id, channel, &callback)
         init
-        @redis.srem("/clients/#{client_id}/channels", channel)
-        @redis.srem("/channels#{channel}", client_id) do
+        @redis.srem(@ns + "/clients/#{client_id}/channels", channel)
+        @redis.srem(@ns + "/channels#{channel}", client_id) do
           debug 'Unsubscribed client ? from channel ?', client_id, channel
           callback.call if callback
         end
@@ -119,11 +120,11 @@ module Faye
         json_message = JSON.dump(message)
         channels = Channel.expand(message['channel'])
         channels.each do |channel|
-          @redis.smembers("/channels#{channel}") do |clients|
+          @redis.smembers(@ns + "/channels#{channel}") do |clients|
             clients.each do |client_id|
               debug 'Queueing for client ?: ?', client_id, message
-              @redis.sadd("/clients/#{client_id}/messages", json_message)
-              @redis.publish('/notifications', client_id)
+              @redis.sadd(@ns + "/clients/#{client_id}/messages", json_message)
+              @redis.publish(@ns + '/notifications', client_id)
             end
           end
         end
@@ -135,7 +136,7 @@ module Faye
         return unless conn = connection(client_id, false)
         init
         
-        key = "/clients/#{client_id}/messages"
+        key = @ns + "/clients/#{client_id}/messages"
         @redis.smembers(key) do |json_messages|
           json_messages.each do |json_message|
             @redis.srem(key, json_message)

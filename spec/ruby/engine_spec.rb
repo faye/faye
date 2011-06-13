@@ -309,7 +309,7 @@ describe "Pub/sub engines" do
   
   describe Faye::Engine::Redis do
     let(:engine_klass) { Faye::Engine::Redis }
-    let(:engine_opts)  { {:password => "foobared"} }
+    let(:engine_opts)  { {:password => "foobared", :namespace => Time.now.to_i.to_s} }
     after { clean_redis_db }
     it_should_behave_like "faye engine"
     it_should_behave_like "distributed engine"

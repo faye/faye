@@ -321,7 +321,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
   describe("Faye.Engine.Redis", function() { with(this) {
     before(function() {
       this.engineKlass = Faye.Engine.Redis
-      this.engineOpts  = {password: "foobared"}
+      this.engineOpts  = {password: "foobared", namespace: new Date().getTime().toString()}
     })
     after(function() { this.clean_redis_db() })
     
