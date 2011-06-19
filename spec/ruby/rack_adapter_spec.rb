@@ -3,7 +3,8 @@ require "thin_proxy"
 
 describe Faye::RackAdapter do
   include Rack::Test::Methods
-  let(:app)     { ThinProxy.new(Faye::RackAdapter.new options) }
+  let(:adapter) { Faye::RackAdapter.new(options) }
+  let(:app)     { ThinProxy.new(adapter) }
   let(:options) { {:mount => "/bayeux", :timeout => 30} }
   let(:server)  { mock "server" }
   
@@ -17,6 +18,7 @@ describe Faye::RackAdapter do
   
   before do
     Faye::Server.should_receive(:new).with(options).and_return server
+    adapter.stub(:get_client).and_return mock("client")
   end
   
   describe "POST requests" do
