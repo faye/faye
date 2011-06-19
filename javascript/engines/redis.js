@@ -10,6 +10,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     var redis = require('redis'),
         host  = this._options.host || this.DEFAULT_HOST,
         port  = this._options.port || this.DEFAULT_PORT,
+        db    = this._options.database || 0,
         auth  = this._options.password;
     
     this._ns  = this._options.namespace;
@@ -21,6 +22,8 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       this._redis.auth(auth);
       this._subscriber.auth(auth);
     }
+    this._redis.select(db);
+    this._subscriber.select(db);
     
     var self = this;
     this._subscriber.subscribe(this._ns + '/notifications');

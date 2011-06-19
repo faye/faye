@@ -70,14 +70,16 @@
     Faye server:
     
     <pre class="prettyprint">faye_server = Faye::RackAdapter.new(
-                    :mount   => '/faye',
-                    :timeout => 45,
-                    :engine  => {
-                      :type     => 'redis',
-                      :host     => 'REDIS_HOST',
-                      :port     => 'REDIS_PORT',
-                      :password => 'REDIS_AUTH' # if your server requires it
-                    })</pre>
+      :mount   => '/faye',
+      :timeout => 45,
+      :engine  => {
+        :type       => 'redis',
+        :host       => 'REDIS_HOST',
+        :port       => 'REDIS_PORT',
+        :password   => 'REDIS_AUTH',  # if your server requires it
+        :database   => 0,             # optional, selects database
+        :namespace  => '/foo'         # optional, namespaces keys
+      })</pre>
     
     h4. Server-side Ruby clients
     

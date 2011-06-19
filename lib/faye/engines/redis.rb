@@ -11,6 +11,7 @@ module Faye
         
         host = @options[:host] || DEFAULT_HOST
         port = @options[:port] || DEFAULT_PORT
+        db   = @options[:database] || 0
         auth = @options[:password]
         @ns  = @options[:namespace] || ''
         
@@ -21,6 +22,8 @@ module Faye
           @redis.auth(auth)
           @subscriber.auth(auth)
         end
+        @redis.select(db)
+        @subscriber.select(db)
         
         @subscriber.subscribe(@ns + '/notifications')
         @subscriber.on(:message) do |topic, message|
