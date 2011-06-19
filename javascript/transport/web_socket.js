@@ -70,6 +70,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     if (!Faye.ENV.WebSocket) return callback.call(scope, false);
     
     var connected = false,
+        called    = false,
         socketUrl = this.getSocketUrl(endpoint),
         socket    = new WebSocket(socketUrl);
     
@@ -77,11 +78,13 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
       connected = true;
       socket.close();
       callback.call(scope, true);
+      called = true;
       socket = null;
     };
     
     var notconnected = function() {
-      if (!connected) callback.call(scope, false);
+      if (!called && !connected) callback.call(scope, false);
+      called = true;
     };
     
     socket.onclose = socket.onerror = notconnected;
