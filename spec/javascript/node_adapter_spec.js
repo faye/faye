@@ -112,35 +112,46 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
   
   describe("POST requests", function() { with(this) {
     describe("with cross-origin access control", function() { with(this) {
-      before(function() { with(this) {
-        header("Origin", "http://example.com")
-        header("Content-Type", "text/plain")
+      sharedBehavior("cross-origin request", function() { with(this) {
+        before(function() { with(this) {
+          header("Origin", "http://example.com")
+        }})
+        
+        it("returns a matching cross-origin access control header", function() { with(this) {
+          stub(server, "process").yields([[]])
+          post("/bayeux", {message: "[]"})
+          check_access_control_origin("http://example.com")
+        }})
+        
+        it("forwards the message param onto the server", function() { with(this) {
+          expect(server, "process").given({channel: "/plain"}, false).yielding([[]])
+          post("/bayeux", "message=%7B%22channel%22%3A%22%2Fplain%22%7D")
+        }})
+        
+        it("returns the server's response as JSON", function() { with(this) {
+          stub(server, "process").yields([[{channel: "/meta/handshake"}]])
+          post("/bayeux", "message=%5B%5D")
+          check_status(200)
+          check_content_type("application/json")
+          check_json([{channel: "/meta/handshake"}])
+        }})
+        
+        it("returns a 400 response if malformed JSON is given", function() { with(this) {
+          expect(server, "process").exactly(0)
+          post("/bayeux", "message=%7B%5B")
+          check_status(400)
+          check_content_type("text/plain")
+        }})
       }})
       
-      it("returns a matching cross-origin access control header", function() { with(this) {
-        stub(server, "process").yields([[]])
-        post("/bayeux", {message: "[]"})
-        check_access_control_origin("http://example.com")
+      describe("with text/plain", function() { with(this) {
+        before(function() { this.header("Content-Type", "text/plain") })
+        behavesLike("cross-origin request")
       }})
       
-      it("forwards the message param onto the server", function() { with(this) {
-        expect(server, "process").given({channel: "/plain"}, false).yielding([[]])
-        post("/bayeux", "message=%7B%22channel%22%3A%22%2Fplain%22%7D")
-      }})
-      
-      it("returns the server's response as JSON", function() { with(this) {
-        stub(server, "process").yields([[{channel: "/meta/handshake"}]])
-        post("/bayeux", "message=%5B%5D")
-        check_status(200)
-        check_content_type("application/json")
-        check_json([{channel: "/meta/handshake"}])
-      }})
-      
-      it("returns a 400 response if malformed JSON is given", function() { with(this) {
-        expect(server, "process").exactly(0)
-        post("/bayeux", "message=%7B%5B")
-        check_status(400)
-        check_content_type("text/plain")
+      describe("with application/xml", function() { with(this) {
+        before(function() { this.header("Content-Type", "application/xml") })
+        behavesLike("cross-origin request")
       }})
     }})
     

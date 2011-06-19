@@ -58,57 +58,67 @@ module Faye
                       [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
       end
       
-      if env['HTTP_UPGRADE'] == 'WebSocket'
-        return handle_upgrade(request)
-      end
-      
-      if request.path_info =~ /\.js$/
-        return [200, TYPE_SCRIPT, File.new(SCRIPT_PATH)]
-      end
-      
-      begin
-        json_msg = message_from_request(request)
-        message  = JSON.parse(json_msg)
-        jsonp    = request.params['jsonp'] || JSONP_CALLBACK
-        head     = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
-        origin   = request.env['HTTP_ORIGIN']
-        callback = env['async.callback']
-        body     = DeferredBody.new
-        
-        debug 'Received ?: ?', env['REQUEST_METHOD'], json_msg
-        @server.flush_connection(message) if request.get?
-        
-        head['Access-Control-Allow-Origin'] = origin if origin
-        callback.call [200, head, body]
-        
-        @server.process(message, false) do |replies|
-          response = JSON.unparse(replies)
-          response = "#{ jsonp }(#{ response });" if request.get?
-          debug 'Returning ?', response
-          body.succeed(response)
-        end
-        
-        ASYNC_RESPONSE
-        
-      rescue
-        [400, TYPE_TEXT, ['Bad request']]
-      end
+      return handle_options(request) if env['REQUEST_METHOD'] == 'OPTIONS'
+      return handle_upgrade(request) if env['HTTP_UPGRADE'] == 'WebSocket'
+      return [200, TYPE_SCRIPT, File.new(SCRIPT_PATH)] if request.path_info =~ /\.js$/
+      handle_request(request)
     end
     
   private
     
+    def handle_request(request)
+      json_msg = message_from_request(request)
+      message  = JSON.parse(json_msg)
+      jsonp    = request.params['jsonp'] || JSONP_CALLBACK
+      head     = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
+      origin   = request.env['HTTP_ORIGIN']
+      callback = request.env['async.callback']
+      body     = DeferredBody.new
+      
+      debug 'Received ?: ?', request.env['REQUEST_METHOD'], json_msg
+      @server.flush_connection(message) if request.get?
+      
+      head['Access-Control-Allow-Origin'] = origin if origin
+      callback.call [200, head, body]
+      
+      @server.process(message, false) do |replies|
+        response = JSON.unparse(replies)
+        response = "#{ jsonp }(#{ response });" if request.get?
+        debug 'Returning ?', response
+        body.succeed(response)
+      end
+      
+      ASYNC_RESPONSE
+      
+    rescue
+      [400, TYPE_TEXT, ['Bad request']]
+    end
+    
     def message_from_request(request)
-      return request.params['message'] unless request.post?
+      message = request.params['message']
+      return message if message
       
       # Some clients do not send a content-type, e.g.
       # Internet Explorer when using cross-origin-long-polling
+      # Some use application/xml when using CORS
       content_type = request.env['CONTENT_TYPE'] || ''
       
-      case content_type.split(';').first
-      when 'application/json' then request.body.read
-      when 'text/plain' then CGI.parse(request.body.read)['message'][0]
-      else request.params['message']
+      if content_type.split(';').first == 'application/json'
+        request.body.read
+      else
+        CGI.parse(request.body.read)['message'][0]
       end
+    end
+    
+    def handle_options(request)
+      headers = {
+        'Access-Control-Allow-Origin'       => '*',
+        'Access-Control-Allow-Credentials'  => 'false',
+        'Access-Control-Max-Age'            => '86400',
+        'Access-Control-Allow-Methods'      => 'POST, GET, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers'      => 'Accept, Content-Type, X-Requested-With'
+      }
+      [200, headers, ['']]
     end
     
     def handle_upgrade(request)

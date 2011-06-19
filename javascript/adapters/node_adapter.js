@@ -105,11 +105,14 @@ Faye.NodeAdapter = Faye.Class({
         response.end();
       });
     
-    if (requestMethod === 'GET') {
-      this._callWithParams(request, response, requestUrl.query);
-      
-    } else if (requestMethod === 'POST') {
-      Faye.withDataFor(request, function(data) {
+    if (requestMethod === 'OPTIONS')
+      return this._handleOptions(request, response);
+    
+    if (requestMethod === 'GET')
+      return this._callWithParams(request, response, requestUrl.query);
+    
+    if (requestMethod === 'POST')
+      return Faye.withDataFor(request, function(data) {
         var type   = (request.headers['content-type'] || '').split(';')[0],
             params = (type === 'application/json')
                    ? {message: data}
@@ -117,10 +120,8 @@ Faye.NodeAdapter = Faye.Class({
         
         self._callWithParams(request, response, params);
       });
-      
-    } else {
-      this._returnError(response);
-    }
+    
+    this._returnError(response);
   },
   
   handleUpgrade: function(request, socket, head) {
@@ -183,6 +184,19 @@ Faye.NodeAdapter = Faye.Class({
     } catch (e) {
       this._returnError(response);
     }
+  },
+  
+  _handleOptions: function(request, response) {
+    var headers = {
+      'Access-Control-Allow-Origin':      '*',
+      'Access-Control-Allow-Credentials': 'false',
+      'Access-Control-Max-Age':           '86400',
+      'Access-Control-Allow-Methods':     'POST, GET, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers':     'Accept, Content-Type, X-Requested-With'
+    };
+    response.writeHead(200, headers);
+    response.write('');
+    response.end();
   },
   
   _returnError: function(response) {
