@@ -6,6 +6,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
         self     = this;
     
     xhr.open('POST', this._endpoint, true);
+    xhr.setRequestHeader('Content-Type', 'text/plain');
     
     xhr.onload = function() {
       try {
