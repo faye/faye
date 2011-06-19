@@ -85,7 +85,6 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   loadClientScript: function(callback) {
-    if (this._clientScript) return callback(this._clientScript);
     var self = this;
     fs.readFile(this.SCRIPT_PATH, function(err, content) {
       self._clientScript = content;
