@@ -52,6 +52,7 @@ module Faye
     def call(env)
       Faye.ensure_reactor_running!
       request = Rack::Request.new(env)
+      origin  = request.env['HTTP_ORIGIN']
       
       unless request.path_info =~ @endpoint_re
         return @app ? @app.call(env) :
@@ -66,12 +67,15 @@ module Faye
         return [200, TYPE_SCRIPT, File.new(SCRIPT_PATH)]
       end
       
+      if request.options? && origin
+        return [200, {'Access-Control-Allow-Origin' => origin}, '']
+      end
+      
       begin
         json_msg = message_from_request(request)
         message  = JSON.parse(json_msg)
         jsonp    = request.params['jsonp'] || JSONP_CALLBACK
         head     = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
-        origin   = request.env['HTTP_ORIGIN']
         callback = env['async.callback']
         body     = DeferredBody.new
         
