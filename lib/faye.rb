@@ -1,6 +1,5 @@
 require 'forwardable'
 require 'set'
-require 'rubygems'
 require 'eventmachine'
 require 'json'
 

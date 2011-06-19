@@ -7,6 +7,8 @@
 # The client connects to the chat server and logs all messages
 # sent by all connected users.
 
+require 'rubygems'
+
 dir = File.dirname(__FILE__)
 require File.expand_path(dir + '/../../lib/faye')
 
