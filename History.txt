@@ -1,3 +1,12 @@
+=== 0.6.2 / 2011-06-19
+
+* Add authentication, database selection and namespacing to Redis engine
+* Clean up all client data when removing clients from Redis
+* Fix cross-origin-long-polling for OPTIONS-aware browsers
+* Update secure WebSocket detection for recent Node versions
+* Reinstate 'faye.client' field in Rack environment
+
+
 === 0.6.1 / 2011-06-06
 TestSwarm build: http://swarm.jcoglan.com/job/37/
 
