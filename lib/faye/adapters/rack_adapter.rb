@@ -95,6 +95,11 @@ module Faye
     end
     
     def message_from_request(request)
+      p [:method, request.env['REQUEST_METHOD']]
+      p [:content_type, request.env['CONTENT_TYPE']]
+      p [:params, request.params]
+      p [:body, request.body.read]
+      
       message = request.params['message']
       return message if message
       
@@ -111,6 +116,7 @@ module Faye
     end
     
     def handle_options(request)
+      p :called_options
       headers = {
         'Access-Control-Allow-Origin'       => '*',
         'Access-Control-Allow-Credentials'  => 'false',

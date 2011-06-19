@@ -6,6 +6,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
         self     = this;
     
     xhr.open('POST', this._endpoint, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
     
     xhr.onload = function() {
       try {
@@ -19,7 +20,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     };
     xhr.onerror = retry;
     xhr.onprogress = function() {};
-    xhr.send('message=' + encodeURIComponent(Faye.toJSON(message)));
+    xhr.send(Faye.toJSON(message));
   }
 }), {
   isUsable: function(endpoint, callback, scope) {

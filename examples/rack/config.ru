@@ -4,8 +4,7 @@ require File.expand_path(dir + '/../../lib/faye')
 require File.expand_path(dir + '/app')
 
 use Faye::RackAdapter, :mount   => '/bayeux',
-                       :timeout => 20,
-                       :engine  => {:type => 'redis'}
+                       :timeout => 20
 
 run Sinatra::Application
 
