@@ -7,9 +7,12 @@ var clientA = new Faye.Client('http://localhost:8080/bayeux'),
 var sub = clientA.subscribe('/chat/foo', function(message) {
   console.log(new Date().getTime() - time);
   console.log(message.text);
+  process.exit();
 });
 
 sub.callback(function() {
-  time = new Date().getTime();
-  clientB.publish('/chat/foo', {text: 'Hello, cluster'});
+  clientB.connect(function() {
+    time = new Date().getTime();
+    clientB.publish('/chat/foo', {text: 'Hello, cluster'});
+  });
 });
