@@ -59,7 +59,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         server.process(publish, false, function() {})
       }})
       
-      it("returns no respons", function() { with(this) {
+      it("returns no response", function() { with(this) {
         stub(engine, "publish")
         server.process(publish, false, function(response) {
           assertEqual( [], response)
