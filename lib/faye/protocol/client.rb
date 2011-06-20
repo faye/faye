@@ -21,14 +21,14 @@ module Faye
     def initialize(endpoint = nil, options = {})
       info('New client created for ?', endpoint)
       
-      @endpoint  = endpoint || RackAdapter::DEFAULT_ENDPOINT
-      @options   = options
+      @endpoint   = endpoint || RackAdapter::DEFAULT_ENDPOINT
+      @options    = options
+
+      @transport  = Transport.get(self, MANDATORY_CONNECTION_TYPES)
+      @state      = UNCONNECTED
+      @channels   = Channel::Set.new
+      @message_id = 0
       
-      @transport = Transport.get(self, MANDATORY_CONNECTION_TYPES)
-      @state     = UNCONNECTED
-      @channels  = Channel::Set.new
-      
-      @namespace = Namespace.new
       @response_callbacks = {}
       
       @advice = {
@@ -286,14 +286,20 @@ module Faye
   private
     
     def send(message, &callback)
-      message['id'] = @namespace.generate
+      message['id'] = generate_message_id
       @response_callbacks[message['id']] = callback if callback
 
       pipe_through_extensions(:outgoing, message) do |message|
         @transport.send(message, @advice['timeout'] / 1000.0) if message
       end
     end
-
+    
+    def generate_message_id
+      @message_id += 1
+      @message_id = 0 if @message_id >= 2**32
+      @message_id.to_s(36)
+    end
+    
     def handle_advice(advice)
       @advice.update(advice)
       

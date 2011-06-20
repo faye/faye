@@ -25,8 +25,8 @@ Faye.Client = Faye.Class({
     
     this._state     = this.UNCONNECTED;
     this._channels  = new Faye.Channel.Set();
+    this._messageId = 0;
     
-    this._namespace = new Faye.Namespace();
     this._responseCallbacks = {};
     
     this._advice = {
@@ -291,13 +291,19 @@ Faye.Client = Faye.Class({
   },
   
   _send: function(message, callback, scope) {
-    message.id = this._namespace.generate();
+    message.id = this._generateMessageId();
     if (callback) this._responseCallbacks[message.id] = [callback, scope];
 
     this.pipeThroughExtensions('outgoing', message, function(message) {
       if (!message) return;
       this._transport.send(message, this._advice.timeout / 1000);
     }, this);
+  },
+  
+  _generateMessageId: function() {
+    this._messageId += 1;
+    if (this._messageId >= Math.pow(2,32)) this._messageId = 0;
+    return this._messageId.toString(36);
   },
 
   _handleAdvice: function(advice) {
