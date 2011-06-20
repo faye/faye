@@ -43,9 +43,10 @@
     Faye.logger = function(msg) { if (window.console) console.log(msg) };
     
     var host = location.hostname,
-        port = location.port;
+        port = location.port,
+        path = '/bayeux';
     
-    Bayeux = new Faye.Client('http://' + host + ':' + port + '/bayeux');
+    Bayeux = new Faye.Client('http://' + host + ':' + port + path);
     Soapbox.init(Bayeux);
   </script>
 

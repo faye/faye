@@ -12,13 +12,16 @@ require 'rubygems'
 dir = File.dirname(__FILE__)
 require File.expand_path(dir + '/../../lib/faye')
 
+port = ARGV[0] || 9292
+path = ARGV[1] || 'bayeux'
+
 EM.run do
-  client = Faye::Client.new('http://localhost:8000/bayeux')
+  client = Faye::Client.new("http://localhost:#{port}/#{path}")
   
-  client.subscribe '/from/*' do |message|
+  client.subscribe '/chat/*' do |message|
     user = message['user']
     puts "[#{ user }]: #{ message['message'] }"
-    client.publish("/mentioning/#{ user }", {
+    client.publish("/members/#{ user }", {
       "user"    => "ruby-logger",
       "message" => "Got your message, #{ user }!"
     })

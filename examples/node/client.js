@@ -8,14 +8,17 @@
 // sent by all connected users.
 
 var sys  = require('sys'),
-    faye = require('../../build/faye-node');
+    faye = require('../../build/faye-node'),
+    
+    port = process.argv[2] || 8000,
+    path = process.argv[3] || 'bayeux';
 
-var client = new faye.Client('http://localhost:8000/bayeux');
+var client = new faye.Client('http://localhost:' + port + '/' + path);
 
-client.subscribe('/from/*', function(message) {
+client.subscribe('/chat/*', function(message) {
   var user = message.user;
   sys.puts('[' + user + ']: ' + message.message);
-  client.publish('/mentioning/' + user, {
+  client.publish('/members/' + user, {
     user:   'node-logger',
     message:  'Got your message, ' + user + '!'
   });

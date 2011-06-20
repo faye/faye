@@ -31,7 +31,7 @@ Soapbox = {
    */
   launch: function() {
     var self = this;
-    this._bayeux.subscribe('/mentioning/' + this._username, this.accept, this);
+    this._bayeux.subscribe('/members/' + this._username, this.accept, this);
     
     // Hide login form, show main application UI
     this._login.fadeOut('slow', function() {
@@ -44,7 +44,7 @@ Soapbox = {
       var follow = $('#followee'),
           name   = follow.val();
       
-      self._bayeux.subscribe('/from/' + name, self.accept, self);
+      self._bayeux.subscribe('/chat/' + name, self.accept, self);
       follow.val('');
       return false;
     });
@@ -81,9 +81,9 @@ Soapbox = {
     
     // Publish to this user's 'from' channel, and to channels for any
     // @replies found in the message
-    this._bayeux.publish('/from/' + this._username, message);
+    this._bayeux.publish('/chat/' + this._username, message);
     $.each(mentions, function(i, name) {
-      self._bayeux.publish('/mentioning/' + name, message);
+      self._bayeux.publish('/members/' + name, message);
     });
   },
   

@@ -1,13 +1,15 @@
-var faye = require('../../build/faye-node'),
-    sys  = require('sys');
+var faye = require('../../build/faye-node');
 
 var clientA = new Faye.Client('http://localhost:8080/bayeux'),
-    clientB = new Faye.Client('http://localhost:9090/bayeux');
+    clientB = new Faye.Client('http://localhost:9090/bayeux'),
+    time;
 
-clientA.subscribe('/foo', function(message) {
-  sys.puts(message.text);
+var sub = clientA.subscribe('/chat/foo', function(message) {
+  console.log(new Date().getTime() - time);
+  console.log(message.text);
 });
 
-setTimeout(function() {
-  clientB.publish('/foo', {text: 'Hello, cluster'});
-}, 1000);
+sub.callback(function() {
+  time = new Date().getTime();
+  clientB.publish('/chat/foo', {text: 'Hello, cluster'});
+});
