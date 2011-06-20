@@ -120,15 +120,16 @@ module Faye
       def publish(message)
         init
         debug 'Publishing message ?', message
+        
         json_message = JSON.dump(message)
-        channels = Channel.expand(message['channel'])
-        channels.each do |channel|
-          @redis.smembers(@ns + "/channels#{channel}") do |clients|
-            clients.each do |client_id|
-              debug 'Queueing for client ?: ?', client_id, message
-              @redis.sadd(@ns + "/clients/#{client_id}/messages", json_message)
-              @redis.publish(@ns + '/notifications', client_id)
-            end
+        channels     = Channel.expand(message['channel'])
+        keys         = channels.map { |c| @ns + "/channels#{c}" }
+        
+        @redis.sunion(*keys) do |clients|
+          clients.each do |client_id|
+            debug 'Queueing for client ?: ?', client_id, message
+            @redis.sadd(@ns + "/clients/#{client_id}/messages", json_message)
+            @redis.publish(@ns + '/notifications', client_id)
           end
         end
       end

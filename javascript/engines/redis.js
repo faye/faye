@@ -116,19 +116,20 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   publish: function(message) {
     this.debug('Publishing message ?', message);
 
-    var jsonMessage = JSON.stringify(message),
+    var self        = this,
+        jsonMessage = JSON.stringify(message),
         channels    = Faye.Channel.expand(message.channel),
-        self        = this;
+        keys        = Faye.map(channels, function(c) { return self._ns + '/channels' + c });
     
-    Faye.each(channels, function(channel) {
-      self._redis.smembers(self._ns + '/channels' + channel, function(error, clients) {
-        Faye.each(clients, function(clientId) {
-          self.debug('Queueing for client ?: ?', clientId, message);
-          self._redis.sadd(self._ns + '/clients/' + clientId + '/messages', jsonMessage);
-          self._redis.publish(self._ns + '/notifications', clientId);
-        });
+    var notify = function(error, clients) {
+      Faye.each(clients, function(clientId) {
+        self.debug('Queueing for client ?: ?', clientId, message);
+        self._redis.sadd(self._ns + '/clients/' + clientId + '/messages', jsonMessage);
+        self._redis.publish(self._ns + '/notifications', clientId);
       });
-    });
+    };
+    keys.push(notify);
+    this._redis.sunion.apply(this._redis, keys);
   },
   
   emptyQueue: function(clientId) {
