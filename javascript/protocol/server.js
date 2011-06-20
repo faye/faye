@@ -106,6 +106,9 @@ Faye.Server = Faye.Class({
   },
   
   _advize: function(response) {
+    if (Faye.indexOf([Faye.Channel.HANDSHAKE, Faye.Channel.CONNECT], response.channel) < 0)
+      return;
+    
     response.advice = response.advice || {};
     if (response.error) {
       Faye.extend(response.advice, {reconnect:  'handshake'}, false);

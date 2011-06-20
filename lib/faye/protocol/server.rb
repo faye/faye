@@ -97,6 +97,8 @@ module Faye
     end
     
     def advize(response)
+      return unless [Channel::HANDSHAKE, Channel::CONNECT].include?(response['channel'])
+      
       advice = response['advice'] ||= {}
       if response['error']
         advice['reconnect'] ||= 'handshake'

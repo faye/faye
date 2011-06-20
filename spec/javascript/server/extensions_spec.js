@@ -27,7 +27,7 @@ JS.ENV.Server.ExtensionsSpec = JS.Test.describe("Server extensions", function() 
       stub(engine, "publish")
       var response = null
       server.process({channel: "/meta/handshake"}, false, function(r) { response = r })
-      assertEqual( [{channel: "/foo", data: "hello", advice: anything()}], response )
+      assertEqual( [{channel: "/foo", data: "hello"}], response )
     }})
   }})
   
@@ -53,7 +53,7 @@ JS.ENV.Server.ExtensionsSpec = JS.Test.describe("Server extensions", function() 
       stub(engine, "publish")
       var response = null
       server.process({channel: "/meta/handshake"}, false, function(r) { response = r })
-      assertEqual( [{channel: "/foo", data: "hello", advice: anything(), ext: {auth: "password"}}], response )
+      assertEqual( [{channel: "/foo", data: "hello", ext: {auth: "password"}}], response )
     }})
   }})
 }})

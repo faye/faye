@@ -94,13 +94,15 @@ describe Faye::Server do
     describe "handshaking" do
       before do
         engine.should_receive(:publish).with(handshake)
-        server.should_receive(:handshake).with(handshake, false).and_yield({"successful" => true})
+        response = {"channel" => "/meta/handshake", "successful" => true}
+        server.should_receive(:handshake).with(handshake, false).and_yield(response)
       end
       
       it "returns the handshake response with advice" do
         server.process(handshake, false) do |response|
           response.should == [
-            { "successful" => true,
+            { "channel" => "/meta/handshake",
+              "successful" => true,
               "advice" => {"reconnect" => "retry", "interval" => 0, "timeout" => 60000}
             }
           ]

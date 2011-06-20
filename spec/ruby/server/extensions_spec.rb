@@ -10,7 +10,6 @@ describe "server extensions" do
   
   let(:server)  { Faye::Server.new }
   let(:message) { {"channel" => "/foo", "data" => "hello"} }
-  let(:advice)  { {"reconnect"=>"retry", "interval"=>0, "timeout"=>60000} }
   
   before do
     Faye::Engine.stub(:get).and_return engine
@@ -37,7 +36,7 @@ describe "server extensions" do
       engine.stub(:publish)
       response = nil
       server.process({"channel" => "/meta/handshake"}, false) { |r| response = r }
-      response.should == [{"channel" => "/foo", "data" => "hello", "advice" => advice}]
+      response.should == [{"channel" => "/foo", "data" => "hello"}]
     end
   end
   
@@ -62,7 +61,7 @@ describe "server extensions" do
       engine.stub(:publish)
       response = nil
       server.process({"channel" => "/meta/handshake"}, false) { |r| response = r }
-      response.should == [{"channel" => "/foo", "data" => "hello", "advice" => advice, "ext" => {"auth" => "password"}}]
+      response.should == [{"channel" => "/foo", "data" => "hello", "ext" => {"auth" => "password"}}]
     end
   end
 end

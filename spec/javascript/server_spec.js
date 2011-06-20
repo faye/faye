@@ -99,13 +99,14 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
     describe("handshaking", function() { with(this) {
       before(function() { with(this) {
         expect(engine, "publish").given(handshake)
-        expect(server, "handshake").given(handshake, false).yielding([{successful: true}])
+        expect(server, "handshake").given(handshake, false).yielding([{channel: "/meta/handshake", successful: true}])
       }})
       
       it("returns the handshake response with advice", function() { with(this) {
         server.process(handshake, false, function(response) {
           assertEqual([
-              { successful: true,
+              { channel: "/meta/handshake",
+                successful: true,
                 advice: {reconnect: "retry", interval: 0, timeout: 60000}
               }
             ], response)
