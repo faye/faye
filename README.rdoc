@@ -46,13 +46,12 @@ should get you up and running:
   bundle exec rspec -c spec/
   node spec/node.js
   
-  # Build Ruby gem
+  # Install Ruby gem
   gem build faye.gemspec
-  gem install faye-0.6.0.gem
+  gem install faye-x.x.x.gem
   
-  # Build NPM package
-  tar zcvf faye-0.6.0.tgz build/
-  npm install ./faye-0.6.0.tgz
+  # Install NPM package
+  npm install build
 
 
 == To-do
