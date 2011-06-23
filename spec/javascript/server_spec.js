@@ -32,7 +32,6 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
     
     it("routes single messages to appropriate handlers", function() { with(this) {
       expect(server, "handshake").given(handshake, false).yielding([{}])
-      expect(engine, "publish").given(handshake)
       server.process(handshake, false, function() {})
     }})
     
@@ -43,11 +42,12 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       expect(server, "subscribe").given(subscribe, false).yielding([{}])
       expect(server, "unsubscribe").given(unsubscribe, false).yielding([{}])
       
-      expect(engine, "publish").given(handshake)
-      expect(engine, "publish").given(connect)
-      expect(engine, "publish").given(disconnect)
-      expect(engine, "publish").given(subscribe)
-      expect(engine, "publish").given(unsubscribe)
+      expect(engine, "publish").given(handshake).exactly(0)
+      expect(engine, "publish").given(connect).exactly(0)
+      expect(engine, "publish").given(disconnect).exactly(0)
+      expect(engine, "publish").given(subscribe).exactly(0)
+      expect(engine, "publish").given(unsubscribe).exactly(0)
+
       expect(engine, "publish").given(publish)
       
       server.process([handshake, connect, disconnect, subscribe, unsubscribe, publish], false, function() {})
@@ -98,7 +98,6 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
     
     describe("handshaking", function() { with(this) {
       before(function() { with(this) {
-        expect(engine, "publish").given(handshake)
         expect(server, "handshake").given(handshake, false).yielding([{channel: "/meta/handshake", successful: true}])
       }})
       
@@ -117,7 +116,6 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
     describe("connecting for messages", function() { with(this) {
       before(function() { with(this) {
         this.messages = [{channel: "/a"}, {channel: "/b"}]
-        expect(engine, "publish").given(connect)
         expect(server, "connect").given(connect, false).yielding([messages])
       }})
       

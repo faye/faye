@@ -73,16 +73,17 @@ module Faye
       info 'Handling message: ? (local: ?)', message, local
       
       channel_name = message['channel']
+      
+      return handle_meta(message, local, &callback) if Channel.meta?(channel_name)
+      
       @engine.publish(message) unless message['error'] or Grammar::CHANNEL_NAME !~ channel_name
       
-      if Channel.meta?(channel_name)
-        handle_meta(message, local, &callback)
-      elsif message['clientId'].nil?
-        callback.call([])
-      else
+      if message['clientId']
         response = make_response(message)
         response['successful'] = !response['error']
         callback.call([response])
+      else
+        callback.call([])
       end
     end
     

@@ -35,7 +35,6 @@ describe Faye::Server do
     
     it "routes single messages to appropriate handlers" do
       server.should_receive(:handshake).with(handshake, false)
-      engine.should_receive(:publish).with(handshake)
       server.process(handshake, false)
     end
     
@@ -46,11 +45,11 @@ describe Faye::Server do
       server.should_receive(:subscribe).with(subscribe, false)
       server.should_receive(:unsubscribe).with(unsubscribe, false)
       
-      engine.should_receive(:publish).with(handshake)
-      engine.should_receive(:publish).with(connect)
-      engine.should_receive(:publish).with(disconnect)
-      engine.should_receive(:publish).with(subscribe)
-      engine.should_receive(:publish).with(unsubscribe)
+      engine.should_not_receive(:publish).with(handshake)
+      engine.should_not_receive(:publish).with(connect)
+      engine.should_not_receive(:publish).with(disconnect)
+      engine.should_not_receive(:publish).with(subscribe)
+      engine.should_not_receive(:publish).with(unsubscribe)
       engine.should_receive(:publish).with(publish)
       
       server.process([handshake, connect, disconnect, subscribe, unsubscribe, publish], false)
@@ -93,7 +92,6 @@ describe Faye::Server do
     
     describe "handshaking" do
       before do
-        engine.should_receive(:publish).with(handshake)
         response = {"channel" => "/meta/handshake", "successful" => true}
         server.should_receive(:handshake).with(handshake, false).and_yield(response)
       end
@@ -114,7 +112,6 @@ describe Faye::Server do
       let(:messages) { [{"channel" => "/a"}, {"channel" => "/b"}] }
       
       before do
-        engine.should_receive(:publish).with(connect)
         server.should_receive(:connect).with(connect, false).and_yield(messages)
       end
       
