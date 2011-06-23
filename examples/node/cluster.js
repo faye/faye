@@ -1,7 +1,15 @@
 var faye = require('../../build/faye-node');
+// faye.Logging.logLevel = 'debug';
 
-var clientA = new Faye.Client('http://localhost:8080/bayeux'),
-    clientB = new Faye.Client('http://localhost:9090/bayeux'),
+var servers = {
+  ruby:   {ports: [7070, 9090], path: 'bayeux'},
+  node:   {ports: [8000, 8000], path: 'bayeux'},
+  cometd: {ports: [8080, 8080], path: 'cometd'}
+};
+
+var server  = servers.ruby,
+    clientA = new faye.Client('http://localhost:' + server.ports[0] + '/' + server.path),
+    clientB = new faye.Client('http://localhost:' + server.ports[1] + '/' + server.path),
     time;
 
 var sub = clientA.subscribe('/chat/foo', function(message) {
