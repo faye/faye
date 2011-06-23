@@ -18,10 +18,6 @@ To run the Rack version, start a Redis server on your local machine and run:
   bundle install
   rake example[8000]
 
-Note that Faye does not depend on Sinatra; the demo just uses it to provide a
-concrete app behind the Faye middleware. You need a Redis server running that
-supports pub/sub to run the Ruby demo.
-
 You can also run the Ruby demo on several ports and use HAProxy to load balance
 between them.
 
