@@ -11,8 +11,9 @@ var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
 var server = http.createServer(function(request, response) {
   var path = (request.url === '/') ? '/index.html' : request.url;
   fs.readFile(PUBLIC_DIR + path, function(err, content) {
-    response.writeHead(200, {'Content-Type': 'text/html'});
-    response.write(content);
+    var status = err ? 404 : 200;
+    response.writeHead(status, {'Content-Type': 'text/html'});
+    response.write(content || 'Not found');
     response.end();
   });
 });
