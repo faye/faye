@@ -1,16 +1,19 @@
 # This script installs all the necessary software to run the Ruby and
-# Node versions of Faye. Tested on Ubuntu 10.04 LTS 64-bit EC2 image:
+# Node versions of Faye, as well as the load testing tools AB and Tsung.
+
+# Tested on Ubuntu 10.04 LTS 64-bit EC2 image:
 # http://uec-images.ubuntu.com/releases/10.04/release/
 
-FAYE_BRANCH=extract-engine
-NODE_VERSION=0.4.7
-REDIS_VERSION=2.2.7
+FAYE_BRANCH=master
+NODE_VERSION=0.4.8
+REDIS_VERSION=2.2.11
 RUBY_VERSION=1.9.2
+TSUNG_VERSION=1.3.3
 
 sudo apt-get update
-sudo apt-get install build-essential g++ git-core \
+sudo apt-get install build-essential g++ git-core curl wget \
                      openssl libcurl4-openssl-dev libreadline-dev \
-                     curl wget
+                     apache2-utils erlang gnuplot
 
 bash < <(curl -s https://rvm.beginrescueend.com/install/rvm)
 echo "source \"\$HOME/.rvm/scripts/rvm\"" | tee -a ~/.bashrc
@@ -22,7 +25,7 @@ echo "install: --no-rdoc --no-ri
 update: --no-rdoc --no-ri" | tee ~/.gemrc
 gem install rake bundler
 
-cd
+cd ~
 git clone git://github.com/creationix/nvm.git ~/.nvm
 . ~/.nvm/nvm.sh
 echo ". ~/.nvm/nvm.sh" | tee -a ~/.bashrc
@@ -38,7 +41,18 @@ sudo make
 sudo ln -s /usr/src/redis-$REDIS_VERSION/src/redis-server /usr/bin/redis-server
 sudo ln -s /usr/src/redis-$REDIS_VERSION/src/redis-cli    /usr/bin/redis-cli
 
-cd
+cd /usr/src
+sudo wget http://tsung.erlang-projects.org/dist/tsung-1.3.3.tar.gz
+sudo tar zxvf tsung-$TSUNG_VERSION.tar.gz
+cd tsung-$TSUNG_VERSION
+sudo ./configure
+sudo make
+sudo make install
+sudo ln -s /usr/lib/tsung/bin/tsung_stats.pl /usr/bin/tsung-stats
+echo "To use tsung-stats you need to 'install Template' from CPAN"
+sudo perl -MCPAN -eshell
+
+cd ~
 git clone git://github.com/jcoglan/faye.git
 cd faye
 git checkout $FAYE_BRANCH
