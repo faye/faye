@@ -42,7 +42,7 @@ sudo ln -s /usr/src/redis-$REDIS_VERSION/src/redis-server /usr/bin/redis-server
 sudo ln -s /usr/src/redis-$REDIS_VERSION/src/redis-cli    /usr/bin/redis-cli
 
 cd /usr/src
-sudo wget http://tsung.erlang-projects.org/dist/tsung-1.3.3.tar.gz
+sudo wget http://tsung.erlang-projects.org/dist/tsung-$TSUNG_VERSION.tar.gz
 sudo tar zxvf tsung-$TSUNG_VERSION.tar.gz
 cd tsung-$TSUNG_VERSION
 sudo ./configure
