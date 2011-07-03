@@ -2,17 +2,20 @@ module Faye
   module Engine
     
     class Redis < Base
-      DEFAULT_HOST = 'localhost'
-      DEFAULT_PORT = 6379
+      DEFAULT_HOST     = 'localhost'
+      DEFAULT_PORT     = 6379
+      DEFAULT_DATABASE = 0
+      DEFAULT_GC       = 10
       
       def init
         return if @redis
         require 'em-hiredis'
         
-        host = @options[:host] || DEFAULT_HOST
-        port = @options[:port] || DEFAULT_PORT
-        db   = @options[:database] || 0
+        host = @options[:host]      || DEFAULT_HOST
+        port = @options[:port]      || DEFAULT_PORT
+        db   = @options[:database]  || 0
         auth = @options[:password]
+        gc   = @options[:gc]        || DEFAULT_GC
         @ns  = @options[:namespace] || ''
         
         @redis      = EventMachine::Hiredis::Client.connect(host, port)
@@ -29,6 +32,8 @@ module Faye
         @subscriber.on(:message) do |topic, message|
           empty_queue(message) if topic == @ns + '/notifications'
         end
+        
+        EventMachine.add_periodic_timer(gc, &method(:gc))
       end
       
       def disconnect
@@ -38,7 +43,7 @@ module Faye
       def create_client(&callback)
         init
         client_id = Faye.random
-        @redis.sadd(@ns + '/clients', client_id) do |added|
+        @redis.zadd(@ns + '/clients', 0, client_id) do |added|
           if added == 0
             create_client(&callback)
           else
@@ -51,11 +56,8 @@ module Faye
       
       def destroy_client(client_id, &callback)
         init
-        @redis.srem(@ns + '/clients', client_id)
+        @redis.zrem(@ns + '/clients', client_id)
         @redis.del(@ns + "/clients/#{client_id}/messages")
-        
-        remove_timeout(client_id)
-        @redis.del(@ns + "/clients/#{client_id}/ping")
         
         @redis.smembers(@ns + "/clients/#{client_id}/channels") do |channels|
           n, i = channels.size, 0
@@ -78,25 +80,18 @@ module Faye
       
       def client_exists(client_id, &callback)
         init
-        @redis.sismember(@ns + '/clients', client_id) do |exists|
-          callback.call(exists != 0)
+        @redis.zscore(@ns + '/clients', client_id) do |score|
+          callback.call(score != nil)
         end
       end
       
       def ping(client_id)
-        timeout = @options[:timeout]
-        time    = Time.now.to_i.to_s
+        init
+        return unless Numeric === @timeout
         
-        return unless Numeric === timeout
-        
-        debug 'Ping ?, ?', client_id, timeout
-        remove_timeout(client_id)
-        @redis.set(@ns + "/clients/#{client_id}/ping", time)
-        add_timeout(client_id, 2 * timeout) do
-          @redis.get(@ns + "/clients/#{client_id}/ping") do |ping|
-            destroy_client(client_id) if ping == time
-          end
-        end
+        time = Time.now.to_i
+        debug 'Ping ?, ?', client_id, time
+        @redis.zadd(@ns + '/clients', time, client_id)
       end
       
       def subscribe(client_id, channel, &callback)
@@ -146,6 +141,15 @@ module Faye
           json_messages.each do |json_message|
             conn.deliver(JSON.parse(json_message))
           end
+        end
+      end
+      
+      def gc
+        return unless Numeric === @timeout
+        
+        cutoff = Time.now.to_i - 2 * @timeout
+        @redis.zrangebyscore(@ns + '/clients', 0, cutoff) do |clients|
+          clients.each { |client_id| destroy_client(client_id) }
         end
       end
     end

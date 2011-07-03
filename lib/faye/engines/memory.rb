@@ -2,6 +2,8 @@ module Faye
   module Engine
     
     class Memory < Base
+      include Timeouts
+      
       def initialize(options)
         @namespace = Namespace.new
         @clients   = {}
@@ -36,11 +38,10 @@ module Faye
       end
       
       def ping(client_id)
-        timeout = @options[:timeout]
-        return unless Numeric === timeout
-        debug 'Ping ?, ?', client_id, timeout
+        return unless Numeric === @timeout
+        debug 'Ping ?, ?', client_id, @timeout
         remove_timeout(client_id)
-        add_timeout(client_id, 2 * timeout) { destroy_client(client_id) }
+        add_timeout(client_id, 2 * @timeout) { destroy_client(client_id) }
       end
       
       def subscribe(client_id, channel, &callback)

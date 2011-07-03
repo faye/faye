@@ -18,7 +18,6 @@ module Faye
     
     class Base
       include Logging
-      include Timeouts
       
       attr_reader :interval, :timeout
       

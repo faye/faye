@@ -135,7 +135,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     }})
     
     describe("ping", function() { with(this) {
-      define("options", function() { return {timeout: 0.3} })
+      define("options", function() { return {timeout: 0.3, gc: 0.1} })
       
       it("removes a client if it does not ping often enough", function() { with(this) {
         clock_tick(700)

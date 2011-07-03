@@ -36,11 +36,10 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
   },
   
   ping: function(clientId) {
-    var timeout = this._options.timeout;
-    if (typeof timeout !== 'number') return;
-    this.debug('Ping ?, ?', clientId, timeout);
+    if (typeof this.timeout !== 'number') return;
+    this.debug('Ping ?, ?', clientId, this.timeout);
     this.removeTimeout(clientId);
-    this.addTimeout(clientId, 2 * timeout, function() {
+    this.addTimeout(clientId, 2 * this.timeout, function() {
       this.destroyClient(clientId);
     }, this);
   },
@@ -102,5 +101,6 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     messages.forEach(conn.deliver, conn);
   }
 });
+Faye.extend(Faye.Engine.Memory.prototype, Faye.Timeouts);
 
 Faye.Engine.register('memory', Faye.Engine.Memory);

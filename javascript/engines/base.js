@@ -52,4 +52,3 @@ Faye.Engine.Base = Faye.Class({
 });
 
 Faye.extend(Faye.Engine.Base.prototype, Faye.Logging);
-Faye.extend(Faye.Engine.Base.prototype, Faye.Timeouts);
