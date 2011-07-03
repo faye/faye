@@ -124,7 +124,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     var notify = function(error, clients) {
       Faye.each(clients, function(clientId) {
         self.debug('Queueing for client ?: ?', clientId, message);
-        self._redis.sadd(self._ns + '/clients/' + clientId + '/messages', jsonMessage);
+        self._redis.rpush(self._ns + '/clients/' + clientId + '/messages', jsonMessage);
         self._redis.publish(self._ns + '/notifications', clientId);
       });
     };
@@ -137,7 +137,8 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     if (!conn) return;
     
     var key = this._ns + '/clients/' + clientId + '/messages', self = this;
-    this._redis.smembers(key, function(error, jsonMessages) {
+    this._redis.lrange(key, 0, -1, function(error, jsonMessages) {
+      self._redis.ltrim(key, jsonMessages.length, -1);
       Faye.each(jsonMessages, function(jsonMessage) {
         self._redis.srem(key, jsonMessage);
         conn.deliver(JSON.parse(jsonMessage));

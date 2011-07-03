@@ -128,7 +128,7 @@ module Faye
         @redis.sunion(*keys) do |clients|
           clients.each do |client_id|
             debug 'Queueing for client ?: ?', client_id, message
-            @redis.sadd(@ns + "/clients/#{client_id}/messages", json_message)
+            @redis.rpush(@ns + "/clients/#{client_id}/messages", json_message)
             @redis.publish(@ns + '/notifications', client_id)
           end
         end
@@ -141,9 +141,9 @@ module Faye
         init
         
         key = @ns + "/clients/#{client_id}/messages"
-        @redis.smembers(key) do |json_messages|
+        @redis.lrange(key, 0, -1) do |json_messages|
+          @redis.ltrim(key, json_messages.size, -1)
           json_messages.each do |json_message|
-            @redis.srem(key, json_message)
             conn.deliver(JSON.parse(json_message))
           end
         end
