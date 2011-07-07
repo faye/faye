@@ -6,6 +6,7 @@
 
 FAYE_BRANCH=master
 NODE_VERSION=0.4.8
+PHANTOM_VERSION=1.2
 REDIS_VERSION=2.2.11
 RUBY_VERSION=1.9.2
 TSUNG_VERSION=1.3.3
@@ -13,7 +14,8 @@ TSUNG_VERSION=1.3.3
 sudo apt-get update
 sudo apt-get install build-essential g++ git-core curl wget \
                      openssl libcurl4-openssl-dev libreadline-dev \
-                     apache2-utils erlang gnuplot
+                     apache2-utils erlang gnuplot \
+                     libqt4-dev qt4-qmake xvfb
 
 bash < <(curl -s https://rvm.beginrescueend.com/install/rvm)
 echo "source \"\$HOME/.rvm/scripts/rvm\"" | tee -a ~/.bashrc
@@ -40,6 +42,15 @@ cd redis-$REDIS_VERSION
 sudo make
 sudo ln -s /usr/src/redis-$REDIS_VERSION/src/redis-server /usr/bin/redis-server
 sudo ln -s /usr/src/redis-$REDIS_VERSION/src/redis-cli    /usr/bin/redis-cli
+
+cd /usr/src
+sudo git clone git://github.com/ariya/phantomjs.git
+cd phantomjs
+sudo git checkout $PHANTOM_VERSION
+sudo qmake-qt4
+sudo make
+sudo ln -s /usr/src/phantomjs/bin/phantomjs /usr/bin/phantomjs
+echo "To use phantomjs, run DISPLAY=:1 Xvfb :1 -screen 0 1024x768x16"
 
 cd /usr/src
 sudo wget http://tsung.erlang-projects.org/dist/tsung-$TSUNG_VERSION.tar.gz

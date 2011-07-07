@@ -8,6 +8,14 @@
   <body>
     <script type="text/javascript">
       
+      if (typeof TestSwarm === 'undefined')
+        TestSwarm = {
+          submit: function(result) {
+            if (window.console) console.log(Faye.toJSON(result));
+          },
+          heartbeat: function() {}
+        }
+      
       JS.Packages(function() { with(this) {
         file('../build/faye-browser-min.js').provides('Faye')
         autoload(/.*Spec/, {from: './javascript'})
