@@ -1,9 +1,9 @@
 require "spec_helper"
 require "thin_proxy"
 
-describe Faye::RackAdapter do
+describe Faye::Adapter::Http do
   include Rack::Test::Methods
-  let(:adapter) { Faye::RackAdapter.new(options) }
+  let(:adapter) { Faye::Adapter::Http.new(options) }
   let(:app)     { ThinProxy.new(adapter) }
   let(:options) { {:mount => "/bayeux", :timeout => 30} }
   let(:server)  { mock "server" }

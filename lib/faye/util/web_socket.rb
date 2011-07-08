@@ -18,7 +18,7 @@ module Faye
       @request  = request
       @callback = @request.env['async.callback']
       @stream   = Stream.new
-      @callback.call [200, RackAdapter::TYPE_JSON, @stream]
+      @callback.call [200, Adapter::Http::TYPE_JSON, @stream]
       
       @url = @request.env['websocket.url']
       @ready_state = OPEN

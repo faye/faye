@@ -4,9 +4,10 @@ require 'cgi'
 require Faye::ROOT + '/thin_extensions'
 
 module Faye
-  class RackAdapter
+  class Adapter::Http
     
     include Logging
+    include Adapter::Common
 
     # Only supported under Thin
     ASYNC_RESPONSE = [-1, {}, []].freeze
@@ -28,18 +29,6 @@ module Faye
       
       return unless extensions = @options[:extensions]
       [*extensions].each { |extension| add_extension(extension) }
-    end
-    
-    def add_extension(extension)
-      @server.add_extension(extension)
-    end
-    
-    def remove_extension(extension)
-      @server.remove_extension(extension)
-    end
-    
-    def get_client
-      @client ||= Client.new(@server)
     end
     
     def listen(port)

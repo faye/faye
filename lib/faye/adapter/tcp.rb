@@ -1,5 +1,7 @@
 module Faye
-  class TcpAdapter
+  class Adapter::Tcp
+    
+    include Adapter::Common
     DEFAULT_HOST = 'localhost'
     
     def initialize(options)

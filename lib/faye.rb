@@ -15,9 +15,13 @@ module Faye
   
   MANDATORY_CONNECTION_TYPES = %w[long-polling callback-polling tcp in-process]
   
+  module Adapter
+    autoload :Common, File.join(ROOT, 'faye', 'adapter', 'common')
+    autoload :Http,   File.join(ROOT, 'faye', 'adapter', 'http')
+    autoload :Tcp,    File.join(ROOT, 'faye', 'adapter', 'tcp')
+  end
+  
   autoload :FrameParser, File.join(ROOT, 'faye', 'util', 'frame_parser')
-  autoload :RackAdapter, File.join(ROOT, 'faye', 'adapters', 'rack_adapter')
-  autoload :TcpAdapter,  File.join(ROOT, 'faye', 'adapters', 'tcp_adapter')
   autoload :WebSocket,   File.join(ROOT, 'faye', 'util', 'web_socket')
   
   %w[ mixins/publisher

@@ -21,7 +21,7 @@ module Faye
     def initialize(endpoint = nil, options = {})
       info('New client created for ?', endpoint)
       
-      @endpoint   = endpoint || RackAdapter::DEFAULT_ENDPOINT
+      @endpoint   = endpoint || Adapter::Http::DEFAULT_ENDPOINT
       @options    = options
 
       @transport  = Transport.get(self, MANDATORY_CONNECTION_TYPES)

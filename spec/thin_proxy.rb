@@ -1,7 +1,7 @@
 require 'rack/proxy'
 
 # This only exists so we can use Rack::Test to test the
-# RackAdapter class, which assumes it's running on Thin
+# Adapter::Http class, which assumes it's running on Thin
 
 class ThinProxy < Rack::Proxy
   HOST = 'localhost'

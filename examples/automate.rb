@@ -10,7 +10,7 @@ require dir + '/rack/app'
 # Build the application stack with Faye in front of our app
 
 application = Rack::Builder.new {
-  use Faye::RackAdapter, :mount => '/bayeux', :timeout => 20
+  use Faye::Adapter::Http, :mount => '/bayeux', :timeout => 20
   run Sinatra::Application
 }
 
