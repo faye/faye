@@ -11,9 +11,14 @@ module Faye
   BAYEUX_VERSION   = '1.0'
   ID_LENGTH        = 128
   JSONP_CALLBACK   = 'jsonpcallback'
-  CONNECTION_TYPES = %w[long-polling cross-origin-long-polling callback-polling websocket in-process]
+  CONNECTION_TYPES = %w[long-polling callback-polling websocket cross-origin-long-polling tcp in-process]
   
-  MANDATORY_CONNECTION_TYPES = %w[long-polling callback-polling in-process]
+  MANDATORY_CONNECTION_TYPES = %w[long-polling callback-polling tcp in-process]
+  
+  autoload :FrameParser, File.join(ROOT, 'faye', 'util', 'frame_parser')
+  autoload :RackAdapter, File.join(ROOT, 'faye', 'adapters', 'rack_adapter')
+  autoload :TcpAdapter,  File.join(ROOT, 'faye', 'adapters', 'tcp_adapter')
+  autoload :WebSocket,   File.join(ROOT, 'faye', 'util', 'web_socket')
   
   %w[ mixins/publisher
       mixins/timeouts
@@ -32,14 +37,12 @@ module Faye
       transport/transport
       transport/local
       transport/http
+      transport/tcp
       error
       
   ].each do |lib|
     require File.join(ROOT, 'faye', lib)
   end
-  
-  autoload :RackAdapter, File.join(ROOT, 'faye', 'adapters', 'rack_adapter')
-  autoload :WebSocket, File.join(ROOT, 'faye', 'util', 'web_socket')
   
   def self.random(bitlength = ID_LENGTH)
     limit    = 2 ** bitlength - 1

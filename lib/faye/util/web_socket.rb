@@ -1,6 +1,7 @@
 module Faye
   class WebSocket
     
+    include FrameParser
     include Publisher
     
     CONNECTING = 0
@@ -12,6 +13,8 @@ module Faye
     attr_accessor :onopen, :onmessage, :onerror, :onclose
     
     def initialize(request)
+      super
+      
       @request  = request
       @callback = @request.env['async.callback']
       @stream   = Stream.new
@@ -25,17 +28,9 @@ module Faye
       event.init_event('open', false, false)
       dispatch_event(event)
       
-      @buffer = []
-      @buffering = false
-      
       @request.env[Thin::Request::WEBSOCKET_RECEIVE_CALLBACK] = lambda do |data|
         data.each_char(&method(:handle_char))
       end
-    end
-    
-    def send(data)
-      string = ["\x00", data, "\xFF"].map(&method(:encode)) * ''
-      @stream.write(string)
     end
     
     def close
@@ -60,29 +55,16 @@ module Faye
     
   private
     
-    def handle_char(data)
-      case data
-        when "\x00" then
-          @buffering = true
-          
-        when "\xFF" then
-          event = Event.new
-          event.init_event('message', false, false)
-          event.data = encode(@buffer.join(''))
-          
-          dispatch_event(event)
-          
-          @buffer = []
-          @buffering = false
-          
-        else
-          @buffer.push(data) if @buffering
-      end
+    def on_message(data)
+      event = Event.new
+      event.init_event('message', false, false)
+      event.data = data
+      
+      dispatch_event(event)
     end
     
-    def encode(string, encoding = 'UTF-8')
-      return string unless string.respond_to?(:force_encoding)
-      string.force_encoding(encoding)
+    def send_data(data)
+      @stream.write(data)
     end
     
   end

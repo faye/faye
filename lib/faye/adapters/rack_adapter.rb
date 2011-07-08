@@ -1,4 +1,3 @@
-require 'json'
 require 'rack'
 require 'thin'
 require 'cgi'
