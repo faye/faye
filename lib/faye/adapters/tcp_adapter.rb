@@ -26,10 +26,6 @@ module Faye
           send(JSON.dump(replies))
         end
       end
-      
-      def receive_data(data)
-        data.each_char(&method(:handle_char))
-      end
     end
     
   end

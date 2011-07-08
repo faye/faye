@@ -28,10 +28,6 @@ module Faye
       def on_message(data)
         parent.receive(JSON.parse(data))
       end
-      
-      def receive_data(data)
-        data.each_char(&method(:handle_char))
-      end
     end
   end
   

@@ -7,6 +7,10 @@ module Faye
       @buffering = false
     end
     
+    def receive_data(data)
+      data.each_char(&method(:handle_char))
+    end
+    
     def handle_char(data)
       case data
         when "\x00" then

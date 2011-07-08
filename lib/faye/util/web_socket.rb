@@ -28,9 +28,7 @@ module Faye
       event.init_event('open', false, false)
       dispatch_event(event)
       
-      @request.env[Thin::Request::WEBSOCKET_RECEIVE_CALLBACK] = lambda do |data|
-        data.each_char(&method(:handle_char))
-      end
+      @request.env[Thin::Request::WEBSOCKET_RECEIVE_CALLBACK] = method(:receive_data)
     end
     
     def close
