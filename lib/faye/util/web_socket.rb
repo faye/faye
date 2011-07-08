@@ -65,41 +65,40 @@ module Faye
       @stream.write(data)
     end
     
+    class Stream
+      include EventMachine::Deferrable
+      
+      def each(&callback)
+        @data_callback = callback
+      end
+      
+      def write(data)
+        return unless @data_callback
+        @data_callback.call(data)
+      end
+    end
+    
+    class Event
+      attr_reader   :type, :bubbles, :cancelable
+      attr_accessor :target, :current_target, :event_phase, :data
+      
+      CAPTURING_PHASE = 1
+      AT_TARGET       = 2
+      BUBBLING_PHASE  = 3
+      
+      def init_event(event_type, can_bubble, cancelable)
+        @type       = event_type
+        @bubbles    = can_bubble
+        @cancelable = cancelable
+      end
+      
+      def stop_propagation
+      end
+      
+      def prevent_default
+      end
+    end
+    
   end
-  
-  class WebSocket::Stream
-    include EventMachine::Deferrable
-    
-    def each(&callback)
-      @data_callback = callback
-    end
-    
-    def write(data)
-      return unless @data_callback
-      @data_callback.call(data)
-    end
-  end
-  
-  class WebSocket::Event
-    attr_reader   :type, :bubbles, :cancelable
-    attr_accessor :target, :current_target, :event_phase, :data
-    
-    CAPTURING_PHASE = 1
-    AT_TARGET       = 2
-    BUBBLING_PHASE  = 3
-    
-    def init_event(event_type, can_bubble, cancelable)
-      @type       = event_type
-      @bubbles    = can_bubble
-      @cancelable = cancelable
-    end
-    
-    def stop_propagation
-    end
-    
-    def prevent_default
-    end
-  end
-  
 end
 
