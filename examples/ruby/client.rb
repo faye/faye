@@ -1,8 +1,8 @@
 # This script demonstrates a logger for the chat app. First, start
 # the chat server in one terminal then run this in another:
 # 
-#   $ rackup examples/rack/config.ru -s thin -E production
-#   $ ruby examples/rack/client.rb
+#   $ rackup examples/ruby/config.ru -s thin -E production
+#   $ ruby examples/ruby/client.rb
 # 
 # The client connects to the chat server and logs all messages
 # sent by all connected users.

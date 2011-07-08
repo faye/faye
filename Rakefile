@@ -2,7 +2,7 @@ require 'rubygems'
 require './lib/faye'
 
 task :example, :port do |t, args|
-  system "rackup -s thin -E production -p #{args[:port]} examples/rack/config.ru"
+  system "rackup -s thin -E production -p #{args[:port]} examples/ruby/config.ru"
 end
 
 task :handshake, :port, :n, :c do |t, args|
