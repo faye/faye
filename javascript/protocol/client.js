@@ -10,7 +10,7 @@ Faye.Client = Faye.Class({
   
   CONNECTION_TIMEOUT:   <%= Faye::Client::CONNECTION_TIMEOUT %>,
   
-  DEFAULT_ENDPOINT:     '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
+  DEFAULT_ENDPOINT:     '<%= Faye::Adapter::Http::DEFAULT_ENDPOINT %>',
   INTERVAL:             <%= Faye::Engine::INTERVAL %>,
   
   initialize: function(endpoint, options) {
