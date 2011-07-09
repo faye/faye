@@ -1,8 +1,8 @@
 # This script demonstrates a logger for the chat app. First, start
 # the chat server in one terminal then run this in another:
 # 
-#   $ ruby examples/rack/server.rb
-#   $ ruby examples/rack/client.rb
+#   $ ruby examples/ruby/server.rb
+#   $ ruby examples/ruby/client.rb
 # 
 # The client connects to the chat server and logs all messages
 # sent by all connected users.

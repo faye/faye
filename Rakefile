@@ -2,7 +2,7 @@ require 'rubygems'
 require './lib/faye'
 
 task :example, :port do |t, args|
-  exec "ruby examples/rack/server.rb #{args[:port]}"
+  exec "ruby examples/ruby/server.rb #{args[:port]}"
 end
 
 task :handshake, :port, :n, :c do |t, args|
