@@ -9,11 +9,11 @@ messages that mention you using the <tt>@username</tt> syntax.
 == Running the demo
 
 There are two backends that handle message routing; one for Node.js and one for
-Rack. To run the Node.js version:
+Ruby. To run the Node.js version:
 
-  node examples/node/app.js 8000
+  node examples/node/server.js 8000
 
-To run the Rack version, start a Redis server on your local machine and run:
+To run the Ruby version, start a Redis server on your local machine and run:
 
   bundle install
   rake example[8000]
