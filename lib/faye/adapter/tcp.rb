@@ -4,16 +4,22 @@ module Faye
     include Adapter::Common
     DEFAULT_HOST = 'localhost'
     
-    CONNECTION_TYPES = %w[tcp]
+    CONNECTION_TYPES = %w[tcp in-process]
 
     def initialize(options)
       @server = Server.new(CONNECTION_TYPES, options)
     end
     
     def listen(port, host = DEFAULT_HOST)
-      EventMachine.run do
-        EventMachine.start_server(host, port, Connection, &method(:setup_connection))
+      if EventMachine.reactor_running?
+        start(port, host)
+      else
+        EventMachine.run { start(port, host) }
       end
+    end
+    
+    def start(port, host = DEFAULT_HOST)
+      EventMachine.start_server(host, port, Connection, &method(:setup_connection))
     end
     
     def setup_connection(connection)

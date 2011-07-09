@@ -14,7 +14,7 @@ module Faye
     
     DEFAULT_ENDPOINT  = '/bayeux'
     SCRIPT_PATH       = File.join(ROOT, 'faye-browser-min.js')
-    CONNECTION_TYPES  = %w[long-polling callback-polling websocket cross-origin-long-polling]
+    CONNECTION_TYPES  = %w[long-polling callback-polling websocket cross-origin-long-polling in-process]
     
     TYPE_JSON   = {'Content-Type' => 'application/json'}
     TYPE_SCRIPT = {'Content-Type' => 'text/javascript'}
