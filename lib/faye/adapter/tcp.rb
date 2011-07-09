@@ -4,8 +4,10 @@ module Faye
     include Adapter::Common
     DEFAULT_HOST = 'localhost'
     
+    CONNECTION_TYPES = %w[tcp]
+
     def initialize(options)
-      @server = Server.new(options)
+      @server = Server.new(CONNECTION_TYPES, options)
     end
     
     def listen(port, host = DEFAULT_HOST)

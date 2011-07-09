@@ -17,7 +17,8 @@ describe Faye::Adapter::Http do
   let(:status)                { last_response.status.to_i }
   
   before do
-    Faye::Server.should_receive(:new).with(options).and_return server
+    types = Faye::Adapter::Http::CONNECTION_TYPES
+    Faye::Server.should_receive(:new).with(types, options).and_return server
     adapter.stub(:get_client).and_return mock("client")
   end
   

@@ -14,6 +14,7 @@ module Faye
     
     DEFAULT_ENDPOINT  = '/bayeux'
     SCRIPT_PATH       = File.join(ROOT, 'faye-browser-min.js')
+    CONNECTION_TYPES  = %w[long-polling callback-polling websocket cross-origin-long-polling]
     
     TYPE_JSON   = {'Content-Type' => 'application/json'}
     TYPE_SCRIPT = {'Content-Type' => 'text/javascript'}
@@ -25,7 +26,7 @@ module Faye
       
       @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
       @endpoint_re = Regexp.new('^' + @endpoint + '(/[^/]*)*(\\.js)?$')
-      @server      = Server.new(@options)
+      @server      = Server.new(CONNECTION_TYPES, @options)
       
       return unless extensions = @options[:extensions]
       [*extensions].each { |extension| add_extension(extension) }

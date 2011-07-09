@@ -11,7 +11,6 @@ module Faye
   BAYEUX_VERSION   = '1.0'
   ID_LENGTH        = 128
   JSONP_CALLBACK   = 'jsonpcallback'
-  CONNECTION_TYPES = %w[long-polling callback-polling websocket cross-origin-long-polling tcp in-process]
   
   MANDATORY_CONNECTION_TYPES = %w[long-polling callback-polling tcp in-process]
   

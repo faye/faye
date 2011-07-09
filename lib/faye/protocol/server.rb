@@ -4,11 +4,12 @@ module Faye
     include Logging
     include Extensible
     
-    def initialize(options = {})
-      @options    = options || {}
+    def initialize(connection_types = [], options = {})
+      @connection_types = connection_types
+      @options = options || {}
       engine_opts = @options[:engine] || {}
       engine_opts[:timeout] = @options[:timeout]
-      @engine     = Faye::Engine.get(engine_opts)
+      @engine = Faye::Engine.get(engine_opts)
 
       info 'Created new server: ?', @options
     end
@@ -124,10 +125,10 @@ module Faye
       client_conns = message['supportedConnectionTypes']
       
       unless local
-        response['supportedConnectionTypes'] = CONNECTION_TYPES
+        response['supportedConnectionTypes'] = @connection_types
         
         if client_conns
-          common_conns = client_conns.select { |c| CONNECTION_TYPES.include?(c) }
+          common_conns = client_conns.select { |c| @connection_types.include?(c) }
           response['error'] = Error.conntype_mismatch(*client_conns) if common_conns.empty?
         else
           response['error'] = Error.parameter_missing('supportedConnectionTypes')
@@ -156,7 +157,7 @@ module Faye
         response['error'] = Error.client_unknown(client_id) unless exists
         response['error'] = Error.parameter_missing('clientId') if client_id.nil?
         
-        unless CONNECTION_TYPES.include?(connection_type)
+        unless @connection_types.include?(connection_type)
           response['error'] = Error.conntype_mismatch(connection_type)
         end
         

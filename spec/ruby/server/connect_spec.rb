@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe "server connect" do
   let(:engine) { mock "engine" }
-  let(:server) { Faye::Server.new }
+  let(:server) { Faye::Server.new %w[long-polling] }
   
   before do
     Faye::Engine.stub(:get).and_return engine
