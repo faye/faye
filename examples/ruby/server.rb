@@ -10,7 +10,7 @@ http = Faye::Adapter::Http.new(Sinatra::Application,
   :engine  => {:type => 'redis'}
 )
 
-tcp = Faye::Adapter::Tcp.new(:engine => {:type => 'redis'})
+tcp = Faye::Adapter::Tcp.new(:engine => http.engine)
 
 port = (ARGV[0] || 9292).to_i
 

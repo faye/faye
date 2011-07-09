@@ -4,12 +4,19 @@ module Faye
     include Logging
     include Extensible
     
+    attr_reader :engine
+    
     def initialize(connection_types = [], options = {})
       @connection_types = connection_types
       @options = options || {}
+      
       engine_opts = @options[:engine] || {}
-      engine_opts[:timeout] = @options[:timeout]
-      @engine = Faye::Engine.get(engine_opts)
+      if engine_opts.is_a?(Hash)
+        engine_opts[:timeout] = @options[:timeout]
+        @engine = Faye::Engine.get(engine_opts)
+      else
+        @engine = engine_opts
+      end
 
       info 'Created new server: ?', @options
     end
