@@ -34,13 +34,14 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       self.emptyQueue(message);
     });
     
-    setInterval(function() { self.gc() }, gc * 1000);
+    this._gc = setInterval(function() { self.gc() }, gc * 1000);
   },
   
   disconnect: function() {
     this._redis.end();
     this._subscriber.unsubscribe();
     this._subscriber.end();
+    clearInterval(this._gc);
   },
   
   createClient: function(callback, scope) {

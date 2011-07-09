@@ -6,16 +6,32 @@
     
     All Faye clients need a central messaging server to communicate with; the
     server records which clients are subscribed to which channels and handles
-    routing of messages between clients. Setting up a server under Node.js is
+    routing of messages between clients. Setting up a server in Node.js is
     simple:
     
     <pre class="prettyprint">var http = require('http'),
         faye = require('faye');
     
-    var bayeux = new faye.NodeAdapter({
-      mount:    '/faye',
-      timeout:  45
-    });
+    var bayeux = new faye.NodeAdapter({mount: '/faye', timeout: 45});
+    bayeux.listen(8000);</pre>
+    
+    The @NodeAdapter@ class supports these options during setup:
+    
+    * @mount@: the path on the host at which the Faye service is available. In
+      this example, clients would connect to @http://localhost:8000/faye@ to
+      talk to the server.
+    * @timeout@: the maximum time to hold a connection open before returning the
+      response. This is given in seconds and must be smaller than the timeout on
+      your frontend webserver.
+    
+    Faye can also be attached to an existing HTTP server using the @attach()@
+    method. It will handle all requests to paths matching the @mount@ path and
+    delegate all other requests to your handlers.
+    
+    <pre class="prettyprint">var http = require('http'),
+        faye = require('faye');
+    
+    var bayeux = new faye.NodeAdapter({mount: '/faye', timeout: 45});
     
     // Handle non-Bayeux requests
     var server = http.createServer(function(request, response) {
@@ -26,15 +42,6 @@
     
     bayeux.attach(server);
     server.listen(8000);</pre>
-    
-    The @NodeAdapter@ class supports these options during setup:
-    
-    * @mount@: the path on the host at which the Faye service is available. In
-      this example, clients would connect to @http://localhost:8000/faye@ to
-      talk to the server.
-    * @timeout@: the maximum time to hold a connection open before returning the
-      response. This is given in seconds and must be smaller than the timeout on
-      your frontend webserver.
     
     h4. Notes
     

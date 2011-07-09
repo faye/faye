@@ -6,28 +6,29 @@
     
     All Faye clients need a central messaging server to communicate with; the
     server records which clients are subscribed to which channels and handles
-    routing of messages between clients. Setting up a server under Rack is simple:
+    routing of messages between clients. Setting up a server in Ruby is simple:
     
-    <pre class="prettyprint"># config.ru
-    require 'faye'
+    <pre class="prettyprint">require 'faye'
     
-    faye_server = Faye::Adapter::Http.new(:mount => '/faye', :timeout => 45)
-    run faye_server</pre>
+    bayeux = Faye::Adapter::Http.new(:mount => '/faye', :timeout => 25)
+    bayeux.listen(9292)</pre>
     
-    The @Adapter::Http@ class supports these options during setup:
+    @bayeux.listen@ will block if EventMachine is not already running. The
+    @Adapter::Http@ class supports these options during setup:
     
     * @:mount@: the path on the host at which the Faye service is available. In
       this example, clients would connect to @http://localhost:9292/faye@ to
       talk to the server.
     * @:timeout@: the maximum time to hold a connection open before returning
       the response. This is given in seconds and must be smaller than the
-      timeout on your frontend webserver.
+      timeout on your frontend webserver. Faye uses Thin as its webserver, whose
+      default timeout is 30 seconds.
     * @:extensions@: (optional) a list of extensions to add to the server,
       useful when using @Adapter::Http@ as middleware.
     * @:engine@: (optional) the type and parameters for the engine you want to
       use - see 'Engines' below.
     
-    Faye can also be setup as middleware, for example in front of a Sinatra
+    Faye can also be setup as Rack middleware, for example in front of a Sinatra
     application:
     
     <pre class="prettyprint"># config.ru
@@ -35,7 +36,7 @@
     require File.dirname(__FILE__) + '/app'
     
     use Faye::Adapter::Http, :mount      => '/faye',
-                             :timeout    => 45,
+                             :timeout    => 25,
                              :extensions => [MyExtension.new]
     
     run Sinatra::Application</pre>
@@ -50,7 +51,9 @@
     Being an event-driven application, Faye only works with event-driven servers.
     It currently only supports Thin, and makes some extensions to Thin in order
     to support WebSockets. If you use @rackup@ you'll need to specify Thin as
-    the web server:
+    the web server, and set the environment to @production@ so that Rack does
+    not load the development middlewares that are not compatible with Thin's
+    async protocol.
     
     <pre class="prettyprint">rackup config.ru -s thin -E production</pre>
     
@@ -69,9 +72,9 @@
     To use the Redis engine, pass the @:engine@ option when initializing the
     Faye server:
     
-    <pre class="prettyprint">faye_server = Faye::Adapter::Http.new(
+    <pre class="prettyprint">bayeux = Faye::Adapter::Http.new(
       :mount   => '/faye',
-      :timeout => 45,
+      :timeout => 25,
       :engine  => {
         :type       => 'redis',
         :host       => 'REDIS_HOST',
@@ -110,9 +113,9 @@
     without going over HTTP, and is thus more efficient. To send messages
     through the server just use the @#get_client@ method.
     
-    <pre class="prettyprint">faye_server.get_client.publish('/email/new', {
+    <pre class="prettyprint">bayeux.get_client.publish('/email/new', {
       'text'      => 'New email has arrived!',
-      'inboxSize' =>34
+      'inboxSize' => 34
     })</pre>
     
     h4. Extensions
@@ -171,7 +174,7 @@
       end
     end
     
-    faye_server.add_extension(ServerAuth.new)</pre>
+    bayeux.add_extension(ServerAuth.new)</pre>
     
     If you add an @error@ property to a message, the server will not process the
     message further and will simply return it to the sender, effectively

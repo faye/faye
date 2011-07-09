@@ -33,11 +33,12 @@ module Faye
           empty_queue(message) if topic == @ns + '/notifications'
         end
         
-        EventMachine.add_periodic_timer(gc, &method(:gc))
+        @gc = EventMachine.add_periodic_timer(gc, &method(:gc))
       end
       
       def disconnect
         @subscriber.unsubscribe(@ns + '/notifications')
+        EventMachine.cancel_timer(@gc)
       end
       
       def create_client(&callback)

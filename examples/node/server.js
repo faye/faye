@@ -1,12 +1,15 @@
 var fs    = require('fs'),
     path  = require('path'),
-    sys   = require('sys'),
     http  = require('http'),
     faye  = require('../../build/faye-node');
 
 var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
     bayeux     = new faye.NodeAdapter({mount: '/bayeux', timeout: 20}),
     port       = process.ARGV[2] || '8000';
+
+bayeux.getClient().subscribe('/chat/*', function(message) {
+  console.log('[' + message.user + ']: ' + message.message);
+});
 
 var server = http.createServer(function(request, response) {
   var path = (request.url === '/') ? '/index.html' : request.url;
@@ -21,5 +24,5 @@ var server = http.createServer(function(request, response) {
 bayeux.attach(server);
 server.listen(Number(port));
 
-sys.puts('Listening on ' + port);
+console.log('Listening on ' + port);
 
