@@ -5,6 +5,10 @@ module Faye
       endpoint.is_a?(Server)
     end
     
+    def batching?
+      false
+    end
+    
     def request(message, timeout)
       @endpoint.process(message, true) { |responses| receive(responses) }
     end
