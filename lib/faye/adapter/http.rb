@@ -13,6 +13,7 @@ module Faye
     ASYNC_RESPONSE = [-1, {}, []].freeze
     
     DEFAULT_ENDPOINT  = '/bayeux'
+    DEFAULT_HOST      = '0.0.0.0'
     SCRIPT_PATH       = File.join(ROOT, 'faye-browser-min.js')
     CONNECTION_TYPES  = %w[long-polling callback-polling websocket cross-origin-long-polling in-process]
     
@@ -32,9 +33,9 @@ module Faye
       [*extensions].each { |extension| add_extension(extension) }
     end
     
-    def listen(port)
+    def listen(port, host = DEFAULT_HOST)
       handler = Rack::Handler.get('thin')
-      handler.run(self, :Port => port)
+      handler.run(self, :Host => host, :Port => port)
     end
     
     def call(env)

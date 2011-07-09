@@ -2,7 +2,7 @@ module Faye
   class Adapter::Tcp
     
     include Adapter::Common
-    DEFAULT_HOST = 'localhost'
+    DEFAULT_HOST = '0.0.0.0'
     
     CONNECTION_TYPES = %w[tcp in-process]
 
