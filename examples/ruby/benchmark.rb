@@ -5,7 +5,7 @@ require File.expand_path(dir + '/../../lib/faye')
 
 ports = ARGV.map { |s| s.to_i }
 http  = "http://localhost:#{ports[0]}/bayeux"
-tcp   = {:host => 'localhost', :port => ports[-1] + 1}
+tcp   = {:port => ports[-1] + 1}
 
 client_a = Faye::Client.new(tcp)
 client_b = Faye::Client.new(tcp)

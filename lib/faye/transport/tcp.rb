@@ -3,9 +3,10 @@ module Faye
   class Transport::Tcp < Transport
     include EventMachine::Deferrable
     
-    UNCONNECTED = 1
-    CONNECTING  = 2
-    CONNECTED   = 3
+    DEFAULT_HOST = 'localhost'
+    UNCONNECTED  = 1
+    CONNECTING   = 2
+    CONNECTED    = 3
     
     def self.usable?(endpoint)
       endpoint.is_a?(Hash)
@@ -32,8 +33,9 @@ module Faye
       return unless @state == UNCONNECTED
       
       @state = CONNECTING
+      host = @endpoint[:host] || DEFAULT_HOST
       
-      EventMachine.connect(@endpoint[:host], @endpoint[:port], Connection) do |conn|
+      EventMachine.connect(host, @endpoint[:port], Connection) do |conn|
         conn.parent = self
         @connection = conn
       end
