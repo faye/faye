@@ -28,31 +28,37 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     this._socket = new WebSocket(Faye.Transport.WebSocket.getSocketUrl(this._endpoint));
     var self = this;
     
-    this._socket.onopen = function() {
-      delete self._timeout;
-      self._state = self.CONNECTED;
-      self.setDeferredStatus('succeeded', self._socket);
-    };
+    this._socket.onopen    = function() { self.onOpen() };
+    this._socket.onclose   = function() { self.onClose() };
+    this._socket.onmessage = function(event) { self.onMessage(event) };
+  },
+  
+  onOpen: function() {
+    delete this._timeout;
+    this._state = self.CONNECTED;
+    this.setDeferredStatus('succeeded', this._socket);
+  },
+  
+  onMessage: function(event) {
+    var messages = [].concat(JSON.parse(event.data));
+    Faye.each(messages, function(message) {
+      delete this._messages[message.id];
+    }, this);
+    this.receive(messages);
+  },
+  
+  onClose: function() {
+    var wasConnected = (this._state === this.CONNECTED),
+        self = this;
     
-    this._socket.onmessage = function(event) {
-      var messages = [].concat(JSON.parse(event.data));
-      Faye.each(messages, function(message) {
-        delete self._messages[message.id];
-      });
-      self.receive(messages);
-    };
+    this.setDeferredStatus('deferred');
+    this._state = this.UNCONNECTED;
+    delete this._socket;
     
-    this._socket.onclose = function() {
-      var wasConnected = (self._state === self.CONNECTED);
-      self.setDeferredStatus('deferred');
-      self._state = self.UNCONNECTED;
-      delete self._socket;
-      
-      if (wasConnected) return self.resend();
-      
-      Faye.ENV.setTimeout(function() { self.connect() }, 1000 * self._timeout);
-      self._timeout = self._timeout * 2;
-    };
+    if (wasConnected) return this.resend();
+    
+    Faye.ENV.setTimeout(function() { self.connect() }, 1000 * this._timeout);
+    this._timeout = this._timeout * 2;
   },
   
   resend: function() {
