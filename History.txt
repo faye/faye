@@ -1,4 +1,4 @@
-=== 0.6.3 / 2011-07-03
+=== 0.6.3 / 2011-07-10
 
 * Use sequential message IDs to reduce memory usage on the client side
 * Only send advice with handshake and connect responses
