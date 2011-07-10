@@ -2,6 +2,7 @@ require 'rubygems'
 
 dir = File.dirname(__FILE__)
 require File.expand_path(dir + '/../../lib/faye')
+require File.expand_path(dir + '/redis_pub_sub')
 
 ports = ARGV.map { |s| s.to_i }
 http  = "http://localhost:#{ports[0]}/bayeux"
@@ -32,11 +33,9 @@ EM.run {
     handle.call(client_b, message, '/socket/a')
   end
   
-  sub_a.callback do
-    sub_b.callback do
-      p :starting
-      client_a.publish '/socket/b', 'count' => 0
-    end
+  EM.add_timer 1 do
+    p :starting
+    client_a.publish '/socket/b', 'count' => 0
   end
 }
 
