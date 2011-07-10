@@ -206,7 +206,7 @@ Faye.Client = Faye.Class({
         
         var channels = [].concat(response.subscription);
         this.info('Subscription acknowledged for ? to ?', this._clientId, channels);
-        this._channels.subscribe(channels, callback, scope);
+        if (!force) this._channels.subscribe(channels, callback, scope);
         
         subscription.setDeferredStatus('succeeded');
       }, this);

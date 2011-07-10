@@ -3,6 +3,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   DEFAULT_PORT:     <%= Faye::Engine::Redis::DEFAULT_PORT %>,
   DEFAULT_DATABASE: <%= Faye::Engine::Redis::DEFAULT_DATABASE %>,
   DEFAULT_GC:       <%= Faye::Engine::Redis::DEFAULT_GC %>,
+  LOCK_TIMEOUT:     <%= Faye::Engine::Redis::LOCK_TIMEOUT %>,
   
   className: 'Engine.Redis',
 
@@ -144,12 +145,46 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   
   gc: function() {
     if (typeof this.timeout !== 'number') return;
+    this._withLock('gc', function(releaseLock) {
+      var cutoff = new Date().getTime() - 1000 * 2 * this.timeout,
+          self   = this;
+      
+      this._redis.zrangebyscore(this._ns + '/clients', 0, cutoff, function(error, clients) {
+        var i = 0, n = clients.length;
+        if (i === n) return releaseLock();
+        
+        Faye.each(clients, function(clientId) {
+          this.destroyClient(clientId, function() {
+            i += 1;
+            if (i === n) releaseLock();
+          }, this);
+        }, self);
+      });
+    }, this);
+  },
+  
+  _withLock: function(lockName, callback, scope) {
+    var lockKey     = this._ns + '/locks/' + lockName,
+        currentTime = new Date().getTime(),
+        expiry      = currentTime + this.LOCK_TIMEOUT * 1000 + 1;
+        self        = this;
     
-    var cutoff = new Date().getTime() - 1000 * 2 * this.timeout,
-        self   = this;
+    var releaseLock = function() {
+      if (new Date().getTime() < expiry) self._redis.del(lockKey);
+    };
     
-    this._redis.zrangebyscore(this._ns + '/clients', 0, cutoff, function(error, clients) {
-      Faye.each(clients, function(clientId) { self.destroyClient(clientId) });
+    this._redis.setnx(lockKey, expiry, function(error, set) {
+      if (set === 1) return callback.call(scope, releaseLock);
+      
+      self._redis.get(lockKey, function(error, timeout) {
+        var lockTimeout = parseInt(timeout, 10);
+        if (currentTime < lockTimeout) return;
+        
+        self._redis.getset(lockKey, expiry, function(error, oldValue) {
+          if (oldValue !== timeout) return;
+          callback.call(scope, releaseLock);
+        });
+      });
     });
   }
 });

@@ -158,11 +158,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         
         client.receiveMessage({advice: {reconnect: "handshake"}})
         
-        stubResponse({channel:    "/meta/handshake",
-                      successful: true,
-                      version:    "1.0",
+        stubResponse({channel:      "/meta/handshake",
+                      successful:   true,
+                      version:      "1.0",
                       supportedConnectionTypes: ["websocket"],
-                      clientId:   "reconnectid" })
+                      clientId:     "reconnectid",
+                      subscription: "/messages/foo" })  // tacked on to trigger subscribe() callback
       }})
       
       it("resends the subscriptions to the server", function() { with(this) {
