@@ -11,11 +11,6 @@ module Faye
       endpoint.is_a?(Hash)
     end
     
-    def initialize(*args)
-      super
-      connect
-    end
-    
     def batching?
       false
     end
@@ -39,18 +34,26 @@ module Faye
       @state = CONNECTING
       
       EventMachine.connect(@endpoint[:host], @endpoint[:port], Connection) do |conn|
-        @connection = conn
         conn.parent = self
-        
-        @state = CONNECTED
-        @timeout = nil
-        set_deferred_status(:succeeded, @connection)
+        @connection = conn
       end
     end
     
     def receive(messages)
       messages.each { |message| @messages.delete(message['id']) }
       super
+    end
+    
+    def on_open
+      @state = CONNECTED
+      @timeout = nil
+      set_deferred_status(:succeeded, @connection)
+    end
+    
+    def on_message(data)
+      messages = [JSON.parse(data)].flatten
+      messages.each { |message| @messages.delete(message['id']) }
+      receive(messages)
     end
     
     def on_close
@@ -74,8 +77,12 @@ module Faye
       include FrameParser
       attr_accessor :parent
       
+      def connection_completed
+        parent.on_open
+      end
+      
       def on_message(data)
-        parent.receive(JSON.parse(data))
+        parent.on_message(data)
       end
       
       def unbind
