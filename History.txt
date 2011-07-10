@@ -3,6 +3,7 @@
 * Use sequential message IDs to reduce memory usage on the client side
 * Only send advice with handshake and connect responses
 * Stop trying to publish /meta/* messages - no-one is listening and it breaks /**
+* Fix bug causing invalid listeners to appear after a client reconnection
 * Stop loading 'rubygems' within our library code
 * Make sure we only queue a message for each client once in the Redis engine
 * Use lists instead of sets for message queues in Redis
