@@ -1,4 +1,5 @@
 === 0.6.3 / 2011-07-10
+TestSwarm build: http://swarm.jcoglan.com/job/69/
 
 * Use sequential message IDs to reduce memory usage on the client side
 * Only send advice with handshake and connect responses
