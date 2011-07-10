@@ -20,6 +20,13 @@ module Faye
     autoload :Tcp,    File.join(ROOT, 'faye', 'adapter', 'tcp')
   end
   
+  class RackAdapter
+    def self.new(*args)
+      warn 'Faye::RackAdapter is deprecated and will be removed in version 0.8. Please use Faye::Adapter::Http instead.'
+      Adapter::Http.new(*args)
+    end
+  end
+  
   autoload :FrameParser, File.join(ROOT, 'faye', 'util', 'frame_parser')
   autoload :WebSocket,   File.join(ROOT, 'faye', 'util', 'web_socket')
   
