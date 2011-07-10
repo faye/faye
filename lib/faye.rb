@@ -12,7 +12,7 @@ module Faye
   ID_LENGTH        = 128
   JSONP_CALLBACK   = 'jsonpcallback'
   
-  MANDATORY_CONNECTION_TYPES = %w[long-polling callback-polling tcp in-process]
+  MANDATORY_CONNECTION_TYPES = %w[long-polling callback-polling redis tcp in-process]
   
   module Adapter
     autoload :Common, File.join(ROOT, 'faye', 'adapter', 'common')
@@ -47,6 +47,7 @@ module Faye
       transport/transport
       transport/local
       transport/http
+      transport/redis
       transport/tcp
       error
       
