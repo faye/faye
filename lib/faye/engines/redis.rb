@@ -5,7 +5,8 @@ module Faye
       DEFAULT_HOST     = 'localhost'
       DEFAULT_PORT     = 6379
       DEFAULT_DATABASE = 0
-      DEFAULT_GC       = 10
+      DEFAULT_GC       = 60
+      LOCK_TIMEOUT     = 120
       
       def init
         return if @redis
@@ -147,10 +148,46 @@ module Faye
       
       def gc
         return unless Numeric === @timeout
+        with_lock 'gc' do |release_lock|
+          cutoff = Time.now.to_i - 2 * @timeout
+          @redis.zrangebyscore(@ns + '/clients', 0, cutoff) do |clients|
+            i, n = 0, clients.size
+            if i == n
+              release_lock.call
+            else
+              clients.each do |client_id|
+                destroy_client(client_id) do
+                  i += 1
+                  release_lock.call if i == n
+                end
+              end
+            end
+          end
+        end
+      end
+      
+      def with_lock(lock_name, &block)
+        lock_key     = @ns + '/locks/' + lock_name
+        current_time = Time.now.to_i * 1000
+        expiry       = current_time + LOCK_TIMEOUT * 1000 + 1
         
-        cutoff = Time.now.to_i - 2 * @timeout
-        @redis.zrangebyscore(@ns + '/clients', 0, cutoff) do |clients|
-          clients.each { |client_id| destroy_client(client_id) }
+        release_lock = lambda do
+          @redis.del(lock_key) if Time.now.to_i * 1000 < expiry
+        end
+        
+        @redis.setnx(lock_key, expiry) do |set|
+          if set == 1
+            block.call(release_lock)
+          else
+            @redis.get(lock_key) do |timeout|
+              lock_timeout = timeout.to_i(10)
+              if lock_timeout < current_time
+                @redis.getset(lock_key, expiry) do |old_value|
+                  block.call(release_lock) if old_value == timeout
+                end
+              end
+            end
+          end
         end
       end
     end
