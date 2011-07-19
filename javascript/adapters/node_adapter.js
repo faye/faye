@@ -3,6 +3,7 @@ var path  = require('path'),
     sys   = require('sys'),
     url   = require('url'),
     http  = require('http'),
+    https = require('https'),
     querystring = require('querystring');
 
 Faye.logger = function(message) {
