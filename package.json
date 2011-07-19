@@ -5,7 +5,7 @@
 , "keywords"      : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
 
 , "version"       : "0.6.3"
-, "engines"       : {"node": ">=0.1.96"}
+, "engines"       : {"node": ">=0.3.6"}
 , "main"          : "./faye-node"
 , "dependencies"  : {"redis": ""}
 
