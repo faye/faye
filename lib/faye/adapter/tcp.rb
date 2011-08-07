@@ -35,6 +35,7 @@ module Faye
         server.process(message, false) do |replies|
           send(JSON.dump(replies))
         end
+      rescue
       end
     end
     
