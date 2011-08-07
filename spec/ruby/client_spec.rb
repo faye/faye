@@ -47,7 +47,7 @@ describe Faye::Client do
   describe :initialize do
     it "creates a transport the server must support" do
       Faye::Transport.should_receive(:get).with(instance_of(Faye::Client),
-                                                ["long-polling", "callback-polling", "tcp", "in-process"]).
+                                                ["long-polling", "callback-polling", "redis", "tcp", "in-process"]).
                                            and_return(transport)
       Faye::Client.new("http://localhost/")
     end
