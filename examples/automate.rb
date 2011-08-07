@@ -1,10 +1,10 @@
 #================================================================
-# Load Terminus and the example application
+# Load the example application
 
 dir = ::File.expand_path(::File.dirname(__FILE__))
 $LOAD_PATH.unshift(dir + '/../lib')
-require dir + '/../vendor/terminus/lib/terminus'
-require dir + '/rack/app'
+require 'faye'
+require dir + '/ruby/app'
 
 #================================================================
 # Build the application stack with Faye in front of our app
@@ -18,9 +18,10 @@ application = Rack::Builder.new {
 # Load and configure Capybara
 
 require 'capybara/dsl'
+require 'terminus'
 Capybara.current_driver = :terminus
 Capybara.app = application.to_app
-extend Capybara
+extend Capybara::DSL
 
 #================================================================
 # Acquire some browsers and log into each with a username
