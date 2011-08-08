@@ -4,7 +4,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         secure   = (uri.protocol === 'https:'),
         port     = (secure ? 443 : 80),
         client   = http.createClient(uri.port || port, uri.hostname, secure),
-        content  = JSON.stringify(message),
+        content  = new Buffer(JSON.stringify(message)),
         response = null,
         retry    = this.retry(message, timeout),
         self     = this;
