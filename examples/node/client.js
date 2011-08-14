@@ -18,8 +18,8 @@ client.subscribe('/chat/*', function(message) {
   var user = message.user;
   
   client.publish('/members/' + user, {
-    user:   'node-logger',
-    message:  'Got your message, ' + user + '!'
+    user:     'node-logger',
+    message:  ' Got your message, ' + user + '!'
   });
 });
 
