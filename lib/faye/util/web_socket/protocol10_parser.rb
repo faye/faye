@@ -37,7 +37,7 @@ module Faye
           mask_key       = data[(2+offset)...payload_offset]
           mask_octets    = (0..3).map { |i| getbyte(mask_key, i) }
         else
-          payload_offset = offset
+          payload_offset = 2 + offset
           mask_octets    = []
         end
         
