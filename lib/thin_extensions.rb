@@ -147,7 +147,7 @@ class Thin::Request
       sec_key = @request.env['HTTP_SEC_WEBSOCKET_KEY']
       return '' unless String === sec_key
       
-      accept = Base64.encode64(Digest::SHA1.digest(sec_key + GUID))
+      accept = Base64.encode64(Digest::SHA1.digest(sec_key + GUID)).strip
       
       upgrade =  "HTTP/1.1 101 Switching Protocols\r\n"
       upgrade << "Upgrade: websocket\r\n"
