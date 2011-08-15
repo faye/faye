@@ -59,7 +59,7 @@ module Faye
       end
       
       return handle_options(request) if env['REQUEST_METHOD'] == 'OPTIONS'
-      return handle_upgrade(request) if env['HTTP_UPGRADE'] == 'WebSocket'
+      return handle_upgrade(request) if env['HTTP_UPGRADE'] =~ /^WebSocket$/i
       return [200, TYPE_SCRIPT, File.new(SCRIPT_PATH)] if request.path_info =~ /\.js$/
       handle_request(request)
     end

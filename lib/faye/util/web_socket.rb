@@ -1,6 +1,9 @@
 module Faye
   class WebSocket
     
+    autoload :Protocol76Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol76_parser'
+    autoload :Protocol10Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol10_parser'
+    
     include Publisher
     
     CONNECTING = 0
@@ -8,7 +11,7 @@ module Faye
     CLOSING    = 2
     CLOSED     = 3
     
-    attr_reader   :url, :ready_state, :buffered_amount
+    attr_reader   :url, :ready_state
     attr_accessor :onopen, :onmessage, :onerror, :onclose
     
     def initialize(request)
@@ -19,23 +22,27 @@ module Faye
       
       @url = @request.env['websocket.url']
       @ready_state = OPEN
-      @buffered_amount = 0
       
       event = Event.new
       event.init_event('open', false, false)
       dispatch_event(event)
       
-      @buffer = []
-      @buffering = false
+      @parser = @request.env['HTTP_SEC_WEBSOCKET_VERSION'] ?
+                Protocol10Parser.new(self) :
+                Protocol76Parser.new(self)
       
-      @request.env[Thin::Request::WEBSOCKET_RECEIVE_CALLBACK] = lambda do |data|
-        data.each_char(&method(:handle_char))
-      end
+      @request.env[Thin::Request::WEBSOCKET_RECEIVE_CALLBACK] = @parser.method(:parse)
+    end
+    
+    def receive(data)
+      event = Event.new
+      event.init_event('message', false, false)
+      event.data = encode(data)
+      dispatch_event(event)
     end
     
     def send(data)
-      string = ["\x00", data, "\xFF"].map(&method(:encode)) * ''
-      @stream.write(string)
+      @stream.write(@parser.frame(encode(data)))
     end
     
     def close
@@ -59,26 +66,6 @@ module Faye
     end
     
   private
-    
-    def handle_char(data)
-      case data
-        when "\x00" then
-          @buffering = true
-          
-        when "\xFF" then
-          event = Event.new
-          event.init_event('message', false, false)
-          event.data = encode(@buffer.join(''))
-          
-          dispatch_event(event)
-          
-          @buffer = []
-          @buffering = false
-          
-        else
-          @buffer.push(data) if @buffering
-      end
-    end
     
     def encode(string, encoding = 'UTF-8')
       return string unless string.respond_to?(:force_encoding)

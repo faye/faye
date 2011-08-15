@@ -2,7 +2,7 @@
 # Based on code from the Cramp project
 # http://github.com/lifo/cramp
 
-# Copyright (c) 2009-2010 Pratik Naik
+# Copyright (c) 2009-2011 Pratik Naik
 # 
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -24,6 +24,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 require 'digest/md5'
+require 'digest/sha1'
 
 class Thin::Connection
   def receive_data(data)
@@ -55,7 +56,7 @@ class Thin::Request
   WEBSOCKET_RECEIVE_CALLBACK = 'websocket.receive_callback'.freeze
 
   def websocket?
-    @env['HTTP_CONNECTION'] == 'Upgrade' && @env['HTTP_UPGRADE'] == 'WebSocket'
+    @env['HTTP_CONNECTION'] == 'Upgrade' && ['WebSocket', 'websocket'].include?(@env['HTTP_UPGRADE'])
   end
   
   def secure_websocket?
@@ -68,11 +69,13 @@ class Thin::Request
 
   def websocket_url
     scheme = secure_websocket? ? 'wss:' : 'ws:'
-    @env['websocket.url'] = "#{ scheme }//#{ @env['HTTP_HOST'] }#{ @env['REQUEST_PATH'] }"
+    @env['websocket.url'] = "#{ scheme }//#{ @env['HTTP_HOST'] }#{ @env['REQUEST_URI'] }"
   end
 
   def websocket_upgrade_data
-    handler = if @env['HTTP_SEC_WEBSOCKET_KEY1'] and @env['HTTP_SEC_WEBSOCKET_KEY2']
+    handler = if @env['HTTP_SEC_WEBSOCKET_VERSION']
+      Protocol10
+    elsif @env['HTTP_SEC_WEBSOCKET_KEY1'] and @env['HTTP_SEC_WEBSOCKET_KEY2']
       Protocol76
     else
       Protocol75
@@ -134,6 +137,23 @@ class Thin::Request
         string << (number >> offset & 0xFF).chr
       end
       string
+    end
+  end
+  
+  class Protocol10 < WebSocketHandler
+    GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+    
+    def handshake
+      sec_key = @request.env['HTTP_SEC_WEBSOCKET_KEY']
+      return '' unless String === sec_key
+      
+      accept = Base64.encode64(Digest::SHA1.digest(sec_key + GUID))
+      
+      upgrade =  "HTTP/1.1 101 Switching Protocols\r\n"
+      upgrade << "Upgrade: websocket\r\n"
+      upgrade << "Connection: Upgrade\r\n"
+      upgrade << "Sec-WebSocket-Accept: #{accept}\r\n\r\n"
+      upgrade
     end
   end
 end
