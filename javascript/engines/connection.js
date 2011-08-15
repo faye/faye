@@ -3,11 +3,11 @@ Faye.Engine.Connection = Faye.Class({
     this._engine  = engine;
     this.id       = id;
     this._options = options;
-    this._inbox   = new Faye.Set();
+    this._inbox   = [];
   },
   
   deliver: function(message) {
-    if (!this._inbox.add(message)) return;
+    this._inbox.push(message);
     this._beginDeliveryTimeout();
   },
   
@@ -28,7 +28,7 @@ Faye.Engine.Connection = Faye.Class({
   
   flush: function() {
     this._releaseConnection();
-    this.setDeferredStatus('succeeded', this._inbox.toArray());
+    this.setDeferredStatus('succeeded', this._inbox);
   },
   
   _releaseConnection: function() {
@@ -39,7 +39,7 @@ Faye.Engine.Connection = Faye.Class({
   },
   
   _beginDeliveryTimeout: function() {
-    if (this._inbox.isEmpty()) return;
+    if (this._inbox.length === 0) return;
     this.addTimeout('delivery', this._engine.MAX_DELAY, this.flush, this);
   },
   

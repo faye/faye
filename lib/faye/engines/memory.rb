@@ -72,15 +72,20 @@ module Faye
       
       def publish(message)
         debug 'Publishing message ?', message
+        
         channels = Channel.expand(message['channel'])
+        clients  = Set.new
+        
         channels.each do |channel|
-          next unless clients = @channels[channel]
-          clients.each do |client_id|
-            debug 'Queueing for client ?: ?', client_id, message
-            @messages[client_id] ||= Set.new
-            @messages[client_id].add(message)
-            empty_queue(client_id)
-          end
+          next unless subs = @channels[channel]
+          subs.each(&clients.method(:add))
+        end
+        
+        clients.each do |client_id|
+          debug 'Queueing for client ?: ?', client_id, message
+          @messages[client_id] ||= []
+          @messages[client_id] << message
+          empty_queue(client_id)
         end
       end
       

@@ -78,17 +78,20 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     this.debug('Publishing message ?', message);
 
     var channels = Faye.Channel.expand(message.channel),
-        messages = this._messages;
+        messages = this._messages,
+        clients  = new Faye.Set();
     
     Faye.each(channels, function(channel) {
-      var clients = this._channels[channel];
-      if (!clients) return;
-      clients.forEach(function(clientId) {
-        this.debug('Queueing for client ?: ?', clientId, message);
-        messages[clientId] = messages[clientId] || new Faye.Set();
-        messages[clientId].add(message);
-        this.emptyQueue(clientId);
-      }, this);
+      var subs = this._channels[channel];
+      if (!subs) return;
+      subs.forEach(clients.add, clients);
+    }, this);
+    
+    clients.forEach(function(clientId) {
+      this.debug('Queueing for client ?: ?', clientId, message);
+      messages[clientId] = messages[clientId] || [];
+      messages[clientId].push(message);
+      this.emptyQueue(clientId);
     }, this);
   },
   
@@ -98,7 +101,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     
     if (!conn || !messages) return;
     delete this._messages[clientId];
-    messages.forEach(conn.deliver, conn);
+    Faye.each(messages, conn.deliver, conn);
   }
 });
 Faye.extend(Faye.Engine.Memory.prototype, Faye.Timeouts);
