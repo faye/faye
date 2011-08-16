@@ -13,6 +13,10 @@ module Faye
         @socket = web_socket
       end
       
+      def version
+        '10'
+      end
+      
       def parse(data)
         byte0  = getbyte(data, 0)
         final  = (byte0 & FIN) == FIN

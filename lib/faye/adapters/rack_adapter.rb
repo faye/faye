@@ -127,9 +127,9 @@ module Faye
       socket.onmessage = lambda do |message|
         begin
           message = JSON.parse(message.data)
-          debug 'Received via WebSocket: ?', message
+          debug "Received via WebSocket[#{socket.version}]: ?", message
           @server.process(message, false) do |replies|
-            debug 'Sending via WebSocket: ?', replies
+            debug "Sending via WebSocket[#{socket.version}]: ?", replies
             socket.send(JSON.unparse(replies))
           end
         rescue

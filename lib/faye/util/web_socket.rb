@@ -14,6 +14,9 @@ module Faye
     attr_reader   :url, :ready_state
     attr_accessor :onopen, :onmessage, :onerror, :onclose
     
+    extend Forwardable
+    def_delegators :@parser, :version
+    
     def initialize(request)
       @request  = request
       @callback = @request.env['async.callback']

@@ -8,6 +8,10 @@ module Faye
         @buffering = false
       end
       
+      def version
+        '76'
+      end
+      
       def parse(data)
         data.each_char(&method(:handle_char))
       end

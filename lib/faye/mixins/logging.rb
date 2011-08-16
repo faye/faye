@@ -4,6 +4,8 @@ module Faye
     attr_accessor :logger
   end
   
+  self.logger = method(:puts)
+  
   module Logging
     
     DEFAULT_LOG_LEVEL = :error
