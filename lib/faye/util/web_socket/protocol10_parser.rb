@@ -69,8 +69,7 @@ module Faye
         
         if masked
           payload_offset = 2 + offset + 4 
-          mask_key       = data[(2+offset)...payload_offset]
-          mask_octets    = (0..3).map { |i| getbyte(mask_key, i) }
+          mask_octets    = (0..3).map { |i| getbyte(data, 2 + offset + i) }
         else
           payload_offset = 2 + offset
           mask_octets    = []
@@ -146,9 +145,9 @@ module Faye
       
       def unmask(payload, mask_octets)
         return payload unless mask_octets.size > 0
-        unmasked = ' ' * payload.size
+        unmasked = ''
         (0...payload.size).each do |i|
-          unmasked[i] = (getbyte(payload, i) ^ mask_octets[i % 4]).chr
+          unmasked << (getbyte(payload, i) ^ mask_octets[i % 4]).chr
         end
         unmasked
       end

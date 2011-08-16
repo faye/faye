@@ -15,7 +15,8 @@
  **/
 
 var Buffer = require('buffer').Buffer,
-    crypto = require('crypto');
+    crypto = require('crypto'),
+    pack   = require('jspack').jspack;
 
 Faye.WebSocket = Faye.Class({
   onopen:     null,
@@ -38,6 +39,7 @@ Faye.WebSocket = Faye.Class({
     this._parser = new parser(this);
     
     this.readyState = Faye.WebSocket.OPEN;
+    this.version = this._parser.version;
     
     var event = new Faye.WebSocket.Event();
     event.initEvent('open', false, false);
@@ -57,8 +59,8 @@ Faye.WebSocket = Faye.Class({
     this.dispatchEvent(event);
   },
   
-  send: function(data) {
-    this._parser.frame(this._stream, data);
+  send: function(data, type) {
+    this._parser.frame(this._stream, data, type);
     return true;
   },
   

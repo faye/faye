@@ -69,6 +69,7 @@ Faye.extend(Faye, {
   },
   
   map: function(object, callback, scope) {
+    if (object.map) return object.map(callback, scope);
     var result = [];
     this.each(object, function() {
       result.push(callback.apply(scope || null, arguments));
