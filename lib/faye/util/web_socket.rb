@@ -1,6 +1,7 @@
 module Faye
   class WebSocket
     
+    autoload :Protocol75Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol75_parser'
     autoload :Protocol76Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol76_parser'
     autoload :Protocol10Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol10_parser'
     
@@ -17,6 +18,16 @@ module Faye
     extend Forwardable
     def_delegators :@parser, :version
     
+    def self.parser(request)
+      if request.env['HTTP_SEC_WEBSOCKET_VERSION']
+        Protocol10Parser
+      elsif request.env['HTTP_SEC_WEBSOCKET_KEY1']
+        Protocol76Parser
+      else
+        Protocol75Parser
+      end
+    end
+    
     def initialize(request)
       @request  = request
       @callback = @request.env['async.callback']
@@ -30,10 +41,7 @@ module Faye
       event.init_event('open', false, false)
       dispatch_event(event)
       
-      @parser = @request.env['HTTP_SEC_WEBSOCKET_VERSION'] ?
-                Protocol10Parser.new(self) :
-                Protocol76Parser.new(self)
-      
+      @parser = WebSocket.parser(@request).new(self)
       @request.env[Thin::Request::WEBSOCKET_RECEIVE_CALLBACK] = @parser.method(:parse)
     end
     

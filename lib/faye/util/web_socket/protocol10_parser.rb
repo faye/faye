@@ -1,7 +1,12 @@
+require 'base64'
+require 'digest/sha1'
+
 module Faye
   class WebSocket
     
     class Protocol10Parser
+      GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+      
       FIN = MASK = 0b10000000
       RSV1       = 0b01000000
       RSV2       = 0b00100000
@@ -17,6 +22,19 @@ module Faye
         :ping         => 9,
         :pong         => 10
       }
+      
+      def self.handshake(request)
+        sec_key = request.env['HTTP_SEC_WEBSOCKET_KEY']
+        return '' unless String === sec_key
+        
+        accept = Base64.encode64(Digest::SHA1.digest(sec_key + GUID)).strip
+        
+        upgrade =  "HTTP/1.1 101 Switching Protocols\r\n"
+        upgrade << "Upgrade: websocket\r\n"
+        upgrade << "Connection: Upgrade\r\n"
+        upgrade << "Sec-WebSocket-Accept: #{accept}\r\n\r\n"
+        upgrade
+      end
 
       def initialize(web_socket)
         reset
