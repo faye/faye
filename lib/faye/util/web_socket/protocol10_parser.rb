@@ -9,7 +9,17 @@ module Faye
       OPCODE     = 0b00001111
       LENGTH     = 0b01111111
       
+      OPCODES = {
+        :continuation => 0,
+        :text         => 1,
+        :binary       => 2,
+        :close        => 8,
+        :ping         => 9,
+        :pong         => 10
+      }
+
       def initialize(web_socket)
+        reset
         @socket = web_socket
       end
       
@@ -22,6 +32,9 @@ module Faye
         final  = (byte0 & FIN) == FIN
         opcode = (byte0 & OPCODE)
         
+        return @socket.send('', :close) unless OPCODES.values.include?(opcode)
+        reset unless opcode == OPCODES[:continuation]
+
         byte1  = getbyte(data, 1)
         masked = (byte1 & MASK) == MASK
         length = (byte1 & LENGTH)
@@ -46,15 +59,37 @@ module Faye
         end
         
         if getbyte(data, payload_offset + length)
-          # error, not eaten the whole frame
+          return @socket.send('', :close)
         end
         
-        payload = data[payload_offset...(payload_offset + length)]
-        @socket.receive(unmask(payload, mask_octets))
+        raw_payload = data[payload_offset...(payload_offset + length)]
+        payload     = unmask(raw_payload, mask_octets)
+
+        case opcode
+          when OPCODES[:continuation] then
+            return unless @mode == :text
+            @buffer << payload
+            if final
+              message = @buffer * ''
+              reset
+              @socket.receive(message)
+            end
+
+          when OPCODES[:text] then
+            if final
+              @socket.receive(payload)
+            else
+              @mode = :text
+              @buffer << payload
+            end
+
+          when OPCODES[:ping] then
+            @socket.send(payload, :pong)
+        end
       end
       
-      def frame(data)
-        opcode = 0b00000001
+      def frame(data, type = nil)
+        opcode = OPCODES[type || :text]
         frame  = (FIN | opcode).chr
         length = data.size
         
@@ -74,6 +109,11 @@ module Faye
       
     private
       
+      def reset
+        @buffer = []
+        @mode   = nil
+      end
+
       def getbyte(data, offset)
         data.respond_to?(:getbyte) ? data.getbyte(offset) : data[offset]
       end

@@ -16,7 +16,7 @@ module Faye
         data.each_char(&method(:handle_char))
       end
       
-      def frame(data)
+      def frame(data, type = nil)
         "\x00#{ data }\xFF"
       end
       

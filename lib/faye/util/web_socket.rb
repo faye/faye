@@ -44,8 +44,8 @@ module Faye
       dispatch_event(event)
     end
     
-    def send(data)
-      @stream.write(@parser.frame(encode(data)))
+    def send(data, type = nil)
+      @stream.write(@parser.frame(encode(data), type))
     end
     
     def close
