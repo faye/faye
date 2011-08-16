@@ -3,7 +3,7 @@ require 'digest/md5'
 module Faye
   class WebSocket
     
-    class Protocol76Parser < Protocol75Parser
+    class Draft76Parser < Draft75Parser
       class << self
         def handshake(request)
           key1   = request.env['HTTP_SEC_WEBSOCKET_KEY1']

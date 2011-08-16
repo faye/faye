@@ -1,8 +1,8 @@
 module Faye
   class WebSocket
     
-    autoload :Protocol75Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol75_parser'
-    autoload :Protocol76Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol76_parser'
+    autoload :Draft75Parser, File.expand_path('..', __FILE__) + '/web_socket/draft75_parser'
+    autoload :Draft76Parser, File.expand_path('..', __FILE__) + '/web_socket/draft76_parser'
     autoload :Protocol10Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol10_parser'
     
     include Publisher
@@ -22,9 +22,9 @@ module Faye
       if request.env['HTTP_SEC_WEBSOCKET_VERSION']
         Protocol10Parser
       elsif request.env['HTTP_SEC_WEBSOCKET_KEY1']
-        Protocol76Parser
+        Draft76Parser
       else
-        Protocol75Parser
+        Draft75Parser
       end
     end
     

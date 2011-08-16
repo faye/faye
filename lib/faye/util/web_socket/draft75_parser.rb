@@ -1,7 +1,7 @@
 module Faye
   class WebSocket
     
-    class Protocol75Parser
+    class Draft75Parser
       def self.handshake(request)
         upgrade =  "HTTP/1.1 101 Web Socket Protocol Handshake\r\n"
         upgrade << "Upgrade: WebSocket\r\n"
