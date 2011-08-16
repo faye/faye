@@ -18,7 +18,7 @@ module Faye
       end
       
       def version
-        '75'
+        'draft-75'
       end
       
       def parse(data)

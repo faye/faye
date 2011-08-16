@@ -45,7 +45,7 @@ module Faye
       end
       
       def version
-        '76'
+        'draft-76'
       end
     end
     

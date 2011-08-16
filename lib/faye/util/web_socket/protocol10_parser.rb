@@ -42,7 +42,7 @@ module Faye
       end
       
       def version
-        '10'
+        'protocol-10'
       end
       
       def parse(data)
