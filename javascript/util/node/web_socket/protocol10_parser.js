@@ -94,7 +94,7 @@ Faye.WebSocket.Protocol10Parser = Faye.Class({
   frame: function(socket, data, type) {
     var opcode = this.OPCODES[type || 'text'],
         frame  = String.fromCharCode(this.FIN | opcode),
-        length = data.length;
+        length = new Buffer(data).length;
     
     var fromCharCode = function(i) { return String.fromCharCode(i) };
     
