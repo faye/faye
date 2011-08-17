@@ -4,7 +4,7 @@ require 'digest/sha1'
 module Faye
   class WebSocket
     
-    class Protocol10Parser
+    class Protocol8Parser
       GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
       
       FIN = MASK = 0b10000000
@@ -42,7 +42,7 @@ module Faye
       end
       
       def version
-        'protocol-10'
+        'protocol-8'
       end
       
       def parse(data)

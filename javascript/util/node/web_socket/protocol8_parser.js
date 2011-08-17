@@ -1,11 +1,11 @@
-Faye.WebSocket.Protocol10Parser = Faye.Class({
-  FIN:    <%= Faye::WebSocket::Protocol10Parser::FIN %>,
-  MASK:   <%= Faye::WebSocket::Protocol10Parser::MASK %>,
-  RSV1:   <%= Faye::WebSocket::Protocol10Parser::RSV1 %>,
-  RSV2:   <%= Faye::WebSocket::Protocol10Parser::RSV2 %>,
-  RSV3:   <%= Faye::WebSocket::Protocol10Parser::RSV3 %>,
-  OPCODE: <%= Faye::WebSocket::Protocol10Parser::OPCODE %>,
-  LENGTH: <%= Faye::WebSocket::Protocol10Parser::LENGTH %>,
+Faye.WebSocket.Protocol8Parser = Faye.Class({
+  FIN:    <%= Faye::WebSocket::Protocol8Parser::FIN %>,
+  MASK:   <%= Faye::WebSocket::Protocol8Parser::MASK %>,
+  RSV1:   <%= Faye::WebSocket::Protocol8Parser::RSV1 %>,
+  RSV2:   <%= Faye::WebSocket::Protocol8Parser::RSV2 %>,
+  RSV3:   <%= Faye::WebSocket::Protocol8Parser::RSV3 %>,
+  OPCODE: <%= Faye::WebSocket::Protocol8Parser::OPCODE %>,
+  LENGTH: <%= Faye::WebSocket::Protocol8Parser::LENGTH %>,
   
   OPCODES: {
     continuation: 0,
@@ -16,7 +16,7 @@ Faye.WebSocket.Protocol10Parser = Faye.Class({
     pong:         10
   },
   
-  version: 'protocol-10',
+  version: 'protocol-8',
   
   initialize: function(webSocket) {
     this._reset();
@@ -134,7 +134,7 @@ Faye.WebSocket.Protocol10Parser = Faye.Class({
   }
 });
 
-Faye.WebSocket.Protocol10Parser.handshake = function(url, request, head, socket) {
+Faye.WebSocket.Protocol8Parser.handshake = function(url, request, head, socket) {
   var secKey = request.headers['sec-websocket-key'];
   if (!secKey) return;
   
@@ -154,5 +154,5 @@ Faye.WebSocket.Protocol10Parser.handshake = function(url, request, head, socket)
   }
 };
 
-Faye.WebSocket.Protocol10Parser.GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
+Faye.WebSocket.Protocol8Parser.GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 

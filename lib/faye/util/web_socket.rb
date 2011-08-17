@@ -3,7 +3,7 @@ module Faye
     
     autoload :Draft75Parser, File.expand_path('..', __FILE__) + '/web_socket/draft75_parser'
     autoload :Draft76Parser, File.expand_path('..', __FILE__) + '/web_socket/draft76_parser'
-    autoload :Protocol10Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol10_parser'
+    autoload :Protocol8Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol8_parser'
     
     include Publisher
     
@@ -20,7 +20,7 @@ module Faye
     
     def self.parser(request)
       if request.env['HTTP_SEC_WEBSOCKET_VERSION']
-        Protocol10Parser
+        Protocol8Parser
       elsif request.env['HTTP_SEC_WEBSOCKET_KEY1']
         Draft76Parser
       else

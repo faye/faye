@@ -111,7 +111,7 @@ Faye.extend(Faye.WebSocket, {
   getParser: function(request) {
     var headers = request.headers;
     return headers['sec-websocket-version']
-         ? this.Protocol10Parser
+         ? this.Protocol8Parser
          : (headers['sec-websocket-key1'] && headers['sec-websocket-key2'])
          ? this.Draft76Parser
          : this.Draft75Parser;

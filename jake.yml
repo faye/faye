@@ -35,7 +35,7 @@ packages:
       - util/node/web_socket
       - util/node/web_socket/draft75_parser
       - util/node/web_socket/draft76_parser
-      - util/node/web_socket/protocol10_parser
+      - util/node/web_socket/protocol8_parser
       - engines/base
       - engines/connection
       - engines/memory
