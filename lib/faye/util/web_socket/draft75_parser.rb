@@ -25,7 +25,7 @@ module Faye
         data.each_char(&method(:handle_char))
       end
       
-      def frame(data, type = nil)
+      def frame(data, type = nil, error_type = nil)
         "\x00#{ data }\xFF"
       end
       
