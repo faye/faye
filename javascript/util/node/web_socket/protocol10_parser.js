@@ -26,9 +26,16 @@ Faye.WebSocket.Protocol10Parser = Faye.Class({
   parse: function(data) {
     var byte0   = data[0],
         isFinal = (byte0 & this.FIN) === this.FIN,
-        opcode  = (byte0 & this.OPCODE);
+        opcode  = (byte0 & this.OPCODE),
+        valid   = false;
     
-    // handle opcode error
+    for (var key in this.OPCODES) {
+      if (this.OPCODES[key] === opcode)
+        valid = true;
+    }
+    if (!valid) {
+      return this._socket.send('', 'close');
+    }
     
     if (opcode !== this.OPCODES.continuation)
       this._reset();
@@ -56,7 +63,7 @@ Faye.WebSocket.Protocol10Parser = Faye.Class({
     }
     
     if (data[payloadOffset + length] !== undefined) {
-      // close the connection
+      return this._socket.send('', 'close');
     }
     
     var rawPayload = data.slice(payloadOffset, payloadOffset + length),
@@ -89,13 +96,17 @@ Faye.WebSocket.Protocol10Parser = Faye.Class({
         frame  = String.fromCharCode(this.FIN | opcode),
         length = data.length;
     
+    var fromCharCode = function(i) { return String.fromCharCode(i) };
+    
     if (length <= 125) {
       frame += String.fromCharCode(length);
     } else if (length >= 126 && length <= 65535) {
       frame += String.fromCharCode(126);
-      frame += Faye.map(pack.Pack('H', [length]), function(i) { return String.fromCharCode(i) }).join('');
+      frame += Faye.map(pack.Pack('H', [length]), fromCharCode).join('');
     } else {
-      // TODO
+      var sections = [Math.floor(length / Math.pow(2,32)), length & 0xFFFFFFFF];
+      frame += String.fromCharCode(127);
+      frame += Faye.map(pack.Pack('II', sections), fromCharCode).join('');
     }
     
     socket.write(frame, 'binary');
