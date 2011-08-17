@@ -1,3 +1,11 @@
+=== 0.6.4 / 2011-08-18
+TestSwarm build: http://swarm.jcoglan.com/job/96/
+
+* Support WebSocket protocol used by Chrome 14 and Firefox 6
+* Fix handling of multibyte characters in WebSocket messages on Node
+* Improve message routing in Node memory engine to avoid false duplicates
+
+
 === 0.6.3 / 2011-07-10
 TestSwarm build: http://swarm.jcoglan.com/job/69/
 

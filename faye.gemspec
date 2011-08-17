@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name              = "faye"
-  s.version           = "0.6.3"
+  s.version           = "0.6.4"
   s.summary           = "Simple pub/sub messaging for the web"
   s.author            = "James Coglan"
   s.email             = "jcoglan@gmail.com"
