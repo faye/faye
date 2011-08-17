@@ -16,7 +16,6 @@ job = TestSwarm::Job.create(
   :inject     => "spec/browser.html",
   
   :build      => [
-    "git submodule update --init --recursive",
     "cd vendor/js.class && jake",
     "rm -rf build",
     "jake"

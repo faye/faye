@@ -118,7 +118,7 @@ module Faye
         end
       end
       
-      def frame(data, type = nil, error_type)
+      def frame(data, type = nil, error_type = nil)
         return nil if @closed
         
         if error_type
