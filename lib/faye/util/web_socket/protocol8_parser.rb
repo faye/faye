@@ -23,6 +23,15 @@ module Faye
         :pong         => 10
       }
       
+      ERRORS = {
+        :normal_closure => 1000,
+        :going_away     => 1001,
+        :protocol_error => 1002,
+        :unacceptable   => 1003,
+        :too_large      => 1004,
+        :encoding_error => 1007
+      }
+      
       def self.handshake(request)
         sec_key = request.env['HTTP_SEC_WEBSOCKET_KEY']
         return '' unless String === sec_key
@@ -50,7 +59,7 @@ module Faye
         final  = (byte0 & FIN) == FIN
         opcode = (byte0 & OPCODE)
         
-        return close unless OPCODES.values.include?(opcode)
+        return close(:protocol_error) unless OPCODES.values.include?(opcode)
         reset unless opcode == OPCODES[:continuation]
 
         byte1  = getbyte(data, 1)
@@ -75,7 +84,7 @@ module Faye
           mask_octets    = []
         end
         
-        return close if getbyte(data, payload_offset + length)
+        return close(:too_large) if getbyte(data, payload_offset + length)
         
         raw_payload = data[payload_offset...(payload_offset + length)]
         payload     = unmask(raw_payload, mask_octets)
@@ -98,16 +107,23 @@ module Faye
               @buffer << payload
             end
 
+          when OPCODES[:binary] then
+            close(:unacceptable)
+
           when OPCODES[:close] then
-            close
+            close(:normal_closure)
 
           when OPCODES[:ping] then
             @socket.send(payload, :pong)
         end
       end
       
-      def frame(data, type = nil)
+      def frame(data, type = nil, error_type)
         return nil if @closed
+        
+        if error_type
+          data = [ERRORS[error_type]].pack('n') + data
+        end
         
         opcode = OPCODES[type || :text]
         frame  = (FIN | opcode).chr
@@ -134,9 +150,9 @@ module Faye
         @mode   = nil
       end
       
-      def close
+      def close(error_type)
         return if @closed
-        @socket.send('', :close)
+        @socket.send('', :close, error_type)
         @closed = true
       end
 

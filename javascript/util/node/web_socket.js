@@ -58,8 +58,8 @@ Faye.WebSocket = Faye.Class({
     this.dispatchEvent(event);
   },
   
-  send: function(data, type) {
-    this._parser.frame(this._stream, data, type);
+  send: function(data, type, errorType) {
+    this._parser.frame(this._stream, data, type, errorType);
     return true;
   },
   

@@ -52,8 +52,8 @@ module Faye
       dispatch_event(event)
     end
     
-    def send(data, type = nil)
-      frame = @parser.frame(encode(data), type)
+    def send(data, type = nil, error_type = nil)
+      frame = @parser.frame(encode(data), type, error_type)
       @stream.write(frame) if frame
     end
     
