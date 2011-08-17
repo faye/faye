@@ -25,7 +25,8 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     
     this._state = this.CONNECTING;
     
-    this._socket = new WebSocket(Faye.Transport.WebSocket.getSocketUrl(this._endpoint));
+    var ws = Faye.ENV.WebSocket || Faye.ENV.MozWebSocket;
+    this._socket = new ws(Faye.Transport.WebSocket.getSocketUrl(this._endpoint));
     var self = this;
     
     this._socket.onopen = function() {
@@ -67,12 +68,13 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   },
   
   isUsable: function(endpoint, callback, scope) {
-    if (!Faye.ENV.WebSocket) return callback.call(scope, false);
+    var ws = Faye.ENV.WebSocket || Faye.ENV.MozWebSocket;
+    if (!ws) return callback.call(scope, false);
     
     var connected = false,
         called    = false,
         socketUrl = this.getSocketUrl(endpoint),
-        socket    = new WebSocket(socketUrl);
+        socket    = new ws(socketUrl);
     
     socket.onopen = function() {
       connected = true;
