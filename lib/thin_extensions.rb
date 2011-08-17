@@ -53,7 +53,8 @@ class Thin::Request
   WEBSOCKET_RECEIVE_CALLBACK = 'websocket.receive_callback'.freeze
 
   def websocket?
-    @env['HTTP_CONNECTION'] == 'Upgrade' && ['WebSocket', 'websocket'].include?(@env['HTTP_UPGRADE'])
+    @env['HTTP_CONNECTION'].split(/\s*,\s*/).include?('Upgrade') and
+    ['WebSocket', 'websocket'].include?(@env['HTTP_UPGRADE'])
   end
   
   def secure_websocket?
