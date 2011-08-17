@@ -1,0 +1,36 @@
+#!/usr/bin/ruby1.8
+
+require 'rubygems'
+require 'testswarm/client'
+
+client  = TestSwarm::Client.new('http://swarm.jcoglan.com')
+project = client.project('faye', :auth => '6d26e250d81b32099fccc59db53a3a0e648f0e6d')
+
+job = TestSwarm::Job.create(
+  :rcs        => {
+    :type     => "git",
+    :url      => "git://github.com/jcoglan/faye.git"
+  },
+  :directory  => "/home/jcoglan/www/swarm.jcoglan.com/app/changeset/#{project.name}",
+  :diff       => ["javascript", "spec/javascript"],
+  :inject     => "spec/browser.html",
+  
+  :build      => [
+    "git submodule update --init --recursive",
+    "cd vendor/js.class",
+    "jake",
+    "cd ../..",
+    "rm -rf build",
+    "jake"
+  ]
+)
+
+exit unless job.new?
+
+path = "#{client.url}/changeset/#{project.name}/#{job.revision}"
+job.add_suite "Faye tests", "#{path}/spec/browser.html"
+
+project.submit_job "Faye Commit #{job.revision}", job,
+                   :browsers => "all",
+                   :max      => 5
+
