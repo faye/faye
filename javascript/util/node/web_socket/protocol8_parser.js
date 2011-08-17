@@ -117,7 +117,6 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       frame[frame.length - 2] = Math.floor(error / 256);
       frame[frame.length - 1] = error & 255;
     }
-    console.log([opcode, length, error, frame]);
     
     socket.write(frame, 'binary');
     socket.write(data, 'utf8');

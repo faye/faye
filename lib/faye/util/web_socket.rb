@@ -77,8 +77,6 @@ module Faye
       callback.call(event) if callback
     end
     
-  private
-    
     def encode(string, encoding = 'UTF-8')
       return string unless string.respond_to?(:force_encoding)
       string.force_encoding(encoding)

@@ -139,8 +139,9 @@ module Faye
             frame << 127.chr
             frame << [length >> 32, length & 0xFFFFFFFF].pack('NN')
         end
-        frame << data
-        frame
+        
+        @socket.encode(frame, 'UTF-8') +
+        @socket.encode(data, 'UTF-8')
       end
       
     private
