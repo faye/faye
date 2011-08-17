@@ -94,19 +94,26 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   
   frame: function(socket, data, type) {
     var opcode = this.OPCODES[type || 'text'],
-        frame  = String.fromCharCode(this.FIN | opcode),
-        length = new Buffer(data).length;
+        length = new Buffer(data).length,
+        frame, factor;
     
     if (length <= 125) {
-      frame += String.fromCharCode(length);
+      frame = new Buffer(2);
+      frame[1] = length;
     } else if (length >= 126 && length <= 65535) {
-      frame += String.fromCharCode(126);
-      frame += String.fromCharCode(pack.Pack('H', [length]));
+      frame = new Buffer(4);
+      frame[1] = 126;
+      frame[2] = Math.floor(length / 256);
+      frame[3] = length & 255;
     } else {
-      var sections = [Math.floor(length / Math.pow(2,32)), length & 0xFFFFFFFF];
-      frame += String.fromCharCode(127);
-      frame += String.fromCharCode(pack.Pack('II', sections));
+      frame = new Buffer(10);
+      frame[1] = 127;
+      for (var i = 0; i < 8; i++) {
+        factor = Math.pow(2, 8 * (8 - 1 - i));
+        frame[2+i] = Math.floor(length / factor) & 255;
+      }
     }
+    frame[0] = this.FIN | opcode;
     
     socket.write(frame, 'binary');
     socket.write(data, 'utf8');

@@ -15,8 +15,7 @@
  **/
 
 var Buffer = require('buffer').Buffer,
-    crypto = require('crypto'),
-    pack   = require('jspack').jspack;
+    crypto = require('crypto');
 
 Faye.WebSocket = Faye.Class({
   onopen:     null,

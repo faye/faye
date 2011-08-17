@@ -33,7 +33,6 @@ should get you up and running:
   # Install dependencies
   gem install bundler
   bundle install
-  npm install jspack
   npm install redis
   
   # Build test tools and Faye itself
