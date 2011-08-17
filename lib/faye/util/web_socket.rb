@@ -53,7 +53,8 @@ module Faye
     end
     
     def send(data, type = nil)
-      @stream.write(@parser.frame(encode(data), type))
+      frame = @parser.frame(encode(data), type)
+      @stream.write(frame) if frame
     end
     
     def close

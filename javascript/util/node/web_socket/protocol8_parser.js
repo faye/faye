@@ -93,6 +93,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   },
   
   frame: function(socket, data, type) {
+    if (this._closed) return;
+    
     var opcode = this.OPCODES[type || 'text'],
         length = new Buffer(data).length,
         frame, factor;
@@ -126,8 +128,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   
   _close: function() {
     if (this._closed) return;
-    this._closed = true;
     this._socket.send('', 'close');
+    this._closed = true;
   },
   
   _getInteger: function(data, offset, length) {

@@ -107,6 +107,8 @@ module Faye
       end
       
       def frame(data, type = nil)
+        return nil if @closed
+        
         opcode = OPCODES[type || :text]
         frame  = (FIN | opcode).chr
         length = data.size
@@ -134,8 +136,8 @@ module Faye
       
       def close
         return if @closed
-        @closed = true
         @socket.send('', :close)
+        @closed = true
       end
 
       def getbyte(data, offset)
