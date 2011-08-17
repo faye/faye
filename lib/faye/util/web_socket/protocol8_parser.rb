@@ -50,7 +50,7 @@ module Faye
         final  = (byte0 & FIN) == FIN
         opcode = (byte0 & OPCODE)
         
-        return @socket.send('', :close) unless OPCODES.values.include?(opcode)
+        return close unless OPCODES.values.include?(opcode)
         reset unless opcode == OPCODES[:continuation]
 
         byte1  = getbyte(data, 1)
@@ -75,9 +75,7 @@ module Faye
           mask_octets    = []
         end
         
-        if getbyte(data, payload_offset + length)
-          return @socket.send('', :close)
-        end
+        return close if getbyte(data, payload_offset + length)
         
         raw_payload = data[payload_offset...(payload_offset + length)]
         payload     = unmask(raw_payload, mask_octets)
@@ -99,6 +97,9 @@ module Faye
               @mode = :text
               @buffer << payload
             end
+
+          when OPCODES[:close] then
+            close
 
           when OPCODES[:ping] then
             @socket.send(payload, :pong)
@@ -129,6 +130,12 @@ module Faye
       def reset
         @buffer = []
         @mode   = nil
+      end
+      
+      def close
+        return if @closed
+        @closed = true
+        @socket.send('', :close)
       end
 
       def getbyte(data, offset)

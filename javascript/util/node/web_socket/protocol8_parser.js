@@ -33,9 +33,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       if (this.OPCODES[key] === opcode)
         valid = true;
     }
-    if (!valid) {
-      return this._socket.send('', 'close');
-    }
+    if (!valid) return this._close();
     
     if (opcode !== this.OPCODES.continuation)
       this._reset();
@@ -63,7 +61,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     }
     
     if (data[payloadOffset + length] !== undefined) {
-      return this._socket.send('', 'close');
+      return this._close();
     }
     
     var rawPayload = data.slice(payloadOffset, payloadOffset + length),
@@ -86,6 +84,9 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         this._buffer.push(payload);
       }
     }
+    else if (opcode === this.OPCODES.close) {
+      this._close();
+    }
     else if (opcode === this.OPCODES.ping) {
       this._socket.send(payload, 'pong');
     }
@@ -96,17 +97,15 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         frame  = String.fromCharCode(this.FIN | opcode),
         length = new Buffer(data).length;
     
-    var fromCharCode = function(i) { return String.fromCharCode(i) };
-    
     if (length <= 125) {
       frame += String.fromCharCode(length);
     } else if (length >= 126 && length <= 65535) {
       frame += String.fromCharCode(126);
-      frame += Faye.map(pack.Pack('H', [length]), fromCharCode).join('');
+      frame += String.fromCharCode(pack.Pack('H', [length]));
     } else {
       var sections = [Math.floor(length / Math.pow(2,32)), length & 0xFFFFFFFF];
       frame += String.fromCharCode(127);
-      frame += Faye.map(pack.Pack('II', sections), fromCharCode).join('');
+      frame += String.fromCharCode(pack.Pack('II', sections));
     }
     
     socket.write(frame, 'binary');
@@ -116,6 +115,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   _reset: function() {
     this._mode   = null;
     this._buffer = [];
+  },
+  
+  _close: function() {
+    if (this._closed) return;
+    this._closed = true;
+    this._socket.send('', 'close');
   },
   
   _getInteger: function(data, offset, length) {
