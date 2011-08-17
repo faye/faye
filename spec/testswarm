@@ -17,9 +17,7 @@ job = TestSwarm::Job.create(
   
   :build      => [
     "git submodule update --init --recursive",
-    "cd vendor/js.class",
-    "jake",
-    "cd ../..",
+    "cd vendor/js.class && jake",
     "rm -rf build",
     "jake"
   ]
