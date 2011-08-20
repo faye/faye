@@ -48,12 +48,12 @@ module Faye
     def receive(data)
       event = Event.new
       event.init_event('message', false, false)
-      event.data = encode(data)
+      event.data = Faye.encode(data)
       dispatch_event(event)
     end
     
     def send(data, type = nil, error_type = nil)
-      frame = @parser.frame(encode(data), type, error_type)
+      frame = @parser.frame(Faye.encode(data), type, error_type)
       @stream.write(frame) if frame
     end
     
@@ -75,11 +75,6 @@ module Faye
       publish_event(event.type, event)
       callback = __send__("on#{ event.type }")
       callback.call(event) if callback
-    end
-    
-    def encode(string, encoding = 'UTF-8')
-      return string unless string.respond_to?(:force_encoding)
-      string.force_encoding(encoding)
     end
     
   end

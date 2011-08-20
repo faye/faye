@@ -57,6 +57,11 @@ module Faye
     end
   end
   
+  def self.encode(string, encoding = 'UTF-8')
+    return string unless string.respond_to?(:force_encoding)
+    string.force_encoding(encoding)
+  end
+  
   def self.ensure_reactor_running!
     Thread.new { EM.run } unless EM.reactor_running?
     while not EM.reactor_running?; end

@@ -127,7 +127,7 @@ module Faye
         
         opcode = OPCODES[type || :text]
         frame  = (FIN | opcode).chr
-        length = data.size
+        length = data.respond_to?(:bytes) ? data.bytes.count : data.size
         
         case length
           when 0..125 then
@@ -140,7 +140,7 @@ module Faye
             frame << [length >> 32, length & 0xFFFFFFFF].pack('NN')
         end
         
-        @socket.encode(frame) + @socket.encode(data)
+        Faye.encode(frame) + Faye.encode(data)
       end
       
     private
