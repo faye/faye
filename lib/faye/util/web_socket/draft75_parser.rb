@@ -26,7 +26,7 @@ module Faye
       end
       
       def frame(data, type = nil, error_type = nil)
-        "\x00#{ data }\xFF"
+        ["\x00", data, "\xFF"].map(&@socket.method(:encode)) * ''
       end
       
     private
