@@ -55,6 +55,8 @@ module Faye
       end
       
       def parse(data)
+        limit  = data.respond_to?(:bytes) ? data.bytes.count : data.size
+        
         byte0  = getbyte(data, 0)
         final  = (byte0 & FIN) == FIN
         opcode = (byte0 & OPCODE)
@@ -84,7 +86,7 @@ module Faye
           mask_octets    = []
         end
         
-        return close(:too_large) if getbyte(data, payload_offset + length)
+        return close(:protocol_error) unless payload_offset + length == limit
         
         raw_payload = data[payload_offset...(payload_offset + length)]
         payload     = unmask(raw_payload, mask_octets)
@@ -96,12 +98,12 @@ module Faye
             if final
               message = @buffer * ''
               reset
-              @socket.receive(message)
+              @socket.receive(Faye.encode(message))
             end
 
           when OPCODES[:text] then
             if final
-              @socket.receive(payload)
+              @socket.receive(Faye.encode(payload))
             else
               @mode = :text
               @buffer << payload

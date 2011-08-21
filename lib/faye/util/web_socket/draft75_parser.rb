@@ -37,7 +37,7 @@ module Faye
             @buffering = true
             
           when "\xFF" then
-            @socket.receive(@buffer.join(''))
+            @socket.receive(Faye.encode(@buffer.join('')))
             @buffer = []
             @buffering = false
             
