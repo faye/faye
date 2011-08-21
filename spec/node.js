@@ -6,6 +6,21 @@ JS.Packages(function() { with(this) {
   autoload(/.*Spec/, {from: 'spec/javascript'})
 }})
 
+FakeSocket = function() {
+  this._fragments = []
+}
+FakeSocket.prototype.write = function(buffer, encoding) {
+  this._fragments.push([buffer, encoding])
+}
+FakeSocket.prototype.read = function() {
+  var output = []
+  this._fragments.forEach(function(buffer, i) {
+    for (var j = 0, n = buffer[0].length; j < n; j++)
+    output.push(buffer[0][j])
+  })
+  return output
+}
+
 JS.require('Faye', 'JS.Test', 'JS.Range', function() {
   JS.Test.Unit.Assertions.include({
     assertYield: function(expected) {
@@ -27,6 +42,8 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
               'Server.SubscribeSpec',
               'Server.UnsubscribeSpec',
               'Server.ExtensionsSpec',
+              'WebSocket.Draft75ParserSpec',
+              'WebSocket.Protocol8ParserSpec',
               'NodeAdapterSpec',
               'ClientSpec',
               'TransportSpec',

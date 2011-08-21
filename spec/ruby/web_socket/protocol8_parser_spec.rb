@@ -113,7 +113,7 @@ describe Faye::WebSocket::Protocol8Parser do
     
     it "encodes close frames with an error code" do
       frame = @parser.frame "Hello", :close, :protocol_error
-      bytes(frame).should == [0x88, 0x7, 0x03, 0xea, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
+      bytes(frame).should == [0x88, 0x07, 0x03, 0xea, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
     end
     
     it "encodes pong frames" do

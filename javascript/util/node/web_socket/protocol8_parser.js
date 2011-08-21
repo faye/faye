@@ -51,28 +51,27 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       maskOctets    = [];
     }
     
-    if (data[payloadOffset + length] !== undefined) {
-      return this._close('too_large');
-    }
+    if (payloadOffset + length !== data.length)
+      return this._close('protocol_error');
     
     var rawPayload = data.slice(payloadOffset, payloadOffset + length),
         payload    = this._unmask(rawPayload, maskOctets);
     
     if (opcode === this.OPCODES.continuation) {
       if (this._mode !== 'text') return;
-      this._buffer.push(payload);
+      this.buffer(payload);
       if (isFinal) {
-        var message = this._buffer.join('');
+        var message = new Buffer(this._buffer).toString('utf8', 0, this._buffer.length);
         this._reset();
         this._socket.receive(message);
       }
     }
     else if (opcode === this.OPCODES.text) {
       if (isFinal) {
-        this._socket.receive(payload);
+        this._socket.receive(payload.toString('utf8', 0, payload.length));
       } else {
         this._mode = 'text';
-        this._buffer.push(payload);
+        this.buffer(payload);
       }
     }
     else if (opcode === this.OPCODES.binary) {
@@ -82,7 +81,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       this._close('normal_closure');
     }
     else if (opcode === this.OPCODES.ping) {
-      this._socket.send(payload, 'pong');
+      this._socket.send(payload.toString('utf8', 0, payload.length), 'pong');
     }
   },
   
@@ -90,9 +89,10 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     if (this._closed) return;
     
     var opcode = this.OPCODES[type || 'text'],
-        length = new Buffer(data).length,
+        buffer = new Buffer(data),
         error  = this.ERRORS[errorType],
         insert = error ? 2 : 0,
+        length = buffer.length + insert,
         frame, factor;
     
     if (length <= 125) {
@@ -119,7 +119,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     }
     
     socket.write(frame, 'binary');
-    socket.write(data, 'utf8');
+    socket.write(buffer, 'utf8');
+  },
+  
+  buffer: function(fragment) {
+    for (var i = 0, n = fragment.length; i < n; i++)
+      this._buffer.push(fragment[i]);
   },
   
   _reset: function() {
@@ -143,9 +148,10 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   _unmask: function(payload, maskOctets) {
     if (maskOctets.length === 0) return payload;
     var unmasked = new Buffer(payload.length);
-    for (var i = 0, n = payload.length; i < n; i++)
+    for (var i = 0, n = payload.length; i < n; i++) {
       unmasked[i] = payload[i] ^ maskOctets[i % 4];
-    return unmasked.toString('utf8', 0, unmasked.length);
+    }
+    return unmasked;
   }
 });
 

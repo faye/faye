@@ -1,6 +1,6 @@
 Faye.WebSocket.Draft75Parser = Faye.Class({
-  FRAME_START : String.fromCharCode(0x00),
-  FRAME_END   : String.fromCharCode(0xFF),
+  FRAME_START : new Buffer([0x00]),
+  FRAME_END   : new Buffer([0xFF]),
   
   version     : 'draft-75',
   
@@ -17,7 +17,7 @@ Faye.WebSocket.Draft75Parser = Faye.Class({
   
   frame: function(socket, data) {
     socket.write(this.FRAME_START, 'binary');
-    socket.write(data, 'utf8');
+    socket.write(new Buffer(data), 'utf8');
     socket.write(this.FRAME_END, 'binary');
   },
   
