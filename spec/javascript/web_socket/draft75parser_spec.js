@@ -1,6 +1,6 @@
-WebSocket = JS.ENV.WebSocket || {}
+JS.ENV.WebSocket = JS.ENV.WebSocket || {}
 
-WebSocket.Draft75ParserSpec = JS.Test.describe("WebSocket.Draft75Parser", function() { with(this) {
+JS.ENV.WebSocket.Draft75ParserSpec = JS.Test.describe("WebSocket.Draft75Parser", function() { with(this) {
   before(function() { with(this) {
     this.webSocket = {}
     this.parser = new Faye.WebSocket.Draft75Parser(webSocket)
