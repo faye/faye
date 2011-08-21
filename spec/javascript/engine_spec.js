@@ -195,6 +195,12 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
           subscribe("alice", "/messages/foo")
         }})
         
+        it("delivers multibyte messages correctly", function() { with(this) {
+          message.data = "Apple = "
+          publish(message)
+          expect_message("alice", [message])
+        }})
+        
         it("delivers messages to the subscribed client", function() { with(this) {
           publish(message)
           expect_message("alice", [message])
