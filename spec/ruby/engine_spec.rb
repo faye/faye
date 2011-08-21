@@ -1,3 +1,5 @@
+# encoding=utf-8
+
 require "spec_helper"
 
 EngineSteps = EM::RSpec.async_steps do
@@ -94,6 +96,7 @@ describe "Pub/sub engines" do
   end
   
   shared_examples_for "faye engine" do
+    include EncodingHelper
     include EngineSteps
     
     let(:options) { {:timeout => 1} }
@@ -186,6 +189,12 @@ describe "Pub/sub engines" do
         before { subscribe :alice, "/messages/foo" }
         
         it "delivers messages to the subscribed client" do
+          publish @message
+          expect_message :alice, [@message]
+        end
+        
+        it "delivers multibyte messages correctly" do
+          @message["data"] = encode "Apple = "
           publish @message
           expect_message :alice, [@message]
         end

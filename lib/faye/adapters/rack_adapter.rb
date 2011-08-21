@@ -45,7 +45,13 @@ module Faye
     
     def listen(port)
       handler = Rack::Handler.get('thin')
-      handler.run(self, :Port => port)
+      handler.run(self, :Port => port) { |s| @thin_server = s }
+    end
+    
+    def stop
+      return unless @thin_server
+      @thin_server.stop
+      @thin_server = nil
     end
     
     def call(env)

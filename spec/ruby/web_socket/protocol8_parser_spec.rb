@@ -1,10 +1,9 @@
 # encoding=utf-8
 
 require "spec_helper"
-require "ruby/web_socket/spec_helper"
 
 describe Faye::WebSocket::Protocol8Parser do
-  include WebSocketSpecHelper
+  include EncodingHelper
   
   before do
     @web_socket = mock Faye::WebSocket
@@ -59,18 +58,18 @@ describe Faye::WebSocket::Protocol8Parser do
     end
     
     it "parses unmasked multibyte text frames" do
-      @web_socket.should_receive(:receive).with(string "Apple = ")
+      @web_socket.should_receive(:receive).with(encode "Apple = ")
       parse [0x81, 0x0b, 0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3, 0xbf]
     end
     
     it "parses fragmented multibyte text frames" do
-      @web_socket.should_receive(:receive).with(string "Apple = ")
+      @web_socket.should_receive(:receive).with(encode "Apple = ")
       parse [0x01, 0x0a, 0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3]
       parse [0x80, 0x01, 0xbf]
     end
     
     it "parses masked multibyte text frames" do
-      @web_socket.should_receive(:receive).with(string "Apple = ")
+      @web_socket.should_receive(:receive).with(encode "Apple = ")
       parse [0x81, 0x8b] + mask + mask_message(0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3, 0xbf)
     end
     
@@ -96,7 +95,7 @@ describe Faye::WebSocket::Protocol8Parser do
     end
     
     it "encodes multibyte characters correctly" do
-      message = string "Apple = "
+      message = encode "Apple = "
       bytes(@parser.frame message).should == [0x81, 0x0b, 0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3, 0xbf]
     end
     
