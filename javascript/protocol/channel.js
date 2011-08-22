@@ -4,11 +4,11 @@ Faye.Channel = Faye.Class({
   },
   
   push: function(message) {
-    this.publishEvent('message', message);
+    this.trigger('message', message);
   },
   
   isUnused: function() {
-    return this.countSubscribers('message') === 0;
+    return this.countListeners('message') === 0;
   }
 });
 
@@ -93,14 +93,14 @@ Faye.extend(Faye.Channel, {
       if (!callback) return;
       Faye.each(names, function(name) {
         var channel = this._channels[name] = this._channels[name] || new Faye.Channel(name);
-        channel.addSubscriber('message', callback, scope);
+        channel.bind('message', callback, scope);
       }, this);
     },
     
     unsubscribe: function(name, callback, scope) {
       var channel = this._channels[name];
       if (!channel) return false;
-      channel.removeSubscriber('message', callback, scope);
+      channel.unbind('message', callback, scope);
       
       if (channel.isUnused()) {
         this.remove(name);
@@ -114,7 +114,7 @@ Faye.extend(Faye.Channel, {
       var channels = Faye.Channel.expand(message.channel);
       Faye.each(channels, function(name) {
         var channel = this._channels[name];
-        if (channel) channel.publishEvent('message', message.data);
+        if (channel) channel.trigger('message', message.data);
       }, this);
     }
   })

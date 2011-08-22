@@ -9,11 +9,11 @@ module Faye
     end
     
     def <<(message)
-      publish_event(:message, message)
+      trigger(:message, message)
     end
     
     def unused?
-      count_subscribers(:message).zero?
+      count_listeners(:message).zero?
     end
     
     HANDSHAKE   = '/meta/handshake'
@@ -94,14 +94,14 @@ module Faye
         return unless callback
         names.each do |name|
           channel = @channels[name] ||= Channel.new(name)
-          channel.add_subscriber(:message, callback)
+          channel.bind(:message, callback)
         end
       end
       
       def unsubscribe(name, callback)
         channel = @channels[name]
         return false unless channel
-        channel.remove_subscriber(:message, callback)
+        channel.unbind(:message, callback)
         if channel.unused?
           remove(name)
           true
@@ -114,7 +114,7 @@ module Faye
         channels = Channel.expand(message['channel'])
         channels.each do |name|
           channel = @channels[name]
-          channel.publish_event(:message, message['data']) if channel
+          channel.trigger(:message, message['data']) if channel
         end
       end
     end

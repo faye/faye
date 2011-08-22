@@ -66,18 +66,18 @@ Faye.WebSocket = Faye.Class({
   close: function() {},
   
   addEventListener: function(type, listener, useCapture) {
-    this.addSubscriber(type, listener);
+    this.bind(type, listener);
   },
   
   removeEventListener: function(type, listener, useCapture) {
-    this.removeSubscriber(type, listener);
+    this.unbind(type, listener);
   },
   
   dispatchEvent: function(event) {
     event.target = event.currentTarget = this;
     event.eventPhase = Faye.WebSocket.Event.AT_TARGET;
     
-    this.publishEvent(event.type, event);
+    this.trigger(event.type, event);
     if (this['on' + event.type])
       this['on' + event.type](event);
   }

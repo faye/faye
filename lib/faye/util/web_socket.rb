@@ -61,18 +61,18 @@ module Faye
     end
     
     def add_event_listener(type, listener, use_capture)
-      add_subscriber(type, listener)
+      bind(type, listener)
     end
     
     def remove_event_listener(type, listener, use_capture)
-      remove_subscriber(type, listener)
+      unbind(type, listener)
     end
     
     def dispatch_event(event)
       event.target = event.current_target = self
       event.event_phase = Event::AT_TARGET
       
-      publish_event(event.type, event)
+      trigger(event.type, event)
       callback = __send__("on#{ event.type }")
       callback.call(event) if callback
     end

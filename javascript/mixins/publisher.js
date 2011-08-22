@@ -1,16 +1,16 @@
 Faye.Publisher = {
-  countSubscribers: function(eventType) {
+  countListeners: function(eventType) {
     if (!this._subscribers || !this._subscribers[eventType]) return 0;
     return this._subscribers[eventType].length;
   },
   
-  addSubscriber: function(eventType, listener, context) {
+  bind: function(eventType, listener, context) {
     this._subscribers = this._subscribers || {};
     var list = this._subscribers[eventType] = this._subscribers[eventType] || [];
     list.push([listener, context]);
   },
   
-  removeSubscriber: function(eventType, listener, context) {
+  unbind: function(eventType, listener, context) {
     if (!this._subscribers || !this._subscribers[eventType]) return;
     
     if (!listener) {
@@ -27,11 +27,7 @@ Faye.Publisher = {
     }
   },
   
-  removeSubscribers: function() {
-    this._subscribers = {};
-  },
-  
-  publishEvent: function() {
+  trigger: function() {
     var args = Array.prototype.slice.call(arguments),
         eventType = args.shift();
     
