@@ -37,6 +37,12 @@ describe Faye::WebSocket::Protocol8Parser do
       parse [0x81, 0x85] + mask + mask_message(0x48, 0x65, 0x6c, 0x6c, 0x6f)
     end
     
+    it "parses masked fragmented text frames" do
+      @web_socket.should_receive(:receive).with("Hello")
+      parse [0x01, 0x81] + mask + mask_message(0x48)
+      parse [0x80, 0x84] + mask + mask_message(0x65, 0x6c, 0x6c, 0x6f)
+    end
+    
     it "closes the socket if the frame is incomplete" do
       @web_socket.should_receive(:send).with("", :close, :protocol_error)
       parse [0x81]
@@ -81,6 +87,12 @@ describe Faye::WebSocket::Protocol8Parser do
     it "parses masked multibyte text frames" do
       @web_socket.should_receive(:receive).with(encode "Apple = ")
       parse [0x81, 0x8b] + mask + mask_message(0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3, 0xbf)
+    end
+    
+    it "parses masked fragmented multibyte text frames" do
+      @web_socket.should_receive(:receive).with(encode "Apple = ")
+      parse [0x01, 0x8a] + mask + mask_message(0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3)
+      parse [0x80, 0x81] + mask + mask_message(0xbf)
     end
     
     it "parses unmasked medium-length text frames" do

@@ -41,6 +41,12 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
       parse([0x81, 0x85], mask(), maskMessage([0x48, 0x65, 0x6c, 0x6c, 0x6f]))
     }})
     
+    it("parses masked fragmented text frames", function() { with(this) {
+      expect(webSocket, "receive").given("Hello")
+      parse([0x01, 0x81], mask(), maskMessage([0x48]))
+      parse([0x80, 0x84], mask(), maskMessage([0x65, 0x6c, 0x6c, 0x6f]))
+    }})
+    
     it("closes the socket if the frame is incomplete", function() { with(this) {
       expect(webSocket, "send").given("", "close", "protocol_error")
       parse([0x81])
@@ -85,6 +91,12 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
     it("parses masked multibyte text frames", function() { with(this) {
       expect(webSocket, "receive").given("Apple = ")
       parse([0x81, 0x8b], mask(), maskMessage([0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3, 0xbf]))
+    }})
+    
+    it("parses masked fragmented multibyte text frames", function() { with(this) {
+      expect(webSocket, "receive").given("Apple = ")
+      parse([0x01, 0x8a], mask(), maskMessage([0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3]))
+      parse([0x80, 0x81], mask(), maskMessage([0xbf]))
     }})
     
     it("parses unmasked medium-length text frames", function() { with(this) {
