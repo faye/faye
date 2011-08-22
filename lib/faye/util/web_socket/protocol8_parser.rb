@@ -58,13 +58,16 @@ module Faye
         limit  = data.respond_to?(:bytes) ? data.bytes.count : data.size
         
         byte0  = getbyte(data, 0)
+        byte1  = getbyte(data, 1)
+        
+        return close(:protocol_error) unless byte0 and byte1
+        
         final  = (byte0 & FIN) == FIN
         opcode = (byte0 & OPCODE)
         
         return close(:protocol_error) unless OPCODES.values.include?(opcode)
         reset unless opcode == OPCODES[:continuation]
 
-        byte1  = getbyte(data, 1)
         masked = (byte1 & MASK) == MASK
         length = (byte1 & LENGTH)
         offset = 0

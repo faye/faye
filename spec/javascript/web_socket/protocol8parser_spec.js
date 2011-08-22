@@ -41,6 +41,16 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
       parse([0x81, 0x85], mask(), maskMessage([0x48, 0x65, 0x6c, 0x6c, 0x6f]))
     }})
     
+    it("closes the socket if the frame is incomplete", function() { with(this) {
+      expect(webSocket, "send").given("", "close", "protocol_error")
+      parse([0x81])
+    }})
+    
+    it("closes the socket if the frame has an unrecognized opcode", function() { with(this) {
+      expect(webSocket, "send").given("", "close", "protocol_error")
+      parse([0x83, 0x00])
+    }})
+    
     it("closes the socket if the length is too large", function() { with(this) {
       expect(webSocket, "send").given("", "close", "protocol_error")
       parse([0x81, 0x06, 0x48, 0x65, 0x6c, 0x6c, 0x6f])

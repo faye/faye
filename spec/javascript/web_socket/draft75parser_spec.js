@@ -16,6 +16,12 @@ JS.ENV.WebSocket.Draft75ParserSpec = JS.Test.describe("WebSocket.Draft75Parser",
       expect(webSocket, "receive").given("Apple = ")
       parser.parse([0x00, 0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3, 0xbf, 0xff])
     }})
+    
+    it("parses fragmented frames", function() { with(this) {
+      expect(webSocket, "receive").given("Hello")
+      parser.parse([0x00, 0x48, 0x65, 0x6c])
+      parser.parse([0x6c, 0x6f, 0xff])
+    }})
   }})
   
   describe("frame", function() { with(this) {

@@ -16,7 +16,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   
   parse: function(data) {
     var byte0   = data[0],
-        isFinal = (byte0 & this.FIN) === this.FIN,
+        byte1   = data[1];
+    
+    if (byte0 === undefined || byte1 === undefined)
+      return this._close('protocol_error');
+    
+    var isFinal = (byte0 & this.FIN) === this.FIN,
         opcode  = (byte0 & this.OPCODE),
         valid   = false;
     
@@ -29,8 +34,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     if (opcode !== this.OPCODES.continuation)
       this._reset();
     
-    var byte1  = data[1],
-        masked = (byte1 & this.MASK) === this.MASK,
+    var masked = (byte1 & this.MASK) === this.MASK,
         length = (byte1 & this.LENGTH),
         offset = 0;
     

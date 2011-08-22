@@ -20,6 +20,12 @@ describe Faye::WebSocket::Draft75Parser do
       @web_socket.should_receive(:receive).with(encode "Apple = ")
       parse [0x00, 0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3, 0xbf, 0xff]
     end
+    
+    it "parses fragmented frames" do
+      @web_socket.should_receive(:receive).with("Hello")
+      parse [0x00, 0x48, 0x65, 0x6c]
+      parse [0x6c, 0x6f, 0xff]
+    end
   end
   
   describe :frame do

@@ -37,6 +37,16 @@ describe Faye::WebSocket::Protocol8Parser do
       parse [0x81, 0x85] + mask + mask_message(0x48, 0x65, 0x6c, 0x6c, 0x6f)
     end
     
+    it "closes the socket if the frame is incomplete" do
+      @web_socket.should_receive(:send).with("", :close, :protocol_error)
+      parse [0x81]
+    end
+    
+    it "closes the socket if the frame has an unrecognized opcode" do
+      @web_socket.should_receive(:send).with("", :close, :protocol_error)
+      parse [0x83, 0x00]
+    end
+    
     it "closes the socket if the length is too large" do
       @web_socket.should_receive(:send).with("", :close, :protocol_error)
       parse [0x81, 0x06, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
