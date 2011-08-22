@@ -1,3 +1,8 @@
+=== 0.6.5 / 2011-08-28
+
+* Fix UTF-8 encoding bugs in draft-75/76 and protocol-8 WebSocket parsers
+
+
 === 0.6.4 / 2011-08-18
 TestSwarm build: http://swarm.jcoglan.com/job/96/
 
