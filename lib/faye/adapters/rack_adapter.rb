@@ -2,7 +2,7 @@ require 'json'
 require 'rack'
 require 'thin'
 require 'cgi'
-require Faye::ROOT + '/thin_extensions'
+require Faye::ROOT + '/faye/thin_extensions'
 
 module Faye
   class RackAdapter
