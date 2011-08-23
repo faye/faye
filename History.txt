@@ -1,6 +1,7 @@
 === 0.6.5 / 2011-08-28
 
 * Fix UTF-8 encoding bugs in draft-75/76 and protocol-8 WebSocket parsers
+* Remove an SREM operation that shouldn't have been in the Redis engine
 
 
 === 0.6.4 / 2011-08-18
