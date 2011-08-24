@@ -4,6 +4,8 @@ dir = File.dirname(__FILE__)
 require File.expand_path(dir + '/../../lib/faye')
 require File.expand_path(dir + '/app')
 
+# Faye::Logging.log_level = :debug
+
 server = Faye::RackAdapter.new(Sinatra::Application,
   :mount   => '/bayeux',
   :timeout => 25,
