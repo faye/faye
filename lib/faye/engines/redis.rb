@@ -52,6 +52,7 @@ module Faye
             debug 'Created new client ?', client_id
             ping(client_id)
             callback.call(client_id)
+            trigger(:handshake, client_id)
           end
         end
       end
@@ -66,6 +67,7 @@ module Faye
           if n == 0
             debug 'Destroyed client ?', client_id
             callback.call if callback
+            trigger(:disconnect, client_id)
           else
             channels.each do |channel|
               unsubscribe(client_id, channel) do
@@ -73,6 +75,7 @@ module Faye
                 if i == n
                   debug 'Destroyed client ?', client_id
                   callback.call if callback
+                  trigger(:disconnect, client_id)
                 end
               end
             end
@@ -102,12 +105,15 @@ module Faye
         @redis.sadd(@ns + "/channels#{channel}", client_id) do
           debug 'Subscribed client ? to channel ?', client_id, channel
           callback.call if callback
+          trigger(:subscribe, client_id, channel)
         end
       end
       
       def unsubscribe(client_id, channel, &callback)
         init
-        @redis.srem(@ns + "/clients/#{client_id}/channels", channel)
+        @redis.srem(@ns + "/clients/#{client_id}/channels", channel) do |removed|
+          trigger(:unsubscribe, client_id, channel) if removed == 1
+        end
         @redis.srem(@ns + "/channels#{channel}", client_id) do
           debug 'Unsubscribed client ? from channel ?', client_id, channel
           callback.call if callback
@@ -127,8 +133,11 @@ module Faye
             debug 'Queueing for client ?: ?', client_id, message
             @redis.rpush(@ns + "/clients/#{client_id}/messages", json_message)
             @redis.publish(@ns + '/notifications', client_id)
+            trigger(:receive, client_id, message['channel'], message['data'])
           end
         end
+
+        trigger(:publish, message['clientId'], message['channel'], message['data'])
       end
       
     private

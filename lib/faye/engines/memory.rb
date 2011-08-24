@@ -17,6 +17,7 @@ module Faye
         debug 'Created new client ?', client_id
         ping(client_id)
         callback.call(client_id)
+        trigger(:handshake, client_id)
       end
       
       def destroy_client(client_id, &callback)
@@ -31,6 +32,7 @@ module Faye
         @messages.delete(client_id)
         debug 'Destroyed client ?', client_id
         callback.call if callback
+        trigger(:disconnect, client_id)
       end
       
       def client_exists(client_id, &callback)
@@ -53,12 +55,14 @@ module Faye
         
         debug 'Subscribed client ? to channel ?', client_id, channel
         callback.call(true) if callback
+        trigger(:subscribe, client_id, channel)
       end
       
       def unsubscribe(client_id, channel, &callback)
-        if @clients.has_key?(client_id)
+        should_trigger = if @clients.has_key?(client_id)
           @clients[client_id].delete(channel)
           @clients.delete(client_id) if @clients[client_id].empty?
+          true
         end
         
         if @channels.has_key?(channel)
@@ -68,6 +72,7 @@ module Faye
         
         debug 'Unsubscribed client ? from channel ?', client_id, channel
         callback.call(true) if callback
+        trigger(:unsubscribe, client_id, channel) if should_trigger
       end
       
       def publish(message)
@@ -86,7 +91,10 @@ module Faye
           @messages[client_id] ||= []
           @messages[client_id] << message
           empty_queue(client_id)
+          trigger(:receive, client_id, message['channel'], message['data'])
         end
+
+        trigger(:publish, message['clientId'], message['channel'], message['data'])
       end
       
     private

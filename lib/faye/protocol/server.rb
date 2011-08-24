@@ -4,6 +4,8 @@ module Faye
     include Logging
     include Extensible
     
+    attr_reader :engine
+
     def initialize(options = {})
       @options    = options || {}
       engine_opts = @options[:engine] || {}

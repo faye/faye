@@ -9,6 +9,9 @@ module Faye
     
     include Logging
 
+    extend Forwardable
+    def_delegators "@server.engine", :bind, :unbind
+
     # Only supported under Thin
     ASYNC_RESPONSE = [-1, {}, []].freeze
     

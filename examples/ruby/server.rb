@@ -15,10 +15,21 @@ server = Faye::RackAdapter.new(Sinatra::Application,
 port = ARGV[0] || 9292
 
 EM.run {
-  thin = Rack::Handler.get('thin')
-  thin.run(server, :Port => port)
+  server.listen(port)
   
   server.get_client.subscribe '/chat/*' do |message|
     puts "[#{ message['user'] }]: #{ message['message'] }"
+  end
+
+  server.bind(:subscribe) do |client_id, channel|
+    puts "[  SUBSCRIBE] #{client_id} -> #{channel}"
+  end
+
+  server.bind(:unsubscribe) do |client_id, channel|
+    puts "[UNSUBSCRIBE] #{client_id} -> #{channel}"
+  end
+
+  server.bind(:disconnect) do |client_id|
+    puts "[ DISCONNECT] #{client_id}"
   end
 }

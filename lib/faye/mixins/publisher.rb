@@ -6,13 +6,13 @@ module Faye
       @subscribers[event_type].size
     end
     
-    def bind(event_type, listener)
+    def bind(event_type, &listener)
       @subscribers ||= {}
       list = @subscribers[event_type] ||= []
       list << listener
     end
     
-    def unbind(event_type, listener)
+    def unbind(event_type, &listener)
       return unless @subscribers and @subscribers[event_type]
       return @subscribers.delete(event_type) unless listener
       

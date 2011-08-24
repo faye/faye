@@ -94,14 +94,14 @@ module Faye
         return unless callback
         names.each do |name|
           channel = @channels[name] ||= Channel.new(name)
-          channel.bind(:message, callback)
+          channel.bind(:message, &callback)
         end
       end
       
       def unsubscribe(name, callback)
         channel = @channels[name]
         return false unless channel
-        channel.unbind(:message, callback)
+        channel.unbind(:message, &callback)
         if channel.unused?
           remove(name)
           true

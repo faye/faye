@@ -63,6 +63,12 @@ EngineSteps = EM::RSpec.async_steps do
     EM.add_timer(0.01, &resume)
   end
   
+  def publish_by(name, message, &resume)
+    message = {"clientId" => @clients[name], "id" => Faye.random}.merge(message)
+    engine.publish(message)
+    EM.add_timer(0.01, &resume)
+  end
+
   def ping(name, &resume)
     engine.ping(@clients[name])
     resume.call
@@ -73,6 +79,22 @@ EngineSteps = EM::RSpec.async_steps do
     resume.call
   end
   
+  def expect_event(name, event, args, &resume)
+    params  = [@clients[name]] + args
+    handler = lambda { |*a| }
+    engine.bind(event, &handler)
+    handler.should_receive(:call).with(*params)
+    resume.call
+  end
+
+  def expect_no_event(name, event, args, &resume)
+    params  = [@clients[name]] + args
+    handler = lambda { |*a| }
+    engine.bind(event, &handler)
+    handler.should_not_receive(:call).with(*params)
+    resume.call
+  end
+
   def expect_message(name, messages, &resume)
     @inboxes[name].should == messages
     resume.call
@@ -119,6 +141,11 @@ describe "Pub/sub engines" do
         1.upto(7) { |i| create_client "client#{i}" }
         check_num_clients 10
       end
+
+      it "publishes an event" do
+        engine.should_receive(:trigger).with(:handshake, match(/^[a-z0-9]+$/)).exactly(4)
+        create_client :dave
+      end
     end
     
     describe :client_exists do
@@ -153,6 +180,11 @@ describe "Pub/sub engines" do
         check_client_exists :alice, false
       end
       
+      it "publishes an event" do
+        expect_event :alice, :disconnect, []
+        destroy_client :alice
+      end
+
       describe "when the client has subscriptions" do
         before do
           @message = {"channel" => "/messages/foo", "data" => "ok"}
@@ -164,6 +196,34 @@ describe "Pub/sub engines" do
           destroy_client :alice
           publish @message
           expect_no_message :alice
+        end
+
+        it "publishes an event" do
+          expect_event :alice, :disconnect, []
+          destroy_client :alice
+        end
+      end
+    end
+
+    describe :subscribe do
+      it "publishes an event" do
+        expect_event :alice, :subscribe, ["/messages/foo"]
+        subscribe :alice, "/messages/foo"
+      end
+    end
+
+    describe :unsubscribe do
+      it "does not publish an event" do
+        expect_no_event :alice, :unsubscribe, ["/messages/foo"]
+        unsubscribe :alice, "/messages/foo"
+      end
+
+      describe "when the client is subscribed to the channel" do
+        before { subscribe :alice, "/messages/foo" }
+
+        it "publishes an event" do
+          expect_event :alice, :unsubscribe, ["/messages/foo"]
+          unsubscribe :alice, "/messages/foo"
         end
       end
     end
@@ -183,6 +243,16 @@ describe "Pub/sub engines" do
           expect_no_message :bob
           expect_no_message :carol
         end
+
+        it "publishes a :publish event with a clientId" do
+          expect_event :bob, :publish, ["/messages/foo", "ok"]
+          publish_by :bob, @message
+        end
+
+        it "publishes a :publish event with no clientId" do
+          expect_event nil, :publish, ["/messages/foo", "ok"]
+          publish @message
+        end
       end
       
       describe "with a subscriber" do
@@ -198,6 +268,16 @@ describe "Pub/sub engines" do
           publish @message
           expect_message :alice, [@message]
         end
+
+        it "publishes a :publish event" do
+          expect_event :bob, :publish, ["/messages/foo", "ok"]
+          publish_by :bob, @message
+        end
+
+        it "publishes a :receive event for the subscriber" do
+          expect_event :alice, :receive, ["/messages/foo", "ok"]
+          publish @message
+        end
       end
       
       describe "with a subscriber that is removed" do
@@ -211,6 +291,16 @@ describe "Pub/sub engines" do
           expect_no_message :alice
           expect_no_message :bob
           expect_no_message :carol
+        end
+
+        it "publishes a :publish event" do
+          expect_event :bob, :publish, ["/messages/foo", "ok"]
+          publish_by :bob, @message
+        end
+
+        it "does not publish a :receive event for the subscriber" do
+          expect_no_event :alice, :receive, ["/messages/foo", "ok"]
+          publish @message
         end
       end
       

@@ -61,11 +61,11 @@ module Faye
     end
     
     def add_event_listener(type, listener, use_capture)
-      bind(type, listener)
+      bind(type, &listener)
     end
     
     def remove_event_listener(type, listener, use_capture)
-      unbind(type, listener)
+      unbind(type, &listener)
     end
     
     def dispatch_event(event)

@@ -17,6 +17,7 @@ module Faye
     end
     
     class Base
+      include Publisher
       include Logging
       
       attr_reader :interval, :timeout
