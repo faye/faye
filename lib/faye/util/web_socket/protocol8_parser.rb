@@ -32,6 +32,22 @@ module Faye
         :encoding_error => 1007
       }
       
+      def self.create_handshake(uri)
+        hostname = uri.host + (uri.port ? ":#{uri.port}" : '')
+        key      = 'ikjDfTXzAgpTF32w36Wacg=='
+        
+        handshake  = "GET #{uri.path} HTTP/1.1\r\n"
+        handshake << "Host: #{hostname}\r\n"
+        handshake << "Accept: text/html\r\n"
+        handshake << "Connection: keep-alive, Upgrade\r\n"
+        handshake << "Sec-WebSocket-Version: 7\r\n"
+        handshake << "Sec-WebSocket-Origin: http://#{hostname}\r\n"
+        handshake << "Sec-WebSocket-Key: #{key}\r\n"
+        handshake << "Upgrade: websocket\r\n\r\n"
+        
+        handshake
+      end
+      
       def self.handshake(request)
         sec_key = request.env['HTTP_SEC_WEBSOCKET_KEY']
         return '' unless String === sec_key

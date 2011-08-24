@@ -1,19 +1,20 @@
 module Faye
   class WebSocket
     
-    autoload :Draft75Parser, File.expand_path('..', __FILE__) + '/web_socket/draft75_parser'
-    autoload :Draft76Parser, File.expand_path('..', __FILE__) + '/web_socket/draft76_parser'
-    autoload :Protocol8Parser, File.expand_path('..', __FILE__) + '/web_socket/protocol8_parser'
+    root = File.expand_path('..', __FILE__) + '/web_socket'
     
-    include Publisher
+    autoload :API,             root + '/api'
+    autoload :Client,          root + '/client'
+    autoload :Draft75Parser,   root + '/draft75_parser'
+    autoload :Draft76Parser,   root + '/draft76_parser'
+    autoload :Protocol8Parser, root + '/protocol8_parser'
+    
+    include API
     
     CONNECTING = 0
     OPEN       = 1
     CLOSING    = 2
     CLOSED     = 3
-    
-    attr_reader   :url, :ready_state
-    attr_accessor :onopen, :onmessage, :onerror, :onclose
     
     extend Forwardable
     def_delegators :@parser, :version
@@ -44,39 +45,6 @@ module Faye
       @parser = WebSocket.parser(@request).new(self)
       @request.env[Thin::Request::WEBSOCKET_RECEIVE_CALLBACK] = @parser.method(:parse)
     end
-    
-    def receive(data)
-      event = Event.new
-      event.init_event('message', false, false)
-      event.data = Faye.encode(data)
-      dispatch_event(event)
-    end
-    
-    def send(data, type = nil, error_type = nil)
-      frame = @parser.frame(Faye.encode(data), type, error_type)
-      @stream.write(frame) if frame
-    end
-    
-    def close
-    end
-    
-    def add_event_listener(type, listener, use_capture)
-      add_subscriber(type, listener)
-    end
-    
-    def remove_event_listener(type, listener, use_capture)
-      remove_subscriber(type, listener)
-    end
-    
-    def dispatch_event(event)
-      event.target = event.current_target = self
-      event.event_phase = Event::AT_TARGET
-      
-      publish_event(event.type, event)
-      callback = __send__("on#{ event.type }")
-      callback.call(event) if callback
-    end
-    
   end
   
   class WebSocket::Stream
@@ -92,26 +60,4 @@ module Faye
     end
   end
   
-  class WebSocket::Event
-    attr_reader   :type, :bubbles, :cancelable
-    attr_accessor :target, :current_target, :event_phase, :data
-    
-    CAPTURING_PHASE = 1
-    AT_TARGET       = 2
-    BUBBLING_PHASE  = 3
-    
-    def init_event(event_type, can_bubble, cancelable)
-      @type       = event_type
-      @bubbles    = can_bubble
-      @cancelable = cancelable
-    end
-    
-    def stop_propagation
-    end
-    
-    def prevent_default
-    end
-  end
-  
 end
-
