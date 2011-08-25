@@ -37,7 +37,7 @@ module Faye
       @stream   = Stream.new
       @callback.call [200, RackAdapter::TYPE_JSON, @stream]
       
-      @url = @request.env['websocket.url']
+      @url = determine_url
       @ready_state = CONNECTING
       @buffered_amount = 0
       
@@ -51,6 +51,20 @@ module Faye
       dispatch_event(event)
       
       @request.env[Thin::Request::WEBSOCKET_RECEIVE_CALLBACK] = @parser.method(:parse)
+    end
+    
+  private
+    
+    def determine_url
+      env = @request.env
+      secure = if env.has_key?('HTTP_X_FORWARDED_PROTO')
+                 env['HTTP_X_FORWARDED_PROTO'] == 'https'
+               else
+                 env['HTTP_ORIGIN'] =~ /^https:/i
+               end
+      
+      scheme = secure ? 'wss:' : 'ws:'
+      "#{ scheme }//#{ env['HTTP_HOST'] }#{ env['REQUEST_URI'] }"
     end
   end
   

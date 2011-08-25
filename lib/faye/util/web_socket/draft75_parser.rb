@@ -19,7 +19,7 @@ module Faye
         upgrade << "Upgrade: WebSocket\r\n"
         upgrade << "Connection: Upgrade\r\n"
         upgrade << "WebSocket-Origin: #{request.env['HTTP_ORIGIN']}\r\n"
-        upgrade << "WebSocket-Location: #{websocket_url}\r\n"
+        upgrade << "WebSocket-Location: #{@socket.url}\r\n"
         upgrade << "\r\n"
         upgrade
       end
@@ -33,21 +33,6 @@ module Faye
       end
       
     private
-      
-      def secure_websocket?
-        env = @socket.request.env
-        if env.has_key?('HTTP_X_FORWARDED_PROTO')
-          env['HTTP_X_FORWARDED_PROTO'] == 'https'
-        else
-          env['HTTP_ORIGIN'] =~ /^https:/i
-        end
-      end
-      
-      def websocket_url
-        scheme = secure_websocket? ? 'wss:' : 'ws:'
-        env = @socket.request.env
-        env['websocket.url'] = "#{ scheme }//#{ env['HTTP_HOST'] }#{ env['REQUEST_URI'] }"
-      end
       
       def handle_char(data)
         case data

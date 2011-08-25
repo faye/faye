@@ -25,7 +25,7 @@ module Faye
         upgrade << "Upgrade: WebSocket\r\n"
         upgrade << "Connection: Upgrade\r\n"
         upgrade << "Sec-WebSocket-Origin: #{request.env['HTTP_ORIGIN']}\r\n"
-        upgrade << "Sec-WebSocket-Location: #{websocket_url}\r\n"
+        upgrade << "Sec-WebSocket-Location: #{@socket.url}\r\n"
         upgrade << "\r\n"
         upgrade << hash
         upgrade
