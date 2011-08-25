@@ -137,7 +137,6 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     this._redis.lrange(key, 0, -1, function(error, jsonMessages) {
       self._redis.ltrim(key, jsonMessages.length, -1);
       Faye.each(jsonMessages, function(jsonMessage) {
-        self._redis.srem(key, jsonMessage);
         conn.deliver(JSON.parse(jsonMessage));
       });
     });
