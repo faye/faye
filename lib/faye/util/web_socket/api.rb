@@ -2,7 +2,7 @@ module Faye
   class WebSocket
     
     module API
-      attr_reader   :url, :ready_state
+      attr_reader   :url, :ready_state, :buffered_amount
       attr_accessor :onopen, :onmessage, :onerror, :onclose
       
       include Publisher

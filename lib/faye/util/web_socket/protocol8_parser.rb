@@ -66,8 +66,17 @@ module Faye
         end
       end
       
-      def self.handshake(request)
-        sec_key = request.env['HTTP_SEC_WEBSOCKET_KEY']
+      def initialize(web_socket)
+        reset
+        @socket = web_socket
+      end
+      
+      def version
+        'protocol-8'
+      end
+      
+      def handshake_response
+        sec_key = @socket.request.env['HTTP_SEC_WEBSOCKET_KEY']
         return '' unless String === sec_key
         
         accept = Base64.encode64(Digest::SHA1.digest(sec_key + GUID)).strip
@@ -79,18 +88,9 @@ module Faye
         upgrade << "\r\n"
         upgrade
       end
-
-      def initialize(web_socket)
-        reset
-        @socket = web_socket
-      end
       
-      def create_handshake(uri)
-        Handshake.new(uri)
-      end
-      
-      def version
-        'protocol-8'
+      def create_handshake
+        Handshake.new(@socket.uri)
       end
       
       def parse(data)

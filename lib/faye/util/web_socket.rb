@@ -16,6 +16,8 @@ module Faye
     CLOSING    = 2
     CLOSED     = 3
     
+    attr_reader :request
+    
     extend Forwardable
     def_delegators :@parser, :version
     
@@ -36,13 +38,18 @@ module Faye
       @callback.call [200, RackAdapter::TYPE_JSON, @stream]
       
       @url = @request.env['websocket.url']
+      @ready_state = CONNECTING
+      @buffered_amount = 0
+      
+      @parser = WebSocket.parser(@request).new(self)
+      @stream.write(@parser.handshake_response)
+      
       @ready_state = OPEN
       
       event = Event.new
       event.init_event('open', false, false)
       dispatch_event(event)
       
-      @parser = WebSocket.parser(@request).new(self)
       @request.env[Thin::Request::WEBSOCKET_RECEIVE_CALLBACK] = @parser.method(:parse)
     end
   end

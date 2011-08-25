@@ -35,7 +35,7 @@ class Thin::Connection
       if @request.parse(data)
         if @request.websocket?
           @response.persistent!
-          @response.websocket_upgrade_data = @request.websocket_upgrade_data
+          @response.websocket = true
           @serving = :websocket
         end
 
@@ -57,32 +57,14 @@ class Thin::Request
     @env['HTTP_CONNECTION'].split(/\s*,\s*/).include?('Upgrade') and
     ['WebSocket', 'websocket'].include?(@env['HTTP_UPGRADE'])
   end
-  
-  def secure_websocket?
-    if @env.has_key?('HTTP_X_FORWARDED_PROTO')
-      @env['HTTP_X_FORWARDED_PROTO'] == 'https' 
-    else
-      @env['HTTP_ORIGIN'] =~ /^https:/i
-    end
-  end
-
-  def websocket_url
-    scheme = secure_websocket? ? 'wss:' : 'ws:'
-    @env['websocket.url'] = "#{ scheme }//#{ @env['HTTP_HOST'] }#{ @env['REQUEST_URI'] }"
-  end
-
-  def websocket_upgrade_data
-    parser = Faye::WebSocket.parser(self)
-    parser.handshake(self)
-  end
 end
 
 class Thin::Response
   # Headers for sending Websocket upgrade
-  attr_accessor :websocket_upgrade_data
+  attr_accessor :websocket
 
   def each
-    websocket_upgrade_data ? yield(websocket_upgrade_data) : yield(head)
+    yield(head) unless websocket
     if @body.is_a?(String)
       yield @body
     else

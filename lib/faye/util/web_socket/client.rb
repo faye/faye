@@ -3,6 +3,7 @@ module Faye
     
     class Client
       include API
+      attr_reader :uri
       
       def initialize(url)
         @parser = Protocol8Parser.new(self)
@@ -18,7 +19,7 @@ module Faye
       end
       
       def on_connect
-        @handshake = @parser.create_handshake(@uri)
+        @handshake = @parser.create_handshake
         @stream.write(@handshake.request_data)
       end
       
