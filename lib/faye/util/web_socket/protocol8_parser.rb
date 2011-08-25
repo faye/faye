@@ -1,5 +1,6 @@
 require 'base64'
 require 'digest/sha1'
+require 'net/http'
 
 module Faye
   class WebSocket
@@ -32,20 +33,37 @@ module Faye
         :encoding_error => 1007
       }
       
-      def self.create_handshake(uri)
-        hostname = uri.host + (uri.port ? ":#{uri.port}" : '')
-        key      = 'ikjDfTXzAgpTF32w36Wacg=='
+      class Handshake
+        def initialize(uri)
+          @uri    = uri
+          @key    = Base64.encode64((1..16).map { rand(255).chr } * '').strip
+          @accept = Base64.encode64(Digest::SHA1.digest(@key + GUID)).strip
+        end
         
-        handshake  = "GET #{uri.path} HTTP/1.1\r\n"
-        handshake << "Host: #{hostname}\r\n"
-        handshake << "Accept: text/html\r\n"
-        handshake << "Connection: keep-alive, Upgrade\r\n"
-        handshake << "Sec-WebSocket-Version: 7\r\n"
-        handshake << "Sec-WebSocket-Origin: http://#{hostname}\r\n"
-        handshake << "Sec-WebSocket-Key: #{key}\r\n"
-        handshake << "Upgrade: websocket\r\n\r\n"
+        def request_data
+          hostname = @uri.host + (@uri.port ? ":#{@uri.port}" : '')
+          
+          handshake  = "GET #{@uri.path} HTTP/1.1\r\n"
+          handshake << "Host: #{hostname}\r\n"
+          handshake << "Upgrade: websocket\r\n"
+          handshake << "Connection: Upgrade\r\n"
+          handshake << "Sec-WebSocket-Key: #{@key}\r\n"
+          handshake << "Sec-WebSocket-Version: 8\r\n"
+          handshake << "\r\n"
+          
+          handshake
+        end
         
-        handshake
+        def valid?(data)
+          response = Net::HTTPResponse.read_new(Net::BufferedIO.new(StringIO.new(data)))
+          return false unless response.code.to_i == 101
+          
+          upgrade, connection = response['Upgrade'], response['Connection']
+          
+          upgrade and upgrade =~ /^websocket$/i and
+          connection and connection.split(/\s*,\s*/).include?('Upgrade') and
+          response['Sec-WebSocket-Accept'] == @accept
+        end
       end
       
       def self.handshake(request)
@@ -57,13 +75,18 @@ module Faye
         upgrade =  "HTTP/1.1 101 Switching Protocols\r\n"
         upgrade << "Upgrade: websocket\r\n"
         upgrade << "Connection: Upgrade\r\n"
-        upgrade << "Sec-WebSocket-Accept: #{accept}\r\n\r\n"
+        upgrade << "Sec-WebSocket-Accept: #{accept}\r\n"
+        upgrade << "\r\n"
         upgrade
       end
 
       def initialize(web_socket)
         reset
         @socket = web_socket
+      end
+      
+      def create_handshake(uri)
+        Handshake.new(uri)
       end
       
       def version

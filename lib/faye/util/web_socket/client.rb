@@ -1,5 +1,3 @@
-require 'thin'
-
 module Faye
   class WebSocket
     
@@ -7,7 +5,7 @@ module Faye
       include API
       
       def initialize(url)
-        @parser = Protocol8Parser
+        @parser = Protocol8Parser.new(self)
         @url    = url
         @uri    = URI.parse(url)
         
@@ -20,21 +18,28 @@ module Faye
       end
       
       def on_connect
-        @stream.write(@parser.create_handshake(@uri))
+        @handshake = @parser.create_handshake(@uri)
+        @stream.write(@handshake.request_data)
       end
       
       def receive_data(data)
+        data = Faye.encode(data)
+        
         case @ready_state
           when CONNECTING then
-            # TODO validate response
+            if @handshake.valid?(data)
+              @ready_state = OPEN
+              event = Event.new
+              event.init_event('open', false, false)
+              dispatch_event(event)
+            else
+              @ready_state = CLOSED
+              event = Event.new
+              event.init_event('error', false, false)
+              dispatch_event(event)
+            end
             
-            @ready_state = OPEN
-            @parser = @parser.new(self)
-            event = Event.new
-            event.init_event('open', false, false)
-            dispatch_event(event)
-            
-          when OPEN
+          when OPEN then
             @parser.parse(data)
         end
       end
