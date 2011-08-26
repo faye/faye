@@ -105,7 +105,15 @@ module Faye
       end
       
       def parse(data)
-        data.each_byte(&method(:handle_byte))
+        data.each_byte do |byte|
+          case @stage
+          when 0 then parse_opcode(byte)
+          when 1 then parse_length(byte)
+          when 2 then parse_extended_length(byte)
+          when 3 then parse_mask(byte)
+          when 4 then parse_payload(byte)
+          end
+        end
       end
       
       def frame(data, type = nil, error_type = nil)
@@ -134,16 +142,6 @@ module Faye
       end
       
     private
-      
-      def handle_byte(data)
-        case @stage
-        when 0 then parse_opcode(data)
-        when 1 then parse_length(data)
-        when 2 then parse_extended_length(data)
-        when 3 then parse_mask(data)
-        when 4 then parse_payload(data)
-        end
-      end
       
       def parse_opcode(data)
         @final   = (data & FIN) == FIN
