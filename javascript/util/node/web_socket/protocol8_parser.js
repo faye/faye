@@ -3,6 +3,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     <%= const %>: <%= Faye::WebSocket::Protocol8Parser.const_get(const) %>,
   <% end %>
   
+  GUID: '<%= Faye::WebSocket::Protocol8Parser::GUID %>',
+  
   OPCODES: <%= JSON.dump Faye::WebSocket::Protocol8Parser::OPCODES %>,
   
   ERRORS: <%= JSON.dump Faye::WebSocket::Protocol8Parser::ERRORS %>,
@@ -12,6 +14,26 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   initialize: function(webSocket) {
     this._reset();
     this._socket = webSocket;
+  },
+  
+  handshakeResponse: function(socket) {
+    var secKey = this._socket.request.headers['sec-websocket-key'];
+    if (!secKey) return;
+    
+    var SHA1 = crypto.createHash('sha1');
+    SHA1.update(secKey + this.GUID);
+    var accept = SHA1.digest('base64');
+    
+    try {
+      socket.write('HTTP/1.1 101 Switching Protocols\r\n');
+      socket.write('Upgrade: websocket\r\n');
+      socket.write('Connection: Upgrade\r\n');
+      socket.write('Sec-WebSocket-Accept: ' + accept + '\r\n');
+      socket.write('\r\n');
+    } catch (e) {
+      // socket closed while writing
+      // no handshake sent; client will stop using WebSocket
+    }
   },
   
   parse: function(data) {
@@ -158,26 +180,3 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     return unmasked;
   }
 });
-
-Faye.WebSocket.Protocol8Parser.handshake = function(url, request, head, socket) {
-  var secKey = request.headers['sec-websocket-key'];
-  if (!secKey) return;
-  
-  var SHA1 = crypto.createHash('sha1');
-  SHA1.update(secKey + this.GUID);
-  var accept = SHA1.digest('base64');
-  
-  try {
-    socket.write('HTTP/1.1 101 Switching Protocols\r\n');
-    socket.write('Upgrade: websocket\r\n');
-    socket.write('Connection: Upgrade\r\n');
-    socket.write('Sec-WebSocket-Accept: ' + accept + '\r\n');
-    socket.write('\r\n');
-  } catch (e) {
-    // socket closed while writing
-    // no handshake sent; client will stop using WebSocket
-  }
-};
-
-Faye.WebSocket.Protocol8Parser.GUID = '<%= Faye::WebSocket::Protocol8Parser::GUID %>';
-

@@ -10,6 +10,20 @@ Faye.WebSocket.Draft75Parser = Faye.Class({
     this._buffering = false;
   },
   
+  handshakeResponse: function(socket) {
+    try {
+      socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n');
+      socket.write('Upgrade: WebSocket\r\n');
+      socket.write('Connection: Upgrade\r\n');
+      socket.write('WebSocket-Origin: ' + this._socket.request.headers.origin + '\r\n');
+      socket.write('WebSocket-Location: ' + this._socket.url + '\r\n');
+      socket.write('\r\n');
+    } catch (e) {
+      // socket closed while writing
+      // no handshake sent; client will stop using WebSocket
+    }
+  },
+  
   parse: function(data) {
     for (var i = 0, n = data.length; i < n; i++)
       this._handleChar(data[i]);
@@ -39,18 +53,3 @@ Faye.WebSocket.Draft75Parser = Faye.Class({
     }
   }
 });
-
-Faye.WebSocket.Draft75Parser.handshake = function(url, request, head, socket) {
-  try {
-    socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n');
-    socket.write('Upgrade: WebSocket\r\n');
-    socket.write('Connection: Upgrade\r\n');
-    socket.write('WebSocket-Origin: ' + request.headers.origin + '\r\n');
-    socket.write('WebSocket-Location: ' + url + '\r\n');
-    socket.write('\r\n');
-  } catch (e) {
-    // socket closed while writing
-    // no handshake sent; client will stop using WebSocket
-  }
-};
-
