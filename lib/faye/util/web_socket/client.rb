@@ -28,7 +28,10 @@ module Faye
         
         case @ready_state
           when CONNECTING then
-            if @handshake.valid?(data)
+            @handshake.parse(data)
+            return unless @handshake.complete?
+            
+            if @handshake.valid?
               @ready_state = OPEN
               event = Event.new
               event.init_event('open', false, false)

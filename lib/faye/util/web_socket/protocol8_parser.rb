@@ -38,6 +38,7 @@ module Faye
           @uri    = uri
           @key    = Base64.encode64((1..16).map { rand(255).chr } * '').strip
           @accept = Base64.encode64(Digest::SHA1.digest(@key + GUID)).strip
+          @buffer = []
         end
         
         def request_data
@@ -54,7 +55,16 @@ module Faye
           handshake
         end
         
-        def valid?(data)
+        def parse(data)
+          data.each_byte { |b| @buffer << b }
+        end
+        
+        def complete?
+          @buffer[-4..-1] == [0x0D, 0x0A, 0x0D, 0x0A]
+        end
+        
+        def valid?
+          data = Faye.encode(@buffer.inject('') { |s,b| s << b})
           response = Net::HTTPResponse.read_new(Net::BufferedIO.new(StringIO.new(data)))
           return false unless response.code.to_i == 101
           
