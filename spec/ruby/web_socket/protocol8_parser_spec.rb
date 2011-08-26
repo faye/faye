@@ -43,34 +43,9 @@ describe Faye::WebSocket::Protocol8Parser do
       parse [0x80, 0x84] + mask + mask_message(0x65, 0x6c, 0x6c, 0x6f)
     end
     
-    it "closes the socket if the frame is incomplete" do
-      @web_socket.should_receive(:send).with("", :close, :protocol_error)
-      parse [0x81]
-    end
-    
     it "closes the socket if the frame has an unrecognized opcode" do
       @web_socket.should_receive(:send).with("", :close, :protocol_error)
       parse [0x83, 0x00]
-    end
-    
-    it "closes the socket if the length is too large" do
-      @web_socket.should_receive(:send).with("", :close, :protocol_error)
-      parse [0x81, 0x06, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
-    end
-    
-    it "closes the socket if the length is too small" do
-      @web_socket.should_receive(:send).with("", :close, :protocol_error)
-      parse [0x81, 0x04, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
-    end
-    
-    it "closes the socket if masking is set on an unmasked message" do
-      @web_socket.should_receive(:send).with("", :close, :protocol_error)
-      parse [0x81, 0x84, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
-    end
-    
-    it "closes the socket if masking is not set on a masked message" do
-      @web_socket.should_receive(:send).with("", :close, :protocol_error)
-      parse [0x81, 0x04] + mask + mask_message(0x48, 0x65, 0x6c, 0x6c, 0x6f)
     end
     
     it "parses unmasked multibyte text frames" do

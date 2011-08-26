@@ -69,6 +69,7 @@ module Faye
       def initialize(web_socket)
         reset
         @socket = web_socket
+        @stage  = 0
       end
       
       def version
@@ -94,57 +95,104 @@ module Faye
       end
       
       def parse(data)
-        limit  = data.respond_to?(:bytes) ? data.bytes.count : data.size
+        data.each_byte(&method(:handle_byte))
+      end
+      
+      def frame(data, type = nil, error_type = nil)
+        return nil if @closed
         
-        byte0  = getbyte(data, 0)
-        byte1  = getbyte(data, 1)
+        if error_type
+          data = [ERRORS[error_type]].pack('n') + data
+        end
         
-        return close(:protocol_error) unless byte0 and byte1
-        
-        final  = (byte0 & FIN) == FIN
-        opcode = (byte0 & OPCODE)
-        
-        return close(:protocol_error) unless OPCODES.values.include?(opcode)
-        reset unless opcode == OPCODES[:continuation]
-
-        masked = (byte1 & MASK) == MASK
-        length = (byte1 & LENGTH)
-        offset = 0
+        opcode = OPCODES[type || :text]
+        frame  = (FIN | opcode).chr
+        length = data.respond_to?(:bytes) ? data.bytes.count : data.size
         
         case length
-          when 126 then
-            length = integer(data, 2, 2)
-            offset = 2
-          when 127 then
-            length = integer(data, 2, 8)
-            offset = 8
+          when 0..125 then
+            frame << length
+          when 126..65535 then
+            frame << 126
+            frame << [length].pack('n')
+          else
+            frame << 127
+            frame << [length >> 32, length & 0xFFFFFFFF].pack('NN')
         end
         
-        if masked
-          payload_offset = 2 + offset + 4 
-          mask_octets    = (0..3).map { |i| getbyte(data, 2 + offset + i) }
+        Faye.encode(frame) + Faye.encode(data)
+      end
+      
+    private
+      
+      def handle_byte(data)
+        case @stage
+        when 0 then parse_opcode(data)
+        when 1 then parse_length(data)
+        when 2 then parse_extended_length(data)
+        when 3 then parse_mask(data)
+        when 4 then parse_payload(data)
+        end
+      end
+      
+      def parse_opcode(data)
+        @final   = (data & FIN) == FIN
+        @opcode  = (data & OPCODE)
+        @mask    = []
+        @payload = []
+        
+        return close(:protocol_error) unless OPCODES.values.include?(@opcode)
+        @stage   = 1
+      end
+      
+      def parse_length(data)
+        @masked = (data & MASK) == MASK
+        @length = (data & LENGTH)
+        
+        if (1..125).include?(@length)
+          @stage = @masked ? 3 : 4
         else
-          payload_offset = 2 + offset
-          mask_octets    = []
+          @length_buffer = []
+          @length_size   = (@length == 126) ? 2 : 8
+          @stage         = 2
         end
+      end
+      
+      def parse_extended_length(data)
+        @length_buffer << data
+        return unless @length_buffer.size == @length_size
+        @length = integer(@length_buffer)
+        @stage  = @masked ? 3 : 4
+      end
+      
+      def parse_mask(data)
+        @mask << data
+        return unless @mask.size == 4
+        @stage = 4
+      end
+      
+      def parse_payload(data)
+        @payload << data
+        return unless @payload.size == @length
+        emit_frame
+        @stage = 0
+      end
+      
+      def emit_frame
+        payload = unmask(@payload, @mask)
         
-        return close(:protocol_error) unless payload_offset + length == limit
-        
-        raw_payload = data[payload_offset...(payload_offset + length)]
-        payload     = unmask(raw_payload, mask_octets)
-
-        case opcode
+        case @opcode
           when OPCODES[:continuation] then
             return unless @mode == :text
             @buffer << payload
-            if final
+            if @final
               message = @buffer * ''
               reset
               @socket.receive(Faye.encode(message))
             end
 
           when OPCODES[:text] then
-            if final
+            if @final
               @socket.receive(Faye.encode(payload))
             else
               @mode = :text
@@ -161,34 +209,7 @@ module Faye
             @socket.send(payload, :pong)
         end
       end
-      
-      def frame(data, type = nil, error_type = nil)
-        return nil if @closed
-        
-        if error_type
-          data = [ERRORS[error_type]].pack('n') + data
-        end
-        
-        opcode = OPCODES[type || :text]
-        frame  = (FIN | opcode).chr
-        length = data.respond_to?(:bytes) ? data.bytes.count : data.size
-        
-        case length
-          when 0..125 then
-            frame << length.chr
-          when 126..65535 then
-            frame << 126.chr
-            frame << [length].pack('n')
-          else
-            frame << 127.chr
-            frame << [length >> 32, length & 0xFFFFFFFF].pack('NN')
-        end
-        
-        Faye.encode(frame) + Faye.encode(data)
-      end
-      
-    private
-      
+
       def reset
         @buffer = []
         @mode   = nil
@@ -204,19 +225,19 @@ module Faye
         data.respond_to?(:getbyte) ? data.getbyte(offset) : data[offset]
       end
       
-      def integer(data, offset, length)
+      def integer(bytes)
         number = 0
-        (0...length).each do |i|
-          number += getbyte(data, offset + i) << (8 * (length - 1 - i))
+        bytes.each_with_index do |data, i|
+          number += data << (8 * (bytes.size - 1 - i))
         end
         number
       end
       
-      def unmask(payload, mask_octets)
-        return payload unless mask_octets.size > 0
+      def unmask(payload, mask)
         unmasked = ''
-        (0...payload.size).each do |i|
-          unmasked << (getbyte(payload, i) ^ mask_octets[i % 4]).chr
+        payload.each_with_index do |byte, i|
+          byte = byte ^ mask[i % 4] if mask.size > 0
+          unmasked << byte
         end
         unmasked
       end

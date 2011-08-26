@@ -25,7 +25,7 @@ module Faye
       end
       
       def parse(data)
-        data.each_char(&method(:handle_char))
+        data.each_byte(&method(:handle_byte))
       end
       
       def frame(data, type = nil, error_type = nil)
@@ -34,7 +34,7 @@ module Faye
       
     private
       
-      def handle_char(data)
+      def handle_byte(data)
         case data
           when "\x00" then
             @buffering = true
