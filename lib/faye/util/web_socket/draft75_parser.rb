@@ -36,16 +36,16 @@ module Faye
       
       def handle_byte(data)
         case data
-          when "\x00" then
+          when 0x00 then
             @buffering = true
             
-          when "\xFF" then
+          when 0xFF then
             @socket.receive(Faye.encode(@buffer.join('')))
             @buffer = []
             @buffering = false
             
           else
-            @buffer.push(data) if @buffering
+            @buffer.push(data.chr) if @buffering
         end
       end
     end
