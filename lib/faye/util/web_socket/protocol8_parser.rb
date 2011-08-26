@@ -175,13 +175,13 @@ module Faye
       
       def parse_mask(data)
         @mask << data
-        return unless @mask.size == 4
+        return if @mask.size < 4
         @stage = 4
       end
       
       def parse_payload(data)
         @payload << data
-        return unless @payload.size == @length
+        return if @payload.size < @length
         emit_frame
         @stage = 0
       end

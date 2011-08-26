@@ -40,6 +40,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   initialize: function(webSocket) {
     this._reset();
     this._socket = webSocket;
+    this._stage  = 0;
   },
   
   handshakeResponse: function(socket) {
@@ -66,77 +67,14 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   },
   
   parse: function(data) {
-    var byte0   = data[0],
-        byte1   = data[1];
-    
-    if (byte0 === undefined || byte1 === undefined)
-      return this._close('protocol_error');
-    
-    var isFinal = (byte0 & this.FIN) === this.FIN,
-        opcode  = (byte0 & this.OPCODE),
-        valid   = false;
-    
-    for (var key in this.OPCODES) {
-      if (this.OPCODES[key] === opcode)
-        valid = true;
-    }
-    if (!valid) return this._close('protocol_error');
-    
-    if (opcode !== this.OPCODES.continuation)
-      this._reset();
-    
-    var masked = (byte1 & this.MASK) === this.MASK,
-        length = (byte1 & this.LENGTH),
-        offset = 0;
-    
-    if (length === 126) {
-      length = this._getInteger(data, 2, 2);
-      offset = 2;
-    } else if (length === 127) {
-      length = this._getInteger(data, 2, 8);
-      offset = 8;
-    }
-    
-    var payloadOffset, maskOctets;
-    if (masked) {
-      payloadOffset = 2 + offset + 4;
-      maskOctets    = Faye.map([0,1,2,3], function(i) { return data[2 + offset + i] });
-    } else {
-      payloadOffset = 2 + offset;
-      maskOctets    = [];
-    }
-    
-    if (payloadOffset + length !== data.length)
-      return this._close('protocol_error');
-    
-    var rawPayload = data.slice(payloadOffset, payloadOffset + length),
-        payload    = this._unmask(rawPayload, maskOctets);
-    
-    if (opcode === this.OPCODES.continuation) {
-      if (this._mode !== 'text') return;
-      this.buffer(payload);
-      if (isFinal) {
-        var message = new Buffer(this._buffer).toString('utf8', 0, this._buffer.length);
-        this._reset();
-        this._socket.receive(message);
+    for (var i = 0, n = data.length; i < n; i++) {
+      switch (this._stage) {
+        case 0: this._parseOpcode(data[i]);         break;
+        case 1: this._parseLength(data[i]);         break;
+        case 2: this._parseExtendedLength(data[i]); break;
+        case 3: this._parseMask(data[i]);           break;
+        case 4: this._parsePayload(data[i]);        break;
       }
-    }
-    else if (opcode === this.OPCODES.text) {
-      if (isFinal) {
-        this._socket.receive(payload.toString('utf8', 0, payload.length));
-      } else {
-        this._mode = 'text';
-        this.buffer(payload);
-      }
-    }
-    else if (opcode === this.OPCODES.binary) {
-      this._close('unacceptable');
-    }
-    else if (opcode === this.OPCODES.close) {
-      this._close('normal_closure');
-    }
-    else if (opcode === this.OPCODES.ping) {
-      this._socket.send(payload.toString('utf8', 0, payload.length), 'pong');
     }
   },
   
@@ -182,6 +120,87 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       this._buffer.push(fragment[i]);
   },
   
+  _parseOpcode: function(data) {
+    this._final   = (data & this.FIN) === this.FIN;
+    this._opcode  = (data & this.OPCODE);
+    this._mask    = [];
+    this._payload = [];
+    
+    var valid = false;
+    
+    for (var key in this.OPCODES) {
+      if (this.OPCODES[key] === this._opcode)
+        valid = true;
+    }
+    if (!valid) return this._close('protocol_error');
+    this._stage = 1;
+  },
+  
+  _parseLength: function(data) {
+    this._masked = (data & this.MASK) === this.MASK;
+    this._length = (data & this.LENGTH);
+    
+    if (this._length >= 0 && this._length <= 125) {
+      this._stage = this._masked ? 3 : 4;
+    } else {
+      this._lengthBuffer = [];
+      this._lengthSize   = (this._length === 126 ? 2 : 8);
+      this._stage        = 2;
+    }
+  },
+  
+  _parseExtendedLength: function(data) {
+    this._lengthBuffer.push(data);
+    if (this._lengthBuffer.length < this._lengthSize) return;
+    this._length = this._getInteger(this._lengthBuffer);
+    this._stage  = this._masked ? 3 : 4;
+  },
+  
+  _parseMask: function(data) {
+    this._mask.push(data);
+    if (this._mask.length < 4) return;
+    this._stage = 4;
+  },
+  
+  _parsePayload: function(data) {
+    this._payload.push(data);
+    if (this._payload.length < this._length) return;
+    this._emitFrame();
+    this._stage = 0;
+  },
+  
+  _emitFrame: function() {
+    var payload = this._unmask(this._payload, this._mask),
+        opcode  = this._opcode;
+    
+    if (opcode === this.OPCODES.continuation) {
+      if (this._mode !== 'text') return;
+      this.buffer(payload);
+      if (this._final) {
+        var message = new Buffer(this._buffer).toString('utf8', 0, this._buffer.length);
+        this._reset();
+        this._socket.receive(message);
+      }
+    }
+    else if (opcode === this.OPCODES.text) {
+      if (this._final) {
+        this._socket.receive(payload.toString('utf8', 0, payload.length));
+      } else {
+        this._mode = 'text';
+        this.buffer(payload);
+      }
+    }
+    else if (opcode === this.OPCODES.binary) {
+      this._close('unacceptable');
+    }
+    else if (opcode === this.OPCODES.close) {
+      this._close('normal_closure');
+    }
+    else if (opcode === this.OPCODES.ping) {
+      this._socket.send(payload.toString('utf8', 0, payload.length), 'pong');
+    }
+  },
+  
   _reset: function() {
     this._mode   = null;
     this._buffer = [];
@@ -193,18 +212,19 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     this._closed = true;
   },
   
-  _getInteger: function(data, offset, length) {
+  _getInteger: function(bytes) {
     var number = 0;
-    for (var i = 0; i < length; i++)
-      number += data[offset + i] << (8 * (length - 1 - i));
+    for (var i = 0, n = bytes.length; i < n; i++)
+      number += bytes[i] << (8 * (n - 1 - i));
     return number;
   },
   
-  _unmask: function(payload, maskOctets) {
-    if (maskOctets.length === 0) return payload;
-    var unmasked = new Buffer(payload.length);
+  _unmask: function(payload, mask) {
+    var unmasked = new Buffer(payload.length), b;
     for (var i = 0, n = payload.length; i < n; i++) {
-      unmasked[i] = payload[i] ^ maskOctets[i % 4];
+      b = payload[i];
+      if (mask.length > 0) b = b ^ mask[i % 4];
+      unmasked[i] = b;
     }
     return unmasked;
   }
