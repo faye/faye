@@ -21,8 +21,7 @@ Faye.WebSocket.Draft76Parser = Faye.Class(Faye.WebSocket.Draft75Parser, {
       socket.write('Upgrade: WebSocket\r\n', 'binary');
       socket.write('Connection: Upgrade\r\n', 'binary');
       socket.write('Sec-WebSocket-Origin: ' + request.headers.origin + '\r\n', 'binary');
-      socket.write('Sec-WebSocket-Location: ' + this._socket.url + '\r\n', 'binary');
-      socket.write('\r\n', 'binary');
+      socket.write('Sec-WebSocket-Location: ' + this._socket.url + '\r\n\r\n', 'binary');
       socket.write(MD5.digest('binary'), 'binary');
     } catch (e) {
       // socket closed while writing

@@ -209,6 +209,7 @@ Faye.NodeAdapter = Faye.Class({
 Faye.extend(Faye.NodeAdapter.prototype, Faye.Logging);
 
 exports.NodeAdapter = Faye.NodeAdapter;
-exports.Client = Faye.Client;
-exports.Logging = Faye.Logging;
+exports.Client      = Faye.Client;
+exports.Logging     = Faye.Logging;
+exports.WebSocket   = Faye.WebSocket;
 

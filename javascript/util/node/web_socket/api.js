@@ -37,7 +37,7 @@ Faye.WebSocket.API = {
 };
 
 Faye.extend(Faye.WebSocket.API, Faye.Publisher);
-// Faye.extend(Faye.WebSocket.Client.prototype, Faye.WebSocket.API);
+Faye.extend(Faye.WebSocket.Client.prototype, Faye.WebSocket.API);
 Faye.extend(Faye.WebSocket.prototype, Faye.WebSocket.API);
 
 Faye.extend(Faye.WebSocket, {

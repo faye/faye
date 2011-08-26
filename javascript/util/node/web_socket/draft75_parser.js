@@ -16,8 +16,7 @@ Faye.WebSocket.Draft75Parser = Faye.Class({
       socket.write('Upgrade: WebSocket\r\n');
       socket.write('Connection: Upgrade\r\n');
       socket.write('WebSocket-Origin: ' + this._socket.request.headers.origin + '\r\n');
-      socket.write('WebSocket-Location: ' + this._socket.url + '\r\n');
-      socket.write('\r\n');
+      socket.write('WebSocket-Location: ' + this._socket.url + '\r\n\r\n');
     } catch (e) {
       // socket closed while writing
       // no handshake sent; client will stop using WebSocket

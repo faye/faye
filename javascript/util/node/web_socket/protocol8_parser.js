@@ -11,6 +11,32 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   
   version: 'protocol-8',
   
+  Handshake: Faye.Class({
+    initialize: function(uri) {
+      this._uri = uri;
+      
+      var buffer = new Buffer(16), i = 16;
+      while (i--) buffer[i] = Math.floor(Math.random() * 254);
+      this._key = buffer.toString('base64');
+      
+      var SHA1 = crypto.createHash('sha1');
+      SHA1.update(this._key + this.GUID);
+      this._accept = SHA1.digest('base64');
+    },
+    
+    requestData: function(socket) {
+      try {
+        socket.write('GET ' + this._uri.pathname + ' HTTP/1.1\r\n');
+        socket.write('Host: ' + this._uri.hostname + '\r\n');
+        socket.write('Upgrade: websocket\r\n');
+        socket.write('Connection: Upgrade\r\n');
+        socket.write('Sec-WebSocket-Key: ' + this._key + '\r\n');
+        socket.write('Sec-WebSocket-Version: 8\r\n');
+        socket.write('\r\n');
+      } catch (e) {}
+    }
+  }),
+  
   initialize: function(webSocket) {
     this._reset();
     this._socket = webSocket;
@@ -28,12 +54,15 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       socket.write('HTTP/1.1 101 Switching Protocols\r\n');
       socket.write('Upgrade: websocket\r\n');
       socket.write('Connection: Upgrade\r\n');
-      socket.write('Sec-WebSocket-Accept: ' + accept + '\r\n');
-      socket.write('\r\n');
+      socket.write('Sec-WebSocket-Accept: ' + accept + '\r\n\r\n');
     } catch (e) {
       // socket closed while writing
       // no handshake sent; client will stop using WebSocket
     }
+  },
+  
+  createHandshake: function() {
+    return new this.Handshake(this._socket.uri);
   },
   
   parse: function(data) {

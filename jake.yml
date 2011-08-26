@@ -33,6 +33,7 @@ packages:
     files:
       - util/set
       - util/node/web_socket
+      - util/node/web_socket/client
       - util/node/web_socket/api
       - util/node/web_socket/draft75_parser
       - util/node/web_socket/draft76_parser
