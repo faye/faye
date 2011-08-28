@@ -12,28 +12,71 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   version: 'protocol-8',
   
   Handshake: Faye.Class({
-    initialize: function(uri) {
-      this._uri = uri;
+    initialize: function(uri, stream) {
+      this._uri    = uri;
+      this._stream = stream;
       
       var buffer = new Buffer(16), i = 16;
       while (i--) buffer[i] = Math.floor(Math.random() * 254);
       this._key = buffer.toString('base64');
       
       var SHA1 = crypto.createHash('sha1');
-      SHA1.update(this._key + this.GUID);
+      SHA1.update(this._key + Faye.WebSocket.Protocol8Parser.prototype.GUID);
       this._accept = SHA1.digest('base64');
+      
+      var HTTPParser = process.binding('http_parser').HTTPParser,
+          parser     = new HTTPParser('response'),
+          current    = null,
+          self       = this;
+      
+      this._complete = false;
+      this._headers  = {};
+      this._parser   = parser;
+      
+      parser.onHeaderField = function(b, start, length) {
+        current = b.toString('utf8', start, start + length);
+      };
+      parser.onHeaderValue = function(b, start, length) {
+        self._headers[current] = b.toString('utf8', start, start + length);
+      };
+      parser.onHeadersComplete = function(settings) {
+        self._status = settings.statusCode;
+      };
+      parser.onMessageComplete = function() {
+        self._complete = true;
+      };
     },
     
-    requestData: function(socket) {
+    requestData: function() {
+      var stream = this._stream;
       try {
-        socket.write('GET ' + this._uri.pathname + ' HTTP/1.1\r\n');
-        socket.write('Host: ' + this._uri.hostname + '\r\n');
-        socket.write('Upgrade: websocket\r\n');
-        socket.write('Connection: Upgrade\r\n');
-        socket.write('Sec-WebSocket-Key: ' + this._key + '\r\n');
-        socket.write('Sec-WebSocket-Version: 8\r\n');
-        socket.write('\r\n');
+        stream.write('GET ' + this._uri.pathname + ' HTTP/1.1\r\n');
+        stream.write('Host: ' + this._uri.hostname + '\r\n');
+        stream.write('Upgrade: websocket\r\n');
+        stream.write('Connection: Upgrade\r\n');
+        stream.write('Sec-WebSocket-Key: ' + this._key + '\r\n');
+        stream.write('Sec-WebSocket-Version: 8\r\n');
+        stream.write('\r\n');
       } catch (e) {}
+    },
+    
+    parse: function(data) {
+      this._parser.execute(data, 0, data.length);
+    },
+    
+    isComplete: function() {
+      return this._complete;
+    },
+    
+    isValid: function() {
+      if (this._status !== 101) return false;
+      
+      var upgrade    = this._headers.Upgrade,
+          connection = this._headers.Connection;
+      
+      return upgrade && /^websocket$/i.test(upgrade) &&
+             connection && connection.split(/\s*,\s*/).indexOf('Upgrade') >= 0 &&
+             this._headers['Sec-WebSocket-Accept'] === this._accept;
     }
   }),
   
@@ -70,7 +113,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   },
   
   createHandshake: function() {
-    return new this.Handshake(this._socket.uri);
+    return new this.Handshake(this._socket.uri, this._stream);
   },
   
   parse: function(data) {

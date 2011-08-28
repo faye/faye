@@ -21,17 +21,26 @@ Faye.WebSocket.Client = Faye.Class({
   
   _onConnect: function() {
     this._handshake = this._parser.createHandshake(this.uri);
-    this._handshake.requestData(this._stream);
+    this._handshake.requestData();
   },
   
   _onData: function(data) {
     switch (this.readyState) {
       case Faye.WebSocket.CONNECTING:
-        // TODO validate handshake
-        this.readyState = Faye.WebSocket.OPEN;
-        var event = new Faye.WebSocket.Event();
-        event.initEvent('open', false, false);
-        this.dispatchEvent(event);
+        this._handshake.parse(data);
+        if (!this._handshake.isComplete()) return;
+        
+        if (this._handshake.isValid()) {
+          this.readyState = Faye.WebSocket.OPEN;
+          var event = new Faye.WebSocket.Event();
+          event.initEvent('open', false, false);
+          this.dispatchEvent(event);
+        } else {
+          this.readyState = Faye.WebSocket.CLOSED;
+          var event = new Faye.WebSocket.Event();
+          event.initEvent('close', false, false);
+          this.dispatchEvent(event);
+        }
         break;
         
       case Faye.WebSocket.OPEN:

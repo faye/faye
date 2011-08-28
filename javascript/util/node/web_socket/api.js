@@ -12,6 +12,7 @@ Faye.WebSocket.API = {
   },
   
   send: function(data, type, errorType) {
+    if (this.readyState === Faye.WebSocket.CLOSED) return false;
     return this._parser.frame(data, type, errorType);
   },
   
