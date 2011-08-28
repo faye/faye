@@ -2,7 +2,7 @@ JS.ENV.WebSocket = JS.ENV.WebSocket || {}
 
 JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Parser", function() { with(this) {
   before(function() { with(this) {
-    this.webSocket = {}
+    this.webSocket = {dispatchEvent: function() {}}
     this.socket = new FakeSocket
     this.parser = new Faye.WebSocket.Protocol8Parser(webSocket, socket)
   }})

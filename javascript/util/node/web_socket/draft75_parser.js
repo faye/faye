@@ -32,9 +32,14 @@ Faye.WebSocket.Draft75Parser = Faye.Class({
   
   frame: function(data) {
     var stream = this._stream;
-    stream.write(this.FRAME_START, 'binary');
-    stream.write(new Buffer(data), 'utf8');
-    stream.write(this.FRAME_END, 'binary');
+    try {
+      stream.write(this.FRAME_START, 'binary');
+      stream.write(new Buffer(data), 'utf8');
+      stream.write(this.FRAME_END, 'binary');
+      return true;
+    } catch (e) {
+      return false;
+    }
   },
   
   _handleChar: function(data) {

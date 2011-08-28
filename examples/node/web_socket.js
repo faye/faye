@@ -9,3 +9,7 @@ ws.onopen = function() {
 ws.onmessage = function(message) {
   console.log(message.data)
 }
+
+ws.onclose = function() {
+  console.log('CLOSED')
+}

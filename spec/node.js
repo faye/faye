@@ -20,6 +20,7 @@ FakeSocket.prototype.read = function() {
   })
   return output
 }
+FakeSocket.prototype.addListener = function() {}
 
 JS.require('Faye', 'JS.Test', 'JS.Range', function() {
   JS.Test.Unit.Assertions.include({

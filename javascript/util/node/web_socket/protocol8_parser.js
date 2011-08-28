@@ -42,6 +42,11 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     this._socket = webSocket;
     this._stream = stream;
     this._stage  = 0;
+    
+    var self = this, close = function() { self._close() };
+    
+    this._stream.addListener('error', function() {});
+    this._stream.addListener('close', close);
   },
   
   handshakeResponse: function() {
@@ -114,8 +119,13 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       frame[frame.length - 1] = error & 255;
     }
     
-    stream.write(frame, 'binary');
-    stream.write(buffer, 'utf8');
+    try {
+      stream.write(frame, 'binary');
+      stream.write(buffer, 'utf8');
+      return true;
+    } catch (e) {
+      return false;
+    }
   },
   
   buffer: function(fragment) {
@@ -213,6 +223,10 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     if (this._closed) return;
     this._socket.send('', 'close', errorType);
     this._closed = true;
+    
+    var event = new Faye.WebSocket.Event();
+    event.initEvent('close', false, false);
+    this._socket.dispatchEvent(event);
   },
   
   _getInteger: function(bytes) {

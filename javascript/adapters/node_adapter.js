@@ -129,12 +129,9 @@ Faye.NodeAdapter = Faye.Class({
         self   = this;
     
     var send = function(messages) {
-      try {
-        self.debug('Sending via WebSocket[' + socket.version + ']: ?', messages);
-        socket.send(JSON.stringify(messages));
-      } catch (e) {
+      self.debug('Sending via WebSocket[' + socket.version + ']: ?', messages);
+      if (!socket.send(JSON.stringify(messages)))
         self._failed[socket.clientId] = messages;
-      }
     };
     
     socket.onmessage = function(message) {
