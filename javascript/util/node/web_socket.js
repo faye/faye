@@ -22,8 +22,8 @@ Faye.WebSocket = Faye.Class({
     this.bufferedAmount = 0;
     
     var Parser = Faye.WebSocket.getParser(request);
-    this._parser = new Parser(this);
-    this._parser.handshakeResponse(this._stream, head);
+    this._parser = new Parser(this, this._stream);
+    this._parser.handshakeResponse(head);
     
     this.readyState = Faye.WebSocket.OPEN;
     this.version = this._parser.version;

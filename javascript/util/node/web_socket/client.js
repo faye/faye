@@ -1,7 +1,5 @@
 Faye.WebSocket.Client = Faye.Class({
   initialize: function(url) {
-    this._parser = new Faye.WebSocket.Protocol8Parser(this);
-    
     this.url = url;
     this.uri = require('url').parse(url);
     
@@ -9,6 +7,8 @@ Faye.WebSocket.Client = Faye.Class({
     
     var connection = require('net').createConnection(this.uri.port || 80, this.uri.hostname),
         self       = this;
+    
+    this._parser = new Faye.WebSocket.Protocol8Parser(this, connection);
     
     connection.addListener('connect', function() {
       self._onConnect();

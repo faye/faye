@@ -37,13 +37,14 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     }
   }),
   
-  initialize: function(webSocket) {
+  initialize: function(webSocket, stream) {
     this._reset();
     this._socket = webSocket;
+    this._stream = stream;
     this._stage  = 0;
   },
   
-  handshakeResponse: function(socket) {
+  handshakeResponse: function() {
     var secKey = this._socket.request.headers['sec-websocket-key'];
     if (!secKey) return;
     
@@ -51,11 +52,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     SHA1.update(secKey + this.GUID);
     var accept = SHA1.digest('base64');
     
+    var stream = this._stream;
     try {
-      socket.write('HTTP/1.1 101 Switching Protocols\r\n');
-      socket.write('Upgrade: websocket\r\n');
-      socket.write('Connection: Upgrade\r\n');
-      socket.write('Sec-WebSocket-Accept: ' + accept + '\r\n\r\n');
+      stream.write('HTTP/1.1 101 Switching Protocols\r\n');
+      stream.write('Upgrade: websocket\r\n');
+      stream.write('Connection: Upgrade\r\n');
+      stream.write('Sec-WebSocket-Accept: ' + accept + '\r\n\r\n');
     } catch (e) {
       // socket closed while writing
       // no handshake sent; client will stop using WebSocket
@@ -78,7 +80,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     }
   },
   
-  frame: function(socket, data, type, errorType) {
+  frame: function(data, type, errorType) {
     if (this._closed) return;
     
     var opcode = this.OPCODES[type || 'text'],
@@ -86,6 +88,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         error  = this.ERRORS[errorType],
         insert = error ? 2 : 0,
         length = buffer.length + insert,
+        stream = this._stream,
         frame, factor;
     
     if (length <= 125) {
@@ -111,8 +114,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       frame[frame.length - 1] = error & 255;
     }
     
-    socket.write(frame, 'binary');
-    socket.write(buffer, 'utf8');
+    stream.write(frame, 'binary');
+    stream.write(buffer, 'utf8');
   },
   
   buffer: function(fragment) {

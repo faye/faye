@@ -3,7 +3,8 @@ JS.ENV.WebSocket = JS.ENV.WebSocket || {}
 JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Parser", function() { with(this) {
   before(function() { with(this) {
     this.webSocket = {}
-    this.parser = new Faye.WebSocket.Protocol8Parser(webSocket)
+    this.socket = new FakeSocket
+    this.parser = new Faye.WebSocket.Protocol8Parser(webSocket, socket)
   }})
   
   define("parse", function() {
@@ -91,20 +92,18 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
   }})
   
   describe("frame", function() { with(this) {
-    before(function() { this.socket = new FakeSocket })
-    
     it("returns the given string formatted as a WebSocket frame", function() { with(this) {
-      parser.frame(socket, "Hello")
+      parser.frame("Hello")
       assertEqual( [0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f], socket.read() )
     }})
     
     it("encodes multibyte characters correctly", function() { with(this) {
-      parser.frame(socket, "Apple = ")
+      parser.frame("Apple = ")
       assertEqual( [0x81, 0x0b, 0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3, 0xbf], socket.read() )
     }})
     
     it("encodes medium-length strings using extra length bytes", function() { with(this) {
-      parser.frame(socket, "HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello")
+      parser.frame("HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello")
       assertEqual( [129, 126, 0, 200, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111, 72, 101, 108, 108, 111], socket.read() )
     }})
     
@@ -114,17 +113,17 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
         message += "Hello"
         output = output.concat([0x48, 0x65, 0x6c, 0x6c, 0x6f])
       }
-      parser.frame(socket, message)
+      parser.frame(message)
       assertEqual( output, socket.read() )
     }})
     
     it("encodes close frames with an error code", function() { with(this) {
-      parser.frame(socket, "Hello", "close", "protocol_error")
+      parser.frame("Hello", "close", "protocol_error")
       assertEqual( [0x88, 0x07, 0x03, 0xea, 0x48, 0x65, 0x6c, 0x6c, 0x6f], socket.read() )
     }})
     
     it("encodes pong frames", function() { with(this) {
-      parser.frame(socket, "", "pong")
+      parser.frame("", "pong")
       assertEqual( [0x8a, 0x00], socket.read() )
     }})
   }})

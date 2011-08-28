@@ -12,8 +12,7 @@ Faye.WebSocket.API = {
   },
   
   send: function(data, type, errorType) {
-    this._parser.frame(this._stream, data, type, errorType);
-    return true;
+    return this._parser.frame(data, type, errorType);
   },
   
   close: function() {},

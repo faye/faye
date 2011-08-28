@@ -3,7 +3,8 @@ JS.ENV.WebSocket = JS.ENV.WebSocket || {}
 JS.ENV.WebSocket.Draft75ParserSpec = JS.Test.describe("WebSocket.Draft75Parser", function() { with(this) {
   before(function() { with(this) {
     this.webSocket = {}
-    this.parser = new Faye.WebSocket.Draft75Parser(webSocket)
+    this.socket = new FakeSocket
+    this.parser = new Faye.WebSocket.Draft75Parser(webSocket, socket)
   }})
   
   describe("parse", function() { with(this) {
@@ -25,15 +26,13 @@ JS.ENV.WebSocket.Draft75ParserSpec = JS.Test.describe("WebSocket.Draft75Parser",
   }})
   
   describe("frame", function() { with(this) {
-    before(function() { this.socket = new FakeSocket })
-    
     it("returns the given string formatted as a WebSocket frame", function() { with(this) {
-      parser.frame(socket, "Hello")
+      parser.frame("Hello")
       assertEqual( [0x00, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0xff], socket.read() )
     }})
     
     it("encodes multibyte characters correctly", function() { with(this) {
-      parser.frame(socket, "Apple = ")
+      parser.frame("Apple = ")
       assertEqual( [0x00, 0x41, 0x70, 0x70, 0x6c, 0x65, 0x20, 0x3d, 0x20, 0xef, 0xa3, 0xbf, 0xff], socket.read() )
     }})
   }})
