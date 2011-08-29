@@ -25,7 +25,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     
     this._state = this.CONNECTING;
     
-    var ws = Faye.ENV.WebSocket || Faye.ENV.MozWebSocket;
+    var ws = Faye.Transport.WebSocket.getClass();
     this._socket = new ws(Faye.Transport.WebSocket.getSocketUrl(this._endpoint));
     var self = this;
     
@@ -64,11 +64,17 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   WEBSOCKET_TIMEOUT: 1000,
   
   getSocketUrl: function(endpoint) {
-    return Faye.URI.parse(endpoint).toURL().replace(/^http(s?):/ig, 'ws$1:');
+    if (Faye.URI) endpoint = Faye.URI.parse(endpoint).toURL();
+    return endpoint.replace(/^http(s?):/ig, 'ws$1:');
+  },
+  
+  getClass: function() {
+    if (Faye.WebSocket) return Faye.WebSocket.Client;
+    return Faye.ENV.WebSocket || Faye.ENV.MozWebSocket;
   },
   
   isUsable: function(endpoint, callback, scope) {
-    var ws = Faye.ENV.WebSocket || Faye.ENV.MozWebSocket;
+    var ws = this.getClass();
     if (!ws) return callback.call(scope, false);
     
     var connected = false,

@@ -44,6 +44,7 @@ packages:
       - engines/redis
       - protocol/server
       - transport/node_local
+      - transport/web_socket
       - transport/node_http
       - adapters/node_adapter
 
