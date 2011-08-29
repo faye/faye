@@ -1,6 +1,11 @@
 module Faye
   class WebSocket
     
+    CONNECTING = 0
+    OPEN       = 1
+    CLOSING    = 2
+    CLOSED     = 3
+    
     module API
       attr_reader   :url, :ready_state, :buffered_amount
       attr_accessor :onopen, :onmessage, :onerror, :onclose
@@ -15,11 +20,34 @@ module Faye
       end
       
       def send(data, type = nil, error_type = nil)
+        return false if ready_state == CLOSED
         frame = @parser.frame(Faye.encode(data), type, error_type)
         @stream.write(frame) if frame
       end
       
-      def close
+      def close(reason = nil)
+        return if [CLOSING, CLOSED].include?(ready_state)
+        
+        @ready_state = CLOSING
+        
+        close = lambda do
+          @ready_state = CLOSED
+          @stream.close_connection_after_writing if EventMachine::Connection === @stream
+          event = Event.new
+          event.init_event('close', false, false)
+          dispatch_event(event)
+        end
+        
+        if reason
+          @parser.close(reason)
+          close.call
+        else
+          if @parser.respond_to?(:close)
+            @parser.close(reason, &close)
+          else
+            close.call
+          end
+        end
       end
       
       def add_event_listener(type, listener, use_capture)

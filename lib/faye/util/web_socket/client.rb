@@ -18,6 +18,8 @@ module Faye
         end
       end
       
+    private
+      
       def on_connect
         @handshake = @parser.create_handshake
         @stream.write(@handshake.request_data)
@@ -43,7 +45,7 @@ module Faye
               dispatch_event(event)
             end
             
-          when OPEN then
+          when OPEN, CLOSING then
             @parser.parse(data)
         end
       end
@@ -52,11 +54,15 @@ module Faye
         attr_accessor :parent
         
         def connection_completed
-          parent.on_connect
+          parent.__send__(:on_connect)
         end
         
         def receive_data(data)
-          parent.receive_data(data)
+          parent.__send__(:receive_data, data)
+        end
+        
+        def unbind
+          parent.close
         end
         
         def write(data)

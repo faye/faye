@@ -11,11 +11,6 @@ module Faye
     
     include API
     
-    CONNECTING = 0
-    OPEN       = 1
-    CLOSING    = 2
-    CLOSED     = 3
-    
     attr_reader :request
     
     extend Forwardable

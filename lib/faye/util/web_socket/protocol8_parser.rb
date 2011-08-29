@@ -138,7 +138,15 @@ module Faye
             frame << [length >> 32, length & 0xFFFFFFFF].pack('NN')
         end
         
+        
         Faye.encode(frame) + Faye.encode(data)
+      end
+      
+      def close(error_type = nil, &callback)
+        return if @closed
+        @closing_callback ||= callback
+        @socket.send('', :close, error_type || :normal_closure)
+        @closed = true
       end
       
     private
@@ -149,7 +157,7 @@ module Faye
         @mask    = []
         @payload = []
         
-        return close(:protocol_error) unless OPCODES.values.include?(@opcode)
+        return @socket.close(:protocol_error) unless OPCODES.values.include?(@opcode)
         @stage   = 1
       end
       
@@ -208,10 +216,11 @@ module Faye
             end
 
           when OPCODES[:binary] then
-            close(:unacceptable)
+            @socket.close(:unacceptable)
 
           when OPCODES[:close] then
-            close(:normal_closure)
+            @socket.close(:normal_closure)
+            @closing_callback.call if @closing_callback
 
           when OPCODES[:ping] then
             @socket.send(payload, :pong)
@@ -223,12 +232,6 @@ module Faye
         @mode   = nil
       end
       
-      def close(error_type)
-        return if @closed
-        @socket.send('', :close, error_type)
-        @closed = true
-      end
-
       def getbyte(data, offset)
         data.respond_to?(:getbyte) ? data.getbyte(offset) : data[offset]
       end
