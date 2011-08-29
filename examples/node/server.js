@@ -3,15 +3,15 @@ var fs    = require('fs'),
     http  = require('http'),
     faye  = require('../../build/faye-node');
 
-faye.Logging.logLevel = 'debug';
+// faye.Logging.logLevel = 'debug';
 
 var PUBLIC_DIR = path.dirname(__filename) + '/../shared/public',
     bayeux     = new faye.NodeAdapter({mount: '/bayeux', timeout: 20}),
     port       = process.ARGV[2] || '8000';
 
-//bayeux.getClient().subscribe('/chat/*', function(message) {
-//  console.log('[' + message.user + ']: ' + message.message);
-//});
+bayeux.getClient().subscribe('/chat/*', function(message) {
+  console.log('[' + message.user + ']: ' + message.message);
+});
 
 var server = http.createServer(function(request, response) {
   var path = (request.url === '/') ? '/index.html' : request.url;
