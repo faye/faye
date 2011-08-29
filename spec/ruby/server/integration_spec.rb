@@ -65,24 +65,42 @@ describe "server integration" do
   
   after { stop }
   
-  it "delivers a message between clients" do
-    publish :alice, "/foo", {"hello" => "world"}
-    check_inbox :bob, "/foo", [{"hello" => "world"}]
+  shared_examples_for "message bus" do
+    it "delivers a message between clients" do
+      publish :alice, "/foo", {"hello" => "world"}
+      check_inbox :bob, "/foo", [{"hello" => "world"}]
+    end
+    
+    it "does not deliver messages for unsubscribed channels" do
+      publish :alice, "/bar", {"hello" => "world"}
+      check_inbox :bob, "/foo", []
+    end
+    
+    it "delivers multiple messages" do
+      publish :alice, "/foo", {"hello" => "world"}
+      publish :alice, "/foo", {"hello" => "world"}
+      check_inbox :bob, "/foo", [{"hello" => "world"}, {"hello" => "world"}]
+    end
+    
+    it "delivers multibyte strings" do
+      publish :alice, "/foo", {"hello" => encode("Apple = ")}
+      check_inbox :bob, "/foo", [{"hello" => encode("Apple = ")}]
+    end
   end
   
-  it "does not deliver messages for unsubscribed channels" do
-    publish :alice, "/bar", {"hello" => "world"}
-    check_inbox :bob, "/foo", []
+  describe "with HTTP transport" do
+    before do
+      Faye::Transport::WebSocket.stub(:usable?).and_yield(false)
+    end
+    
+    it_should_behave_like "message bus"
   end
   
-  it "delivers multiple messages" do
-    publish :alice, "/foo", {"hello" => "world"}
-    publish :alice, "/foo", {"hello" => "world"}
-    check_inbox :bob, "/foo", [{"hello" => "world"}, {"hello" => "world"}]
-  end
-  
-  it "delivers multibyte strings" do
-    publish :alice, "/foo", {"hello" => encode("Apple = ")}
-    check_inbox :bob, "/foo", [{"hello" => encode("Apple = ")}]
+  describe "with WebSocket transport" do
+    before do
+      Faye::Transport::WebSocket.stub(:usable?).and_yield(false)
+    end
+    
+    it_should_behave_like "message bus"
   end
 end

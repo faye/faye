@@ -31,6 +31,7 @@ module Faye
       protocol/server
       transport/transport
       transport/local
+      transport/web_socket
       transport/http
       error
       

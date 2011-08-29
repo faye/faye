@@ -1,7 +1,7 @@
 Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
-  UNCONNECTED:  1,
-  CONNECTING:   2,
-  CONNECTED:    3,
+  UNCONNECTED:  <%= Faye::Transport::WebSocket::UNCONNECTED %>,
+  CONNECTING:   <%= Faye::Transport::WebSocket::CONNECTING %>,
+  CONNECTED:    <%= Faye::Transport::WebSocket::CONNECTED %>,
 
   batching:     false,
   
