@@ -62,7 +62,7 @@ module Faye
       @stream.write(frame) if frame
     end
     
-    def close
+    def close(*args)
     end
     
     def add_event_listener(type, listener, use_capture)
