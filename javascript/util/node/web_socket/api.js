@@ -16,7 +16,26 @@ Faye.WebSocket.API = {
     return this._parser.frame(data, type, errorType);
   },
   
-  close: function() {},
+  close: function(reason) {
+    if (this.readyState !== Faye.WebSocket.OPEN) return;
+    this.readyState = Faye.WebSocket.CLOSING;
+    
+    var close = function() {
+      this.readyState = Faye.WebSocket.CLOSED;
+      this._stream.end();
+      var event = new Faye.WebSocket.Event();
+      event.initEvent('close', false, false);
+      this.dispatchEvent(event);
+    };
+    
+    if (reason) {
+      this._parser.close(reason);
+      close.call(this);
+    } else {
+      if (this._parser.close) this._parser.close(reason, close, this);
+      else close.call(this);
+    }
+  },
   
   addEventListener: function(type, listener, useCapture) {
     this.addSubscriber(type, listener);

@@ -9,6 +9,7 @@ Faye.WebSocket.Client = Faye.Class({
         self       = this;
     
     this._parser = new Faye.WebSocket.Protocol8Parser(this, connection);
+    this._stream = connection;
     
     connection.addListener('connect', function() {
       self._onConnect();
@@ -16,7 +17,10 @@ Faye.WebSocket.Client = Faye.Class({
     connection.addListener('data', function(data) {
       self._onData(data);
     });
-    this._stream = connection;
+    connection.addListener('close', function() {
+      self.close();
+    });
+    connection.addListener('error', function() {});
   },
   
   _onConnect: function() {
@@ -44,6 +48,7 @@ Faye.WebSocket.Client = Faye.Class({
         break;
         
       case Faye.WebSocket.OPEN:
+      case Faye.WebSocket.CLOSING:
         this._parser.parse(data);
     }
   }

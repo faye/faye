@@ -85,11 +85,6 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     this._socket = webSocket;
     this._stream = stream;
     this._stage  = 0;
-    
-    var self = this, close = function() { self._close() };
-    
-    this._stream.addListener('error', function() {});
-    this._stream.addListener('close', close);
   },
   
   handshakeResponse: function() {
@@ -164,11 +159,18 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     
     try {
       stream.write(frame, 'binary');
-      stream.write(buffer, 'utf8');
+      if (buffer.length > 0) stream.write(buffer, 'utf8');
       return true;
     } catch (e) {
       return false;
     }
+  },
+  
+  close: function(errorType, callback, context) {
+    if (this._closed) return;
+    if (callback) this._closingCallback = [callback, context];
+    this.frame('', 'close', errorType || 'normal_closure');
+    this._closed = true;
   },
   
   buffer: function(fragment) {
@@ -188,7 +190,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       if (this.OPCODES[key] === this._opcode)
         valid = true;
     }
-    if (!valid) return this._close('protocol_error');
+    if (!valid) return this._socket.close('protocol_error');
     this._stage = 1;
   },
   
@@ -247,10 +249,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       }
     }
     else if (opcode === this.OPCODES.binary) {
-      this._close('unacceptable');
+      this._socket.close('unacceptable');
     }
     else if (opcode === this.OPCODES.close) {
-      this._close('normal_closure');
+      this._socket.close('normal_closure');
+      if (this._closingCallback)
+        this._closingCallback[0].call(this._closingCallback[1]);
     }
     else if (opcode === this.OPCODES.ping) {
       this._socket.send(payload.toString('utf8', 0, payload.length), 'pong');
@@ -260,16 +264,6 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   _reset: function() {
     this._mode   = null;
     this._buffer = [];
-  },
-  
-  _close: function(errorType) {
-    if (this._closed) return;
-    this._socket.send('', 'close', errorType);
-    this._closed = true;
-    
-    var event = new Faye.WebSocket.Event();
-    event.initEvent('close', false, false);
-    this._socket.dispatchEvent(event);
   },
   
   _getInteger: function(bytes) {

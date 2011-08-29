@@ -47,32 +47,51 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
 JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function() { with(this) {
   include(IntegrationSteps)
   
-  before(function() { with(this) {
-    server(8000)
-    client("alice", [])
-    client("bob", ["/foo"])
+  sharedExamplesFor("message bus", function() { with(this) {
+    before(function() { with(this) {
+      server(8000)
+      client("alice", [])
+      client("bob", ["/foo"])
+    }})
+    
+    after(function() { this.stop() })
+    
+    it("delivers a message between clients", function() { with(this) {
+      publish("alice", "/foo", {hello: "world"})
+      check_inbox("bob", "/foo", [{hello: "world"}])
+    }})
+    
+    it("does not deliver messages for unsubscribed channels", function() { with(this) {
+      publish("alice", "/bar", {hello: "world"})
+      check_inbox("bob", "/foo", [])
+    }})
+    
+    it("delivers multiple messages", function() { with(this) {
+      publish("alice", "/foo", {hello: "world"})
+      publish("alice", "/foo", {hello: "world"})
+      check_inbox("bob", "/foo", [{hello: "world"},{hello: "world"}])
+    }})
+    
+    it("delivers multibyte strings", function() { with(this) {
+      publish("alice", "/foo", {hello: "Apple = "})
+      check_inbox("bob", "/foo", [{hello: "Apple = "}])
+    }})
   }})
   
-  after(function() { this.stop() })
-  
-  it("delivers a message between clients", function() { with(this) {
-    publish("alice", "/foo", {hello: "world"})
-    check_inbox("bob", "/foo", [{hello: "world"}])
+  describe("with HTTP transport", function() { with(this) {
+    before(function() { with(this) {
+      stub(Faye.Transport.WebSocket, "isUsable").yields([false])
+    }})
+    
+    itShouldBehaveLike("message bus")
   }})
   
-  it("does not deliver messages for unsubscribed channels", function() { with(this) {
-    publish("alice", "/bar", {hello: "world"})
-    check_inbox("bob", "/foo", [])
-  }})
-  
-  it("delivers multiple messages", function() { with(this) {
-    publish("alice", "/foo", {hello: "world"})
-    publish("alice", "/foo", {hello: "world"})
-    check_inbox("bob", "/foo", [{hello: "world"},{hello: "world"}])
-  }})
-  
-  it("delivers multibyte strings", function() { with(this) {
-    publish("alice", "/foo", {hello: "Apple = "})
-    check_inbox("bob", "/foo", [{hello: "Apple = "}])
+  describe("with WebSocket transport", function() { with(this) {
+    before(function() { with(this) {
+      stub(Faye.Transport.WebSocket, "isUsable").yields([true])
+    }})
+    
+    itShouldBehaveLike("message bus")
   }})
 }})
+

@@ -44,6 +44,7 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
               'Server.UnsubscribeSpec',
               'Server.ExtensionsSpec',
               'Server.IntegrationSpec',
+              'WebSocket.ClientSpec',
               'WebSocket.Draft75ParserSpec',
               'WebSocket.Protocol8ParserSpec',
               'NodeAdapterSpec',
