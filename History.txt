@@ -1,7 +1,10 @@
-=== 0.6.5 / 2011-08-28
+=== 0.6.5 / 2011-08-29
+TestSwarm build: http://swarm.jcoglan.com/job/99/
 
 * Fix UTF-8 encoding bugs in draft-75/76 and protocol-8 WebSocket parsers
+* Switch to streaming parser for WebSocket protocol-8
 * Remove an SREM operation that shouldn't have been in the Redis engine
+* Move thin_extensions.rb so it's not on the Rubygems load path
 
 
 === 0.6.4 / 2011-08-18
