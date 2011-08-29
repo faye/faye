@@ -17,7 +17,9 @@ Faye.WebSocket.API = {
   },
   
   close: function(reason) {
-    if (this.readyState !== Faye.WebSocket.OPEN) return;
+    if (this.readyState === Faye.WebSocket.CLOSING ||
+        this.readyState === Faye.WebSocket.CLOSED) return;
+    
     this.readyState = Faye.WebSocket.CLOSING;
     
     var close = function() {
