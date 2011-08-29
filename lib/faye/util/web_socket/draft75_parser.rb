@@ -2,15 +2,6 @@ module Faye
   class WebSocket
     
     class Draft75Parser
-      def self.handshake(request)
-        upgrade =  "HTTP/1.1 101 Web Socket Protocol Handshake\r\n"
-        upgrade << "Upgrade: WebSocket\r\n"
-        upgrade << "Connection: Upgrade\r\n"
-        upgrade << "WebSocket-Origin: #{request.env['HTTP_ORIGIN']}\r\n"
-        upgrade << "WebSocket-Location: #{request.websocket_url}\r\n\r\n"
-        upgrade
-      end
-      
       def initialize(web_socket)
         @socket    = web_socket
         @buffer    = []
@@ -21,8 +12,20 @@ module Faye
         'draft-75'
       end
       
+      def handshake_response
+        request = @socket.request
+        
+        upgrade =  "HTTP/1.1 101 Web Socket Protocol Handshake\r\n"
+        upgrade << "Upgrade: WebSocket\r\n"
+        upgrade << "Connection: Upgrade\r\n"
+        upgrade << "WebSocket-Origin: #{request.env['HTTP_ORIGIN']}\r\n"
+        upgrade << "WebSocket-Location: #{@socket.url}\r\n"
+        upgrade << "\r\n"
+        upgrade
+      end
+      
       def parse(data)
-        data.each_char(&method(:handle_char))
+        data.each_byte(&method(:handle_byte))
       end
       
       def frame(data, type = nil, error_type = nil)
@@ -31,18 +34,18 @@ module Faye
       
     private
       
-      def handle_char(data)
+      def handle_byte(data)
         case data
-          when "\x00" then
+          when 0x00 then
             @buffering = true
             
-          when "\xFF" then
+          when 0xFF then
             @socket.receive(Faye.encode(@buffer.join('')))
             @buffer = []
             @buffering = false
             
           else
-            @buffer.push(data) if @buffering
+            @buffer.push(data.chr) if @buffering
         end
       end
     end

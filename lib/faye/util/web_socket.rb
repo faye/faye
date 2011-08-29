@@ -12,7 +12,7 @@ module Faye
     CLOSING    = 2
     CLOSED     = 3
     
-    attr_reader   :url, :ready_state
+    attr_reader   :request, :url, :ready_state
     attr_accessor :onopen, :onmessage, :onerror, :onclose
     
     extend Forwardable
@@ -34,14 +34,19 @@ module Faye
       @stream   = Stream.new
       @callback.call [200, RackAdapter::TYPE_JSON, @stream]
       
-      @url = @request.env['websocket.url']
+      @url = determine_url
+      @ready_state = CONNECTING
+      @buffered_amount = 0
+      
+      @parser = WebSocket.parser(@request).new(self)
+      @stream.write(@parser.handshake_response)
+      
       @ready_state = OPEN
       
       event = Event.new
       event.init_event('open', false, false)
       dispatch_event(event)
       
-      @parser = WebSocket.parser(@request).new(self)
       @request.env[Thin::Request::WEBSOCKET_RECEIVE_CALLBACK] = @parser.method(:parse)
     end
     
@@ -77,6 +82,19 @@ module Faye
       callback.call(event) if callback
     end
     
+  private
+    
+    def determine_url
+      env = @request.env
+      secure = if env.has_key?('HTTP_X_FORWARDED_PROTO')
+                 env['HTTP_X_FORWARDED_PROTO'] == 'https'
+               else
+                 env['HTTP_ORIGIN'] =~ /^https:/i
+               end
+      
+      scheme = secure ? 'wss:' : 'ws:'
+      "#{ scheme }//#{ env['HTTP_HOST'] }#{ env['REQUEST_URI'] }"
+    end
   end
   
   class WebSocket::Stream
