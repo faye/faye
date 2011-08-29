@@ -18,7 +18,7 @@ describe Faye::Client do
   end
 
   def create_client
-    Faye::Transport.stub(:get).and_return(transport)
+    Faye::Transport.stub(:get).and_yield(transport)
     @client = Faye::Client.new("http://localhost/")
   end
   

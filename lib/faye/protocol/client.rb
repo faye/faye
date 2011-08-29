@@ -24,7 +24,9 @@ module Faye
       @endpoint   = endpoint || RackAdapter::DEFAULT_ENDPOINT
       @options    = options
 
-      @transport  = Transport.get(self, MANDATORY_CONNECTION_TYPES)
+      Transport.get(self, MANDATORY_CONNECTION_TYPES) do |transport|
+        @transport = transport
+      end
       @state      = UNCONNECTED
       @channels   = Channel::Set.new
       @message_id = 0
@@ -84,7 +86,9 @@ module Faye
         if response['successful']
           @state     = CONNECTED
           @client_id = response['clientId']
-          @transport = Transport.get(self, response['supportedConnectionTypes'])
+          Transport.get(self, response['supportedConnectionTypes']) do |transport|
+            @transport = transport
+          end
           
           info('Handshake successful: ?', @client_id)
           

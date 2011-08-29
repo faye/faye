@@ -68,20 +68,29 @@ module Faye
     class << self
       attr_accessor :connection_type
       
-      def get(client, connection_types = nil)
+      def get(client, connection_types = nil, &callback)
         endpoint = client.endpoint
         connection_types ||= supported_connection_types
         
-        candidate_class = @transports.find do |(type, klass)|
-          connection_types.include?(type) and
-          klass.usable?(endpoint)
+        select = lambda do |(conn_type, klass), resume|
+          if connection_types.include?(conn_type)
+            klass.usable?(endpoint) do |is_usable|
+              if is_usable
+                callback.call(klass.new(client, endpoint))
+              else
+                resume.call
+              end
+            end
+          else
+            resume.call
+          end
         end
         
-        unless candidate_class
+        error = lambda do
           raise "Could not find a usable connection type for #{ endpoint }"
         end
         
-        candidate_class.last.new(client, endpoint)
+        Faye.async_each(@transports, select, error)
       end
       
       def register(type, klass)
