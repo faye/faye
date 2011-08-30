@@ -12,7 +12,7 @@ module Faye
     def self.usable?(endpoint, &callback)
       connected  = false
       called     = false
-      socket_url = endpoint.gsub(/^http(s?):/, 'ws:')
+      socket_url = endpoint.gsub(/^http(s?):/, 'ws\1:')
       socket     = Faye::WebSocket::Client.new(socket_url)
       
       socket.onopen = lambda do |event|
@@ -54,7 +54,7 @@ module Faye
       
       @state = CONNECTING
       
-      @socket = Faye::WebSocket::Client.new(@endpoint.gsub(/^http(s?):/, 'ws:'))
+      @socket = Faye::WebSocket::Client.new(@endpoint.gsub(/^http(s?):/, 'ws\1:'))
       
       @socket.onopen = lambda do |*args|
         @timeout = nil

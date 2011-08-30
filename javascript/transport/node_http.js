@@ -2,36 +2,39 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
     var uri      = url.parse(this._endpoint),
         secure   = (uri.protocol === 'https:'),
-        port     = (secure ? 443 : 80),
-        client   = http.createClient(uri.port || port, uri.hostname, secure),
+        client   = secure ? https : http,
+        port     = uri.port || (secure ? 443 : 80),
         content  = new Buffer(JSON.stringify(message)),
         response = null,
+        body     = '',
         retry    = this.retry(message, timeout),
         self     = this;
     
-    client.addListener('error', retry);
-    
-    client.addListener('end', function() {
-      if (!response) retry();
-    });
-    
-    var request = client.request('POST', uri.pathname, {
-      'Content-Type':   'application/json',
-      'Host':           uri.hostname,
-      'Content-Length': content.length
+    var request = client.request({
+      method:   'POST',
+      host:     uri.hostname,
+      port:     port,
+      path:     uri.pathname,
+      headers:  {
+        'Content-Type':   'application/json',
+        'Host':           uri.hostname,
+        'Content-Length': content.length
+      }
     });
     
     request.addListener('response', function(stream) {
       response = stream;
-      Faye.withDataFor(response, function(data) {
+      response.addListener('data', function(c) { body += c.toString('utf8', 0, c.length) });
+      response.addListener('end', function() {
         try {
-          self.receive(JSON.parse(data));
+          self.receive(JSON.parse(body));
         } catch (e) {
           retry();
         }
       });
     });
     
+    request.addListener('error', retry);
     request.write(content);
     request.end();
   }

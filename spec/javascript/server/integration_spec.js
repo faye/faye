@@ -1,8 +1,15 @@
 JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
-  server: function(port, callback) {
+  server: function(port, ssl, callback) {
+    var shared  = __dirname + '/../../../examples/shared',
+        
+        options = ssl
+                ? { key: shared + '/server.key', cert: shared + '/server.crt' }
+                : null
+    
     this._adapter = new Faye.NodeAdapter({mount: "/bayeux", timeout: 25})
-    this._adapter.listen(port)
+    this._adapter.listen(port, options)
     this._port = port
+    this._secure = ssl
     setTimeout(callback, 100)
   },
   
@@ -12,13 +19,14 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
   },
   
   client: function(name, channels, callback) {
+    var scheme = this._secure ? "https" : "http"
     this._clients = this._clients || {}
     this._inboxes = this._inboxes || {}
-    this._clients[name] = new Faye.Client("http://0.0.0.0:" + this._port  + "/bayeux")
+    this._clients[name] = new Faye.Client(scheme + "://0.0.0.0:" + this._port  + "/bayeux")
     this._inboxes[name] = {}
     
     var n = channels.length
-    if (n === 0) return callback()
+    if (n === 0) return this._clients[name].connect(callback)
     
     Faye.each(channels, function(channel) {
       var subscription = this._clients[name].subscribe(channel, function(message) {
@@ -49,7 +57,7 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
   
   sharedExamplesFor("message bus", function() { with(this) {
     before(function() { with(this) {
-      server(8000)
+      server(8000, serverOptions.ssl)
       client("alice", [])
       client("bob", ["/foo"])
     }})
@@ -78,20 +86,38 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
     }})
   }})
   
-  describe("with HTTP transport", function() { with(this) {
-    before(function() { with(this) {
-      stub(Faye.Transport.WebSocket, "isUsable").yields([false])
-    }})
+  sharedExamplesFor("network transports", function() { with(this) {
+//    describe("with HTTP transport", function() { with(this) {
+//      before(function() { with(this) {
+//        stub(Faye.Transport.WebSocket, "isUsable").yields([false])
+//      }})
+//      
+//      itShouldBehaveLike("message bus")
+//    }})
     
-    itShouldBehaveLike("message bus")
+    describe("with WebSocket transport", function() { with(this) {
+      before(function() { with(this) {
+        stub(Faye.Transport.WebSocket, "isUsable").yields([true])
+      }})
+      
+      itShouldBehaveLike("message bus")
+    }})
   }})
   
-  describe("with WebSocket transport", function() { with(this) {
+  describe("with HTTP server", function() { with(this) {
     before(function() { with(this) {
-      stub(Faye.Transport.WebSocket, "isUsable").yields([true])
+      this.serverOptions = {ssl: false}
     }})
     
-    itShouldBehaveLike("message bus")
+    itShouldBehaveLike("network transports")
+  }})
+  
+  describe("with HTTPS server", function() { with(this) {
+    before(function() { with(this) {
+      this.serverOptions = {ssl: true}
+    }})
+    
+    itShouldBehaveLike("network transports")
   }})
 }})
 

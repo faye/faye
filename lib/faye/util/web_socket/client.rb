@@ -21,6 +21,7 @@ module Faye
     private
       
       def on_connect
+        @stream.start_tls if @uri.scheme == 'wss'
         @handshake = @parser.create_handshake
         @stream.write(@handshake.request_data)
       end

@@ -9,7 +9,8 @@
 
 var Buffer = require('buffer').Buffer,
     crypto = require('crypto'),
-    net    = require('net');
+    net    = require('net'),
+    tls    = require('tls');
 
 Faye.WebSocket = Faye.Class({
   initialize: function(request, head) {

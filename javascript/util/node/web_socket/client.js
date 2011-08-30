@@ -5,15 +5,19 @@ Faye.WebSocket.Client = Faye.Class({
     
     this.readyState = Faye.WebSocket.CONNECTING;
     
-    var connection = require('net').createConnection(this.uri.port || 80, this.uri.hostname),
-        self       = this;
+    var secure     = (this.uri.protocol === 'wss:'),
+        self       = this,
+        onConnect  = function() { self._onConnect() },
+        
+        connection = secure
+                   ? tls.connect(this.uri.port || 443, this.uri.hostname, onConnect)
+                   : net.createConnection(this.uri.port || 80, this.uri.hostname);
     
     this._parser = new Faye.WebSocket.Protocol8Parser(this, connection);
     this._stream = connection;
     
-    connection.addListener('connect', function() {
-      self._onConnect();
-    });
+    if (!secure) connection.addListener('connect', onConnect);
+    
     connection.addListener('data', function(data) {
       self._onData(data);
     });
