@@ -1,8 +1,8 @@
 require 'rubygems'
 require './lib/faye'
 
-task :example, :port do |t, args|
-  exec "ruby examples/ruby/server.rb #{args[:port]}"
+task :example, :port, :ssl do |t, args|
+  exec "ruby examples/ruby/server.rb #{args[:port]} #{args[:ssl] && 'ssl'}"
 end
 
 task :handshake, :port, :n, :c do |t, args|
