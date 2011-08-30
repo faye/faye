@@ -43,9 +43,18 @@ module Faye
       @client ||= Client.new(@server)
     end
     
-    def listen(port)
+    def listen(port, ssl_options = nil)
       handler = Rack::Handler.get('thin')
-      handler.run(self, :Port => port) { |s| @thin_server = s }
+      handler.run(self, :Port => port) do |s|
+        if ssl_options
+          s.ssl = true
+          s.ssl_options = {
+            :private_key_file => ssl_options[:key],
+            :cert_chain_file  => ssl_options[:cert]
+          }
+        end
+        @thin_server = s
+      end
     end
     
     def stop

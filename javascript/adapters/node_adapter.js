@@ -3,6 +3,7 @@ var path  = require('path'),
     sys   = require('sys'),
     url   = require('url'),
     http  = require('http'),
+    https = require('https'),
     querystring = require('querystring');
 
 Faye.logger = function(message) {
@@ -49,8 +50,17 @@ Faye.NodeAdapter = Faye.Class({
     return this._client = this._client || new Faye.Client(this._server);
   },
   
-  listen: function(port) {
-    var httpServer = http.createServer(function() {});
+  listen: function(port, sslOptions) {
+    var ssl = sslOptions
+            ? { key:  fs.readFileSync(sslOptions.key),
+                cert: fs.readFileSync(sslOptions.cert)
+              }
+            : null,
+        
+        httpServer = ssl
+                   ? https.createServer(ssl, function() {})
+                   : http.createServer(function() {});
+    
     this.attach(httpServer);
     httpServer.listen(port);
     this._httpServer = httpServer;
