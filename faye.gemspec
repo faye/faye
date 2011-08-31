@@ -15,10 +15,12 @@ Gem::Specification.new do |s|
   
   s.require_paths     = %w[lib]
 
-  s.add_dependency "eventmachine", "~> 0.12.0"
+  s.add_dependency "eventmachine", "~> 1.0.0.beta.3"
   s.add_dependency "em-http-request", ">= 0.2"
   s.add_dependency "em-hiredis", ">= 0.0.1"
   s.add_dependency "json", ">= 1.0"
+  s.add_dependency "mongoid", "~> 2.2.0"
+  s.add_dependency "em-mongo", "~> 0.4.0"
   s.add_dependency "thin", "~> 1.2"
   s.add_dependency "rack", ">= 1.0"
 
