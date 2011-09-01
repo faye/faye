@@ -24,18 +24,17 @@ Faye.WebSocket = Faye.Class({
   onclose:    null,
   
   initialize: function(request, head) {
-    this._request = request;
-    this._head    = head;
-    this._stream  = request.socket;
+    this.request = request;
+    this._stream = request.socket;
     
     var scheme = Faye.WebSocket.isSecureConnection(request) ? 'wss:' : 'ws:';
     this.url = scheme + '//' + request.headers.host + request.url;    
     this.readyState = Faye.WebSocket.CONNECTING;
     this.bufferedAmount = 0;
     
-    var parser = Faye.WebSocket.getParser(request);
-    parser.handshake(this.url, this._request, this._head, this._stream);
-    this._parser = new parser(this);
+    var Parser = Faye.WebSocket.getParser(request);
+    this._parser = new Parser(this, this._stream);
+    this._parser.handshakeResponse(head);
     
     this.readyState = Faye.WebSocket.OPEN;
     this.version = this._parser.version;
@@ -59,7 +58,7 @@ Faye.WebSocket = Faye.Class({
   },
   
   send: function(data, type, errorType) {
-    this._parser.frame(this._stream, data, type, errorType);
+    this._parser.frame(data, type, errorType);
     return true;
   },
   

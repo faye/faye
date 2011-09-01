@@ -4,10 +4,25 @@ Faye.WebSocket.Draft75Parser = Faye.Class({
   
   version     : 'draft-75',
   
-  initialize: function(webSocket) {
+  initialize: function(webSocket, stream) {
     this._socket    = webSocket;
+    this._stream    = stream;
     this._buffer    = [];
     this._buffering = false;
+  },
+  
+  handshakeResponse: function() {
+    var stream = this._stream;
+    try {
+      stream.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n');
+      stream.write('Upgrade: WebSocket\r\n');
+      stream.write('Connection: Upgrade\r\n');
+      stream.write('WebSocket-Origin: ' + this._socket.request.headers.origin + '\r\n');
+      stream.write('WebSocket-Location: ' + this._socket.url + '\r\n\r\n');
+    } catch (e) {
+      // socket closed while writing
+      // no handshake sent; client will stop using WebSocket
+    }
   },
   
   parse: function(data) {
@@ -15,10 +30,16 @@ Faye.WebSocket.Draft75Parser = Faye.Class({
       this._handleChar(data[i]);
   },
   
-  frame: function(socket, data) {
-    socket.write(this.FRAME_START, 'binary');
-    socket.write(new Buffer(data), 'utf8');
-    socket.write(this.FRAME_END, 'binary');
+  frame: function(data) {
+    var stream = this._stream;
+    try {
+      stream.write(this.FRAME_START, 'binary');
+      stream.write(new Buffer(data), 'utf8');
+      stream.write(this.FRAME_END, 'binary');
+      return true;
+    } catch (e) {
+      return false;
+    }
   },
   
   _handleChar: function(data) {
@@ -39,18 +60,3 @@ Faye.WebSocket.Draft75Parser = Faye.Class({
     }
   }
 });
-
-Faye.WebSocket.Draft75Parser.handshake = function(url, request, head, socket) {
-  try {
-    socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n');
-    socket.write('Upgrade: WebSocket\r\n');
-    socket.write('Connection: Upgrade\r\n');
-    socket.write('WebSocket-Origin: ' + request.headers.origin + '\r\n');
-    socket.write('WebSocket-Location: ' + url + '\r\n');
-    socket.write('\r\n');
-  } catch (e) {
-    // socket closed while writing
-    // no handshake sent; client will stop using WebSocket
-  }
-};
-

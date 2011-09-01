@@ -12,10 +12,21 @@ server = Faye::RackAdapter.new(Sinatra::Application,
   :engine  => {:type => 'redis'}
 )
 
-port = ARGV[0] || 9292
+port   = ARGV[0] || 9292
+secure = ARGV[1] == 'ssl'
 
 EM.run {
-  server.listen(port)
+  thin = Rack::Handler.get('thin')
+  thin.run(server, :Port => port) do |s|
+    
+    if secure
+      s.ssl = true
+      s.ssl_options = {
+        :private_key_file => dir + '/../shared/server.key',
+        :cert_chain_file  => dir + '/../shared/server.crt'
+      }
+    end
+  end
   
   server.get_client.subscribe '/chat/*' do |message|
     puts "[#{ message['user'] }]: #{ message['message'] }"
