@@ -91,7 +91,6 @@ module Faye
           @messages[client_id] ||= []
           @messages[client_id] << message
           empty_queue(client_id)
-          trigger(:receive, client_id, message['channel'], message['data'])
         end
 
         trigger(:publish, message['clientId'], message['channel'], message['data'])

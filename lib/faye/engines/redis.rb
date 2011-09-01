@@ -133,7 +133,6 @@ module Faye
             debug 'Queueing for client ?: ?', client_id, message
             @redis.rpush(@ns + "/clients/#{client_id}/messages", json_message)
             @redis.publish(@ns + '/notifications', client_id)
-            trigger(:receive, client_id, message['channel'], message['data'])
           end
         end
 

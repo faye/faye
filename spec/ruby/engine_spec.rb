@@ -273,11 +273,6 @@ describe "Pub/sub engines" do
           expect_event :bob, :publish, ["/messages/foo", "ok"]
           publish_by :bob, @message
         end
-
-        it "publishes a :receive event for the subscriber" do
-          expect_event :alice, :receive, ["/messages/foo", "ok"]
-          publish @message
-        end
       end
       
       describe "with a subscriber that is removed" do
@@ -296,11 +291,6 @@ describe "Pub/sub engines" do
         it "publishes a :publish event" do
           expect_event :bob, :publish, ["/messages/foo", "ok"]
           publish_by :bob, @message
-        end
-
-        it "does not publish a :receive event for the subscriber" do
-          expect_no_event :alice, :receive, ["/messages/foo", "ok"]
-          publish @message
         end
       end
       
