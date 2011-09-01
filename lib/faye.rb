@@ -23,7 +23,6 @@ module Faye
       engines/connection
       engines/memory
       engines/redis
-      engines/mongoid
       protocol/grammar
       protocol/extensible
       protocol/channel
