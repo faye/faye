@@ -18,6 +18,7 @@ module Faye
     
     class Base
       include Logging
+      include ::Faye::Engine::Callbacks
       
       attr_reader :interval, :timeout
       

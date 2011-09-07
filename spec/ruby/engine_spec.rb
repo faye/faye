@@ -45,7 +45,7 @@ EngineSteps = EM::RSpec.async_steps do
       resume.call
     end
   end
-  
+
   def subscribe(name, channel, &resume)
     engine.subscribe(@clients[name], channel, &resume)
   end
@@ -88,6 +88,31 @@ EngineSteps = EM::RSpec.async_steps do
     redis = EM::Hiredis::Client.connect
     redis.flushall(&resume)
   end
+
+  def set_callback(type,method,&resume)
+    engine.set_callback(type,method) do |*args, &_resume|
+      @callbacks ||= {}
+      @callbacks[type] ||= {}
+      @callbacks[type][method] = args
+      _resume.call(*args)
+    end
+    resume.call
+  end
+
+  def expect_callback(type,method,&resume)
+    @callbacks ||= {}
+    @callbacks[type] ||= {}
+    @callbacks[type][method].should_not == nil
+    resume.call
+  end
+  
+  # Don't do anything, just call client_exists on the engine
+  def client_exists(name, &resume)
+    engine.client_exists(@clients[name]) { |noop|
+      resume.call
+    }
+  end
+
 end
 
 describe "Pub/sub engines" do
@@ -277,6 +302,127 @@ describe "Pub/sub engines" do
       end
     end
   end
+
+  shared_examples_for "engine with callbacks" do
+    include EngineSteps
+
+    before do
+      Faye.ensure_reactor_running!
+    end
+
+    describe "callbacks mixin" do
+      let(:options) { {} }
+      let(:engine)  { create_engine }
+
+      before do
+        set_callback(:after, :create_client)
+      end
+      
+      it "defines the set_callback method" do
+        engine.should.respond_to? :set_callback
+      end
+
+      it "aliases the original method" do
+        engine.should.respond_to? :create_client_without_callback_hooks
+      end
+
+      it "defines the new hooked method" do
+        engine.should.respond_to? :create_client_with_callback_hooks
+      end
+
+      it "aliases the new hooked method" do
+        engine.method(:create_client).should == engine.method(:create_client_with_callback_hooks)
+      end
+    end
+
+    describe "callbacks run" do
+      let(:options) { {} }
+      let(:engine)  { create_engine }
+
+
+      describe :create_client do
+        before do
+          set_callback(:after, :create_client)
+          create_client :alice
+        end
+        it :after do
+          expect_callback(:after, :create_client)
+        end
+      end
+
+      describe :client_exists do
+        before do
+          set_callback(:before, :client_exists)
+          set_callback(:after, :client_exists)
+          create_client :alice
+          client_exists :alice
+        end
+        it :before do
+          expect_callback(:before, :client_exists)
+        end
+        it :after do
+          expect_callback(:after, :client_exists)
+        end
+      end
+
+      describe :subscribe do
+        before do
+          set_callback(:before, :subscribe)
+          set_callback(:after, :subscribe)
+          create_client :alice
+          subscribe :alice, '/messages/foo'
+        end
+        it :before do
+          expect_callback(:before, :subscribe)
+        end
+        it :after do
+          expect_callback(:after, :subscribe)
+        end
+      end
+
+      describe :publish do
+        before do
+          @message = {"channel" => "/messages/foo", "data" => "ok"}
+          set_callback(:before, :publish)
+          publish @message
+        end
+        it :before do
+          expect_callback(:before, :publish)
+        end
+      end
+
+      describe :unsubscribe do
+        before do
+          set_callback(:before, :unsubscribe)
+          set_callback(:after, :unsubscribe)
+          create_client :alice
+          subscribe :alice, '/messages/foo'
+          unsubscribe :alice, '/messages/foo'
+        end
+        it :before do
+          expect_callback(:before, :unsubscribe)
+        end
+        it :after do
+          expect_callback(:after, :unsubscribe)
+        end
+      end
+
+      describe :destroy_client do
+        before do
+          set_callback(:before, :destroy_client)
+          set_callback(:after, :destroy_client)
+          create_client :alice
+          destroy_client :alice
+        end
+        it :before do
+          expect_callback(:before, :destroy_client)
+        end
+        it :after do
+          expect_callback(:after, :destroy_client)
+        end
+      end
+    end
+  end
   
   shared_examples_for "distributed engine" do
     include EngineSteps
@@ -313,7 +459,8 @@ describe "Pub/sub engines" do
   describe Faye::Engine::Memory do
     let(:engine_klass) { Faye::Engine::Memory }
     let(:engine_opts)  { {} }
-    it_should_behave_like "faye engine"
+    #it_should_behave_like "faye engine"
+    it_should_behave_like "engine with callbacks"
   end
   
   describe Faye::Engine::Redis do
@@ -323,5 +470,6 @@ describe "Pub/sub engines" do
     it_should_behave_like "faye engine"
     it_should_behave_like "distributed engine"
   end
+
 end
 

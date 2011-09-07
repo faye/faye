@@ -19,6 +19,7 @@ module Faye
       mixins/timeouts
       mixins/logging
       util/namespace
+      engines/callbacks
       engines/base
       engines/connection
       engines/memory
