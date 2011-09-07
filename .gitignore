@@ -9,3 +9,5 @@ examples/node/faye*
 Gemfile.lock
 node_modules
 lib/*.js
+.*.swp
+0
