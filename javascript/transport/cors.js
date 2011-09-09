@@ -18,6 +18,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
       }
     };
     xhr.onerror = retry;
+    xhr.ontimeout = retry;
     xhr.onprogress = function() {};
     xhr.send('message=' + encodeURIComponent(Faye.toJSON(message)));
   }
