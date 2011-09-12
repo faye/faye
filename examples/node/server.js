@@ -40,5 +40,17 @@ bayeux.getClient().subscribe('/chat/*', function(message) {
   console.log('[' + message.user + ']: ' + message.message);
 });
 
+bayeux.bind('subscribe', function(clientId, channel) {
+  console.log('[  SUBSCRIBE] ' + clientId + ' -> ' + channel);
+});
+
+bayeux.bind('unsubscribe', function(clientId, channel) {
+  console.log('[UNSUBSCRIBE] ' + clientId + ' -> ' + channel);
+});
+
+bayeux.bind('disconnect', function(clientId) {
+  console.log('[ DISCONNECT] ' + clientId);
+});
+
 console.log('Listening on ' + port + (secure? ' (https)' : ''));
 

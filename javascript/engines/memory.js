@@ -14,6 +14,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     var clientId = this._namespace.generate();
     this.debug('Created new client ?', clientId);
     this.ping(clientId);
+    this.trigger('handshake', clientId);
     callback.call(scope, clientId);
   },
   
@@ -28,6 +29,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     this._namespace.release(clientId);
     delete this._messages[clientId];
     this.debug('Destroyed client ?', clientId);
+    this.trigger('disconnect', clientId);
     if (callback) callback.call(scope);
   },
   
@@ -54,11 +56,14 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     channels[channel].add(clientId);
     
     this.debug('Subscribed client ? to channel ?', clientId, channel);
+    this.trigger('subscribe', clientId, channel);
     if (callback) callback.call(scope, true);
   },
   
   unsubscribe: function(clientId, channel, callback, scope) {
-    var clients = this._clients, channels = this._channels;
+    var clients  = this._clients,
+        channels = this._channels,
+        trigger  = clients.hasOwnProperty(clientId);
     
     if (clients[clientId]) {
       clients[clientId].remove(channel);
@@ -71,6 +76,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     }
     
     this.debug('Unsubscribed client ? from channel ?', clientId, channel);
+    if (trigger) this.trigger('unsubscribe', clientId, channel);
     if (callback) callback.call(scope, true);
   },
   
@@ -93,6 +99,8 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
       messages[clientId].push(message);
       this.emptyQueue(clientId);
     }, this);
+    
+    this.trigger('publish', message.clientId, message.channel, message.data);
   },
   
   emptyQueue: function(clientId) {

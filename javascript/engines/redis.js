@@ -51,6 +51,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     this._redis.zadd(this._ns + '/clients', 0, clientId, function(error, added) {
       if (added === 0) return self.createClient(callback, scope);
       self.ping(clientId);
+      self.trigger('handshake', clientId);
       callback.call(scope, clientId);
     });
   },
@@ -62,13 +63,18 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     
     this._redis.smembers(this._ns + '/clients/' + clientId + '/channels', function(error, channels) {
       var n = channels.length, i = 0;
-      if (n === 0) return callback && callback.call(scope);
+      if (n === 0) {
+        self.trigger('disconnect', clientId);
+        if (callback) callback.call(scope);
+        return;
+      }
       
       Faye.each(channels, function(channel) {
         self.unsubscribe(clientId, channel, function() {
           i += 1;
           if (i === n) {
             self.debug('Destroyed client ?', clientId);
+            self.trigger('disconnect', clientId);
             if (callback) callback.call(scope);
           }
         });
@@ -97,13 +103,16 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     this._redis.sadd(this._ns + '/clients/' + clientId + '/channels', channel);
     this._redis.sadd(this._ns + '/channels' + channel, clientId, function() {
       self.debug('Subscribed client ? to channel ?', clientId, channel);
+      self.trigger('subscribe', clientId, channel);
       if (callback) callback.call(scope);
     });
   },
   
   unsubscribe: function(clientId, channel, callback, scope) {
     var self = this;
-    this._redis.srem(this._ns + '/clients/' + clientId + '/channels', channel);
+    this._redis.srem(this._ns + '/clients/' + clientId + '/channels', channel, function(error, removed) {
+      if (removed === 1) self.trigger('unsubscribe', clientId, channel);
+    });
     this._redis.srem(this._ns + '/channels' + channel, clientId, function() {
       self.debug('Unsubscribed client ? from channel ?', clientId, channel);
       if (callback) callback.call(scope);
@@ -127,6 +136,8 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     };
     keys.push(notify);
     this._redis.sunion.apply(this._redis, keys);
+    
+    this.trigger('publish', message.clientId, message.channel, message.data);
   },
   
   emptyQueue: function(clientId) {

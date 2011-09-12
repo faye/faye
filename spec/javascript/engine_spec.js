@@ -62,6 +62,12 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
     setTimeout(resume, 20)
   },
   
+  publish_by: function(name, message, resume) {
+    message = Faye.extend({clientId: this._clients[name], id: Faye.random()}, message)
+    this.engine.publish(message)
+    setTimeout(resume, 10)
+  },
+  
   ping: function(name, resume) {
     this.engine.ping(this._clients[name])
     resume()
@@ -69,6 +75,24 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   
   clock_tick: function(time, resume) {
     setTimeout(resume, time)
+  },
+  
+  expect_event: function(name, event, args, resume) {
+    var params  = [this._clients[name]].concat(args),
+        handler = function() {}
+    
+    this.engine.bind(event, handler)
+    this.expect(handler, "apply").given(undefined, params)
+    resume()
+  },
+  
+  expect_no_event: function(name, event, args, resume) {
+    var params  = [this._clients[name]].concat(args),
+        handler = function() {}
+    
+    this.engine.bind(event, handler)
+    this.expect(handler, "apply").exactly(0)
+    resume()
   },
   
   expect_message: function(name, messages, resume) {
@@ -122,6 +146,11 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         $R(1,7).forEach(function(i) { create_client("client" + i) })
         check_num_clients(10)
       }})
+      
+      it("publishes an event", function() { with(this) {
+        expect(engine, "trigger").given("handshake", match(/^[a-z0-9]+$/))
+        create_client("dave")
+      }})
     }})
     
     describe("clientExists", function() { with(this) {
@@ -157,6 +186,11 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         destroy_client("alice")
         check_client_exists("alice", false)
       }})
+      
+      it("publishes an event", function() { with(this) {
+        expect_event("alice", "disconnect", [])
+        destroy_client("alice")
+      }})
 
       describe("when the client has subscriptions", function() { with(this) {
         before(function() { with(this) {
@@ -169,6 +203,35 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
           destroy_client("alice")
           publish(message)
           expect_no_message("alice")
+        }})
+        
+        it("publishes an event", function() { with(this) {
+          expect_event("alice", "disconnect", [])
+          destroy_client("alice")
+        }})
+      }})
+    }})
+    
+    describe("subscribe", function() { with(this) {
+      it("publishes an event", function() { with(this) {
+        expect_event("alice", "subscribe", ["/messages/foo"])
+        subscribe("alice", "/messages/foo")
+      }})
+    }})
+    
+    
+    describe("unsubscribe", function() { with(this) {
+      it("does not publish an event", function() { with(this) {
+        expect_no_event("alice", "unsubscribe", ["/messages/foo"])
+        unsubscribe("alice", "/messages/foo")
+      }})
+      
+      describe("when the client is subscribed to the channel", function() { with(this) {
+        before(function() { this.subscribe("alice", "/messages/foo") })
+        
+        it("publishes an event", function() { with(this) {
+          expect_event("alice", "unsubscribe", ["/messages/foo"])
+          unsubscribe("alice", "/messages/foo")
         }})
       }})
     }})
@@ -188,6 +251,16 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
           expect_no_message("bob")
           expect_no_message("carol")
         }})
+        
+        it("publishes a :publish event with a clientId", function() { with(this) {
+          expect_event("bob", "publish", ["/messages/foo", "ok"])
+          publish_by("bob", message)
+        }})
+        
+        it("publishes a :publish event with no clientId", function() { with(this) {
+          expect_event(null, "publish", ["/messages/foo", "ok"])
+          publish(message)
+        }})
       }})
       
       describe("with a subscriber", function() { with(this) {
@@ -205,6 +278,11 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
           publish(message)
           expect_message("alice", [message])
         }})
+        
+        it("publishes a :publish event with a clientId", function() { with(this) {
+          expect_event("bob", "publish", ["/messages/foo", "ok"])
+          publish_by("bob", message)
+        }})
       }})
       
       describe("with a subscriber that is removed", function() { with(this) {
@@ -218,6 +296,11 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
           expect_no_message("alice")
           expect_no_message("bob")
           expect_no_message("carol")
+        }})
+        
+        it("publishes a :publish event with a clientId", function() { with(this) {
+          expect_event("bob", "publish", ["/messages/foo", "ok"])
+          publish_by("bob", message)
         }})
       }})
       

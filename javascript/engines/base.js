@@ -51,4 +51,5 @@ Faye.Engine.Base = Faye.Class({
   }
 });
 
+Faye.extend(Faye.Engine.Base.prototype, Faye.Publisher);
 Faye.extend(Faye.Engine.Base.prototype, Faye.Logging);
