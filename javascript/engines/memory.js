@@ -63,10 +63,10 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
   unsubscribe: function(clientId, channel, callback, scope) {
     var clients  = this._clients,
         channels = this._channels,
-        trigger  = clients.hasOwnProperty(clientId);
+        trigger  = false;
     
     if (clients[clientId]) {
-      clients[clientId].remove(channel);
+      trigger = clients[clientId].remove(channel);
       if (clients[clientId].isEmpty()) delete clients[clientId];
     }
     

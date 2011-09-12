@@ -221,6 +221,8 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     
     
     describe("unsubscribe", function() { with(this) {
+      before(function() { this.subscribe("alice", "/messages/bar") })
+      
       it("does not publish an event", function() { with(this) {
         expect_no_event("alice", "unsubscribe", ["/messages/foo"])
         unsubscribe("alice", "/messages/foo")

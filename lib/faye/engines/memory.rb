@@ -59,10 +59,9 @@ module Faye
       end
       
       def unsubscribe(client_id, channel, &callback)
-        should_trigger = if @clients.has_key?(client_id)
-          @clients[client_id].delete(channel)
+        if @clients.has_key?(client_id)
+          should_trigger = @clients[client_id].delete?(channel)
           @clients.delete(client_id) if @clients[client_id].empty?
-          true
         end
         
         if @channels.has_key?(channel)

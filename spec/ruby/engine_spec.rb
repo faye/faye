@@ -213,6 +213,8 @@ describe "Pub/sub engines" do
     end
 
     describe :unsubscribe do
+      before { subscribe :alice, "/messages/bar" }
+      
       it "does not publish an event" do
         expect_no_event :alice, :unsubscribe, ["/messages/foo"]
         unsubscribe :alice, "/messages/foo"
