@@ -1,3 +1,10 @@
+=== 0.6.6 / 2011-09-12
+
+* Add :key and :cert options to the Adapter#listen methods for setting up SSL
+* Fix error detection of CORS transport in IE9 running IE8 compatibility mode
+* Fix dependency versions so that Rubygems lets Faye install
+
+
 === 0.6.5 / 2011-08-29
 TestSwarm build: http://swarm.jcoglan.com/job/99/
 
