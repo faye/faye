@@ -28,6 +28,14 @@
     * @:engine@: (optional) the type and parameters for the engine you want to
       use - see 'Engines' below.
     
+    The @listen()@ method can take options that specify the key and certificate
+    files to use, which if given make the server respond to SSL traffic.
+    
+    <pre class="prettyprint">bayeux.listen(443,
+      :key  => 'path/to/ssl.key',
+      :cert => 'path/to/ssl.cert'
+    )</pre>
+    
     Faye can also be setup as Rack middleware, for example in front of a Sinatra
     application:
     

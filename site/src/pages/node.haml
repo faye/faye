@@ -24,6 +24,14 @@
       response. This is given in seconds and must be smaller than the timeout on
       your frontend webserver.
     
+    The @listen()@ method can take options that specify the key and certificate
+    files to use, which if given make the server respond to SSL traffic.
+    
+    <pre class="prettyprint">bayeux.listen(443, {
+      key:  'path/to/ssl.key',
+      cert: 'path/to/ssl.cert'
+    });</pre>
+    
     Faye can also be attached to an existing HTTP server using the @attach()@
     method. It will handle all requests to paths matching the @mount@ path and
     delegate all other requests to your handlers.
