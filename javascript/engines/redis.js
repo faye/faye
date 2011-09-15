@@ -17,7 +17,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
         auth  = this._options.password,
         gc    = this._options.gc       || this.DEFAULT_GC;
     
-    this._ns  = this._options.namespace;
+    this._ns  = this._options.namespace || '';
     
     this._redis = redis.createClient(port, host, {no_ready_check: true});
     this._subscriber = redis.createClient(port, host, {no_ready_check: true});
