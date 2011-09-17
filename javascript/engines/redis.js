@@ -85,8 +85,8 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   ping: function(clientId) {
     if (typeof this.timeout !== 'number') return;
     
-    var time    = new Date().getTime(),
-        self    = this;
+    var time = new Date().getTime(),
+        self = this;
     
     this.debug('Ping ?, ?', clientId, time);
     this._redis.zadd(this._ns + '/clients', time, clientId);
