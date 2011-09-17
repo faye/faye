@@ -39,7 +39,7 @@ Faye.URI = Faye.extend(Faye.Class({
     consume('port',     /^:[0-9]+/);
     
     Faye.extend(location, {
-      protocol:   'http://',
+      protocol:   Faye.ENV.location.protocol + '//',
       hostname:   Faye.ENV.location.hostname,
       port:       Faye.ENV.location.port
     }, false);
