@@ -176,6 +176,8 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       if (set === 1) return callback.call(scope, releaseLock);
       
       self._redis.get(lockKey, function(error, timeout) {
+        if (!timeout) return self._withLock(lockKey, callback, scope);
+        
         var lockTimeout = parseInt(timeout, 10);
         if (currentTime < lockTimeout) return;
         
