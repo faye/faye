@@ -191,17 +191,24 @@ module Faye
           if set == 1
             block.call(release_lock)
           else
+            
             @redis.get(lock_key) do |timeout|
-              lock_timeout = timeout.to_i(10)
-              if lock_timeout < current_time
-                @redis.getset(lock_key, expiry) do |old_value|
-                  block.call(release_lock) if old_value == timeout
+              if timeout
+                lock_timeout = timeout.to_i(10)
+                if lock_timeout < current_time
+                  @redis.getset(lock_key, expiry) do |old_value|
+                    block.call(release_lock) if old_value == timeout
+                  end
                 end
+              else
+                with_lock(lock_name, &block)
               end
             end
+            
           end
         end
       end
+      
     end
     
     register 'redis', Redis
