@@ -25,7 +25,8 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
       removeScript();
       self.request(message, 2 * timeout);
     }, 1000 * timeout);
-    
+
+    location.params.nocache = (new Date()).getTime();
     location.params.jsonp = callbackName;
     script.type = 'text/javascript';
     script.src  = location.toURL();
