@@ -6,16 +6,16 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
                 ? { key: shared + '/server.key', cert: shared + '/server.crt' }
                 : null
     
-    this._adapter = new Faye.NodeAdapter({mount: "/bayeux", timeout: 25})
-    this._adapter.listen(port, options)
+    this._adapter = new Faye.NodeAdapter({mount: "/bayeux", timeout: 2})
     this._port = port
     this._secure = ssl
-    setTimeout(callback, 100)
+    this._adapter.listen(port, options, callback)
   },
   
   stop: function(callback) {
-    this._adapter.stop()
-    setTimeout(callback, 100)
+    for (var id in this._clients) this._clients[id].disconnect()
+    var self = this
+    setTimeout(function() { self._adapter.stop(callback) }, 100)
   },
   
   client: function(name, channels, callback) {
@@ -87,13 +87,13 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
   }})
   
   sharedExamplesFor("network transports", function() { with(this) {
-//    describe("with HTTP transport", function() { with(this) {
-//      before(function() { with(this) {
-//        stub(Faye.Transport.WebSocket, "isUsable").yields([false])
-//      }})
-//      
-//      itShouldBehaveLike("message bus")
-//    }})
+    describe("with HTTP transport", function() { with(this) {
+      before(function() { with(this) {
+        stub(Faye.Transport.WebSocket, "isUsable").yields([false])
+      }})
+      
+      itShouldBehaveLike("message bus")
+    }})
     
     describe("with WebSocket transport", function() { with(this) {
       before(function() { with(this) {

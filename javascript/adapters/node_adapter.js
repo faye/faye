@@ -58,8 +58,8 @@ Faye.NodeAdapter = Faye.Class({
     return this._client = this._client || new Faye.Client(this._server);
   },
   
-  listen: function(port, sslOptions) {
-    var ssl = sslOptions
+  listen: function(port, sslOptions, callback, scope) {
+    var ssl = sslOptions && sslOptions.cert
             ? { key:  fs.readFileSync(sslOptions.key),
                 cert: fs.readFileSync(sslOptions.cert)
               }
@@ -70,11 +70,16 @@ Faye.NodeAdapter = Faye.Class({
                    : http.createServer(function() {});
     
     this.attach(httpServer);
-    httpServer.listen(port);
+    httpServer.listen(port, function() {
+      if (callback) callback.call(scope);
+    });
     this._httpServer = httpServer;
   },
   
-  stop: function() {
+  stop: function(callback, scope) {
+    this._httpServer.addListener('close', function() {
+      if (callback) callback.call(scope);
+    });
     this._httpServer.close();
   },
   

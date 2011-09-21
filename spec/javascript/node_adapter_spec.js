@@ -5,13 +5,11 @@ JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
   start_server: function(port, resume) {
     this._port = port
     this._app  = new Faye.NodeAdapter(this.options())
-    this._app.listen(port)
-    setTimeout(resume, 50)
+    this._app.listen(port, {}, resume)
   },
   
   stop_server: function(resume) {
-    this._app.stop()
-    resume()
+    this._app.stop(resume)
   },
   
   header: function(key, value, resume) {
