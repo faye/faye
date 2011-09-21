@@ -17,7 +17,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
         auth  = this._options.password,
         gc    = this._options.gc       || this.DEFAULT_GC;
     
-    this._ns  = this._options.namespace;
+    this._ns  = this._options.namespace || '';
     
     this._redis = redis.createClient(port, host, {no_ready_check: true});
     this._subscriber = redis.createClient(port, host, {no_ready_check: true});
@@ -85,8 +85,8 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   ping: function(clientId) {
     if (typeof this.timeout !== 'number') return;
     
-    var time    = new Date().getTime(),
-        self    = this;
+    var time = new Date().getTime(),
+        self = this;
     
     this.debug('Ping ?, ?', clientId, time);
     this._redis.zadd(this._ns + '/clients', time, clientId);
@@ -176,6 +176,8 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       if (set === 1) return callback.call(scope, releaseLock);
       
       self._redis.get(lockKey, function(error, timeout) {
+        if (!timeout) return self._withLock(lockKey, callback, scope);
+        
         var lockTimeout = parseInt(timeout, 10);
         if (currentTime < lockTimeout) return;
         

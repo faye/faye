@@ -4,7 +4,7 @@ require 'eventmachine'
 require 'json'
 
 module Faye
-  VERSION = '0.6.5'
+  VERSION = '0.6.6'
   
   ROOT = File.expand_path(File.dirname(__FILE__))
   

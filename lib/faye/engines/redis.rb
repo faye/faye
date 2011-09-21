@@ -91,7 +91,7 @@ module Faye
         init
         return unless Numeric === @timeout
         
-        time = Time.now.to_i
+        time = get_current_time
         debug 'Ping ?, ?', client_id, time
         @redis.zadd(@ns + '/clients', time, client_id)
       end
@@ -133,6 +133,10 @@ module Faye
       
     private
       
+      def get_current_time
+        (Time.now.to_f * 1000).to_i
+      end
+      
       def empty_queue(client_id)
         return unless conn = connection(client_id, false)
         init
@@ -149,7 +153,7 @@ module Faye
       def gc
         return unless Numeric === @timeout
         with_lock 'gc' do |release_lock|
-          cutoff = Time.now.to_i - 2 * @timeout
+          cutoff = get_current_time - 1000 * 2 * @timeout
           @redis.zrangebyscore(@ns + '/clients', 0, cutoff) do |clients|
             i, n = 0, clients.size
             if i == n
@@ -168,28 +172,35 @@ module Faye
       
       def with_lock(lock_name, &block)
         lock_key     = @ns + '/locks/' + lock_name
-        current_time = Time.now.to_i * 1000
+        current_time = get_current_time
         expiry       = current_time + LOCK_TIMEOUT * 1000 + 1
         
         release_lock = lambda do
-          @redis.del(lock_key) if Time.now.to_i * 1000 < expiry
+          @redis.del(lock_key) if get_current_time < expiry
         end
         
         @redis.setnx(lock_key, expiry) do |set|
           if set == 1
             block.call(release_lock)
           else
+            
             @redis.get(lock_key) do |timeout|
-              lock_timeout = timeout.to_i(10)
-              if lock_timeout < current_time
-                @redis.getset(lock_key, expiry) do |old_value|
-                  block.call(release_lock) if old_value == timeout
+              if timeout
+                lock_timeout = timeout.to_i(10)
+                if lock_timeout < current_time
+                  @redis.getset(lock_key, expiry) do |old_value|
+                    block.call(release_lock) if old_value == timeout
+                  end
                 end
+              else
+                with_lock(lock_name, &block)
               end
             end
+            
           end
         end
       end
+      
     end
     
     register 'redis', Redis
