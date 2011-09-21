@@ -48,14 +48,14 @@ module Faye
       
       def subscribe(client_id, channel, &callback)
         @clients[client_id] ||= Set.new
-        @clients[client_id].add(channel)
+        should_trigger = @clients[client_id].add?(channel)
         
         @channels[channel] ||= Set.new
         @channels[channel].add(client_id)
         
         debug 'Subscribed client ? to channel ?', client_id, channel
+        trigger(:subscribe, client_id, channel) if should_trigger
         callback.call(true) if callback
-        trigger(:subscribe, client_id, channel)
       end
       
       def unsubscribe(client_id, channel, &callback)
@@ -70,8 +70,8 @@ module Faye
         end
         
         debug 'Unsubscribed client ? from channel ?', client_id, channel
-        callback.call(true) if callback
         trigger(:unsubscribe, client_id, channel) if should_trigger
+        callback.call(true) if callback
       end
       
       def publish(message)

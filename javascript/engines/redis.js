@@ -100,10 +100,11 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   
   subscribe: function(clientId, channel, callback, scope) {
     var self = this;
-    this._redis.sadd(this._ns + '/clients/' + clientId + '/channels', channel);
+    this._redis.sadd(this._ns + '/clients/' + clientId + '/channels', channel, function(error, added) {
+      if (added === 1) self.trigger('subscribe', clientId, channel);
+    });
     this._redis.sadd(this._ns + '/channels' + channel, clientId, function() {
       self.debug('Subscribed client ? to channel ?', clientId, channel);
-      self.trigger('subscribe', clientId, channel);
       if (callback) callback.call(scope);
     });
   },

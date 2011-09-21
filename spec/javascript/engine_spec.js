@@ -217,6 +217,15 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         expect_event("alice", "subscribe", ["/messages/foo"])
         subscribe("alice", "/messages/foo")
       }})
+      
+      describe("when the client is subscribed to the channel", function() { with(this) {
+        before(function() { this.subscribe("alice", "/messages/foo") })
+        
+        it("does not publish an event", function() { with(this) {
+          expect_no_event("alice", "subscribe", ["/messages/foo"])
+          subscribe("alice", "/messages/foo")
+        }})
+      }})
     }})
     
     

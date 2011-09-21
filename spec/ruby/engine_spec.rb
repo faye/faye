@@ -210,6 +210,15 @@ describe "Pub/sub engines" do
         expect_event :alice, :subscribe, ["/messages/foo"]
         subscribe :alice, "/messages/foo"
       end
+      
+      describe "when the client is subscribed to the channel" do
+        before { subscribe :alice, "/messages/foo" }
+        
+        it "does not publish an event" do
+          expect_no_event :alice, :subscribe, ["/messages/foo"]
+          subscribe :alice, "/messages/foo"
+        end
+      end
     end
 
     describe :unsubscribe do

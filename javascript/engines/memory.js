@@ -50,13 +50,13 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     var clients = this._clients, channels = this._channels;
     
     clients[clientId] = clients[clientId] || new Faye.Set();
-    clients[clientId].add(channel);
+    var trigger = clients[clientId].add(channel);
     
     channels[channel] = channels[channel] || new Faye.Set();
     channels[channel].add(clientId);
     
     this.debug('Subscribed client ? to channel ?', clientId, channel);
-    this.trigger('subscribe', clientId, channel);
+    if (trigger) this.trigger('subscribe', clientId, channel);
     if (callback) callback.call(scope, true);
   },
   

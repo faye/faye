@@ -101,11 +101,12 @@ module Faye
       
       def subscribe(client_id, channel, &callback)
         init
-        @redis.sadd(@ns + "/clients/#{client_id}/channels", channel)
+        @redis.sadd(@ns + "/clients/#{client_id}/channels", channel) do |added|
+          trigger(:subscribe, client_id, channel) if added == 1
+        end
         @redis.sadd(@ns + "/channels#{channel}", client_id) do
           debug 'Subscribed client ? to channel ?', client_id, channel
           callback.call if callback
-          trigger(:subscribe, client_id, channel)
         end
       end
       
