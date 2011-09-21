@@ -1,8 +1,15 @@
 JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
-  server: function(port, callback) {
+  server: function(port, ssl, callback) {
+    var shared  = __dirname + '/../../../examples/shared',
+        
+        options = ssl
+                ? { key: shared + '/server.key', cert: shared + '/server.crt' }
+                : null
+    
     this._adapter = new Faye.NodeAdapter({mount: "/bayeux", timeout: 25})
-    this._adapter.listen(port)
+    this._adapter.listen(port, options)
     this._port = port
+    this._secure = ssl
     setTimeout(callback, 100)
   },
   
@@ -12,13 +19,14 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
   },
   
   client: function(name, channels, callback) {
+    var scheme = this._secure ? "https" : "http"
     this._clients = this._clients || {}
     this._inboxes = this._inboxes || {}
-    this._clients[name] = new Faye.Client("http://0.0.0.0:" + this._port  + "/bayeux")
+    this._clients[name] = new Faye.Client(scheme + "://0.0.0.0:" + this._port  + "/bayeux")
     this._inboxes[name] = {}
     
     var n = channels.length
-    if (n === 0) return callback()
+    if (n === 0) return this._clients[name].connect(callback)
     
     Faye.each(channels, function(channel) {
       var subscription = this._clients[name].subscribe(channel, function(message) {
@@ -47,32 +55,69 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
 JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function() { with(this) {
   include(IntegrationSteps)
   
-  before(function() { with(this) {
-    server(8000)
-    client("alice", [])
-    client("bob", ["/foo"])
+  sharedExamplesFor("message bus", function() { with(this) {
+    before(function() { with(this) {
+      server(8000, serverOptions.ssl)
+      client("alice", [])
+      client("bob", ["/foo"])
+    }})
+    
+    after(function() { this.stop() })
+    
+    it("delivers a message between clients", function() { with(this) {
+      publish("alice", "/foo", {hello: "world"})
+      check_inbox("bob", "/foo", [{hello: "world"}])
+    }})
+    
+    it("does not deliver messages for unsubscribed channels", function() { with(this) {
+      publish("alice", "/bar", {hello: "world"})
+      check_inbox("bob", "/foo", [])
+    }})
+    
+    it("delivers multiple messages", function() { with(this) {
+      publish("alice", "/foo", {hello: "world"})
+      publish("alice", "/foo", {hello: "world"})
+      check_inbox("bob", "/foo", [{hello: "world"},{hello: "world"}])
+    }})
+    
+    it("delivers multibyte strings", function() { with(this) {
+      publish("alice", "/foo", {hello: "Apple = "})
+      check_inbox("bob", "/foo", [{hello: "Apple = "}])
+    }})
   }})
   
-  after(function() { this.stop() })
-  
-  it("delivers a message between clients", function() { with(this) {
-    publish("alice", "/foo", {hello: "world"})
-    check_inbox("bob", "/foo", [{hello: "world"}])
+  sharedExamplesFor("network transports", function() { with(this) {
+//    describe("with HTTP transport", function() { with(this) {
+//      before(function() { with(this) {
+//        stub(Faye.Transport.WebSocket, "isUsable").yields([false])
+//      }})
+//      
+//      itShouldBehaveLike("message bus")
+//    }})
+    
+    describe("with WebSocket transport", function() { with(this) {
+      before(function() { with(this) {
+        stub(Faye.Transport.WebSocket, "isUsable").yields([true])
+      }})
+      
+      itShouldBehaveLike("message bus")
+    }})
   }})
   
-  it("does not deliver messages for unsubscribed channels", function() { with(this) {
-    publish("alice", "/bar", {hello: "world"})
-    check_inbox("bob", "/foo", [])
+  describe("with HTTP server", function() { with(this) {
+    before(function() { with(this) {
+      this.serverOptions = {ssl: false}
+    }})
+    
+    itShouldBehaveLike("network transports")
   }})
   
-  it("delivers multiple messages", function() { with(this) {
-    publish("alice", "/foo", {hello: "world"})
-    publish("alice", "/foo", {hello: "world"})
-    check_inbox("bob", "/foo", [{hello: "world"},{hello: "world"}])
-  }})
-  
-  it("delivers multibyte strings", function() { with(this) {
-    publish("alice", "/foo", {hello: "Apple = "})
-    check_inbox("bob", "/foo", [{hello: "Apple = "}])
+  describe("with HTTPS server", function() { with(this) {
+    before(function() { with(this) {
+      this.serverOptions = {ssl: true}
+    }})
+    
+    itShouldBehaveLike("network transports")
   }})
 }})
+

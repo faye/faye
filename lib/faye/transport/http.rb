@@ -4,8 +4,8 @@ require 'em-http/version'
 module Faye
   
   class Transport::Http < Transport
-    def self.usable?(endpoint)
-      endpoint.is_a?(String)
+    def self.usable?(endpoint, &callback)
+      callback.call(endpoint.is_a?(String))
     end
     
     def request(message, timeout)

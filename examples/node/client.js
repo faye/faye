@@ -9,10 +9,13 @@
 
 var faye = require('../../build/faye-node'),
     
-    port = process.argv[2] || 8000,
-    path = process.argv[3] || 'bayeux';
+    port     = process.argv[2] || 8000,
+    path     = process.argv[3] || 'bayeux',
+    scheme   = process.argv[4] === 'ssl' ? 'https' : 'http',
+    endpoint = scheme + '://localhost:' + port + '/' + path;
 
-var client = new faye.Client('http://localhost:' + port + '/' + path);
+console.log('Connecting to ' + endpoint);
+var client = new faye.Client(endpoint);
 
 client.subscribe('/chat/*', function(message) {
   var user = message.user;

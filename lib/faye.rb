@@ -31,6 +31,7 @@ module Faye
       protocol/server
       transport/transport
       transport/local
+      transport/web_socket
       transport/http
       error
       
@@ -65,6 +66,39 @@ module Faye
   def self.ensure_reactor_running!
     Thread.new { EM.run } unless EM.reactor_running?
     while not EM.reactor_running?; end
+  end
+  
+  def self.async_each(list, iterator, callback)
+    n       = list.size
+    i       = -1
+    calls   = 0
+    looping = false
+    
+    loop, resume = nil, nil
+    
+    iterate = lambda do
+      calls -= 1
+      i += 1
+      if i == n
+        callback.call if callback
+      else
+        iterator.call(list[i], resume)
+      end
+    end
+    
+    loop = lambda do
+      unless looping
+        looping = true
+        iterate.call while calls > 0
+        looping = false
+      end
+    end
+    
+    resume = lambda do
+      calls += 1
+      loop.call
+    end
+    resume.call
   end
 end
 

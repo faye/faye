@@ -20,6 +20,7 @@ FakeSocket.prototype.read = function() {
   })
   return output
 }
+FakeSocket.prototype.addListener = function() {}
 
 JS.require('Faye', 'JS.Test', 'JS.Range', function() {
   JS.Test.Unit.Assertions.include({
@@ -43,6 +44,7 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
               'Server.UnsubscribeSpec',
               'Server.ExtensionsSpec',
               'Server.IntegrationSpec',
+              'WebSocket.ClientSpec',
               'WebSocket.Draft75ParserSpec',
               'WebSocket.Protocol8ParserSpec',
               'NodeAdapterSpec',

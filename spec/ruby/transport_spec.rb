@@ -9,13 +9,19 @@ describe Faye::Transport do
   
   describe :get do
     before do
-      Faye::Transport::Local.stub(:usable?).and_return(false)
-      Faye::Transport::Http.stub(:usable?).and_return(false)
+      Faye::Transport::Local.stub(:usable?).and_yield(false)
+      Faye::Transport::Http.stub(:usable?).and_yield(false)
     end
     
-    let(:transport)       { Faye::Transport.get(client, ["long-polling", "in-process"]) }
-    let(:local_transport) { Faye::Transport.get(client, ["in-process"]) }
-    let(:http_transport)  { Faye::Transport.get(client, ["long-polling"]) }
+    def get_transport(connection_types)
+      transport = nil
+      Faye::Transport.get(client, connection_types) { |t| transport = t }
+      transport
+    end
+    
+    let(:transport)       { get_transport ["long-polling", "in-process"] }
+    let(:local_transport) { get_transport ["in-process"] }
+    let(:http_transport)  { get_transport ["long-polling"] }
     
     describe "when no transport is usable" do
       it "raises an exception" do
@@ -25,7 +31,7 @@ describe Faye::Transport do
     
     describe "when a less preferred transport is usable" do
       before do
-        Faye::Transport::Http.stub(:usable?).and_return(true)
+        Faye::Transport::Http.stub(:usable?).and_yield(true)
       end
       
       it "returns a transport of the usable type" do
@@ -43,8 +49,8 @@ describe Faye::Transport do
     
     describe "when all transports are usable" do
       before do
-        Faye::Transport::Local.stub(:usable?).and_return(true)
-        Faye::Transport::Http.stub(:usable?).and_return(true)
+        Faye::Transport::Local.stub(:usable?).and_yield(true)
+        Faye::Transport::Http.stub(:usable?).and_yield(true)
       end
       
       it "returns the most preferred type" do

@@ -6,10 +6,17 @@ require "thin"
 Thin::Logging.silent = true
 
 IntegrationSteps = EM::RSpec.async_steps do
-  def server(port, &callback)
+  def server(port, ssl, &callback)
+    shared = File.dirname(__FILE__) + '/../../../examples/shared'
+    
+    options = ssl ?
+              { :key => shared + '/server.key', :cert => shared + '/server.crt' } :
+              nil
+    
     @adapter = Faye::RackAdapter.new(:mount => "/bayeux", :timeout => 25)
-    @adapter.listen(port)
+    @adapter.listen(port, options)
     @port = port
+    @secure = ssl
     EM.next_tick(&callback)
   end
   
@@ -19,13 +26,14 @@ IntegrationSteps = EM::RSpec.async_steps do
   end
   
   def client(name, channels, &callback)
+    scheme = @secure ? "https" : "http"
     @clients ||= {}
     @inboxes ||= {}
-    @clients[name] = Faye::Client.new("http://0.0.0.0:#{@port}/bayeux")
+    @clients[name] = Faye::Client.new("#{scheme}://0.0.0.0:#{@port}/bayeux")
     @inboxes[name] = {}
     
     n = channels.size
-    return callback.call if n.zero?
+    return @clients[name].connect(&callback) if n.zero?
     
     channels.each do |channel|
       subscription = @clients[name].subscribe(channel) do |message|
@@ -57,7 +65,7 @@ describe "server integration" do
   
   before do
     Faye.ensure_reactor_running!
-    server 8000
+    server 8000, server_options[:ssl]
     client :alice, []
     client :bob,   ["/foo"]
     sync
@@ -65,24 +73,54 @@ describe "server integration" do
   
   after { stop }
   
-  it "delivers a message between clients" do
-    publish :alice, "/foo", {"hello" => "world"}
-    check_inbox :bob, "/foo", [{"hello" => "world"}]
+  shared_examples_for "message bus" do
+    it "delivers a message between clients" do
+      publish :alice, "/foo", {"hello" => "world"}
+      check_inbox :bob, "/foo", [{"hello" => "world"}]
+    end
+    
+    it "does not deliver messages for unsubscribed channels" do
+      publish :alice, "/bar", {"hello" => "world"}
+      check_inbox :bob, "/foo", []
+    end
+    
+    it "delivers multiple messages" do
+      publish :alice, "/foo", {"hello" => "world"}
+      publish :alice, "/foo", {"hello" => "world"}
+      check_inbox :bob, "/foo", [{"hello" => "world"}, {"hello" => "world"}]
+    end
+    
+    it "delivers multibyte strings" do
+      publish :alice, "/foo", {"hello" => encode("Apple = ")}
+      check_inbox :bob, "/foo", [{"hello" => encode("Apple = ")}]
+    end
   end
   
-  it "does not deliver messages for unsubscribed channels" do
-    publish :alice, "/bar", {"hello" => "world"}
-    check_inbox :bob, "/foo", []
+  shared_examples_for "network transports" do
+    describe "with HTTP transport" do
+      before do
+        Faye::Transport::WebSocket.stub(:usable?).and_yield(false)
+      end
+      
+      it_should_behave_like "message bus"
+    end
+    
+    describe "with WebSocket transport" do
+      before do
+        Faye::Transport::WebSocket.stub(:usable?).and_yield(false)
+      end
+      
+      it_should_behave_like "message bus"
+    end
   end
   
-  it "delivers multiple messages" do
-    publish :alice, "/foo", {"hello" => "world"}
-    publish :alice, "/foo", {"hello" => "world"}
-    check_inbox :bob, "/foo", [{"hello" => "world"}, {"hello" => "world"}]
+  describe "with HTTP server" do
+    let(:server_options) { {:ssl => false} }
+    it_should_behave_like "network transports"
   end
   
-  it "delivers multibyte strings" do
-    publish :alice, "/foo", {"hello" => encode("Apple = ")}
-    check_inbox :bob, "/foo", [{"hello" => encode("Apple = ")}]
+  describe "with HTTPS server" do
+    let(:server_options) { {:ssl => true} }
+    it_should_behave_like "network transports"
   end
 end
