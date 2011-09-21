@@ -1,10 +1,11 @@
 var faye = require('../../build/faye-node'),
     
-    port = process.argv[2] || 8000,
-    path = process.argv[3] || 'bayeux';
+    port   = process.argv[2] || 8000,
+    path   = process.argv[3] || 'bayeux',
+    scheme = process.argv[4] === 'ssl' ? 'https' : 'http';
 
-var A = new faye.Client('http://localhost:' + port + '/' + path),
-    B = new faye.Client('http://localhost:' + port + '/' + path);
+var A = new faye.Client(scheme + '://localhost:' + port + '/' + path),
+    B = new faye.Client(scheme + '://localhost:' + port + '/' + path);
 
 A.connect(function() {
   B.connect(function() {

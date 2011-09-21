@@ -3,12 +3,13 @@ require 'rubygems'
 dir = File.dirname(__FILE__)
 require File.expand_path(dir + '/../../lib/faye')
 
-port = ARGV[0] || 9292
-path = ARGV[1] || 'bayeux'
+port   = ARGV[0] || 9292
+path   = ARGV[1] || 'bayeux'
+scheme = ARGV[2] == 'ssl' ? 'https' : 'http'
 
 EM.run {
-  A = Faye::Client.new("http://localhost:#{port}/#{path}")
-  B = Faye::Client.new("http://localhost:#{port}/#{path}")
+  A = Faye::Client.new("#{scheme}://localhost:#{port}/#{path}")
+  B = Faye::Client.new("#{scheme}://localhost:#{port}/#{path}")
   
   A.connect do
     B.connect do
