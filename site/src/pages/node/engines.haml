@@ -1,0 +1,31 @@
+.content
+  = partial 'node_navigation'
+  
+  :textile
+    h4. Engines
+    
+    Faye supports pluggable back-end engines that help the service adapt to
+    different use cases. The engines currently available are:
+    
+    * @memory@: (default) all service state is stored in the Faye server process.
+      Only one instance of the server may be run but internal operations are
+      very fast.
+    * @redis@: (experimental) service state and message distribution is handled
+      by a Redis database server. Operations are slower but multiple instances
+      of the Faye server may be run on top of a single Redis database.
+    
+    To use the Redis engine, pass the @engine@ option when initializing the
+    Faye server:
+    
+    <pre class="prettyprint">bayeux = new faye.NodeAdapter({
+      mount:    '/faye',
+      timeout:  45,
+      engine: {
+        type:       'redis',
+        host:       'REDIS_HOST',
+        port:       'REDIS_PORT',
+        password:   'REDIS_AUTH',   // if your server requires it
+        database:   0,              // optional, selects database
+        namespace:  '/foo'          // optional, namespaces keys
+      }
+    })</pre>
