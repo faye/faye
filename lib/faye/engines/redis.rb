@@ -192,8 +192,6 @@ module Faye
                     block.call(release_lock) if old_value == timeout
                   end
                 end
-              else
-                with_lock(lock_name, &block)
               end
             end
             
