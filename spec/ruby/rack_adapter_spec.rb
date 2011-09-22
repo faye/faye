@@ -11,6 +11,7 @@ describe Faye::RackAdapter do
   after { app.stop }
   
   let(:content_type)          { last_response["Content-Type"] }
+  let(:cache_control)         { last_response["Cache-Control"] }
   let(:access_control_origin) { last_response["Access-Control-Allow-Origin"] }
   let(:json)                  { JSON.parse(body) }
   let(:body)                  { last_response.body }
@@ -161,6 +162,12 @@ describe Faye::RackAdapter do
         status.should == 200
         content_type.should == "text/javascript"
         body.should == 'callback([{"channel":"/meta/handshake"}]);'
+      end
+      
+      it "does not let the client cache the response" do
+        server.stub(:process).and_yield ["channel" => "/meta/handshake"]
+        get "/bayeux", params
+        cache_control.should == "no-cache, no-store"
       end
     end
     
