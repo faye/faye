@@ -7,7 +7,7 @@
 , "version"       : "0.6.6"
 , "engines"       : {"node": ">=0.1.96"}
 , "main"          : "./faye-node"
-, "dependencies"  : {"redis": ""}
+, "dependencies"  : {"redis": "", "cookiejar": ""}
 
 , "bugs"          : "http://github.com/jcoglan/faye/issues"
 
