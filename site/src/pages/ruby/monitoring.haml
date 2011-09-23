@@ -1,0 +1,89 @@
+.content
+  = partial 'ruby_navigation'
+  
+  :textile
+    h4. Monitoring
+    
+    Since version 0.7, Faye includes an API for monitoring activity going on
+    within the "engine":/ruby/engines.html. This means you can attach event
+    listeners to monitor the creation and destruction of client sessions, find
+    out when clients subscribe and unsubscribe from channels, and watch published
+    messages.
+    
+    You attach an event listener to your server like so:
+    
+    <pre class="prettyprint">bayeux = Faye::RackAdapter.new(:mount => '/faye', :timeout => 25)
+    
+    bayeux.bind(:handshake) do |client_id|
+      # event listener logic
+    end</pre>
+    
+    The available events are:
+    
+    * *@:handshake [client_id]@* - Triggered when a new client connects and is
+      issued with an ID.
+    * *@:subscribe [client_id, channel]@* - Triggered when a client subscribes to
+      a channel. This does not fire if a @/meta/subscribe@ message is received
+      for a subscription that already exists.
+    * *@:unsubscribe [client_id, channel]@* - Triggered when a client unsubscribes
+      from a channel. This can fire either because the client explicitly sent
+      a @/meta/unsubscribe@ message, or because its session was timed out by
+      the server.
+    * *@:publish [client_id, channel, data]@* - Triggered when a non-@/meta/**@
+      message is published. Includes the client ID of the publisher (which may
+      be @nil@), the channel the message was sent to and the data payload.
+    * *@:disconnect [client_id]@* - Triggered when a client session ends, either
+      because it explicitly sent a @/meta/disconnect@ message or because its
+      session was timed out by the server.
+    
+    h4. Events versus extensions
+    
+    On the surface, this API seems similar to the facilities provided by the
+    "extensions":/ruby/extensions.html system. Historically, a common use case
+    for extensions has been to monitor what's going on in your Faye service. The
+    difference is that extensions operate within the protocol layer, and
+    monitoring events are attached at a lower level: they come from the engine
+    and are independent of the protocol. See the "architecture overview":/architecture.html
+    for more information.
+    
+    This means that they can notify you about events that are not caused by
+    incoming messages. For example, although clients are supposed to explicitly
+    end their session by sending a @/meta/disconnect@ message, they often fail
+    to do this and their session is ended when the server notices that no messages
+    have been received from that client for a certain amount of time. In this
+    case a @:disconnect@ event is emitted, along with @:unsubscribe@ events for
+    all the client's subscriptions, even though no message was received.
+    
+    The flip side of this is that these events cannot use or modify any data
+    being transmitted via the protocol. If you need to implement authentication,
+    or use message extension data, then you should write an extension. If not,
+    these events provide a lightweight way to monitor messaging activity.
+    
+    h4. Monitoring in multi-process servers
+    
+    If you're using the Redis engine to run multiple front-end server processes,
+    you should keep in mind that monitoring events only fire once, in the process
+    that handled the relevant event. For example if a client subscribes to a
+    channel, the @:subscribe@ event will only fire in the process that handled
+    the @/meta/subscribe@ message, not in any other process.
+    
+    This has implications if you're storing state derived from this activity.
+    For example, if you're storing subscriber counts for channels in memory but
+    running multiple Faye servers, each server will have its own local and
+    incorrect value of the count for a channel.
+    
+    h4. A word of warning
+    
+    While this monitoring API is certainly useful for some applications, you
+    are advised to think carefully before using it to implement decisions within
+    your application. For example, many people building a chat room initially
+    think that listening for @:disconnect@ is a good way to monitor presence. In
+    reality, a user in your app will create many Faye clients as they navigate
+    from page to page, so a Faye session may not have a one-to-one relationship
+    with an entity in your app.
+    
+    You should consider whether it would be better to implement your own
+    heartbeat/timeout system on top of Faye for your use case before diving in
+    and using monitoring events for this. Binding your application logic to Faye
+    client IDs may create unwelcome couplings between your application and your
+    network communication stack.
