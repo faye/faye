@@ -1,6 +1,6 @@
 module Faye
   module Engine
-    
+
     class Redis < Base
       DEFAULT_HOST     = 'localhost'
       DEFAULT_PORT     = 6379
@@ -12,15 +12,21 @@ module Faye
         return if @redis
         require 'em-hiredis'
         
-        host = @options[:host]      || DEFAULT_HOST
-        port = @options[:port]      || DEFAULT_PORT
-        db   = @options[:database]  || 0
-        auth = @options[:password]
-        gc   = @options[:gc]        || DEFAULT_GC
-        @ns  = @options[:namespace] || ''
+        host   = @options[:host]      || DEFAULT_HOST
+        port   = @options[:port]      || DEFAULT_PORT
+        db     = @options[:database]  || 0
+        auth   = @options[:password]
+        gc     = @options[:gc]        || DEFAULT_GC
+        @ns    = @options[:namespace] || ''
+        socket = @options[:socket]
         
-        @redis      = EventMachine::Hiredis::Client.connect(host, port)
-        @subscriber = EventMachine::Hiredis::Client.connect(host, port)
+        if socket
+          @redis      = EventMachine::Hiredis::Client.connect(socket, nil)
+          @subscriber = EventMachine::Hiredis::Client.connect(socket, nil)
+        else
+          @redis      = EventMachine::Hiredis::Client.connect(host, port)
+          @subscriber = EventMachine::Hiredis::Client.connect(host, port)
+        end
         
         if auth
           @redis.auth(auth)
@@ -136,7 +142,7 @@ module Faye
             @redis.publish(@ns + '/notifications', client_id)
           end
         end
-
+        
         trigger(:publish, message['clientId'], message['channel'], message['data'])
       end
       

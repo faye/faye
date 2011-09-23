@@ -6,21 +6,27 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   LOCK_TIMEOUT:     <%= Faye::Engine::Redis::LOCK_TIMEOUT %>,
   
   className: 'Engine.Redis',
-
+  
   initialize: function(options) {
     Faye.Engine.Base.prototype.initialize.call(this, options);
     
-    var redis = require('redis'),
-        host  = this._options.host     || this.DEFAULT_HOST,
-        port  = this._options.port     || this.DEFAULT_PORT,
-        db    = this._options.database || this.DEFAULT_DATABASE,
-        auth  = this._options.password,
-        gc    = this._options.gc       || this.DEFAULT_GC;
+    var redis  = require('redis'),
+        host   = this._options.host     || this.DEFAULT_HOST,
+        port   = this._options.port     || this.DEFAULT_PORT,
+        db     = this._options.database || this.DEFAULT_DATABASE,
+        auth   = this._options.password,
+        gc     = this._options.gc       || this.DEFAULT_GC,
+        socket = this._options.socket;
     
     this._ns  = this._options.namespace || '';
     
-    this._redis = redis.createClient(port, host, {no_ready_check: true});
-    this._subscriber = redis.createClient(port, host, {no_ready_check: true});
+    if (socket) {
+      this._redis = redis.createClient(socket, {no_ready_check: true});
+      this._subscriber = redis.createClient(socket, {no_ready_check: true});
+    } else {
+      this._redis = redis.createClient(port, host, {no_ready_check: true});
+      this._subscriber = redis.createClient(port, host, {no_ready_check: true});
+    }
     
     if (auth) {
       this._redis.auth(auth);
@@ -68,7 +74,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
         if (callback) callback.call(scope);
         return;
       }
-      
+            
       Faye.each(channels, function(channel) {
         self.unsubscribe(clientId, channel, function() {
           i += 1;
@@ -122,7 +128,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   
   publish: function(message) {
     this.debug('Publishing message ?', message);
-
+    
     var self        = this,
         jsonMessage = JSON.stringify(message),
         channels    = Faye.Channel.expand(message.channel),
