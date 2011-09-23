@@ -36,7 +36,7 @@ module Faye
       end
       request.callback do
         begin
-          cookies = [request.response_header['SET_COOKIE']].flatten.compact
+          cookies = [*request.response_header['SET_COOKIE']]
           cookies.each do |cookie|
             @client.cookies.set_cookie(@endpoint, cookie)
           end
