@@ -157,8 +157,11 @@ module Faye
         init
         
         key = @ns + "/clients/#{client_id}/messages"
-        @redis.lrange(key, 0, -1) do |json_messages|
-          @redis.ltrim(key, json_messages.size, -1)
+        
+        @redis.multi
+        @redis.lrange(key, 0, -1)
+        @redis.del(key)
+        @redis.exec.callback  do |json_messages, deleted|
           json_messages.each do |json_message|
             conn.deliver(JSON.parse(json_message))
           end
