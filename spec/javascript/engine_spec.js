@@ -426,8 +426,17 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     after(function() { this.clean_redis_db() })
     
     itShouldBehaveLike("faye engine")
+    
     describe("distribution", function() { with(this) {
       itShouldBehaveLike("distributed engine")
+    }})
+    
+    describe("using a Unix socket", function() { with(this) {
+      before(function() { with(this) {
+        this.engineOpts.socket = "/tmp/redis.sock"
+      }})
+      
+      itShouldBehaveLike("faye engine")
     }})
   }})
 }})
