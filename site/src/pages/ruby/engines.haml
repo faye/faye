@@ -28,3 +28,14 @@
         :database   => 0,             # optional, selects database
         :namespace  => '/foo'         # optional, namespaces keys
       })</pre>
+    
+    If you're using the @unixsocket@ directive in your Redis server, you can
+    also pass @:socket@ instead of @:host@ and @:port@ to connect:
+    
+    <pre class="prettyprint">bayeux = Faye::RackAdapter.new(
+      :mount   => '/faye',
+      :timeout => 25,
+      :engine  => {
+        :type       => 'redis',
+        :socket     => '/tmp/redis.sock'
+      })</pre>

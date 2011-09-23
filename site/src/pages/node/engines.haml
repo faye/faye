@@ -29,3 +29,15 @@
         namespace:  '/foo'          // optional, namespaces keys
       }
     })</pre>
+    
+    If you're using the @unixsocket@ directive in your Redis server, you can
+    also pass @socket@ instead of @host@ and @port@ to connect:
+    
+    <pre class="prettyprint">bayeux = new faye.NodeAdapter({
+      mount:    '/faye',
+      timeout:  45,
+      engine: {
+        type:       'redis',
+        socket:     '/tmp/redis.sock'
+      }
+    })</pre>
