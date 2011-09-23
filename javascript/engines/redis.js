@@ -133,13 +133,17 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     var conn = this.connection(clientId, false);
     if (!conn) return;
     
-    var key = this._ns + '/clients/' + clientId + '/messages', self = this;
-    this._redis.lrange(key, 0, -1, function(error, jsonMessages) {
-      self._redis.ltrim(key, jsonMessages.length, -1);
+    var key   = this._ns + '/clients/' + clientId + '/messages',
+        multi = this._redis.multi(),
+        self  = this;
+    
+    multi.lrange(key, 0, -1, function(error, jsonMessages) {
       Faye.each(jsonMessages, function(jsonMessage) {
         conn.deliver(JSON.parse(jsonMessage));
       });
     });
+    multi.del(key);
+    multi.exec();
   },
   
   gc: function() {
