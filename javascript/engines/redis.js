@@ -4,47 +4,53 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   DEFAULT_DATABASE: <%= Faye::Engine::Redis::DEFAULT_DATABASE %>,
   DEFAULT_GC:       <%= Faye::Engine::Redis::DEFAULT_GC %>,
   LOCK_TIMEOUT:     <%= Faye::Engine::Redis::LOCK_TIMEOUT %>,
-  
+
   className: 'Engine.Redis',
 
   initialize: function(options) {
     Faye.Engine.Base.prototype.initialize.call(this, options);
-    
-    var redis = require('redis'),
-        host  = this._options.host     || this.DEFAULT_HOST,
-        port  = this._options.port     || this.DEFAULT_PORT,
-        db    = this._options.database || this.DEFAULT_DATABASE,
-        auth  = this._options.password,
-        gc    = this._options.gc       || this.DEFAULT_GC;
-    
+
+    var redis  = require('redis'),
+        host   = this._options.host     || this.DEFAULT_HOST,
+        port   = this._options.port     || this.DEFAULT_PORT,
+        db     = this._options.database || this.DEFAULT_DATABASE,
+        auth   = this._options.password,
+        gc     = this._options.gc       || this.DEFAULT_GC,
+        socket = this._options.socket;
+
     this._ns  = this._options.namespace || '';
-    
-    this._redis = redis.createClient(port, host, {no_ready_check: true});
-    this._subscriber = redis.createClient(port, host, {no_ready_check: true});
-    
+
+    if (socket) {
+      this._redis = redis.createClient(socket, {no_ready_check: true});
+      this._subscriber = redis.createClient(socket, {no_ready_check: true});
+    } else {
+      this._redis = redis.createClient(port, host, {no_ready_check: true});
+      this._subscriber = redis.createClient(port, host, {no_ready_check: true});
+    }
+
     if (auth) {
       this._redis.auth(auth);
       this._subscriber.auth(auth);
     }
     this._redis.select(db);
     this._subscriber.select(db);
-    
+
     var self = this;
     this._subscriber.subscribe(this._ns + '/notifications');
     this._subscriber.on('message', function(topic, message) {
       self.emptyQueue(message);
     });
-    
+
     this._gc = setInterval(function() { self.gc() }, gc * 1000);
   },
-  
+
   disconnect: function() {
     this._redis.end();
     this._subscriber.unsubscribe();
     this._subscriber.end();
     clearInterval(this._gc);
   },
-  
+
   createClient: function(callback, scope) {
     var clientId = Faye.random(), self = this;
     this.debug('Created new client ?', clientId);
@@ -54,16 +60,16 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       callback.call(scope, clientId);
     });
   },
-  
+
   destroyClient: function(clientId, callback, scope) {
     var self = this;
     this._redis.zrem(this._ns + '/clients', clientId);
     this._redis.del(this._ns + '/clients/' + clientId + '/messages');
-    
+
     this._redis.smembers(this._ns + '/clients/' + clientId + '/channels', function(error, channels) {
       var n = channels.length, i = 0;
       if (n === 0) return callback && callback.call(scope);
-      
+
       Faye.each(channels, function(channel) {
         self.unsubscribe(clientId, channel, function() {
           i += 1;
@@ -75,23 +81,23 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       });
     });
   },
-  
+
   clientExists: function(clientId, callback, scope) {
     this._redis.zscore(this._ns + '/clients', clientId, function(error, score) {
       callback.call(scope, score !== null);
     });
   },
-  
+
   ping: function(clientId) {
     if (typeof this.timeout !== 'number') return;
-    
+
     var time = new Date().getTime(),
         self = this;
-    
+
     this.debug('Ping ?, ?', clientId, time);
     this._redis.zadd(this._ns + '/clients', time, clientId);
   },
-  
+
   subscribe: function(clientId, channel, callback, scope) {
     var self = this;
     this._redis.sadd(this._ns + '/clients/' + clientId + '/channels', channel);
@@ -100,7 +106,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       if (callback) callback.call(scope);
     });
   },
-  
+
   unsubscribe: function(clientId, channel, callback, scope) {
     var self = this;
     this._redis.srem(this._ns + '/clients/' + clientId + '/channels', channel);
@@ -109,7 +115,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       if (callback) callback.call(scope);
     });
   },
-  
+
   publish: function(message) {
     this.debug('Publishing message ?', message);
 
@@ -117,7 +123,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
         jsonMessage = JSON.stringify(message),
         channels    = Faye.Channel.expand(message.channel),
         keys        = Faye.map(channels, function(c) { return self._ns + '/channels' + c });
-    
+
     var notify = function(error, clients) {
       Faye.each(clients, function(clientId) {
         self.debug('Queueing for client ?: ?', clientId, message);
@@ -128,11 +134,11 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     keys.push(notify);
     this._redis.sunion.apply(this._redis, keys);
   },
-  
+
   emptyQueue: function(clientId) {
     var conn = this.connection(clientId, false);
     if (!conn) return;
-    
+
     var key = this._ns + '/clients/' + clientId + '/messages', self = this;
     this._redis.lrange(key, 0, -1, function(error, jsonMessages) {
       self._redis.ltrim(key, jsonMessages.length, -1);
@@ -141,17 +147,17 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       });
     });
   },
-  
+
   gc: function() {
     if (typeof this.timeout !== 'number') return;
     this._withLock('gc', function(releaseLock) {
       var cutoff = new Date().getTime() - 1000 * 2 * this.timeout,
           self   = this;
-      
+
       this._redis.zrangebyscore(this._ns + '/clients', 0, cutoff, function(error, clients) {
         var i = 0, n = clients.length;
         if (i === n) return releaseLock();
-        
+
         Faye.each(clients, function(clientId) {
           this.destroyClient(clientId, function() {
             i += 1;
@@ -161,26 +167,26 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       });
     }, this);
   },
-  
+
   _withLock: function(lockName, callback, scope) {
     var lockKey     = this._ns + '/locks/' + lockName,
         currentTime = new Date().getTime(),
         expiry      = currentTime + this.LOCK_TIMEOUT * 1000 + 1;
         self        = this;
-    
+
     var releaseLock = function() {
       if (new Date().getTime() < expiry) self._redis.del(lockKey);
     };
-    
+
     this._redis.setnx(lockKey, expiry, function(error, set) {
       if (set === 1) return callback.call(scope, releaseLock);
-      
+
       self._redis.get(lockKey, function(error, timeout) {
         if (!timeout) return;
         
         var lockTimeout = parseInt(timeout, 10);
         if (currentTime < lockTimeout) return;
-        
+
         self._redis.getset(lockKey, expiry, function(error, oldValue) {
           if (oldValue !== timeout) return;
           callback.call(scope, releaseLock);
