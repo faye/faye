@@ -193,7 +193,10 @@ Faye.NodeAdapter = Faye.Class({
             head   = Faye.extend({}, type),
             origin = request.headers.origin;
         
-        if (isGet)  body = jsonp + '(' + body + ');';
+        if (isGet) {
+          body = jsonp + '(' + body + ');';
+          head['Cache-Control'] = 'no-cache, no-store';
+        }
         if (origin) head['Access-Control-Allow-Origin'] = origin;
         
         this.debug('Returning ?', body);

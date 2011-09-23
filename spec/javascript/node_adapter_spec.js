@@ -74,6 +74,11 @@ JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
     resume()
   },
   
+  check_cache_control: function(value, resume) {
+    this.assertEqual(value, this._response.headers["cache-control"])
+    resume()
+  },
+  
   check_content_type: function(type, resume) {
     this.assertEqual(type, this._response.headers["content-type"])
     resume()
@@ -229,6 +234,12 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
         check_status(200)
         check_content_type("text/javascript")
         check_body('callback([{"channel":"/meta/handshake"}]);')
+      }})
+      
+      it("does not let the client cache the response", function() { with(this) {
+        stub(server, "process").yields([[{channel: "/meta/handshake"}]])
+        get("/bayeux", params)
+        check_cache_control("no-cache, no-store")
       }})
     }})
     

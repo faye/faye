@@ -97,6 +97,7 @@ module Faye
       @server.flush_connection(message) if request.get?
       
       head['Access-Control-Allow-Origin'] = origin if origin
+      head['Cache-Control'] = 'no-cache, no-store' if request.get?
       callback.call [200, head, body]
       
       @server.process(message, false) do |replies|
