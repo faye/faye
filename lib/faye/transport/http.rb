@@ -1,3 +1,4 @@
+require 'cookiejar'
 require 'em-http'
 require 'em-http/version'
 
@@ -11,12 +12,16 @@ module Faye
     def request(message, timeout)
       retry_block = retry_block(message, timeout)
       
+      @client.cookies ||= CookieJar::Jar.new
+      cookies = @client.cookies.get_cookies(@endpoint)
+      
       content = JSON.unparse(message)
       params = {
         :head => {
+          'Content-Length'  => content.length,
           'Content-Type'    => 'application/json',
-          'host'            => URI.parse(@endpoint).host,
-          'Content-Length'  => content.length
+          'Cookie'          => cookies * '; ',
+          'Host'            => URI.parse(@endpoint).host
         },
         :body    => content,
         :timeout => -1  # for em-http-request < 1.0
@@ -31,6 +36,10 @@ module Faye
       end
       request.callback do
         begin
+          cookies = [request.response_header['SET_COOKIE']].flatten.compact
+          cookies.each do |cookie|
+            @client.cookies.set_cookie(@endpoint, cookie)
+          end
           receive(JSON.parse(request.response))
         rescue
           retry_block.call

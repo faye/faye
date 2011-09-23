@@ -16,6 +16,7 @@ module Faye
     
     CONNECTION_TIMEOUT  = 60.0
     
+    attr_accessor :cookies
     attr_reader :endpoint, :client_id
     
     def initialize(endpoint = nil, options = {})
