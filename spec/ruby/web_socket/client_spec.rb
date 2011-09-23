@@ -10,7 +10,7 @@ WebSocketSteps = EM::RSpec.async_steps do
     @adapter = Faye::RackAdapter.new(:mount => "/bayeux", :timeout => 25)
     @adapter.listen(port)
     @port = port
-    EM.next_tick(&callback)
+    EM.add_timer(0.1, &callback)
   end
   
   def stop(&callback)
