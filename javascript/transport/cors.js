@@ -1,26 +1,29 @@
 Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
+  xhr: null,
   request: function(message, timeout) {
     var xhrClass = Faye.ENV.XDomainRequest ? XDomainRequest : XMLHttpRequest,
-        xhr      = new xhrClass(),
         retry    = this.retry(message, timeout),
         self     = this;
+
+    if (!this.xhr) {
+      this.xhr = new xhrClass();
+      this.xhr.timeout = 100000; 
+    } else {
+      try { this.xhr.abort(); } catch(e){}
+    }
     
-    xhr.open('POST', this._endpoint, true);
-    
-    xhr.onload = function() {
+    this.xhr.open('POST', this._endpoint, true);
+    this.xhr.onload = function() {
       try {
-        self.receive(JSON.parse(xhr.responseText));
+        self.receive(JSON.parse(self.xhr.responseText));
       } catch(e) {
         retry();
-      } finally {
-        xhr.onload = xhr.onerror = null;
-        xhr = null;
       }
     };
-    xhr.onerror = retry;
-    xhr.ontimeout = retry;
-    xhr.onprogress = function() {};
-    xhr.send('message=' + encodeURIComponent(Faye.toJSON(message)));
+    this.xhr.onerror = retry;
+    this.xhr.ontimeout = retry;
+    this.xhr.onprogress = function() {};
+    this.xhr.send('message=' + encodeURIComponent(Faye.toJSON(message)));
   }
 }), {
   isUsable: function(endpoint, callback, scope) {
