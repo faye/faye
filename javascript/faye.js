@@ -13,16 +13,16 @@ Faye.extend = function(dest, source, overwrite) {
 
 Faye.extend(Faye, {
   VERSION:          '<%= Faye::VERSION %>',
-  
+
   BAYEUX_VERSION:   '<%= Faye::BAYEUX_VERSION %>',
   ID_LENGTH:        <%= Faye::ID_LENGTH %>,
   JSONP_CALLBACK:   '<%= Faye::JSONP_CALLBACK %>',
   CONNECTION_TYPES: ['long-polling', 'cross-origin-long-polling', 'callback-polling', 'websocket', 'in-process'],
-  
+
   MANDATORY_CONNECTION_TYPES: ['long-polling', 'callback-polling', 'in-process'],
-  
+
   ENV: (function() { return this })(),
-  
+
   random: function(bitlength) {
     bitlength = bitlength || this.ID_LENGTH;
     if (bitlength > 32) {
@@ -34,11 +34,11 @@ Faye.extend(Faye, {
     var limit   = Math.pow(2, bitlength) - 1,
         maxSize = limit.toString(36).length,
         string  = Math.floor(Math.random() * limit).toString(36);
-    
+
     while (string.length < maxSize) string = '0' + string;
     return string;
   },
-  
+
   commonElement: function(lista, listb) {
     for (var i = 0, n = lista.length; i < n; i++) {
       if (this.indexOf(listb, lista[i]) !== -1)
@@ -46,19 +46,19 @@ Faye.extend(Faye, {
     }
     return null;
   },
-  
+
   indexOf: function(list, needle) {
     for (var i = 0, n = list.length; i < n; i++) {
       if (list[i] === needle) return i;
     }
     return -1;
   },
-  
+
   each: function(object, callback, scope) {
     if (object instanceof Array) {
       for (var i = 0, n = object.length; i < n; i++) {
-        if (object[i] !== undefined)
-          callback.call(scope || null, object[i], i);
+        if ((value = object[i]) !== undefined)
+          callback.call(scope || null, value, i);
       }
     } else {
       for (var key in object) {
@@ -67,7 +67,7 @@ Faye.extend(Faye, {
       }
     }
   },
-  
+
   map: function(object, callback, scope) {
     if (object.map) return object.map(callback, scope);
     var result = [];
@@ -76,7 +76,7 @@ Faye.extend(Faye, {
     });
     return result;
   },
-  
+
   filter: function(array, callback, scope) {
     var result = [];
     this.each(array, function() {
@@ -85,13 +85,13 @@ Faye.extend(Faye, {
     });
     return result;
   },
-  
+
   size: function(object) {
     var size = 0;
     this.each(object, function() { size += 1 });
     return size;
   },
-  
+
   enumEqual: function(actual, expected) {
     if (expected instanceof Array) {
       if (!(actual instanceof Array)) return false;
@@ -111,7 +111,7 @@ Faye.extend(Faye, {
       return result;
     }
   },
-  
+
   asyncEach: function(list, iterator, callback, scope) {
     var n       = list.length,
         i       = -1,
@@ -138,7 +138,7 @@ Faye.extend(Faye, {
     };
     resume();
   },
-  
+
   // http://assanka.net/content/tech/2009/09/02/json2-js-vs-prototype/
   toJSON: function(object) {
     if (this.stringify)
@@ -147,10 +147,10 @@ Faye.extend(Faye, {
             ? this[key]
             : value;
       });
-    
+
     return JSON.stringify(object);
   },
-  
+
   timestamp: function() {
     var date   = new Date(),
         year   = date.getFullYear(),
@@ -159,11 +159,11 @@ Faye.extend(Faye, {
         hour   = date.getHours(),
         minute = date.getMinutes(),
         second = date.getSeconds();
-    
+
     var pad = function(n) {
       return n < 10 ? '0' + n : String(n);
     };
-    
+
     return pad(year) + '-' + pad(month) + '-' + pad(day) + ' ' +
            pad(hour) + ':' + pad(minute) + ':' + pad(second);
   }
