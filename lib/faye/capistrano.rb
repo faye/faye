@@ -10,9 +10,11 @@ Capistrano::Configuration.instance(:must_exist).load do
   namespace :faye do
     desc "Start Faye daemon"
     task :start do
-      raise PathError, "Could not find Faye in #{faye_config}. Please, ensure that it exists." unless File.exists?(faye_config) # don't execute command if there is no rack file
-      
-      run "cd #{current_path} && bundle exec rackup #{faye_config} -s thin -E production -D --pid #{faye_pid}"
+      begin
+        run "cd #{current_path} && bundle exec rackup #{faye_config} -s thin -E production -D --pid #{faye_pid}"
+      rescue
+        raise ::Capistrano::CommandError.new("Can not start Faye daemon. Please, ensure that config file in '#{faye_config}' exists and you have permissions to create pid file in '#{faye_pid}'.")
+      end
     end
 
     desc "Stop Faye"
