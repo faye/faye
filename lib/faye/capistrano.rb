@@ -1,7 +1,10 @@
 # Capistrano task for Faye.
-#
-# Just add "require 'faye/capistrano'" in your Capistrano deploy.rb, and
-# Faye will be started/stoped after each new deployment.
+# Just add:
+
+# set :faye_config, "#{deploy_to}/path-to-your-faye.ru"
+# require 'faye/capistrano'
+
+# in your Capistrano deploy.rb, and Faye will be started/stoped after each new deployment.
 
 Capistrano::Configuration.instance(:must_exist).load do
   _cset(:faye_config) { "#{current_path}/faye.ru" }
