@@ -16,11 +16,12 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     };
     
     xhr.onload = function() {
-      cleanUp();
       try {
         self.receive(JSON.parse(xhr.responseText));
       } catch(e) {
         retry();
+      } finally {
+        cleanUp();
       }
     };
     
