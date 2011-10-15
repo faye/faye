@@ -8,9 +8,11 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     xhr.open('POST', this._endpoint, true);
     
     var cleanUp = function() {
+      if (!xhr) return false;
       xhr.onload = xhr.onerror = xhr.ontimeout = xhr.onprogress = null;
       xhr = null;
       Faye.ENV.clearTimeout(timer);
+      return true;
     };
     
     xhr.onload = function() {
