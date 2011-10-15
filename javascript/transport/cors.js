@@ -7,18 +7,29 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     
     xhr.open('POST', this._endpoint, true);
     
+    var cleanUp = function() {
+      xhr.onload = xhr.onerror = xhr.ontimeout = xhr.onprogress = null;
+      xhr = null;
+      Faye.ENV.clearTimeout(timer);
+    };
+    
     xhr.onload = function() {
+      cleanUp();
       try {
         self.receive(JSON.parse(xhr.responseText));
       } catch(e) {
         retry();
-      } finally {
-        xhr.onload = xhr.onerror = null;
-        xhr = null;
       }
     };
-    xhr.onerror = retry;
-    xhr.ontimeout = retry;
+    
+    var onerror = function() {
+      cleanUp();
+      retry();
+    };
+    var timer = Faye.ENV.setTimeout(onerror, 1000 * timeout);
+    xhr.onerror = onerror;
+    xhr.ontimeout = onerror;
+    
     xhr.onprogress = function() {};
     xhr.send('message=' + encodeURIComponent(Faye.toJSON(message)));
   }

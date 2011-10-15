@@ -47,8 +47,10 @@ Faye.Transport = Faye.extend(Faye.Class({
   },
   
   retry: function(message, timeout) {
-    var self = this;
+    var self = this, called = false;
     return function() {
+      if (called) return;
+      called = true;
       Faye.ENV.setTimeout(function() { self.request(message, 2 * timeout) }, 1000 * timeout);
     };
   }
