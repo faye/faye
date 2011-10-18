@@ -191,18 +191,18 @@ Faye.NodeAdapter = Faye.Class({
       if (isGet) this._server.flushConnection(message);
       
       this._server.process(message, false, function(replies) {
-        var body   = JSON.stringify(replies),
-            head   = Faye.extend({}, type),
-            origin = request.headers.origin;
+        var body    = JSON.stringify(replies),
+            headers = Faye.extend({}, type),
+            origin  = request.headers.origin;
         
         if (isGet) {
           body = jsonp + '(' + body + ');';
-          head['Cache-Control'] = 'no-cache, no-store';
+          headers['Cache-Control'] = 'no-cache, no-store';
         }
-        if (origin) head['Access-Control-Allow-Origin'] = origin;
+        if (origin) headers['Access-Control-Allow-Origin'] = origin;
         
         this.debug('Returning ?', body);
-        response.writeHead(200, head);
+        response.writeHead(200, headers);
         response.write(body);
         response.end();
       }, this);
