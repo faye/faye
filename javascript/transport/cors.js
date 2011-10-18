@@ -29,7 +29,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
       cleanUp();
       retry();
     };
-    var timer = Faye.ENV.setTimeout(onerror, 1000 * timeout);
+    var timer = Faye.ENV.setTimeout(onerror, 1.5 * 1000 * timeout);
     xhr.onerror = onerror;
     xhr.ontimeout = onerror;
     

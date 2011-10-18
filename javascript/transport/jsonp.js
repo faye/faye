@@ -16,7 +16,7 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
     var timer = Faye.ENV.setTimeout(function() {
       cleanUp();
       retry();
-    }, 1000 * timeout);
+    }, 1.5 * 1000 * timeout);
     
     var cleanUp = function() {
       if (!Faye.ENV[callbackName]) return false;
