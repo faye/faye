@@ -1,9 +1,10 @@
-var path  = require('path'),
-    fs    = require('fs'),
-    sys   = require('sys'),
-    url   = require('url'),
-    http  = require('http'),
-    https = require('https'),
+var path   = require('path'),
+    fs     = require('fs'),
+    crypto = require('crypto'),
+    sys    = require('sys'),
+    url    = require('url'),
+    http   = require('http'),
+    https  = require('https'),
     querystring = require('querystring');
 
 Faye.logger = function(message) {
@@ -94,26 +95,13 @@ Faye.NodeAdapter = Faye.Class({
     return !!this._endpointRe.test(path);
   },
   
-  loadClientScript: function(callback) {
-    if (this._clientScript) return callback(this._clientScript);
-    var self = this;
-    fs.readFile(this.SCRIPT_PATH, function(err, content) {
-      self._clientScript = content;
-      callback(content);
-    });
-  },
-  
   handle: function(request, response) {
     var requestUrl    = url.parse(request.url, true),
         requestMethod = request.method,
         self          = this;
     
     if (/\.js$/.test(requestUrl.pathname))
-      return this.loadClientScript(function(content) {
-        response.writeHead(200, self.TYPE_SCRIPT);
-        response.write(content);
-        response.end();
-      });
+      return this._serveClientScript(request, response);
     
     if (requestMethod === 'OPTIONS')
       return this._handleOptions(request, response);
@@ -166,6 +154,30 @@ Faye.NodeAdapter = Faye.Class({
         self._server.process(message, false, send);
       } catch (e) {}
     };
+  },
+  
+  _serveClientScript: function(request, response) {
+    this._clientScript = this._clientScript || fs.readFileSync(this.SCRIPT_PATH);
+    this._clientDigest = this._clientDigest || crypto.createHash('sha1').update(this._clientScript).digest('hex');
+    this._clientMtime  = this._clientMtime  || fs.statSync(this.SCRIPT_PATH).mtime;
+    
+    var headers = Faye.extend({}, this.TYPE_SCRIPT),
+        ims     = request.headers['if-modified-since'];
+    
+    headers['ETag'] = this._clientDigest;
+    headers['Last-Modified'] = this._clientMtime.toGMTString();
+    
+    if (request.headers['if-none-match'] === this._clientDigest) {
+      response.writeHead(304, headers);
+      response.end();
+    } else if (ims && this._clientMtime < new Date(ims)) {
+      response.writeHead(304, headers);
+      response.end();
+    } else {
+      response.writeHead(200, headers);
+      response.write(this._clientScript);
+      response.end();
+    }
   },
   
   _callWithParams: function(request, response, params) {

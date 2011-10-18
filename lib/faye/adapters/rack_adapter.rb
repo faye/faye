@@ -1,7 +1,9 @@
+require 'cgi'
+require 'digest/sha1'
 require 'json'
 require 'rack'
 require 'thin'
-require 'cgi'
+require 'time'
 require Faye::ROOT + '/faye/thin_extensions'
 
 module Faye
@@ -73,24 +75,40 @@ module Faye
                       [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
       end
       
-      return handle_options(request) if env['REQUEST_METHOD'] == 'OPTIONS'
-      return handle_upgrade(request) if env['HTTP_UPGRADE'] =~ /^WebSocket$/i
-      
-      if request.path_info =~ /\.js$/
-        @client_script ||= File.read(SCRIPT_PATH)
-        return [200, TYPE_SCRIPT, [@client_script]]
-      end
+      return handle_options(request)  if env['REQUEST_METHOD'] == 'OPTIONS'
+      return handle_upgrade(request)  if env['HTTP_UPGRADE'] =~ /^WebSocket$/i
+      return serve_client_script(env) if request.path_info =~ /\.js$/
       
       handle_request(request)
     end
     
   private
     
+    def serve_client_script(env)
+      @client_script ||= File.read(SCRIPT_PATH)
+      @client_digest ||= Digest::SHA1.hexdigest(@client_script)
+      @client_mtime  ||= File.mtime(SCRIPT_PATH)
+      
+      headers = TYPE_SCRIPT.dup
+      ims     = env['HTTP_IF_MODIFIED_SINCE']
+      
+      headers['ETag'] = @client_digest
+      headers['Last-Modified'] = @client_mtime.httpdate
+      
+      if env['HTTP_IF_NONE_MATCH'] == @client_digest
+        [304, headers, ['']]
+      elsif ims and @client_mtime < Time.httpdate(ims)
+        [304, headers, ['']]
+      else
+        [200, headers, [@client_script]]
+      end
+    end
+    
     def handle_request(request)
       json_msg = message_from_request(request)
       message  = JSON.parse(json_msg)
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
-      head     = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
+      headers  = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
       origin   = request.env['HTTP_ORIGIN']
       callback = request.env['async.callback']
       body     = DeferredBody.new
@@ -98,9 +116,9 @@ module Faye
       debug 'Received ?: ?', request.env['REQUEST_METHOD'], json_msg
       @server.flush_connection(message) if request.get?
       
-      head['Access-Control-Allow-Origin'] = origin if origin
-      head['Cache-Control'] = 'no-cache, no-store' if request.get?
-      callback.call [200, head, body]
+      headers['Access-Control-Allow-Origin'] = origin if origin
+      headers['Cache-Control'] = 'no-cache, no-store' if request.get?
+      callback.call [200, headers, body]
       
       @server.process(message, false) do |replies|
         response = JSON.unparse(replies)

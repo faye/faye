@@ -14,9 +14,6 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/events.html
  **/
 
-var Buffer = require('buffer').Buffer,
-    crypto = require('crypto');
-
 Faye.WebSocket = Faye.Class({
   onopen:     null,
   onmessage:  null,
