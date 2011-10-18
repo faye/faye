@@ -170,7 +170,7 @@ Faye.NodeAdapter = Faye.Class({
     if (request.headers['if-none-match'] === this._clientDigest) {
       response.writeHead(304, headers);
       response.end();
-    } else if (ims && this._clientMtime < new Date(ims)) {
+    } else if (ims && this._clientMtime <= new Date(ims)) {
       response.writeHead(304, headers);
       response.end();
     } else {

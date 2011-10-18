@@ -97,7 +97,7 @@ module Faye
       
       if env['HTTP_IF_NONE_MATCH'] == @client_digest
         [304, headers, ['']]
-      elsif ims and @client_mtime < Time.httpdate(ims)
+      elsif ims and @client_mtime <= Time.httpdate(ims)
         [304, headers, ['']]
       else
         [200, headers, [@client_script]]
