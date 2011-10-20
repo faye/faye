@@ -1,4 +1,12 @@
 #================================================================
+# Load and configure Capybara
+
+require 'capybara/dsl'
+require 'terminus'
+Capybara.current_driver = :terminus
+extend Capybara::DSL
+
+#================================================================
 # Load the example application
 
 dir = ::File.expand_path(::File.dirname(__FILE__))
@@ -13,22 +21,14 @@ application = Rack::Builder.new {
   use Faye::RackAdapter, :mount => '/bayeux', :timeout => 20
   run Sinatra::Application
 }
-
-#================================================================
-# Load and configure Capybara
-
-require 'capybara/dsl'
-require 'terminus'
-Capybara.current_driver = :terminus
 Capybara.app = application.to_app
-extend Capybara::DSL
 
 #================================================================
 # Acquire some browsers and log into each with a username
 
 NAMES = %w[alice bob carol dan erica frank gemma harold ingrid james]
 BROWSERS = {}
-Terminus.ensure_browsers 10
+Terminus.ensure_browsers 5
 
 Terminus.browsers.each_with_index do |browser, i|
   name = NAMES[i]

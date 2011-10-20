@@ -7,11 +7,6 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/events.html
  **/
 
-var Buffer = require('buffer').Buffer,
-    crypto = require('crypto'),
-    net    = require('net'),
-    tls    = require('tls');
-
 Faye.WebSocket = Faye.Class({
   initialize: function(request, head) {
     this.request = request;
