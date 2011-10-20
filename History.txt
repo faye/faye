@@ -1,3 +1,16 @@
+=== 0.6.7 / 2011-10-20
+TestSwarm build: http://swarm.jcoglan.com/job/101/
+
+* Cache client script in memory and add ETag and Last-Modified headers
+* Fix bug in Node Redis engine where 'undefined' was used if no namespace given
+* Flush Redis message queues using a transaction to avoid re-delivery of messages
+* Fix race condition and timing errors present in Redis locking code
+* Use Cache-Control: no-cache, no-store on JSON-P responses
+* Improvements to the CORS and JSON-P transports
+* Prevent retry handlers in transports from being invoked multiple times
+* Use the current page protocol by default when parsing relative URIs
+
+
 === 0.6.6 / 2011-09-12
 
 * Add :key and :cert options to the Adapter#listen methods for setting up SSL
