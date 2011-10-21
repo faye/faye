@@ -10,7 +10,10 @@ module Faye
     end
     
     def request(message, timeout)
-      @endpoint.process(message, true) { |responses| receive(responses) }
+      message = Faye.copy_object(message)
+      @endpoint.process(message, true) do |responses|
+        receive(Faye.copy_object(responses))
+      end
     end
   end
   

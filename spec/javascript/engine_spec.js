@@ -105,6 +105,11 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
     resume()
   },
   
+  check_different_messages: function(a, b, resume) {
+    this.assertNotSame(this._inboxes[a][0], this._inboxes[b][0])
+    resume()
+  },
+  
   clean_redis_db: function(resume) {
     this.engine.disconnect()
     var redis = require('redis').createClient(6379, 'localhost', {no_ready_check: true})
@@ -357,6 +362,11 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
           expect_message("alice", [message])
           expect_no_message("bob")
           expect_message("carol", [message])
+        }})
+        
+        it("delivers a unique copy of the message to each client", function() { with(this) {
+          publish(message)
+          check_different_messages("alice", "carol")
         }})
       }})
       

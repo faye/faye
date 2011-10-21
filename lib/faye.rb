@@ -58,6 +58,10 @@ module Faye
     end
   end
   
+  def self.copy_object(object)
+    Marshal.load(Marshal.dump(object))
+  end
+  
   def self.encode(string, encoding = 'UTF-8')
     return string unless string.respond_to?(:force_encoding)
     string.force_encoding(encoding)

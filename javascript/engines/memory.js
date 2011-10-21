@@ -96,7 +96,7 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     clients.forEach(function(clientId) {
       this.debug('Queueing for client ?: ?', clientId, message);
       messages[clientId] = messages[clientId] || [];
-      messages[clientId].push(message);
+      messages[clientId].push(Faye.copyObject(message));
       this.emptyQueue(clientId);
     }, this);
     

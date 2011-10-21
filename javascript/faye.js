@@ -39,6 +39,10 @@ Faye.extend(Faye, {
     return string;
   },
   
+  copyObject: function(object) {
+    return JSON.parse(Faye.toJSON(object));
+  },
+  
   commonElement: function(lista, listb) {
     for (var i = 0, n = lista.length; i < n; i++) {
       if (this.indexOf(listb, lista[i]) !== -1)

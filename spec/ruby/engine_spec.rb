@@ -105,6 +105,11 @@ EngineSteps = EM::RSpec.async_steps do
     resume.call
   end
   
+  def check_different_messages(a, b, &resume)
+    @inboxes[a].first.should_not be_equal(@inboxes[b].first)
+    resume.call
+  end
+  
   def clean_redis_db(&resume)
     engine.disconnect
     redis = EM::Hiredis::Client.connect
@@ -347,6 +352,11 @@ describe "Pub/sub engines" do
           expect_message    :alice, [@message]
           expect_no_message :bob
           expect_message    :carol, [@message]
+        end
+        
+        it "delivers a unique copy of the message to each client" do
+          publish @message
+          check_different_messages :alice, :carol
         end
       end
       

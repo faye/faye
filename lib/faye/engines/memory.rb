@@ -88,7 +88,7 @@ module Faye
         clients.each do |client_id|
           debug 'Queueing for client ?: ?', client_id, message
           @messages[client_id] ||= []
-          @messages[client_id] << message
+          @messages[client_id] << Faye.copy_object(message)
           empty_queue(client_id)
         end
 
