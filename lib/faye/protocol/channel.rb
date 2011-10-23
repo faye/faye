@@ -67,6 +67,10 @@ module Faye
         segments ? (segments.first == SERVICE) : nil
       end
       
+      def publishable?(name)
+        subscribable?(name) and Grammar::CHANNEL_NAME =~ name
+      end
+      
       def subscribable?(name)
         return nil unless valid?(name)
         not meta?(name) and not service?(name)
@@ -110,11 +114,13 @@ module Faye
         end
       end
       
-      def distribute_message(message)
+      def distribute_message(message, *args)
+        return unless data = message['data']
+        
         channels = Channel.expand(message['channel'])
         channels.each do |name|
           channel = @channels[name]
-          channel.trigger(:message, message['data']) if channel
+          channel.trigger(:message, data, *args) if channel
         end
       end
     end

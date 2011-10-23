@@ -63,6 +63,15 @@ EngineSteps = EM::RSpec.async_steps do
     EM.add_timer(0.01, &resume)
   end
   
+  def deliver(name, messages, &resume)
+    messages = [messages].flatten
+    messages.each do |message|
+      message = {"id" => Faye.random}.merge(message)
+      engine.deliver(@clients[name], message)
+    end
+    EM.add_timer(0.01, &resume)
+  end
+  
   def publish_by(name, message, &resume)
     message = {"clientId" => @clients[name], "id" => Faye.random}.merge(message)
     engine.publish(message)
@@ -375,6 +384,18 @@ describe "Pub/sub engines" do
           publish [@message, @message]
           expect_message :alice, [@message, @message]
         end
+      end
+    end
+    
+    describe :deliver do
+      before do
+        @message = {"channel" => "/messages/foo", "data" => "ok"}
+        connect :bob, engine
+      end
+      
+      it "delivers a message directly to one client" do
+        deliver :bob, @message
+        expect_message :bob, [@message]
       end
     end
   end

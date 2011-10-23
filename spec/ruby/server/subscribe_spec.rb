@@ -179,9 +179,9 @@ describe "server subscribe" do
       end
     end
     
-    describe "with a /meta/* channel" do
+    shared_examples_for "forbidden channel" do
       before do
-        message["subscription"] = "/meta/foo"
+        message["subscription"] = channel
         engine.should_receive(:client_exists).with(client_id).and_yield true
       end
       
@@ -195,15 +195,15 @@ describe "server subscribe" do
           response.should == {
             "channel"      => "/meta/subscribe",
             "successful"   => false,
-            "error"        => "403:/meta/foo:Forbidden channel",
+            "error"        => "403:#{channel}:Forbidden channel",
             "clientId"     => client_id,
-            "subscription" => "/meta/foo"
+            "subscription" => channel
           }
         end
       end
       
       it "subscribes local clients to the channel" do
-        engine.should_receive(:subscribe).with(client_id, "/meta/foo")
+        engine.should_receive(:subscribe).with(client_id, channel)
         server.subscribe(message, true) {}
       end
       
@@ -214,10 +214,20 @@ describe "server subscribe" do
             "channel"      => "/meta/subscribe",
             "successful"   => true,
             "clientId"     => client_id,
-            "subscription" => "/meta/foo"
+            "subscription" => channel
           }
         end
       end
+    end
+    
+    describe "with a /meta/* channel" do
+      let(:channel) { "/meta/foo" }
+      it_should_behave_like "forbidden channel"
+    end
+    
+    describe "with a /service/* channel" do
+      let(:channel) { "/service/foo" }
+      it_should_behave_like "forbidden channel"
     end
     
     describe "with an error" do

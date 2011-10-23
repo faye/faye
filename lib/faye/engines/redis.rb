@@ -131,19 +131,20 @@ module Faye
         init
         debug 'Publishing message ?', message
         
-        json_message = JSON.dump(message)
-        channels     = Channel.expand(message['channel'])
-        keys         = channels.map { |c| @ns + "/channels#{c}" }
+        channels = Channel.expand(message['channel'])
+        keys     = channels.map { |c| @ns + "/channels#{c}" }
         
         @redis.sunion(*keys) do |clients|
-          clients.each do |client_id|
-            debug 'Queueing for client ?: ?', client_id, message
-            @redis.rpush(@ns + "/clients/#{client_id}/messages", json_message)
-            @redis.publish(@ns + '/notifications', client_id)
-          end
+          clients.each { |client_id| deliver(client_id, message) }
         end
         
         trigger(:publish, message['clientId'], message['channel'], message['data'])
+      end
+      
+      def deliver(client_id, message)
+        debug 'Queueing for client ?: ?', client_id, message
+        @redis.rpush(@ns + "/clients/#{client_id}/messages", JSON.dump(message))
+        @redis.publish(@ns + '/notifications', client_id)
       end
       
     private

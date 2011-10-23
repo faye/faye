@@ -5,14 +5,19 @@ module Faye
     include Extensible
     
     attr_reader :engine
-
+    
     def initialize(options = {})
       @options    = options || {}
       engine_opts = @options[:engine] || {}
       engine_opts[:timeout] = @options[:timeout]
-      @engine     = Faye::Engine.get(engine_opts)
+      @engine     = Engine.get(engine_opts)
+      @services   = Channel::Set.new
 
       info 'Created new server: ?', @options
+    end
+    
+    def service(channels, &listener)
+      @services.subscribe([channels].flatten, listener)
     end
     
     def flush_connection(messages)
@@ -78,7 +83,11 @@ module Faye
       
       return handle_meta(message, local, &callback) if Channel.meta?(channel_name)
       
-      @engine.publish(message) unless message['error'] or Grammar::CHANNEL_NAME !~ channel_name
+      if Channel.publishable?(channel_name) and not message['error']
+        @engine.publish(message)
+      end
+      
+      @services.distribute_message(message, Session.new(@engine, message['clientId']))
       
       if message['clientId']
         response = make_response(message)

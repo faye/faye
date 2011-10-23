@@ -85,14 +85,16 @@ module Faye
           subs.each(&clients.method(:add))
         end
         
-        clients.each do |client_id|
-          debug 'Queueing for client ?: ?', client_id, message
-          @messages[client_id] ||= []
-          @messages[client_id] << Faye.copy_object(message)
-          empty_queue(client_id)
-        end
-
+        clients.each { |client_id| deliver(client_id, message) }
+        
         trigger(:publish, message['clientId'], message['channel'], message['data'])
+      end
+      
+      def deliver(client_id, message)
+        debug 'Queueing for client ?: ?', client_id, message
+        @messages[client_id] ||= []
+        @messages[client_id] << Faye.copy_object(message)
+        empty_queue(client_id)
       end
       
     private

@@ -29,6 +29,7 @@ module Faye
       protocol/subscription
       protocol/client
       protocol/server
+      protocol/session
       transport/transport
       transport/local
       transport/web_socket
