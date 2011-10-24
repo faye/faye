@@ -60,8 +60,8 @@ module Faye
     def make_response(message)
       response = {}
       %w[id clientId channel error].each do |field|
-        if message[field]
-          response[field] = message[field]
+        if value = message[field]
+          response[field] = value
         end
       end
       response['successful'] = !response['error']

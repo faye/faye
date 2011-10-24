@@ -69,9 +69,9 @@ Faye.Server = Faye.Class({
   },
   
   _makeResponse: function(message) {
-    var response = {};
+    var response = {}, value;
     Faye.each(['id', 'clientId', 'channel', 'error'], function(field) {
-      if (message[field]) response[field] = message[field];
+      if (value = message[field]) response[field] = value;
     });
     response.successful = !response.error;
     return response;

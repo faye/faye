@@ -56,9 +56,10 @@ Faye.extend(Faye, {
   
   each: function(object, callback, scope) {
     if (object instanceof Array) {
+      var value;
       for (var i = 0, n = object.length; i < n; i++) {
-        if (object[i] !== undefined)
-          callback.call(scope || null, object[i], i);
+        if ((value = object[i]) !== undefined)
+          callback.call(scope || null, value, i);
       }
     } else {
       for (var key in object) {
