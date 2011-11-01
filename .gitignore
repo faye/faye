@@ -2,6 +2,7 @@
 .redcar
 *.rbc
 *.gem
+*.swp
 *.tgz
 build
 dump.rdb
