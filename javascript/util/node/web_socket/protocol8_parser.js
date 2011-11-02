@@ -120,6 +120,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         case 3: this._parseMask(data[i]);           break;
         case 4: this._parsePayload(data[i]);        break;
       }
+      if (this._stage === 4 && this._length === 0)
+        this._emitFrame();
     }
   },
   
@@ -224,7 +226,6 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     this._payload.push(data);
     if (this._payload.length < this._length) return;
     this._emitFrame();
-    this._stage = 0;
   },
   
   _emitFrame: function() {
@@ -259,6 +260,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     else if (opcode === this.OPCODES.ping) {
       this._socket.send(payload.toString('utf8', 0, payload.length), 'pong');
     }
+    this._stage = 0;
   },
   
   _reset: function() {

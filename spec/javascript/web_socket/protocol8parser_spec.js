@@ -31,6 +31,11 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
       parse([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f])
     }})
     
+    it("parses empty text frames", function() { with(this) {
+      expect(webSocket, "receive").given("")
+      parse([0x81, 0x00])
+    }})
+    
     it("parses fragmented text frames", function() { with(this) {
       expect(webSocket, "receive").given("Hello")
       parse([0x01, 0x03, 0x48, 0x65, 0x6c])
@@ -40,6 +45,11 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
     it("parses masked text frames", function() { with(this) {
       expect(webSocket, "receive").given("Hello")
       parse([0x81, 0x85], mask(), maskMessage([0x48, 0x65, 0x6c, 0x6c, 0x6f]))
+    }})
+    
+    it("parses masked empty text frames", function() { with(this) {
+      expect(webSocket, "receive").given("")
+      parse([0x81, 0x80], mask(), maskMessage([]))
     }})
     
     it("parses masked fragmented text frames", function() { with(this) {

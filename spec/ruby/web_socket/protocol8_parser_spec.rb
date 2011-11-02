@@ -26,6 +26,11 @@ describe Faye::WebSocket::Protocol8Parser do
       parse [0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
     end
     
+    it "parses empty text frames" do
+      @web_socket.should_receive(:receive).with("")
+      parse [0x81, 0x00]
+    end
+    
     it "parses fragmented text frames" do
       @web_socket.should_receive(:receive).with("Hello")
       parse [0x01, 0x03, 0x48, 0x65, 0x6c]
@@ -35,6 +40,11 @@ describe Faye::WebSocket::Protocol8Parser do
     it "parses masked text frames" do
       @web_socket.should_receive(:receive).with("Hello")
       parse [0x81, 0x85] + mask + mask_message(0x48, 0x65, 0x6c, 0x6c, 0x6f)
+    end
+    
+    it "parses masked empty text frames" do
+      @web_socket.should_receive(:receive).with("")
+      parse [0x81, 0x80] + mask + mask_message()
     end
     
     it "parses masked fragmented text frames" do

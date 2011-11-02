@@ -113,6 +113,7 @@ module Faye
           when 3 then parse_mask(byte)
           when 4 then parse_payload(byte)
           end
+          emit_frame if @stage == 4 and @length == 0
         end
       end
       
@@ -165,7 +166,7 @@ module Faye
         @masked = (data & MASK) == MASK
         @length = (data & LENGTH)
         
-        if (1..125).include?(@length)
+        if @length <= 125
           @stage = @masked ? 3 : 4
         else
           @length_buffer = []
@@ -191,7 +192,6 @@ module Faye
         @payload << data
         return if @payload.size < @length
         emit_frame
-        @stage = 0
       end
       
       def emit_frame
@@ -225,6 +225,7 @@ module Faye
           when OPCODES[:ping] then
             @socket.send(payload, :pong)
         end
+        @stage = 0
       end
 
       def reset
