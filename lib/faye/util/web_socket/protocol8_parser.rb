@@ -25,13 +25,17 @@ module Faye
       }
       
       ERRORS = {
-        :normal_closure => 1000,
-        :going_away     => 1001,
-        :protocol_error => 1002,
-        :unacceptable   => 1003,
-        :too_large      => 1004,
-        :encoding_error => 1007
+        :normal_closure   => 1000,
+        :going_away       => 1001,
+        :protocol_error   => 1002,
+        :unacceptable     => 1003,
+        :encoding_error   => 1007,
+        :policy_violation => 1008,
+        :too_large        => 1009,
+        :extension_error  => 1010
       }
+      
+      ERROR_CODES = ERRORS.values
       
       class Handshake
         def initialize(uri)
@@ -194,7 +198,7 @@ module Faye
       end
       
       def emit_frame
-        payload = unmask(@payload, @mask)
+        payload_array, payload = *unmask(@payload, @mask)
         
         case @opcode
           when OPCODES[:continuation] then
@@ -218,7 +222,9 @@ module Faye
             @socket.close(:unacceptable)
 
           when OPCODES[:close] then
-            @socket.close(:normal_closure)
+            error_code = (payload_array.size == 2) ? 256 * payload_array[0] + payload_array[1] : 0
+            error_type = ERROR_CODES.include?(error_code) ? :normal_closure : :protocol_error
+            @socket.close(error_type)
             @closing_callback.call if @closing_callback
 
           when OPCODES[:ping] then
@@ -245,12 +251,13 @@ module Faye
       end
       
       def unmask(payload, mask)
-        unmasked = ''
+        array, string = [], ''
         payload.each_with_index do |byte, i|
           byte = byte ^ mask[i % 4] if mask.size > 0
-          unmasked << byte
+          array << byte
+          string << byte
         end
-        unmasked
+        [array, string]
       end
     end
     

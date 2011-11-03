@@ -9,6 +9,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   
   ERRORS: <%= JSON.dump Faye::WebSocket::Protocol8Parser::ERRORS %>,
   
+  ERROR_CODES: <%= JSON.dump Faye::WebSocket::Protocol8Parser::ERROR_CODES %>,
+  
   version: 'protocol-8',
   
   Handshake: Faye.Class({
@@ -253,7 +255,9 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       this._socket.close('unacceptable');
     }
     else if (opcode === this.OPCODES.close) {
-      this._socket.close('normal_closure');
+      var errorCode = (payload.length === 2) ? 256 * payload[0] + payload[1] : 0,
+          errorType = Faye.indexOf(this.ERROR_CODES, errorCode) >= 0 ? 'normal_closure' : 'protocol_error';
+      this._socket.close(errorType);
       if (this._closingCallback)
         this._closingCallback[0].call(this._closingCallback[1]);
     }
