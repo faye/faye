@@ -87,7 +87,7 @@ describe Faye::WebSocket::Client do
     sync
   end
   
-  after { stop }
+  after { sync ; stop }
   
   it "can open a connection" do
     open_socket "ws://localhost:8000/bayeux"

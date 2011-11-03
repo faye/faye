@@ -34,6 +34,7 @@ class Thin::Connection
     else
       if @request.parse(data)
         if @request.websocket?
+          @request.env['em.connection'] = self
           @response.persistent!
           @response.websocket = true
           @serving = :websocket
@@ -51,7 +52,6 @@ end
 
 class Thin::Request
   WEBSOCKET_RECEIVE_CALLBACK = 'websocket.receive_callback'.freeze
-
   def websocket?
     @env['HTTP_CONNECTION'] and
     @env['HTTP_CONNECTION'].split(/\s*,\s*/).include?('Upgrade') and

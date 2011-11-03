@@ -32,7 +32,7 @@ module Faye
         
         close = lambda do
           @ready_state = CLOSED
-          @stream.close_connection_after_writing if EventMachine::Connection === @stream
+          @stream.close_connection_after_writing
           event = Event.new
           event.init_event('close', false, false)
           dispatch_event(event)
