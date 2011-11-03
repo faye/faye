@@ -139,7 +139,6 @@ module Faye
             frame << [length >> 32, length & 0xFFFFFFFF].pack('NN')
         end
         
-        
         Faye.encode(frame) + Faye.encode(data)
       end
       
