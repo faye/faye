@@ -63,6 +63,7 @@ module Faye
   end
   
   def self.encode(string, encoding = 'UTF-8')
+    string = string.pack('C*') if Array === string
     return string unless string.respond_to?(:force_encoding)
     string.force_encoding(encoding)
   end

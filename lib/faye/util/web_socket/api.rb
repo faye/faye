@@ -15,13 +15,14 @@ module Faye
       def receive(data)
         event = Event.new
         event.init_event('message', false, false)
-        event.data = Faye.encode(data)
+        event.data = data
         dispatch_event(event)
       end
       
       def send(data, type = nil, error_type = nil)
         return false if ready_state == CLOSED
-        frame = @parser.frame(Faye.encode(data), type, error_type)
+        data = Faye.encode(data) if String === data
+        frame = @parser.frame(data, type, error_type)
         @stream.write(frame) if frame
       end
       

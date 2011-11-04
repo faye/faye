@@ -130,7 +130,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   frame: function(data, type, errorType) {
     if (this._closed) return;
     
-    var opcode = this.OPCODES[type || 'text'],
+    var opcode = this.OPCODES[type || (typeof data === 'string' ? 'text' : 'binary')],
         buffer = new Buffer(data),
         error  = this.ERRORS[errorType],
         insert = error ? 2 : 0,
@@ -235,10 +235,11 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         opcode  = this._opcode;
     
     if (opcode === this.OPCODES.continuation) {
-      if (this._mode !== 'text') return;
+      if (!this._mode) return;
       this.buffer(payload);
       if (this._final) {
-        var message = new Buffer(this._buffer).toString('utf8', 0, this._buffer.length);
+        var message = new Buffer(this._buffer);
+        if (this._mode === 'text') message = message.toString('utf8', 0, this._buffer.length);
         this._reset();
         this._socket.receive(message);
       }
@@ -252,7 +253,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       }
     }
     else if (opcode === this.OPCODES.binary) {
-      this._socket.close('unacceptable');
+      if (this._final) {
+        this._socket.receive(payload);
+      } else {
+        this._mode = 'binary';
+        this.buffer(payload);
+      }
     }
     else if (opcode === this.OPCODES.close) {
       var errorCode = (payload.length === 2) ? 256 * payload[0] + payload[1] : 0,

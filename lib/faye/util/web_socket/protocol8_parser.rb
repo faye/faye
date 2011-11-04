@@ -128,7 +128,7 @@ module Faye
           data = [ERRORS[error_type]].pack('n') + data
         end
         
-        opcode = OPCODES[type || :text]
+        opcode = OPCODES[type || (String === data ? :text : :binary)]
         frame  = (FIN | opcode).chr
         length = data.respond_to?(:bytes) ? data.bytes.count : data.size
         
@@ -198,16 +198,17 @@ module Faye
       end
       
       def emit_frame
-        payload_array, payload = *unmask(@payload, @mask)
+        payload = unmask(@payload, @mask)
         
         case @opcode
           when OPCODES[:continuation] then
-            return unless @mode == :text
-            @buffer << payload
+            return unless @mode
+            @buffer += payload
             if @final
-              message = @buffer * ''
+              message = @buffer
+              message = Faye.encode(message) if @mode == :text
               reset
-              @socket.receive(Faye.encode(message))
+              @socket.receive(message)
             end
 
           when OPCODES[:text] then
@@ -215,14 +216,19 @@ module Faye
               @socket.receive(Faye.encode(payload))
             else
               @mode = :text
-              @buffer << payload
+              @buffer += payload
             end
 
           when OPCODES[:binary] then
-            @socket.close(:unacceptable)
+            if @final
+              @socket.receive(payload)
+            else
+              @mode = :binary
+              @buffer += payload
+            end
 
           when OPCODES[:close] then
-            error_code = (payload_array.size == 2) ? 256 * payload_array[0] + payload_array[1] : 0
+            error_code = (payload.size == 2) ? 256 * payload[0] + payload[1] : 0
             
             error_type = (error_code >= 3000 && error_code < 5000) ||
                          ERROR_CODES.include?(error_code) ?
@@ -233,7 +239,7 @@ module Faye
             @closing_callback.call if @closing_callback
 
           when OPCODES[:ping] then
-            @socket.send(payload, :pong)
+            @socket.send(Faye.encode(payload), :pong)
         end
         @stage = 0
       end
@@ -256,13 +262,12 @@ module Faye
       end
       
       def unmask(payload, mask)
-        array, string = [], ''
+        unmasked = []
         payload.each_with_index do |byte, i|
           byte = byte ^ mask[i % 4] if mask.size > 0
-          array << byte
-          string << byte
+          unmasked << byte
         end
-        [array, string]
+        unmasked
       end
     end
     
