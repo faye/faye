@@ -223,7 +223,12 @@ module Faye
 
           when OPCODES[:close] then
             error_code = (payload_array.size == 2) ? 256 * payload_array[0] + payload_array[1] : 0
-            error_type = ERROR_CODES.include?(error_code) ? :normal_closure : :protocol_error
+            
+            error_type = (error_code >= 3000 && error_code < 5000) ||
+                         ERROR_CODES.include?(error_code) ?
+                         :normal_closure :
+                         :protocol_error
+            
             @socket.close(error_type)
             @closing_callback.call if @closing_callback
 

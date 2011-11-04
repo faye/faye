@@ -256,7 +256,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     }
     else if (opcode === this.OPCODES.close) {
       var errorCode = (payload.length === 2) ? 256 * payload[0] + payload[1] : 0,
-          errorType = Faye.indexOf(this.ERROR_CODES, errorCode) >= 0 ? 'normal_closure' : 'protocol_error';
+          
+          errorType = (errorCode >= 3000 && errorCode < 5000) ||
+                      Faye.indexOf(this.ERROR_CODES, errorCode) >= 0 ?
+                      'normal_closure' :
+                      'protocol_error';
+      
       this._socket.close(errorType);
       if (this._closingCallback)
         this._closingCallback[0].call(this._closingCallback[1]);
