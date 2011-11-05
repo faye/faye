@@ -63,15 +63,15 @@ module Faye
         end
         
         def parse(data)
-          data.each_byte { |b| @buffer << b.chr }
+          @buffer += data.bytes.to_a
         end
         
         def complete?
-          @buffer[-4..-1] == ["\r", "\n", "\r", "\n"]
+          @buffer[-4..-1] == [0x0D, 0x0A, 0x0D, 0x0A]
         end
         
         def valid?
-          data = Faye.encode(@buffer * '')
+          data = Faye.encode(@buffer)
           response = Net::HTTPResponse.read_new(Net::BufferedIO.new(StringIO.new(data)))
           return false unless response.code.to_i == 101
           
