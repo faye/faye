@@ -10,8 +10,8 @@ var SHARED_DIR = path.dirname(__filename) + '/../shared',
     PUBLIC_DIR = SHARED_DIR + '/public',
     
     bayeux     = new faye.NodeAdapter({mount: '/bayeux', timeout: 20}),
-    port       = process.ARGV[2] || '8000',
-    secure     = process.ARGV[3] === 'ssl',
+    port       = process.argv[2] || '8000',
+    secure     = process.argv[3] === 'ssl',
     
     sslOpts = {
       key:  fs.readFileSync(SHARED_DIR + '/server.key'),
