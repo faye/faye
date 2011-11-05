@@ -156,13 +156,18 @@ module Faye
     private
       
       def parse_opcode(data)
+        if [RSV1, RSV2, RSV3].any? { |rsv| (data & rsv) == rsv }
+          return @socket.close(:protocol_error)
+        end
+        
         @final   = (data & FIN) == FIN
         @opcode  = (data & OPCODE)
         @mask    = []
         @payload = []
         
         return @socket.close(:protocol_error) unless OPCODES.values.include?(@opcode)
-        @stage   = 1
+        
+        @stage = 1
       end
       
       def parse_length(data)

@@ -183,6 +183,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   },
   
   _parseOpcode: function(data) {
+    var rsvs = [this.RSV1, this.RSV2, this.RSV3].filter(function(rsv) {
+      return (data & rsv) === rsv;
+    }, this);
+    
+    if (rsvs.length > 0) return this._socket.close('protocol_error');
+    
     this._final   = (data & this.FIN) === this.FIN;
     this._opcode  = (data & this.OPCODE);
     this._mask    = [];
