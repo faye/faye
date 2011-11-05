@@ -6,6 +6,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   GUID: '<%= Faye::WebSocket::Protocol8Parser::GUID %>',
   
   OPCODES: <%= JSON.dump Faye::WebSocket::Protocol8Parser::OPCODES %>,
+  FRAGMENTED_OPCODES: <%= JSON.dump Faye::WebSocket::Protocol8Parser::FRAGMENTED_OPCODES %>,
+  OPENING_OPCODES: <%= JSON.dump Faye::WebSocket::Protocol8Parser::OPENING_OPCODES %>,
   
   ERRORS: <%= JSON.dump Faye::WebSocket::Protocol8Parser::ERRORS %>,
   
@@ -201,6 +203,13 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         valid = true;
     }
     if (!valid) return this._socket.close('protocol_error');
+    
+    if (Faye.indexOf(this.FRAGMENTED_OPCODES, this._opcode) < 0 && !this._final)
+      return this._socket.close('protocol_error');
+    
+    if (this._mode && Faye.indexOf(this.OPENING_OPCODES, this._opcode) >= 0)
+      return this._socket.close('protocol_error');
+    
     this._stage = 1;
   },
   
@@ -241,7 +250,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         opcode  = this._opcode;
     
     if (opcode === this.OPCODES.continuation) {
-      if (!this._mode) return;
+      if (!this._mode) return this._socket.close('protocol_error');
       this.buffer(payload);
       if (this._final) {
         var message = new Buffer(this._buffer);

@@ -24,6 +24,9 @@ module Faye
         :pong         => 10
       }
       
+      FRAGMENTED_OPCODES = OPCODES.values_at(:continuation, :text, :binary)
+      OPENING_OPCODES = OPCODES.values_at(:text, :binary)
+      
       ERRORS = {
         :normal_closure   => 1000,
         :going_away       => 1001,
@@ -165,7 +168,17 @@ module Faye
         @mask    = []
         @payload = []
         
-        return @socket.close(:protocol_error) unless OPCODES.values.include?(@opcode)
+        unless OPCODES.values.include?(@opcode)
+          return @socket.close(:protocol_error)
+        end
+        
+        unless FRAGMENTED_OPCODES.include?(@opcode) or @final
+          return @socket.close(:protocol_error)
+        end
+        
+        if @mode and OPENING_OPCODES.include?(@opcode)
+          return @socket.close(:protocol_error)
+        end
         
         @stage = 1
       end
@@ -207,7 +220,7 @@ module Faye
         
         case @opcode
           when OPCODES[:continuation] then
-            return unless @mode
+            return @socket.close(:protocol_error) unless @mode
             @buffer += payload
             if @final
               message = @buffer
@@ -257,7 +270,7 @@ module Faye
             @closing_callback.call if @closing_callback
 
           when OPCODES[:ping] then
-            return @socket.close(:protocol_error) if @payload.size > 125
+            return @socket.close(:protocol_error) if payload.size > 125
             @socket.send(payload, :pong)
         end
         @stage = 0
