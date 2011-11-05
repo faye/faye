@@ -91,7 +91,7 @@ describe Faye::WebSocket::Protocol8Parser do
     end
     
     it "replies to pings with a pong" do
-      @web_socket.should_receive(:send).with("OHAI", :pong)
+      @web_socket.should_receive(:send).with([0x4f, 0x48, 0x41, 0x49], :pong)
       parse [0x89, 0x04, 0x4f, 0x48, 0x41, 0x49]
     end
   end

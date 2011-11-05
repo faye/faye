@@ -273,7 +273,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         this._closingCallback[0].call(this._closingCallback[1]);
     }
     else if (opcode === this.OPCODES.ping) {
-      this._socket.send(payload.toString('utf8', 0, payload.length), 'pong');
+      if (payload.length > 125) return this._socket.close('protocol_error');
+      this._socket.send(payload, 'pong');
     }
     this._stage = 0;
   },

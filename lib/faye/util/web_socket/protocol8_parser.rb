@@ -239,7 +239,8 @@ module Faye
             @closing_callback.call if @closing_callback
 
           when OPCODES[:ping] then
-            @socket.send(Faye.encode(payload), :pong)
+            return @socket.close(:protocol_error) if @payload.size > 125
+            @socket.send(payload, :pong)
         end
         @stage = 0
       end

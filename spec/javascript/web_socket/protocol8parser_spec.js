@@ -13,6 +13,14 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
     this.parser.parse(new Buffer(bytes))
   })
   
+  define("buffer", function(string) {
+    return {
+      equals: function(buffer) {
+        return buffer.toString('utf8', 0, buffer.length) === string
+      }
+    }
+  })
+  
   describe("parse", function() { with(this) {
     define("mask", function() {
       return this._mask = this._mask || Faye.map([1,2,3,4], function() { return Math.floor(Math.random() * 255) })
@@ -96,7 +104,7 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
     }})
     
     it("replies to pings with a pong", function() { with(this) {
-      expect(webSocket, "send").given("OHAI", "pong")
+      expect(webSocket, "send").given(buffer("OHAI"), "pong")
       parse([0x89, 0x04, 0x4f, 0x48, 0x41, 0x49])
     }})
   }})
