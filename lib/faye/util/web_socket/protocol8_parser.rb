@@ -242,12 +242,16 @@ module Faye
             end
 
           when OPCODES[:close] then
-            error_code = (payload.size == 2) ? 256 * payload[0] + payload[1] : 0
+            error_code = (payload.size >= 2) ? 256 * payload[0] + payload[1] : 0
             
-            error_type = (error_code >= 3000 && error_code < 5000) ||
+            error_type = (payload.size == 0) ||
+                         (error_code >= 3000 && error_code < 5000) ||
                          ERROR_CODES.include?(error_code) ?
                          :normal_closure :
                          :protocol_error
+            
+            error_type = :protocol_error if payload.size > 125 or
+                                            not Faye.valid_utf8?(payload[2..-1] || [])
             
             @socket.close(error_type)
             @closing_callback.call if @closing_callback
