@@ -1,11 +1,12 @@
 .DS_Store
-.redcar
-*.rbc
 *.gem
+*.rbc
+.redcar
+*.swp
 *.tgz
 build
 dump.rdb
 examples/node/faye*
 Gemfile.lock
-node_modules
 lib/*.js
+node_modules
