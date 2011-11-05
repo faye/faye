@@ -211,14 +211,23 @@ module Faye
             @buffer += payload
             if @final
               message = @buffer
-              message = Faye.encode(message) if @mode == :text
+              message = Faye.encode(message, true) if @mode == :text
               reset
-              @socket.receive(message)
+              if message
+                @socket.receive(message)
+              else
+                @socket.close(:encoding_error)
+              end
             end
 
           when OPCODES[:text] then
             if @final
-              @socket.receive(Faye.encode(payload))
+              message = Faye.encode(payload, true)
+              if message
+                @socket.receive(message)
+              else
+                @socket.close(:encoding_error)
+              end
             else
               @mode = :text
               @buffer += payload

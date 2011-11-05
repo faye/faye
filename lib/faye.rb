@@ -15,6 +15,9 @@ module Faye
   
   MANDATORY_CONNECTION_TYPES = %w[long-polling callback-polling in-process]
   
+  # http://www.w3.org/International/questions/qa-forms-utf-8.en.php
+  UTF8_MATCH = /^([\x00-\x7F]|[\xC2-\xDF][\x80-\xBF]|\xE0[\xA0-\xBF][\x80-\xBF]|[\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}|\xED[\x80-\x9F][\x80-\xBF]|\xF0[\x90-\xBF][\x80-\xBF]{2}|[\xF1-\xF3][\x80-\xBF]{3}|\xF4[\x80-\x8F][\x80-\xBF]{2})*$/
+  
   %w[ mixins/publisher
       mixins/timeouts
       mixins/logging
@@ -62,10 +65,17 @@ module Faye
     Marshal.load(Marshal.dump(object))
   end
   
-  def self.encode(string, encoding = 'UTF-8')
-    string = string.pack('C*') if Array === string
+  def self.encode(string, validate_encoding = false)
+    if Array === string
+      return nil if validate_encoding and !valid_utf8?(string)
+      string = string.pack('C*')
+    end
     return string unless string.respond_to?(:force_encoding)
-    string.force_encoding(encoding)
+    string.force_encoding('UTF-8')
+  end
+  
+  def self.valid_utf8?(byte_array)
+    UTF8_MATCH =~ byte_array.pack('C*') ? true : false
   end
   
   def self.ensure_reactor_running!

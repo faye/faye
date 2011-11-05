@@ -127,4 +127,14 @@ describe Faye::WebSocket::Protocol8Parser do
       bytes(@parser.frame '', :pong).should == [0x8a, 0x00]
     end
   end
+  
+  describe :utf8 do
+    it "detects valid UTF-8" do
+      Faye.valid_utf8?( [72, 101, 108, 108, 111, 45, 194, 181, 64, 195, 159, 195, 182, 195, 164, 195, 188, 195, 160, 195, 161, 45, 85, 84, 70, 45, 56, 33, 33] ).should be_true
+    end
+    
+    it "detects invalid UTF-8" do
+      Faye.valid_utf8?( [206, 186, 225, 189, 185, 207, 131, 206, 188, 206, 181, 237, 160, 128, 101, 100, 105, 116, 101, 100] ).should be_false
+    end
+  end
 end
