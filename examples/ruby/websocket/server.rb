@@ -1,5 +1,5 @@
 require 'rubygems'
-require File.expand_path('../../../lib/faye', __FILE__)
+require File.expand_path('../../../../lib/faye', __FILE__)
 require 'rack'
 require 'thin'
 

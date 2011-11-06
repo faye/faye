@@ -1,4 +1,4 @@
-var faye   = require('../../build/faye-node'),
+var faye   = require('../../../build/faye-node'),
     port   = process.argv[2] || 7000,
     socket = new faye.WebSocket.Client('socket://localhost:' + port + '/')
 

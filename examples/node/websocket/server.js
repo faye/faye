@@ -1,4 +1,4 @@
-var faye = require('../../build/faye-node'),
+var faye = require('../../../build/faye-node'),
     http = require('http');
 
 var port = process.argv[2] || 7000;
