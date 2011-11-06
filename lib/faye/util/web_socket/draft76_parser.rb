@@ -9,22 +9,22 @@ module Faye
       end
       
       def handshake_response
-        request = @socket.request
+        env = @socket.env
         
-        key1   = request.env['HTTP_SEC_WEBSOCKET_KEY1']
+        key1   = env['HTTP_SEC_WEBSOCKET_KEY1']
         value1 = number_from_key(key1) / spaces_in_key(key1)
         
-        key2   = request.env['HTTP_SEC_WEBSOCKET_KEY2']
+        key2   = env['HTTP_SEC_WEBSOCKET_KEY2']
         value2 = number_from_key(key2) / spaces_in_key(key2)
         
         hash = Digest::MD5.digest(big_endian(value1) +
                                   big_endian(value2) +
-                                  request.body.read)
+                                  env['rack.input'].read)
         
         upgrade =  "HTTP/1.1 101 Web Socket Protocol Handshake\r\n"
         upgrade << "Upgrade: WebSocket\r\n"
         upgrade << "Connection: Upgrade\r\n"
-        upgrade << "Sec-WebSocket-Origin: #{request.env['HTTP_ORIGIN']}\r\n"
+        upgrade << "Sec-WebSocket-Origin: #{env['HTTP_ORIGIN']}\r\n"
         upgrade << "Sec-WebSocket-Location: #{@socket.url}\r\n"
         upgrade << "\r\n"
         upgrade << hash

@@ -7,7 +7,7 @@ port = ARGV[0] || 7000
 
 app = lambda do |env|
   if env['HTTP_UPGRADE']
-    socket = Faye::WebSocket.new(Rack::Request.new(env))
+    socket = Faye::WebSocket.new(env)
     socket.onmessage = lambda do |message|
       socket.send(message.data)
     end 

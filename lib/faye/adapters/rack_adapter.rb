@@ -163,7 +163,7 @@ module Faye
     end
     
     def handle_upgrade(request)
-      socket = Faye::WebSocket.new(request)
+      socket = Faye::WebSocket.new(request.env)
       
       socket.onmessage = lambda do |message|
         begin

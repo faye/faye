@@ -13,12 +13,10 @@ module Faye
       end
       
       def handshake_response
-        request = @socket.request
-        
         upgrade =  "HTTP/1.1 101 Web Socket Protocol Handshake\r\n"
         upgrade << "Upgrade: WebSocket\r\n"
         upgrade << "Connection: Upgrade\r\n"
-        upgrade << "WebSocket-Origin: #{request.env['HTTP_ORIGIN']}\r\n"
+        upgrade << "WebSocket-Origin: #{@socket.env['HTTP_ORIGIN']}\r\n"
         upgrade << "WebSocket-Location: #{@socket.url}\r\n"
         upgrade << "\r\n"
         upgrade
