@@ -289,7 +289,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
                       'normal_closure' :
                       'protocol_error';
       
-      if (payload.length > 125) errorType = 'protocol_error';
+      if (payload.length > 125 || (payload.length > 2 && !this._encode(payload.slice(2))))
+        errorType = 'protocol_error';
       
       this._socket.close(errorType);
       if (this._closingCallback)
@@ -308,8 +309,10 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   },
   
   _encode: function(buffer) {
-    var string = buffer.toString('binary', 0, buffer.length);
-    if (!this.UTF8_MATCH.test(string)) return null;
+    try {
+      var string = buffer.toString('binary', 0, buffer.length);
+      if (!this.UTF8_MATCH.test(string)) return null;
+    } catch (e) {}
     return buffer.toString('utf8', 0, buffer.length);
   },
   
