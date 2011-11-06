@@ -14,7 +14,7 @@ Faye.WebSocket.Client = Faye.Class({
                    ? tls.connect(this.uri.port || 443, this.uri.hostname, onConnect)
                    : net.createConnection(this.uri.port || 80, this.uri.hostname);
     
-    this._parser = new Faye.WebSocket.Protocol8Parser(this, connection);
+    this._parser = new Faye.WebSocket.Protocol8Parser(this, connection, {masking: true});
     this._stream = connection;
     
     if (!secure) connection.addListener('connect', onConnect);
@@ -30,13 +30,17 @@ Faye.WebSocket.Client = Faye.Class({
   
   _onConnect: function() {
     this._handshake = this._parser.createHandshake(this.uri);
+    this._message = [];
     this._handshake.requestData();
   },
   
   _onData: function(data) {
     switch (this.readyState) {
       case Faye.WebSocket.CONNECTING:
-        this._handshake.parse(data);
+        var bytes = this._handshake.parse(data);
+        for (var i = 0, n = bytes.length; i < n; i++)
+          this._message.push(bytes[i]);
+        
         if (!this._handshake.isComplete()) return;
         
         if (this._handshake.isValid()) {
@@ -44,6 +48,9 @@ Faye.WebSocket.Client = Faye.Class({
           var event = new Faye.WebSocket.Event('open');
           event.initEvent('open', false, false);
           this.dispatchEvent(event);
+          
+          this._parser.parse(this._message);
+          
         } else {
           this.readyState = Faye.WebSocket.CLOSED;
           var event = new Faye.WebSocket.Event('close');

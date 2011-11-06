@@ -54,10 +54,10 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     },
     
     requestData: function() {
-      var stream = this._stream;
+      var stream = this._stream, u = this._uri;
       try {
-        stream.write('GET ' + this._uri.pathname + ' HTTP/1.1\r\n');
-        stream.write('Host: ' + this._uri.hostname + '\r\n');
+        stream.write('GET ' + u.pathname + (u.search || '') + ' HTTP/1.1\r\n');
+        stream.write('Host: ' + u.hostname + (u.port ? ':' + u.port : '') + '\r\n');
         stream.write('Upgrade: websocket\r\n');
         stream.write('Connection: Upgrade\r\n');
         stream.write('Sec-WebSocket-Key: ' + this._key + '\r\n');
@@ -67,7 +67,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     },
     
     parse: function(data) {
-      this._parser.execute(data, 0, data.length);
+      var consumed = this._parser.execute(data, 0, data.length);
+      return (consumed === data.length) ? [] : data.slice(consumed + 1);
     },
     
     isComplete: function() {
@@ -86,11 +87,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     }
   }),
   
-  initialize: function(webSocket, stream) {
+  initialize: function(webSocket, stream, options) {
     this._reset();
-    this._socket = webSocket;
-    this._stream = stream;
-    this._stage  = 0;
+    this._socket  = webSocket;
+    this._stream  = stream;
+    this._stage   = 0;
+    this._masking = options && options.masking;
   },
   
   handshakeResponse: function() {
@@ -138,20 +140,29 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         buffer = new Buffer(data),
         insert = code ? 2 : 0,
         length = buffer.length + insert,
+        masked = this._masking ? this.MASK : 0,
         stream = this._stream,
-        frame, factor;
+        frame, factor, mask, i, n;
+    
+    data = new Buffer(length);
+    if (code) {
+      data[0] = Math.floor(code / 256);
+      data[1] = code & 255;
+    }
+    for (i = 0, n = buffer.length; i < n; i++)
+      data[insert + i] = buffer[i];
     
     if (length <= 125) {
-      frame = new Buffer(2 + insert);
-      frame[1] = length;
+      frame = new Buffer(2);
+      frame[1] = masked | length;
     } else if (length >= 126 && length <= 65535) {
-      frame = new Buffer(4 + insert);
-      frame[1] = 126;
+      frame = new Buffer(4);
+      frame[1] = masked | 126;
       frame[2] = Math.floor(length / 256);
       frame[3] = length & 255;
     } else {
-      frame = new Buffer(10 + insert);
-      frame[1] = 127;
+      frame = new Buffer(10);
+      frame[1] = masked | 127;
       for (var i = 0; i < 8; i++) {
         factor = Math.pow(2, 8 * (8 - 1 - i));
         frame[2+i] = Math.floor(length / factor) & 255;
@@ -159,14 +170,16 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     }
     frame[0] = this.FIN | opcode;
     
-    if (code) {
-      frame[frame.length - 2] = Math.floor(code / 256);
-      frame[frame.length - 1] = code & 255;
+    if (this._masking) {
+      mask = Faye.map([1,2,3,4], function() { return Math.floor(Math.random() * 255) });
+      for (i = 0, n = data.length; i < n; i++)
+        data[i] = data[i] ^ mask[i % 4];
     }
     
     try {
       stream.write(frame, 'binary');
-      if (buffer.length > 0) stream.write(buffer, 'utf8');
+      if (mask) stream.write(new Buffer(mask), 'binary');
+      if (data.length > 0) stream.write(data, 'utf8');
       return true;
     } catch (e) {
       return false;

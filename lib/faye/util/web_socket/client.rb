@@ -6,7 +6,7 @@ module Faye
       attr_reader :uri
       
       def initialize(url)
-        @parser = Protocol8Parser.new(self)
+        @parser = Protocol8Parser.new(self, :masking => true)
         @url    = url
         @uri    = URI.parse(url)
         
@@ -24,6 +24,7 @@ module Faye
       def on_connect
         @stream.start_tls if @uri.scheme == 'wss'
         @handshake = @parser.create_handshake
+        @message = []
         @stream.write(@handshake.request_data)
       end
       
@@ -32,7 +33,7 @@ module Faye
         
         case @ready_state
           when CONNECTING then
-            @handshake.parse(data)
+            @message += @handshake.parse(data)
             return unless @handshake.complete?
             
             if @handshake.valid?
@@ -40,6 +41,8 @@ module Faye
               event = Event.new('open')
               event.init_event('open', false, false)
               dispatch_event(event)
+              
+              receive_data(@message)
             else
               @ready_state = CLOSED
               event = Event.new('error')

@@ -51,7 +51,7 @@ module Faye
         def request_data
           hostname = @uri.host + (@uri.port ? ":#{@uri.port}" : '')
           
-          handshake  = "GET #{@uri.path} HTTP/1.1\r\n"
+          handshake  = "GET #{@uri.path}#{@uri.query ? '?' : ''}#{@uri.query} HTTP/1.1\r\n"
           handshake << "Host: #{hostname}\r\n"
           handshake << "Upgrade: websocket\r\n"
           handshake << "Connection: Upgrade\r\n"
@@ -63,7 +63,17 @@ module Faye
         end
         
         def parse(data)
-          @buffer += data.bytes.to_a
+          message  = []
+          complete = false
+          data.each_byte do |byte|
+            if complete
+              message << byte
+            else
+              @buffer << byte
+              complete ||= complete?
+            end
+          end
+          message
         end
         
         def complete?
@@ -83,10 +93,11 @@ module Faye
         end
       end
       
-      def initialize(web_socket)
+      def initialize(web_socket, options = {})
         reset
-        @socket = web_socket
-        @stage  = 0
+        @socket  = web_socket
+        @stage   = 0
+        @masking = options[:masking]
       end
       
       def version
@@ -127,23 +138,34 @@ module Faye
       def frame(data, type = nil, code = nil)
         return nil if @closed
         
+        type ||= (String === data ? :text : :binary)
+        data   = data.bytes.to_a if data.respond_to?(:bytes)
+        
         if code
-          data = [code].pack('n') + data
+          data = [code].pack('n').bytes.to_a + data
         end
         
-        opcode = OPCODES[type || (String === data ? :text : :binary)]
-        frame  = (FIN | opcode).chr
-        length = data.respond_to?(:bytes) ? data.bytes.count : data.size
+        frame  = (FIN | OPCODES[type]).chr
+        length = data.size
+        masked = @masking ? MASK : 0
         
         case length
           when 0..125 then
-            frame << length
+            frame << (masked | length).chr
           when 126..65535 then
-            frame << 126
+            frame << (masked | 126).chr
             frame << [length].pack('n')
           else
-            frame << 127
+            frame << (masked | 127).chr
             frame << [length >> 32, length & 0xFFFFFFFF].pack('NN')
+        end
+        
+        if @masking
+          mask = (1..4).map { rand 256 }
+          data.each_with_index do |byte, i|
+            data[i] = byte ^ mask[i % 4]
+          end
+          frame << mask.pack('C*')
         end
         
         Faye.encode(frame) + Faye.encode(data)
