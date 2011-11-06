@@ -67,7 +67,7 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
     }})
     
     it("closes the socket if the frame has an unrecognized opcode", function() { with(this) {
-      expect(webSocket, "close").given("protocol_error")
+      expect(webSocket, "close").given(1002)
       parse([0x83, 0x00])
     }})
     
@@ -136,7 +136,7 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
     }})
     
     it("encodes close frames with an error code", function() { with(this) {
-      parser.frame("Hello", "close", "protocol_error")
+      parser.frame("Hello", "close", 1002)
       assertEqual( [0x88, 0x07, 0x03, 0xea, 0x48, 0x65, 0x6c, 0x6c, 0x6f], socket.read() )
     }})
     

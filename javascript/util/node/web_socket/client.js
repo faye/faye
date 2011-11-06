@@ -4,6 +4,7 @@ Faye.WebSocket.Client = Faye.Class({
     this.uri = require('url').parse(url);
     
     this.readyState = Faye.WebSocket.CONNECTING;
+    this.bufferedAmount = 0;
     
     var secure     = (this.uri.protocol === 'wss:'),
         self       = this,

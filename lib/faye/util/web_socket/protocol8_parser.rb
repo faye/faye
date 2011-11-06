@@ -124,11 +124,11 @@ module Faye
         end
       end
       
-      def frame(data, type = nil, error_type = nil)
+      def frame(data, type = nil, code = nil)
         return nil if @closed
         
-        if error_type
-          data = [ERRORS[error_type]].pack('n') + data
+        if code
+          data = [code].pack('n') + data
         end
         
         opcode = OPCODES[type || (String === data ? :text : :binary)]
@@ -149,10 +149,10 @@ module Faye
         Faye.encode(frame) + Faye.encode(data)
       end
       
-      def close(error_type = nil, &callback)
+      def close(code = nil, reason = nil, &callback)
         return if @closed
         @closing_callback ||= callback
-        @socket.send('', :close, error_type || :normal_closure)
+        @socket.send(reason || '', :close, code || ERRORS[:normal_closure])
         @closed = true
       end
       
@@ -160,7 +160,7 @@ module Faye
       
       def parse_opcode(data)
         if [RSV1, RSV2, RSV3].any? { |rsv| (data & rsv) == rsv }
-          return @socket.close(:protocol_error)
+          return @socket.close(ERRORS[:protocol_error])
         end
         
         @final   = (data & FIN) == FIN
@@ -169,15 +169,15 @@ module Faye
         @payload = []
         
         unless OPCODES.values.include?(@opcode)
-          return @socket.close(:protocol_error)
+          return @socket.close(ERRORS[:protocol_error])
         end
         
         unless FRAGMENTED_OPCODES.include?(@opcode) or @final
-          return @socket.close(:protocol_error)
+          return @socket.close(ERRORS[:protocol_error])
         end
         
         if @mode and OPENING_OPCODES.include?(@opcode)
-          return @socket.close(:protocol_error)
+          return @socket.close(ERRORS[:protocol_error])
         end
         
         @stage = 1
@@ -220,7 +220,7 @@ module Faye
         
         case @opcode
           when OPCODES[:continuation] then
-            return @socket.close(:protocol_error) unless @mode
+            return @socket.close(ERRORS[:protocol_error]) unless @mode
             @buffer += payload
             if @final
               message = @buffer
@@ -229,7 +229,7 @@ module Faye
               if message
                 @socket.receive(message)
               else
-                @socket.close(:encoding_error)
+                @socket.close(ERRORS[:encoding_error])
               end
             end
 
@@ -239,7 +239,7 @@ module Faye
               if message
                 @socket.receive(message)
               else
-                @socket.close(:encoding_error)
+                @socket.close(ERRORS[:encoding_error])
               end
             else
               @mode = :text
@@ -266,11 +266,11 @@ module Faye
             error_type = :protocol_error if payload.size > 125 or
                                             not Faye.valid_utf8?(payload[2..-1] || [])
             
-            @socket.close(error_type)
+            @socket.close(ERRORS[error_type])
             @closing_callback.call if @closing_callback
 
           when OPCODES[:ping] then
-            return @socket.close(:protocol_error) if payload.size > 125
+            return @socket.close(ERRORS[:protocol_error]) if payload.size > 125
             @socket.send(payload, :pong)
         end
         @stage = 0

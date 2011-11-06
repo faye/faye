@@ -26,7 +26,7 @@ module Faye
         @stream.write(frame) if frame
       end
       
-      def close(reason = nil)
+      def close(code = nil, reason = nil)
         return if [CLOSING, CLOSED].include?(ready_state)
         
         @ready_state = CLOSING
@@ -39,12 +39,12 @@ module Faye
           dispatch_event(event)
         end
         
-        if reason
-          @parser.close(reason)
+        if code
+          @parser.close(code, reason)
           close.call
         else
           if @parser.respond_to?(:close)
-            @parser.close(reason, &close)
+            @parser.close(code, reason, &close)
           else
             close.call
           end

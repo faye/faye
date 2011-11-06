@@ -54,7 +54,7 @@ describe Faye::WebSocket::Protocol8Parser do
     end
     
     it "closes the socket if the frame has an unrecognized opcode" do
-      @web_socket.should_receive(:close).with(:protocol_error)
+      @web_socket.should_receive(:close).with(1002)
       parse [0x83, 0x00]
     end
     
@@ -119,7 +119,7 @@ describe Faye::WebSocket::Protocol8Parser do
     end
     
     it "encodes close frames with an error code" do
-      frame = @parser.frame "Hello", :close, :protocol_error
+      frame = @parser.frame "Hello", :close, 1002
       bytes(frame).should == [0x88, 0x07, 0x03, 0xea, 0x48, 0x65, 0x6c, 0x6c, 0x6f]
     end
     

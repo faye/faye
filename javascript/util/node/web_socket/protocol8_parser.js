@@ -131,13 +131,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     }
   },
   
-  frame: function(data, type, errorType) {
+  frame: function(data, type, code) {
     if (this._closed) return;
     
     var opcode = this.OPCODES[type || (typeof data === 'string' ? 'text' : 'binary')],
         buffer = new Buffer(data),
-        error  = this.ERRORS[errorType],
-        insert = error ? 2 : 0,
+        insert = code ? 2 : 0,
         length = buffer.length + insert,
         stream = this._stream,
         frame, factor;
@@ -160,9 +159,9 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     }
     frame[0] = this.FIN | opcode;
     
-    if (error) {
-      frame[frame.length - 2] = Math.floor(error / 256);
-      frame[frame.length - 1] = error & 255;
+    if (code) {
+      frame[frame.length - 2] = Math.floor(code / 256);
+      frame[frame.length - 1] = code & 255;
     }
     
     try {
@@ -174,10 +173,10 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     }
   },
   
-  close: function(errorType, callback, context) {
+  close: function(code, reason, callback, context) {
     if (this._closed) return;
     if (callback) this._closingCallback = [callback, context];
-    this.frame('', 'close', errorType || 'normal_closure');
+    this.frame(reason || '', 'close', code || this.ERRORS.normal_closure);
     this._closed = true;
   },
   
@@ -191,7 +190,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       return (data & rsv) === rsv;
     }, this);
     
-    if (rsvs.length > 0) return this._socket.close('protocol_error');
+    if (rsvs.length > 0) return this._socket.close(this.ERRORS.protocol_error);
     
     this._final   = (data & this.FIN) === this.FIN;
     this._opcode  = (data & this.OPCODE);
@@ -204,13 +203,13 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       if (this.OPCODES[key] === this._opcode)
         valid = true;
     }
-    if (!valid) return this._socket.close('protocol_error');
+    if (!valid) return this._socket.close(this.ERRORS.protocol_error);
     
     if (Faye.indexOf(this.FRAGMENTED_OPCODES, this._opcode) < 0 && !this._final)
-      return this._socket.close('protocol_error');
+      return this._socket.close(this.ERRORS.protocol_error);
     
     if (this._mode && Faye.indexOf(this.OPENING_OPCODES, this._opcode) >= 0)
-      return this._socket.close('protocol_error');
+      return this._socket.close(this.ERRORS.protocol_error);
     
     this._stage = 1;
   },
@@ -252,21 +251,21 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         opcode  = this._opcode;
     
     if (opcode === this.OPCODES.continuation) {
-      if (!this._mode) return this._socket.close('protocol_error');
+      if (!this._mode) return this._socket.close(this.ERRORS.protocol_error);
       this.buffer(payload);
       if (this._final) {
         var message = new Buffer(this._buffer);
         if (this._mode === 'text') message = this._encode(message);
         this._reset();
         if (message !== null) this._socket.receive(message);
-        else this._socket.close('encoding_error');
+        else this._socket.close(this.ERRORS.encoding_error);
       }
     }
     else if (opcode === this.OPCODES.text) {
       if (this._final) {
         var message = this._encode(payload);
         if (message !== null) this._socket.receive(message);
-        else this._socket.close('encoding_error');
+        else this._socket.close(this.ERRORS.encoding_error);
       } else {
         this._mode = 'text';
         this.buffer(payload);
@@ -292,12 +291,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       if (payload.length > 125 || (payload.length > 2 && !this._encode(payload.slice(2))))
         errorType = 'protocol_error';
       
-      this._socket.close(errorType);
+      this._socket.close(this.ERRORS[errorType]);
       if (this._closingCallback)
         this._closingCallback[0].call(this._closingCallback[1]);
     }
     else if (opcode === this.OPCODES.ping) {
-      if (payload.length > 125) return this._socket.close('protocol_error');
+      if (payload.length > 125) return this._socket.close(this.ERRORS.protocol_error);
       this._socket.send(payload, 'pong');
     }
     this._stage = 0;

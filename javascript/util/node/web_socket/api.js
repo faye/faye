@@ -16,7 +16,7 @@ Faye.WebSocket.API = {
     return this._parser.frame(data, type, errorType);
   },
   
-  close: function(reason) {
+  close: function(code, reason) {
     if (this.readyState === Faye.WebSocket.CLOSING ||
         this.readyState === Faye.WebSocket.CLOSED) return;
     
@@ -30,11 +30,11 @@ Faye.WebSocket.API = {
       this.dispatchEvent(event);
     };
     
-    if (reason) {
-      this._parser.close(reason);
+    if (code) {
+      this._parser.close(code, reason);
       close.call(this);
     } else {
-      if (this._parser.close) this._parser.close(reason, close, this);
+      if (this._parser.close) this._parser.close(code, reason, close, this);
       else close.call(this);
     }
   },

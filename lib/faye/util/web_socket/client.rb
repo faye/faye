@@ -11,6 +11,7 @@ module Faye
         @uri    = URI.parse(url)
         
         @ready_state = CONNECTING
+        @buffered_amount = 0
         
         EventMachine.connect(@uri.host, @uri.port || 80, Connection) do |conn|
           @stream = conn
