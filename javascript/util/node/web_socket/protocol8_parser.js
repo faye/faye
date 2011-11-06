@@ -13,6 +13,8 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   
   ERROR_CODES: <%= JSON.dump Faye::WebSocket::Protocol8Parser::ERROR_CODES %>,
   
+  UTF8_MATCH: <%= Faye::UTF8_MATCH.inspect %>,
+  
   version: 'protocol-8',
   
   Handshake: Faye.Class({
@@ -254,14 +256,17 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       this.buffer(payload);
       if (this._final) {
         var message = new Buffer(this._buffer);
-        if (this._mode === 'text') message = message.toString('utf8', 0, this._buffer.length);
+        if (this._mode === 'text') message = this._encode(message);
         this._reset();
-        this._socket.receive(message);
+        if (message !== null) this._socket.receive(message);
+        else this._socket.close('encoding_error');
       }
     }
     else if (opcode === this.OPCODES.text) {
       if (this._final) {
-        this._socket.receive(payload.toString('utf8', 0, payload.length));
+        var message = this._encode(payload);
+        if (message !== null) this._socket.receive(message);
+        else this._socket.close('encoding_error');
       } else {
         this._mode = 'text';
         this.buffer(payload);
@@ -300,6 +305,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
   _reset: function() {
     this._mode   = null;
     this._buffer = [];
+  },
+  
+  _encode: function(buffer) {
+    var string = buffer.toString('binary', 0, buffer.length);
+    if (!this.UTF8_MATCH.test(string)) return null;
+    return buffer.toString('utf8', 0, buffer.length);
   },
   
   _getInteger: function(bytes) {
