@@ -8,9 +8,7 @@
 # sent by all connected users.
 
 require 'rubygems'
-
-dir = File.dirname(__FILE__)
-require File.expand_path(dir + '/../../lib/faye')
+require File.expand_path('../../../lib/faye', __FILE__)
 
 port     = ARGV[0] || 9292
 path     = ARGV[1] || 'bayeux'

@@ -4,7 +4,6 @@ require 'json'
 require 'rack'
 require 'thin'
 require 'time'
-require Faye::ROOT + '/faye/thin_extensions'
 
 module Faye
   class RackAdapter

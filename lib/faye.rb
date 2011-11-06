@@ -2,6 +2,7 @@ require 'forwardable'
 require 'set'
 require 'eventmachine'
 require 'json'
+require 'thin'
 
 module Faye
   VERSION = '0.6.7'
@@ -37,6 +38,7 @@ module Faye
       transport/web_socket
       transport/http
       error
+      thin_extensions
       
   ].each do |lib|
     require File.join(ROOT, 'faye', lib)

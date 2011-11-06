@@ -1,8 +1,7 @@
 require 'rubygems'
-require './lib/faye'
+require File.expand_path('../../../lib/faye', __FILE__)
 require 'rack'
 require 'thin'
-require './lib/faye/thin_extensions'
 
 port = ARGV[0] || 7000
 

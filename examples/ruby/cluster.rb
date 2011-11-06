@@ -1,7 +1,5 @@
 require 'rubygems'
-
-dir = File.dirname(__FILE__)
-require File.expand_path(dir + '/../../lib/faye')
+require File.expand_path('../../../lib/faye', __FILE__)
 
 # Faye::Logging.log_level = :debug
 
