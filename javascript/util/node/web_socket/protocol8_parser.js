@@ -31,13 +31,14 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       this._accept = SHA1.digest('base64');
       
       var HTTPParser = process.binding('http_parser').HTTPParser,
-          parser     = new HTTPParser('response'),
+          parser     = new HTTPParser(HTTPParser.RESPONSE || 'response'),
           current    = null,
           self       = this;
       
-      this._complete = false;
-      this._headers  = {};
-      this._parser   = parser;
+      this._nodeVersion = HTTPParser.RESPONSE ? 6 : 4;
+      this._complete    = false;
+      this._headers     = {};
+      this._parser      = parser;
       
       parser.onHeaderField = function(b, start, length) {
         current = b.toString('utf8', start, start + length);
@@ -45,8 +46,12 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       parser.onHeaderValue = function(b, start, length) {
         self._headers[current] = b.toString('utf8', start, start + length);
       };
-      parser.onHeadersComplete = function(settings) {
-        self._status = settings.statusCode;
+      parser.onHeadersComplete = function(info) {
+        self._status = info.statusCode;
+        var headers = info.headers;
+        if (!headers) return;
+        for (var i = 0, n = headers.length; i < n; i += 2)
+          self._headers[headers[i]] = headers[i+1];
       };
       parser.onMessageComplete = function() {
         self._complete = true;
@@ -67,8 +72,10 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
     },
     
     parse: function(data) {
-      var consumed = this._parser.execute(data, 0, data.length);
-      return (consumed === data.length) ? [] : data.slice(consumed + 1);
+      var consumed = this._parser.execute(data, 0, data.length),
+          offset   = (this._nodeVersion < 6) ? 1 : 0;
+      
+      return (consumed === data.length) ? [] : data.slice(consumed + offset);
     },
     
     isComplete: function() {
