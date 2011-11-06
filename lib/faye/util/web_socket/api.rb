@@ -13,7 +13,8 @@ module Faye
       include Publisher
       
       def receive(data)
-        event = Event.new
+        return false unless ready_state == OPEN
+        event = Event.new('message')
         event.init_event('message', false, false)
         event.data = data
         dispatch_event(event)
@@ -26,7 +27,7 @@ module Faye
         @stream.write(frame) if frame
       end
       
-      def close(code = nil, reason = nil)
+      def close(code = nil, reason = nil, ack = true)
         return if [CLOSING, CLOSED].include?(ready_state)
         
         @ready_state = CLOSING
@@ -34,20 +35,20 @@ module Faye
         close = lambda do
           @ready_state = CLOSED
           @stream.close_connection_after_writing
-          event = Event.new
+          event = Event.new('close', :code => code, :reason => reason)
           event.init_event('close', false, false)
           dispatch_event(event)
         end
         
-        if code
-          @parser.close(code, reason)
-          close.call
-        else
+        if ack
           if @parser.respond_to?(:close)
             @parser.close(code, reason, &close)
           else
             close.call
           end
+        else
+          @parser.close(code, reason)
+          close.call
         end
       end
       
@@ -76,6 +77,14 @@ module Faye
       CAPTURING_PHASE = 1
       AT_TARGET       = 2
       BUBBLING_PHASE  = 3
+      
+      def initialize(event_type, options = {})
+        @type = event_type
+        metaclass = (class << self ; self ; end)
+        options.each do |key, value|
+          metaclass.__send__(:define_method, key) { value }
+        end
+      end
       
       def init_event(event_type, can_bubble, cancelable)
         @type       = event_type

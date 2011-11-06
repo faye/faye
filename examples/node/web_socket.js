@@ -1,15 +1,17 @@
-var faye = require('../../build/faye-node'),
-    ws   = new faye.WebSocket.Client('ws://localhost:8000/bayeux')
+var faye   = require('../../build/faye-node'),
+    port   = process.argv[2] || 7000,
+    socket = new faye.WebSocket.Client('socket://localhost:' + port + '/')
 
-ws.onopen = function() {
-  console.log('OPEN')
-  ws.send(JSON.stringify({channel: '/meta/subscribe', subscription: '/foo'}))
+socket.onopen = function(event) {
+  console.log('open')
+  socket.send(JSON.stringify({channel: '/meta/subscribe', subscription: '/foo'}))
 }
 
-ws.onmessage = function(message) {
-  console.log(message.data)
+socket.onmessage = function(event) {
+  console.log('message', event.data)
+  socket.close(1002, 'Going away')
 }
 
-ws.onclose = function() {
-  console.log('CLOSED')
+socket.onclose = function(event) {
+  console.log('close', event.code, event.reason)
 }

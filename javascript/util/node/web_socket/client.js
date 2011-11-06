@@ -41,12 +41,12 @@ Faye.WebSocket.Client = Faye.Class({
         
         if (this._handshake.isValid()) {
           this.readyState = Faye.WebSocket.OPEN;
-          var event = new Faye.WebSocket.Event();
+          var event = new Faye.WebSocket.Event('open');
           event.initEvent('open', false, false);
           this.dispatchEvent(event);
         } else {
           this.readyState = Faye.WebSocket.CLOSED;
-          var event = new Faye.WebSocket.Event();
+          var event = new Faye.WebSocket.Event('close');
           event.initEvent('close', false, false);
           this.dispatchEvent(event);
         }

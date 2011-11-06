@@ -8,9 +8,16 @@ port = ARGV[0] || 7000
 app = lambda do |env|
   if env['HTTP_UPGRADE']
     socket = Faye::WebSocket.new(env)
-    socket.onmessage = lambda do |message|
-      socket.send(message.data)
-    end 
+    
+    socket.onmessage = lambda do |event|
+      socket.send(event.data)
+    end
+    
+    socket.onclose = lambda do |event|
+      p [:close, event.code, event.reason]
+      socket = nil
+    end
+    
     [-1, {}, []]
   else
     [200, {'Content-Type' => 'text/plain'}, ['Hello']]

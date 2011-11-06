@@ -37,12 +37,12 @@ module Faye
             
             if @handshake.valid?
               @ready_state = OPEN
-              event = Event.new
+              event = Event.new('open')
               event.init_event('open', false, false)
               dispatch_event(event)
             else
               @ready_state = CLOSED
-              event = Event.new
+              event = Event.new('error')
               event.init_event('error', false, false)
               dispatch_event(event)
             end

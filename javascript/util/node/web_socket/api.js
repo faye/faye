@@ -5,7 +5,8 @@ Faye.WebSocket.API = {
   onclose:    null,
   
   receive: function(data) {
-    var event = new Faye.WebSocket.Event();
+    if (this.readyState !== Faye.WebSocket.OPEN) return false;
+    var event = new Faye.WebSocket.Event('message');
     event.initEvent('message', false, false);
     event.data = data;
     this.dispatchEvent(event);
@@ -16,7 +17,7 @@ Faye.WebSocket.API = {
     return this._parser.frame(data, type, errorType);
   },
   
-  close: function(code, reason) {
+  close: function(code, reason, ack) {
     if (this.readyState === Faye.WebSocket.CLOSING ||
         this.readyState === Faye.WebSocket.CLOSED) return;
     
@@ -25,17 +26,17 @@ Faye.WebSocket.API = {
     var close = function() {
       this.readyState = Faye.WebSocket.CLOSED;
       this._stream.end();
-      var event = new Faye.WebSocket.Event();
+      var event = new Faye.WebSocket.Event('close', {code: code, reason: reason});
       event.initEvent('close', false, false);
       this.dispatchEvent(event);
     };
     
-    if (code) {
-      this._parser.close(code, reason);
-      close.call(this);
-    } else {
+    if (ack !== false) {
       if (this._parser.close) this._parser.close(code, reason, close, this);
       else close.call(this);
+    } else {
+      this._parser.close(code, reason);
+      close.call(this);
     }
   },
   
@@ -68,6 +69,11 @@ Faye.extend(Faye.WebSocket, {
   CLOSED:       3,
   
   Event: Faye.extend(Faye.Class({
+    initialize: function(eventType, options) {
+      this.type = eventType;
+      Faye.extend(this, options);
+    },
+    
     initEvent: function(eventType, canBubble, cancelable) {
       this.type       = eventType;
       this.bubbles    = canBubble;

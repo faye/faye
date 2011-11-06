@@ -67,8 +67,13 @@ JS.ENV.WebSocket.Protocol8ParserSpec = JS.Test.describe("WebSocket.Protocol8Pars
     }})
     
     it("closes the socket if the frame has an unrecognized opcode", function() { with(this) {
-      expect(webSocket, "close").given(1002)
+      expect(webSocket, "close").given(1002, null, false)
       parse([0x83, 0x00])
+    }})
+    
+    it("closes the socket if a close frame is received", function() { with(this) {
+      expect(webSocket, "close").given(1000, "Hello", false)
+      parse([0x88, 0x07, 0x03, 0xe8, 0x48, 0x65, 0x6c, 0x6c, 0x6f])
     }})
     
     it("parses unmasked multibyte text frames", function() { with(this) {

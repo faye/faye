@@ -24,7 +24,7 @@ Faye.WebSocket = Faye.Class({
     this.readyState = Faye.WebSocket.OPEN;
     this.version = this._parser.version;
     
-    var event = new Faye.WebSocket.Event();
+    var event = new Faye.WebSocket.Event('open');
     event.initEvent('open', false, false);
     this.dispatchEvent(event);
     

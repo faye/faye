@@ -190,7 +190,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       return (data & rsv) === rsv;
     }, this);
     
-    if (rsvs.length > 0) return this._socket.close(this.ERRORS.protocol_error);
+    if (rsvs.length > 0) return this._socket.close(this.ERRORS.protocol_error, null, false);
     
     this._final   = (data & this.FIN) === this.FIN;
     this._opcode  = (data & this.OPCODE);
@@ -203,13 +203,13 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       if (this.OPCODES[key] === this._opcode)
         valid = true;
     }
-    if (!valid) return this._socket.close(this.ERRORS.protocol_error);
+    if (!valid) return this._socket.close(this.ERRORS.protocol_error, null, false);
     
     if (Faye.indexOf(this.FRAGMENTED_OPCODES, this._opcode) < 0 && !this._final)
-      return this._socket.close(this.ERRORS.protocol_error);
+      return this._socket.close(this.ERRORS.protocol_error, null, false);
     
     if (this._mode && Faye.indexOf(this.OPENING_OPCODES, this._opcode) >= 0)
-      return this._socket.close(this.ERRORS.protocol_error);
+      return this._socket.close(this.ERRORS.protocol_error, null, false);
     
     this._stage = 1;
   },
@@ -251,21 +251,21 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
         opcode  = this._opcode;
     
     if (opcode === this.OPCODES.continuation) {
-      if (!this._mode) return this._socket.close(this.ERRORS.protocol_error);
+      if (!this._mode) return this._socket.close(this.ERRORS.protocol_error, null, false);
       this.buffer(payload);
       if (this._final) {
         var message = new Buffer(this._buffer);
         if (this._mode === 'text') message = this._encode(message);
         this._reset();
         if (message !== null) this._socket.receive(message);
-        else this._socket.close(this.ERRORS.encoding_error);
+        else this._socket.close(this.ERRORS.encoding_error, null, false);
       }
     }
     else if (opcode === this.OPCODES.text) {
       if (this._final) {
         var message = this._encode(payload);
         if (message !== null) this._socket.receive(message);
-        else this._socket.close(this.ERRORS.encoding_error);
+        else this._socket.close(this.ERRORS.encoding_error, null, false);
       } else {
         this._mode = 'text';
         this.buffer(payload);
@@ -280,23 +280,23 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
       }
     }
     else if (opcode === this.OPCODES.close) {
-      var errorCode = (payload.length >= 2) ? 256 * payload[0] + payload[1] : 0,
-          
-          errorType = (payload.length === 0) ||
-                      (errorCode >= 3000 && errorCode < 5000) ||
-                      Faye.indexOf(this.ERROR_CODES, errorCode) >= 0 ?
-                      'normal_closure' :
-                      'protocol_error';
+      var code   = (payload.length >= 2) ? 256 * payload[0] + payload[1] : null,
+          reason = (payload.length > 2) ? this._encode(payload.slice(2)) : null;
       
-      if (payload.length > 125 || (payload.length > 2 && !this._encode(payload.slice(2))))
-        errorType = 'protocol_error';
+      if (!(payload.length === 0) &&
+          !(code !== null && code >= 3000 && code < 5000) &&
+          Faye.indexOf(this.ERROR_CODES, code) < 0)
+        code = this.ERRORS.protocol_error;
       
-      this._socket.close(this.ERRORS[errorType]);
+      if (payload.length > 125 || (payload.length > 2 && !reason))
+        code = this.ERRORS.protocol_error;
+      
+      this._socket.close(code, (payload.length > 2) ? reason : null, false);
       if (this._closingCallback)
         this._closingCallback[0].call(this._closingCallback[1]);
     }
     else if (opcode === this.OPCODES.ping) {
-      if (payload.length > 125) return this._socket.close(this.ERRORS.protocol_error);
+      if (payload.length > 125) return this._socket.close(this.ERRORS.protocol_error, null, false);
       this._socket.send(payload, 'pong');
     }
     this._stage = 0;

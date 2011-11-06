@@ -40,7 +40,7 @@ module Faye
       
       @ready_state = OPEN
       
-      event = Event.new
+      event = Event.new('open')
       event.init_event('open', false, false)
       dispatch_event(event)
       

@@ -1,14 +1,23 @@
 require 'rubygems'
 require File.expand_path('../../../lib/faye', __FILE__)
 
+port = ARGV[0] || 7000
+
 EM.run {
-  ws = Faye::WebSocket::Client.new('ws://localhost:8000/bayeux')
+  socket = Faye::WebSocket::Client.new("socket://localhost:#{port}/")
   
-  ws.onopen = lambda do |event|
-    puts "OPEN"
-    ws.send JSON.dump('channel' => '/meta/handshake')
+  socket.onopen = lambda do |event|
+    p [:open]
+    socket.send JSON.dump('channel' => '/meta/handshake')
   end
-  ws.onmessage = lambda do |message|
-    puts message.data
+  
+  socket.onmessage = lambda do |event|
+    p [:message, event.data]
+    socket.close 1002, 'Going away'
+  end
+  
+  socket.onclose = lambda do |event|
+    p [:close, event.code, event.reason]
+    EM.stop
   end
 }
