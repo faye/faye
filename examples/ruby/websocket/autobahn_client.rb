@@ -18,7 +18,7 @@ EM.run {
   socket.onclose = lambda do |event|
     run_case = lambda do |n|
       if n > cases
-        socket = Faye::WebSocket::Client.new("#{host}/updateReports?agent=%22#{CGI.escape agent}%22")
+        socket = Faye::WebSocket::Client.new("#{host}/updateReports?agent=#{CGI.escape agent}")
         socket.onclose = lambda { |e| EM.stop }
         
       elsif skip.include?(n)
@@ -26,7 +26,7 @@ EM.run {
         
       else
         puts "Running test case ##{n} ..."
-        socket = Faye::WebSocket::Client.new("#{host}/runCase?case=#{n}&agent=%22#{CGI.escape agent}%22")
+        socket = Faye::WebSocket::Client.new("#{host}/runCase?case=#{n}&agent=#{CGI.escape agent}")
         
         socket.onmessage = lambda do |event|
           socket.send(event.data)

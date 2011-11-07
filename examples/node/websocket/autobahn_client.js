@@ -15,7 +15,7 @@ socket.onmessage = function(event) {
 socket.onclose = function() {
   var runCase = function(n) {
     if (n > cases) {
-      socket = new faye.WebSocket.Client(host + '/updateReports?agent=%22' + encodeURIComponent(agent) + '%22');
+      socket = new faye.WebSocket.Client(host + '/updateReports?agent=' + encodeURIComponent(agent));
       socket.onclose = process.exit
       
     } else if (skip.indexOf(n) >= 0) {
@@ -23,7 +23,7 @@ socket.onclose = function() {
       
     } else {
       console.log('Running test case #' + n + ' ...');
-      socket = new faye.WebSocket.Client(host + '/runCase?case=' + n + '&agent=%22' + encodeURIComponent(agent) + '%22');
+      socket = new faye.WebSocket.Client(host + '/runCase?case=' + n + '&agent=' + encodeURIComponent(agent));
       
       socket.onmessage = function(event) {
         socket.send(event.data);
