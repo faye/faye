@@ -305,10 +305,6 @@ module Faye
         @mode   = nil
       end
       
-      def getbyte(data, offset)
-        data.respond_to?(:getbyte) ? data.getbyte(offset) : data[offset]
-      end
-      
       def integer(bytes)
         number = 0
         bytes.each_with_index do |data, i|

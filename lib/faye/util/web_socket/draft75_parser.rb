@@ -38,12 +38,12 @@ module Faye
             @buffering = true
             
           when 0xFF then
-            @socket.receive(Faye.encode(@buffer.join('')))
+            @socket.receive(Faye.encode(@buffer))
             @buffer = []
             @buffering = false
             
           else
-            @buffer.push(data.chr) if @buffering
+            @buffer.push(data) if @buffering
         end
       end
     end
