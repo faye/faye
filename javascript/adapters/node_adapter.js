@@ -236,4 +236,5 @@ Faye.extend(Faye.NodeAdapter.prototype, Faye.Logging);
 exports.NodeAdapter = Faye.NodeAdapter;
 exports.Client = Faye.Client;
 exports.Logging = Faye.Logging;
+exports.Transport = Faye.Transport;
 
