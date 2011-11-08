@@ -1,6 +1,3 @@
-require 'json'
-require 'uri'
-
 module Faye
   class Transport
     
@@ -104,6 +101,10 @@ module Faye
       def supported_connection_types
         @transports.map { |t| t.first }
       end
+    end
+    
+    %w[local web_socket http].each do |type|
+      require File.join(ROOT, 'faye', 'transport', type)
     end
     
   end

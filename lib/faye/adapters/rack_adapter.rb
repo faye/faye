@@ -1,10 +1,3 @@
-require 'cgi'
-require 'digest/sha1'
-require 'json'
-require 'rack'
-require 'thin'
-require 'time'
-
 module Faye
   class RackAdapter
     

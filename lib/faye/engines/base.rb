@@ -57,6 +57,10 @@ module Faye
       end
     end
     
+    %w[connection memory redis].each do |type|
+      require File.join(ROOT, 'faye', 'engines', type)
+    end
+    
   end
 end
 

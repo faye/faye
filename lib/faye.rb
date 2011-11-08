@@ -1,13 +1,45 @@
-require 'forwardable'
-require 'set'
+require 'base64'
+require 'cgi'
+require 'cookiejar'
+require 'digest/md5'
+require 'digest/sha1'
+require 'em-http'
+require 'em-http/version'
 require 'eventmachine'
+require 'forwardable'
 require 'json'
+require 'rack'
+require 'set'
 require 'thin'
+require 'time'
+require 'uri'
 
 module Faye
   VERSION = '0.6.7'
   
   ROOT = File.expand_path(File.dirname(__FILE__))
+  require File.join(ROOT, 'faye', 'thin_extensions')
+  
+  autoload :Publisher,    File.join(ROOT, 'faye', 'mixins', 'publisher')
+  autoload :Timeouts,     File.join(ROOT, 'faye', 'mixins', 'timeouts')
+  autoload :Logging,      File.join(ROOT, 'faye', 'mixins', 'logging')
+  
+  autoload :Namespace,    File.join(ROOT, 'faye', 'util', 'namespace')
+  
+  autoload :Engine,       File.join(ROOT, 'faye', 'engines', 'base')
+  
+  autoload :Grammar,      File.join(ROOT, 'faye', 'protocol', 'grammar')
+  autoload :Extensible,   File.join(ROOT, 'faye', 'protocol', 'extensible')
+  autoload :Channel,      File.join(ROOT, 'faye', 'protocol', 'channel')
+  autoload :Subscription, File.join(ROOT, 'faye', 'protocol', 'subscription')
+  autoload :Client,       File.join(ROOT, 'faye', 'protocol', 'client')
+  autoload :Server,       File.join(ROOT, 'faye', 'protocol', 'server')
+  
+  autoload :Transport,    File.join(ROOT, 'faye', 'transport', 'transport')
+  autoload :Error,        File.join(ROOT, 'faye', 'error')
+  
+  autoload :RackAdapter,  File.join(ROOT, 'faye', 'adapters', 'rack_adapter')
+  autoload :WebSocket,    File.join(ROOT, 'faye', 'util', 'web_socket')
   
   BAYEUX_VERSION   = '1.0'
   ID_LENGTH        = 128
@@ -18,34 +50,6 @@ module Faye
   
   # http://www.w3.org/International/questions/qa-forms-utf-8.en.php
   UTF8_MATCH = /^([\x00-\x7F]|[\xC2-\xDF][\x80-\xBF]|\xE0[\xA0-\xBF][\x80-\xBF]|[\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}|\xED[\x80-\x9F][\x80-\xBF]|\xF0[\x90-\xBF][\x80-\xBF]{2}|[\xF1-\xF3][\x80-\xBF]{3}|\xF4[\x80-\x8F][\x80-\xBF]{2})*$/
-  
-  %w[ mixins/publisher
-      mixins/timeouts
-      mixins/logging
-      util/namespace
-      engines/base
-      engines/connection
-      engines/memory
-      engines/redis
-      protocol/grammar
-      protocol/extensible
-      protocol/channel
-      protocol/subscription
-      protocol/client
-      protocol/server
-      transport/transport
-      transport/local
-      transport/web_socket
-      transport/http
-      error
-      thin_extensions
-      
-  ].each do |lib|
-    require File.join(ROOT, 'faye', lib)
-  end
-  
-  autoload :RackAdapter, File.join(ROOT, 'faye', 'adapters', 'rack_adapter')
-  autoload :WebSocket, File.join(ROOT, 'faye', 'util', 'web_socket')
   
   def self.random(bitlength = ID_LENGTH)
     limit    = 2 ** bitlength - 1

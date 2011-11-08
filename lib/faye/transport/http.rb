@@ -1,7 +1,3 @@
-require 'cookiejar'
-require 'em-http'
-require 'em-http/version'
-
 module Faye
   
   class Transport::Http < Transport
