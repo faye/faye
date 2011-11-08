@@ -18,6 +18,9 @@ module Faye
       true
     end
     
+    def close
+    end
+    
     def connection_type
       self.class.connection_type
     end

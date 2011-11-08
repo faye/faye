@@ -264,8 +264,22 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     }})
     
     it("puts the client in the DISCONNECTED state", function() { with(this) {
+      stub(transport, "close")
       client.disconnect()
       assertEqual( "DISCONNECTED", client.getState() )
+    }})
+    
+    describe("on successful response", function() { with(this) {
+      before(function() { with(this) {
+        stubResponse({channel:      "/meta/disconnect",
+                      successful:   true,
+                      clientId:     "fakeid" })
+      }})
+      
+      it("closes the transport", function() { with(this) {
+        expect(transport, "close")
+        client.disconnect()
+      }})
     }})
   }})
   

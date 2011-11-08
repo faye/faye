@@ -19,7 +19,15 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     this.connect();
   },
   
+  close: function() {
+    if (this._closed) return;
+    this._closed = true;
+    if (this._socket) this._socket.close();
+  },
+  
   connect: function() {
+    if (this._closed) return;
+    
     this._state = this._state || this.UNCONNECTED;
     if (this._state !== this.UNCONNECTED) return;
     

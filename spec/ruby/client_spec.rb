@@ -257,6 +257,7 @@ describe Faye::Client do
     before { create_connected_client }
     
     it "sends a disconnect message to the server" do
+      transport.stub(:close)
       transport.should_receive(:send).with({
         "channel"  => "/meta/disconnect",
         "clientId" => "fakeid",
@@ -266,8 +267,22 @@ describe Faye::Client do
     end
     
     it "puts the client in the DISCONNECTED state" do
+      transport.stub(:close)
       @client.disconnect
       @client.state.should == :DISCONNECTED
+    end
+    
+    describe "on successful response" do
+      before do
+        stub_response "channel"      => "/meta/disconnect",
+                      "successful"   => true,
+                      "clientId"     => "fakeid"
+      end
+      
+      it "closes the transport" do
+        transport.should_receive(:close)
+        @client.disconnect
+      end
     end
   end
   

@@ -160,7 +160,10 @@ Faye.Client = Faye.Class({
     this._send({
       channel:    Faye.Channel.DISCONNECT,
       clientId:   this._clientId
-    });
+      
+    }, function(response) {
+      if (response.successful) this._transport.close();
+    }, this);
     
     this.info('Clearing channel listeners for ?', this._clientId);
     this._channels = new Faye.Channel.Set();

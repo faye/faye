@@ -48,7 +48,15 @@ module Faye
       connect
     end
     
+    def close
+      return if @closed
+      @closed = true
+      @socket.close if @socket
+    end
+    
     def connect
+      return if @closed
+      
       @state ||= UNCONNECTED
       return unless @state == UNCONNECTED
       

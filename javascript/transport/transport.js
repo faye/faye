@@ -9,6 +9,8 @@ Faye.Transport = Faye.extend(Faye.Class({
     this._outbox   = [];
   },
   
+  close: function() {},
+  
   send: function(message, timeout) {
     this.debug('Client ? sending message to ?: ?',
                this._client._clientId, this._endpoint, message);

@@ -157,7 +157,10 @@ module Faye
       send({
         'channel'   => Channel::DISCONNECT,
         'clientId'  => @client_id
-      })
+        
+      }) do |response|
+        @transport.close if response['successful']
+      end
       
       info('Clearing channel listeners for ?', @client_id)
       @channels = Channel::Set.new
