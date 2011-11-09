@@ -9,9 +9,11 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files  = %w[README.rdoc]
   s.rdoc_options      = %w[--main README.rdoc]
 
-  s.files             = %w[History.txt README.rdoc] +
-                        %w[lib/faye-browser-min.js] +
-                        Dir.glob("{spec,lib}/**/*")
+  # It is important that the JavaScript file listed here is not removed: it
+  # contains the browser client and the gem should fail to build without it. You
+  # should generate it by running `bundle exec jake` in the project root.
+  s.files = %w[History.txt README.rdoc lib/faye-browser-min.js] +
+            Dir.glob("{spec,lib}/**/*")
   
   s.require_paths     = %w[lib]
 
