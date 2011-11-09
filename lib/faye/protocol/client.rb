@@ -256,6 +256,7 @@ module Faye
         raise "Cannot publish: '#{channel}' is not a valid channel name"
       end
       
+      publication = Publication.new
       connect {
         info('Client ? queueing published message to ?: ?', @client_id, channel, data)
         
@@ -263,8 +264,15 @@ module Faye
           'channel'   => channel,
           'data'      => data,
           'clientId'  => @client_id
-        })
+        }) do |response|
+          if response['successful']
+            publication.set_deferred_status(:succeeded)
+          else
+            publication.set_deferred_status(:failed, Error.parse(response['error']))
+          end
+        end
       }
+      publication
     end
     
     def receive_message(message)

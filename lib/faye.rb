@@ -26,6 +26,7 @@ module Faye
       protocol/grammar
       protocol/extensible
       protocol/channel
+      protocol/publication
       protocol/subscription
       protocol/client
       protocol/server
