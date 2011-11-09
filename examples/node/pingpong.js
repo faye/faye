@@ -1,18 +1,17 @@
-var faye = require('../../build/faye-node'),
-    sys  = require('sys');
+var faye = require('../../build/faye-node');
 
 ENDPOINT = 'http://localhost:8000/bayeux';
-sys.puts('Connecting to ' + ENDPOINT);
+console.log('Connecting to ' + ENDPOINT);
 
-var ping = new Faye.Client(ENDPOINT);
+var ping = new faye.Client(ENDPOINT);
 ping.subscribe('/ping', function() {
-  sys.puts('PING');
+  console.log('PING');
   setTimeout(function() { ping.publish('/pong', {}) }, 1000);
 });
 
-var pong = new Faye.Client(ENDPOINT);
+var pong = new faye.Client(ENDPOINT);
 pong.subscribe('/pong', function() {
-  sys.puts('PONG');
+  console.log('PONG');
   setTimeout(function() { pong.publish('/ping', {}) }, 1000);
 });
 
