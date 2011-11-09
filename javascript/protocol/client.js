@@ -266,6 +266,8 @@ Faye.Client = Faye.Class({
     if (!Faye.Grammar.CHANNEL_NAME.test(channel))
       throw new Error("Cannot publish: '" + channel + "' is not a valid channel name");
     
+    var publication = new Faye.Publication();
+    
     this.connect(function() {
       this.info('Client ? queueing published message to ?: ?', this._clientId, channel, data);
       
@@ -273,8 +275,15 @@ Faye.Client = Faye.Class({
         channel:      channel,
         data:         data,
         clientId:     this._clientId
-      });
+      }, function(response) {
+        if (response.successful)
+          publication.setDeferredStatus('succeeded');
+        else
+          publication.setDeferredStatus('failed', Faye.Error.parse(response.error));
+      }, this);
     }, this);
+    
+    return publication;
   },
   
   receiveMessage: function(message) {

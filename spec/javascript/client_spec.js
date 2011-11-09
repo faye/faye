@@ -577,6 +577,29 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       assertThrows(Error, function() { client.publish("/messages/*", {hello: "world"}) })
     }})
     
+    describe("on publish failure", function() { with(this) {
+      before(function() { with(this) {
+        stubResponse({channel:    "/messages/foo",
+                      error:      "407:/messages/foo:Failed to publish",
+                      successful: false,
+                      clientId:   "fakeid" })
+      }})
+      
+      it("should not be published", function() { with(this) {
+        var published = false
+        client.publish("/messages/foo", {text: "hi"}).callback(function() { published = true })
+        assert( !published )
+      }})
+      
+      it("reports the error through an errback", function() { with(this) {
+        var error = null
+        client.publish("/messages/foo", {text: "hi"}).errback(function(e) { error = e })
+        assertEqual( 407, error.code )
+        assertEqual( ["/messages/foo"], error.params )
+        assertEqual( "Failed to publish", error.message )
+      }})
+    }})
+    
     describe("with an outgoing extension installed", function() { with(this) {
       before(function() { with(this) {
         var extension = {

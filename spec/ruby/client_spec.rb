@@ -592,13 +592,13 @@ describe Faye::Client do
 
       it "should not be published" do
         published = false
-        @client.publish("/messages/foo", :text => "hi").callback { published = true }
+        @client.publish("/messages/foo", "text" => "hi").callback { published = true }
         published.should be_false
       end
 
       it "reports the error through an errback" do
         error = nil
-        @client.publish("/messages/foo", :text => "hi").errback { |e| error = e }
+        @client.publish("/messages/foo", "text" => "hi").errback { |e| error = e }
         error.code.should == 407
         error.params.should == ["/messages/foo"]
         error.message.should == "Failed to publish"

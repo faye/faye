@@ -1,8 +1,7 @@
 # This script demonstrates error handling
-require 'rubygems'
 
-dir = File.dirname(__FILE__)
-require File.expand_path(dir + '/../../lib/faye')
+require 'rubygems'
+require File.expand_path('../../../lib/faye', __FILE__)
 
 port = ARGV[0] || 9292
 path = ARGV[1] || 'bayeux'
@@ -17,18 +16,20 @@ EM.run {
       "user"    => "ruby-logger",
       "message" => "Got your message, #{ user }!"
     })
-    publication.callback {
+    publication.callback do
       puts "publish succeeded"
-    }
-    publication.errback { |error|
-      puts "publish failed: #{error}"
-    }
+    end
+    publication.errback do |error|
+      puts "publish failed: #{error.inspect}"
+    end
   end
-  subscription.callback {
+  
+  subscription.callback do
     puts "subscribe succeeded"
-  }
-  subscription.errback { |error|
-    puts "subscribe failed: #{error}"
-  }
+  end
+  
+  subscription.errback do |error|
+    puts "subscribe failed: #{error.inspect}"
+  end
 }
 
