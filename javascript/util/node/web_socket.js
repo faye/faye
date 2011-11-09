@@ -34,7 +34,7 @@ Faye.WebSocket = Faye.Class({
       self._parser.parse(data);
     });
     this._stream.addListener('close', function() {
-      self.close();
+      self.close(null, null, false);
     });
     this._stream.addListener('error', function() {});
   }

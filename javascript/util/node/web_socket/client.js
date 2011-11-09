@@ -23,7 +23,7 @@ Faye.WebSocket.Client = Faye.Class({
       self._onData(data);
     });
     connection.addListener('close', function() {
-      self.close();
+      self.close(null, null, false);
     });
     connection.addListener('error', function() {});
   },
