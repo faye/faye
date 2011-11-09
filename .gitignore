@@ -10,3 +10,4 @@ examples/node/faye*
 Gemfile.lock
 lib/*.js
 node_modules
+.rvmrc
