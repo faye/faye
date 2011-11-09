@@ -129,7 +129,7 @@
       alert('Message received by server!');
     });
     
-    publication.error(function(error) {
+    publication.errback(function(error) {
       alert('There was a problem: ' + error.message);
     });</pre>
     
