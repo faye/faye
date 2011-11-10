@@ -13,7 +13,7 @@ EM.run {
   
   socket.onmessage = lambda do |event|
     p [:message, event.data]
-    socket.close 1002, 'Going away'
+    # socket.close 1002, 'Going away'
   end
   
   socket.onclose = lambda do |event|
