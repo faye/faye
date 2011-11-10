@@ -28,7 +28,7 @@ module Faye
     def initialize(env)
       @env      = env
       @callback = @env['async.callback']
-      @stream   = Stream.new(@env['em.connection'])
+      @stream   = Stream.new(self, @env['em.connection'])
       @callback.call [200, RackAdapter::TYPE_JSON, @stream]
       
       @url = determine_url
@@ -67,12 +67,17 @@ module Faye
     extend Forwardable
     def_delegators :@connection, :close_connection, :close_connection_after_writing
     
-    def initialize(connection)
+    def initialize(web_socket, connection)
+      @web_socket = web_socket
       @connection = connection
     end
     
     def each(&callback)
       @data_callback = callback
+    end
+    
+    def fail
+      @web_socket.close(nil, nil, false)
     end
     
     def write(data)
