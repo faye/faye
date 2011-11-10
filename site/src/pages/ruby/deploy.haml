@@ -1,0 +1,37 @@
+.content
+  = partial 'ruby_navigation'
+  
+  :textile
+    h4. Deployment in production
+    
+    There are several ways to run Faye worker in deployment process. The easiest is to add such lines to your Capistrano recipe:
+    
+    <pre># config/deploy.rb
+    # content of your recipe
+    set :faye_pid, "#{deploy_to}/shared/pids/faye.pid"
+    set :faye_config, "#{deploy_to}/current/faye.ru"
+    namespace :faye do
+      desc "Start Faye"
+      task :start do
+        run "cd #{deploy_to}/current && bundle exec rackup #{faye_config} -s thin -E production -D --pid #{faye_pid}"
+      end
+      desc "Stop Faye"
+      task :stop do
+        run "kill `cat #{faye_pid}` || true"
+      end
+    end
+    before 'deploy:update_code', 'faye:stop'
+    after 'deploy:finalize_update', 'faye:start'</pre>
+    
+    But your server may be restarted to Faye worker may be killed. So, the second way is more bulletproof. You will need to install "runit":http://smarden.org/runit/ monitoring utility and create the runit service. Here is example this service with RVM integration which was tested with Ubuntu 10.04 LTS and Rails 3.1:
+    
+    <pre>#!/bin/sh
+    exec 2>&1
+    export USER=deploy
+    export RAILS_ENV=production
+    APP_ROOT=/home/deploy/my_project
+    FAYE_CONF="$APP_ROOT/current/faye.ru"
+    FAYE="/usr/local/rvm/bin/rvm ree@my_project exec bundle exec rackup $FAYE_CONF -s thin -E $RAILS_ENV --pid $APP_ROOT/shared/pids/faye.pid"
+    echo $FAYE
+    cd $APP_ROOT/current
+    exec $FAYE</pre>
