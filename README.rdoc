@@ -31,9 +31,8 @@ should get you up and running:
   git submodule update --init --recursive
   
   # Install dependencies
-  gem install bundler
   bundle install
-  npm install redis
+  npm install
   
   # Build test tools and Faye itself
   cd vendor/js.class
