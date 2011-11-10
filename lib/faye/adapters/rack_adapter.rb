@@ -123,9 +123,25 @@ module Faye
       end
       
       ASYNC_RESPONSE
-      
     rescue
       [400, TYPE_TEXT, ['Bad request']]
+    end
+    
+    def handle_upgrade(request)
+      socket = Faye::WebSocket.new(request.env)
+      
+      socket.onmessage = lambda do |message|
+        begin
+          message = JSON.parse(message.data)
+          debug "Received via WebSocket[#{socket.version}]: ?", message
+          @server.process(message, false) do |replies|
+            debug "Sending via WebSocket[#{socket.version}]: ?", replies
+            socket.send(JSON.unparse(replies))
+          end
+        rescue
+        end
+      end
+      ASYNC_RESPONSE
     end
     
     def message_from_request(request)
@@ -153,23 +169,6 @@ module Faye
         'Access-Control-Allow-Headers'      => 'Accept, Content-Type, X-Requested-With'
       }
       [200, headers, ['']]
-    end
-    
-    def handle_upgrade(request)
-      socket = Faye::WebSocket.new(request.env)
-      
-      socket.onmessage = lambda do |message|
-        begin
-          message = JSON.parse(message.data)
-          debug "Received via WebSocket[#{socket.version}]: ?", message
-          @server.process(message, false) do |replies|
-            debug "Sending via WebSocket[#{socket.version}]: ?", replies
-            socket.send(JSON.unparse(replies))
-          end
-        rescue
-        end
-      end
-      ASYNC_RESPONSE
     end
     
     class DeferredBody
