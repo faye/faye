@@ -36,7 +36,7 @@ module Faye
       false
     end
     
-    def request(messages, timeout)
+    def request(messages, timeout = nil)
       @timeout  ||= timeout
       @messages ||= {}
       messages.each { |message| @messages[message['id']] = message }
