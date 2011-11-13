@@ -11,11 +11,13 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
     Faye.ENV[callbackName] = function(data) {
       cleanUp();
       self.receive(data);
+      self.trigger('up');
     };
     
     var timer = Faye.ENV.setTimeout(function() {
       cleanUp();
       retry();
+      self.trigger('down');
     }, 1.5 * 1000 * timeout);
     
     var cleanUp = function() {

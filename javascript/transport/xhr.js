@@ -15,10 +15,13 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
       if (xhr.readyState !== 4) return;
       var status = xhr.status;
       try {
-        if ((status >= 200 && status < 300) || status === 304 || status === 1223)
+        if ((status >= 200 && status < 300) || status === 304 || status === 1223) {
           self.receive(JSON.parse(xhr.responseText));
-        else
+          self.trigger('up');
+        } else {
           retry();
+          self.trigger('down');
+        }
       } catch (e) {
         retry();
       } finally {

@@ -18,6 +18,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     xhr.onload = function() {
       try {
         self.receive(JSON.parse(xhr.responseText));
+        self.trigger('up');
       } catch(e) {
         retry();
       } finally {
@@ -28,6 +29,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     var onerror = function() {
       cleanUp();
       retry();
+      self.trigger('down');
     };
     var timer = Faye.ENV.setTimeout(onerror, 1.5 * 1000 * timeout);
     xhr.onerror = onerror;

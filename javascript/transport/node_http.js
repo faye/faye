@@ -44,13 +44,17 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
       response.addListener('end', function() {
         try {
           self.receive(JSON.parse(body));
+          self.trigger('up');
         } catch (e) {
           retry();
         }
       });
     });
     
-    request.addListener('error', retry);
+    request.addListener('error', function() {
+      retry();
+      self.trigger('down');
+    });
     request.write(content);
     request.end();
   }

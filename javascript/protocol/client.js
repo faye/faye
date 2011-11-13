@@ -19,9 +19,7 @@ Faye.Client = Faye.Class({
     this.endpoint   = endpoint || this.DEFAULT_ENDPOINT;
     this._options   = options || {};
     
-    Faye.Transport.get(this, Faye.MANDATORY_CONNECTION_TYPES, function(transport) {
-      this._transport = transport;
-    }, this);
+    this._selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
     
     this._state     = this.UNCONNECTED;
     this._channels  = new Faye.Channel.Set();
@@ -91,9 +89,7 @@ Faye.Client = Faye.Class({
         this._state     = this.CONNECTED;
         this._clientId  = response.clientId;
         
-        Faye.Transport.get(this, response.supportedConnectionTypes, function(transport) {
-          this._transport = transport;
-        }, this);
+        this._selectTransport(response.supportedConnectionTypes);
         
         this.info('Handshake successful: ?', this._clientId);
         
@@ -302,6 +298,25 @@ Faye.Client = Faye.Class({
     }, this);
   },
   
+  _selectTransport: function(transportTypes) {
+    Faye.Transport.get(this, transportTypes, function(transport) {
+      this._transport = transport;
+      var up = true;
+      
+      transport.bind('down', function() {
+        if (!up) return;
+        up = false;
+        this.trigger('transport:down');
+      }, this);
+      
+      transport.bind('up', function() {
+        if (up) return;
+        up = true;
+        this.trigger('transport:up');
+      }, this);
+    }, this);
+  },
+  
   _send: function(message, callback, scope) {
     message.id = this._generateMessageId();
     if (callback) this._responseCallbacks[message.id] = [callback, scope];
@@ -348,6 +363,7 @@ Faye.Client = Faye.Class({
 });
 
 Faye.extend(Faye.Client.prototype, Faye.Deferrable);
+Faye.extend(Faye.Client.prototype, Faye.Publisher);
 Faye.extend(Faye.Client.prototype, Faye.Logging);
 Faye.extend(Faye.Client.prototype, Faye.Extensible);
 

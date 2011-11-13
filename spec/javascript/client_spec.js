@@ -1,6 +1,7 @@
 JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   before(function() { with(this) {
     this.transport = {connectionType: "fake", send: function() {}}
+    Faye.extend(transport, Faye.Publisher)
     stub(Faye.Transport, "get").yields([transport])
   }})
   
@@ -642,6 +643,36 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           id:       instanceOf("string")
         }, 60)
         client.publish("/messages/foo", {hello: "world"})
+      }})
+    }})
+  }})
+  
+  describe("network notifications", function() { with(this) {
+    before(function() { this.createClient() })
+    
+    describe("when the transport is up", function() { with(this) {
+      it("broadcasts a down notification", function() { with(this) {
+        expect(client, "trigger").given("transport:down")
+        transport.trigger("down")
+      }})
+      
+      it("does not broadcast an up notification", function() { with(this) {
+        expect(client, "trigger").exactly(0)
+        transport.trigger("up")
+      }})
+    }})
+    
+    describe("when the transport is down", function() { with(this) {
+      before(function() { this.transport.trigger("down") })
+      
+      it("does not broadcast a down notification", function() { with(this) {
+        expect(client, "trigger").exactly(0)
+        transport.trigger("down")
+      }})
+      
+      it("broadcasts an up notification", function() { with(this) {
+        expect(client, "trigger").given("transport:up")
+        transport.trigger("up")
       }})
     }})
   }})
