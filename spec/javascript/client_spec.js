@@ -650,7 +650,21 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   describe("network notifications", function() { with(this) {
     before(function() { this.createClient() })
     
+    describe("in the default state", function() { with(this) {
+      it("broadcasts a down notification", function() { with(this) {
+        expect(client, "trigger").given("transport:down")
+        transport.trigger("down")
+      }})
+      
+      it("broadcasts an up notification", function() { with(this) {
+        expect(client, "trigger").given("transport:up")
+        transport.trigger("up")
+      }})
+    }})
+    
     describe("when the transport is up", function() { with(this) {
+      before(function() { this.transport.trigger("up") })
+      
       it("broadcasts a down notification", function() { with(this) {
         expect(client, "trigger").given("transport:down")
         transport.trigger("down")

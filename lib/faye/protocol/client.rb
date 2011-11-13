@@ -303,17 +303,17 @@ module Faye
     def select_transport(transport_types)
       Transport.get(self, transport_types) do |transport|
         @transport = transport
-        up = true
+        up = nil
         
         transport.bind :down do
-          if up
+          if up.nil? or up
             up = false
             trigger('transport:down')
           end
         end
         
         transport.bind :up do
-          unless up
+          if up.nil? or not up
             up = true
             trigger('transport:up')
           end

@@ -655,7 +655,21 @@ describe Faye::Client do
   describe "network notifications" do
     before { create_client }
     
+    describe "in the default state" do
+      it "broadcasts a down notification" do
+        @client.should_receive(:trigger).with("transport:down")
+        transport.trigger(:down)
+      end
+      
+      it "broadcasts an up notification" do
+        @client.should_receive(:trigger).with("transport:up")
+        transport.trigger(:up)
+      end
+    end
+    
     describe "when the transport is up" do
+      before { transport.trigger(:up) }
+      
       it "broadcasts a down notification" do
         @client.should_receive(:trigger).with("transport:down")
         transport.trigger(:down)
