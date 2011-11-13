@@ -2,6 +2,7 @@ module Faye
   class Transport
     
     include Logging
+    include Publisher
     include Timeouts
     
     def initialize(client, endpoint)

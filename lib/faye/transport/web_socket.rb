@@ -37,7 +37,7 @@ module Faye
     end
     
     def request(messages, timeout = nil)
-      @timeout  ||= timeout
+      @timeout    = timeout || @timeout
       @messages ||= {}
       messages.each { |message| @messages[message['id']] = message }
       with_socket { |socket| socket.send(JSON.unparse(messages)) }
@@ -65,9 +65,9 @@ module Faye
       @socket = Faye::WebSocket::Client.new(@endpoint.gsub(/^http(s?):/, 'ws\1:'))
       
       @socket.onopen = lambda do |*args|
-        @timeout = nil
         @state = CONNECTED
         set_deferred_status(:succeeded, @socket)
+        trigger(:up)
       end
       
       @socket.onmessage = lambda do |event|
@@ -87,6 +87,7 @@ module Faye
         else
           EventMachine.add_timer(@timeout) { connect }
           @timeout = @timeout * 2
+          trigger(:down)
         end
       end
     end

@@ -37,11 +37,15 @@ module Faye
             @client.cookies.set_cookie(@endpoint, cookie)
           end
           receive(JSON.parse(request.response))
+          trigger(:up)
         rescue
           retry_block.call
         end
       end
-      request.errback { retry_block.call }
+      request.errback do
+        retry_block.call
+        trigger(:down)
+      end
     end
   end
   

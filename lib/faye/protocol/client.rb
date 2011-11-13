@@ -2,6 +2,7 @@ module Faye
   class Client
     
     include EventMachine::Deferrable
+    include Publisher
     include Logging
     include Extensible
     
@@ -25,9 +26,8 @@ module Faye
       @endpoint   = endpoint || RackAdapter::DEFAULT_ENDPOINT
       @options    = options
 
-      Transport.get(self, MANDATORY_CONNECTION_TYPES) do |transport|
-        @transport = transport
-      end
+      select_transport(MANDATORY_CONNECTION_TYPES)
+      
       @state      = UNCONNECTED
       @channels   = Channel::Set.new
       @message_id = 0
@@ -87,9 +87,8 @@ module Faye
         if response['successful']
           @state     = CONNECTED
           @client_id = response['clientId']
-          Transport.get(self, response['supportedConnectionTypes']) do |transport|
-            @transport = transport
-          end
+          
+          select_transport(response['supportedConnectionTypes'])
           
           info('Handshake successful: ?', @client_id)
           
@@ -300,6 +299,27 @@ module Faye
     end
     
   private
+    
+    def select_transport(transport_types)
+      Transport.get(self, transport_types) do |transport|
+        @transport = transport
+        up = true
+        
+        transport.bind :down do
+          if up
+            up = false
+            trigger('transport:down')
+          end
+        end
+        
+        transport.bind :up do
+          unless up
+            up = true
+            trigger('transport:up')
+          end
+        end
+      end
+    end
     
     def send(message, &callback)
       message['id'] = generate_message_id

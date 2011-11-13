@@ -27,5 +27,13 @@ EM.run {
       "message" => "Got your message, #{ user }!"
     })
   end
+  
+  client.bind 'transport:down' do
+    puts '[CONNECTION DOWN]'
+  end
+  
+  client.bind 'transport:up' do
+    puts '[CONNECTION UP]'
+  end
 }
 

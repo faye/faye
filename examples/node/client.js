@@ -26,3 +26,11 @@ client.subscribe('/chat/*', function(message) {
   });
 });
 
+client.bind('transport:down', function() {
+  console.log('[CONNECTION DOWN]');
+});
+
+client.bind('transport:up', function() {
+  console.log('[CONNECTION UP]');
+});
+

@@ -6,7 +6,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   batching:     false,
   
   request: function(messages, timeout) {
-    this._timeout = this._timeout || timeout;
+    this._timeout = timeout || this._timeout;
     this._messages = this._messages || {};
     Faye.each(messages, function(message) {
       this._messages[message.id] = message;
@@ -38,7 +38,6 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     var self = this;
     
     this._socket.onopen = function() {
-      delete self._timeout;
       self._state = self.CONNECTED;
       self.setDeferredStatus('succeeded', self._socket);
       self.trigger('up');

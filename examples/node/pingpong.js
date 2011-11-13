@@ -15,13 +15,5 @@ pong.subscribe('/pong', function() {
   setTimeout(function() { pong.publish('/ping', {}) }, 1000);
 });
 
-pong.bind('transport:down', function() {
-  console.log('[CONNECTION DOWN]');
-});
-
-pong.bind('transport:up', function() {
-  console.log('[CONNECTION UP]');
-});
-
 setTimeout(function() { ping.publish('/pong', {}) }, 500);
 

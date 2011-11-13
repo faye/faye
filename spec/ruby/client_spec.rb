@@ -5,6 +5,7 @@ describe Faye::Client do
     transport = mock("transport")
     transport.stub(:connection_type).and_return "fake"
     transport.stub(:send)
+    transport.extend(Faye::Publisher)
     transport
   end
   
@@ -647,6 +648,36 @@ describe Faye::Client do
           "id"       => instance_of(String)
         }, 60)
         @client.publish("/messages/foo", "hello" => "world")
+      end
+    end
+  end
+  
+  describe "network notifications" do
+    before { create_client }
+    
+    describe "when the transport is up" do
+      it "broadcasts a down notification" do
+        @client.should_receive(:trigger).with("transport:down")
+        transport.trigger(:down)
+      end
+      
+      it "does not broadcast an up notification" do
+        @client.should_not_receive(:trigger)
+        transport.trigger(:up)
+      end
+    end
+    
+    describe "when the transport is down" do
+      before { transport.trigger(:down) }
+      
+      it "does not broadcast a down notification" do
+        @client.should_not_receive(:trigger)
+        transport.trigger(:down)
+      end
+      
+      it "broadcasts an up notification" do
+        @client.should_receive(:trigger).with("transport:up")
+        transport.trigger(:up)
       end
     end
   end
