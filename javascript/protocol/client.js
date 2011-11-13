@@ -301,17 +301,16 @@ Faye.Client = Faye.Class({
   _selectTransport: function(transportTypes) {
     Faye.Transport.get(this, transportTypes, function(transport) {
       this._transport = transport;
-      var up = null;
       
       transport.bind('down', function() {
-        if (up !== null && !up) return;
-        up = false;
+        if (this._transportUp !== undefined && !this._transportUp) return;
+        this._transportUp = false;
         this.trigger('transport:down');
       }, this);
       
       transport.bind('up', function() {
-        if (up !== null && up) return;
-        up = true;
+        if (this._transportUp !== undefined && this._transportUp) return;
+        this._transportUp = true;
         this.trigger('transport:up');
       }, this);
     }, this);
