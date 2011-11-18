@@ -6,7 +6,7 @@ EM.run {
   host   = 'ws://localhost:9001'
   agent  = "Faye (Ruby #{RUBY_VERSION})"
   cases  = 0
-  skip   = [247,248,249]
+  skip   = [247,248,249,256]
   
   socket = Faye::WebSocket::Client.new("#{host}/getCaseCount")
   

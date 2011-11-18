@@ -3,7 +3,7 @@ var faye   = require('../../../build/faye-node');
 var host  = 'ws://localhost:9001',
     agent = 'Faye (Node ' + process.version + ')',
     cases = 0,
-    skip  = [247,248,249];
+    skip  = [247,248,249,256];
 
 var socket = new faye.WebSocket.Client(host + '/getCaseCount');
 
