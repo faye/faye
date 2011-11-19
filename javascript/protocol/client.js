@@ -34,8 +34,11 @@ Faye.Client = Faye.Class({
       timeout:   1000 * (this._options.timeout  || this.CONNECTION_TIMEOUT)
     };
     
-    if (Faye.Event) Faye.Event.on(Faye.ENV, 'beforeunload',
-                                  this.disconnect, this);
+    if (Faye.Event)
+      Faye.Event.on(Faye.ENV, 'beforeunload', function() {
+        if (Faye.indexOf(this._disabled, 'autodisconnect') < 0)
+          this.disconnect();
+      }, this);
   },
   
   disable: function(feature) {
