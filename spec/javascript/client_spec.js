@@ -104,7 +104,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         stubResponse({channel:    "/meta/handshake",
                       successful: true,
                       version:    "1.0",
-                      supportedConnectionTypes: ["websocket"],
+                      supportedConnectionTypes: ["long-polling", "websocket"],
                       clientId:   "fakeid" })
       }})
 
@@ -117,16 +117,26 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         client.handshake()
         assertEqual( "CONNECTED", client.getState() )
       }})
-
-      it("selects a new transport based on what the server supports", function() { with(this) {
-        expect(Faye.Transport, "get").given(instanceOf(Faye.Client), ["websocket"])
-                                     .yielding([transport])
-        client.handshake()
-      }})
-
+      
       it("registers any pre-existing subscriptions", function() { with(this) {
         expect(client, "subscribe").given([], true)
         client.handshake()
+      }})
+      
+      it("selects a new transport based on what the server supports", function() { with(this) {
+        expect(Faye.Transport, "get").given(instanceOf(Faye.Client), ["long-polling", "websocket"])
+                                     .yielding([transport])
+        client.handshake()
+      }})
+      
+      describe("with websocket disabled", function() { with(this) {
+        before(function() { this.client.disable('websocket') })
+        
+        it("selects a new transport, excluding websocket", function() { with(this) {
+          expect(Faye.Transport, "get").given(instanceOf(Faye.Client), ["long-polling"])
+                                       .yielding([transport])
+          client.handshake()
+        }})
       }})
     }})
 

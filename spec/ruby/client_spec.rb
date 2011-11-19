@@ -107,7 +107,7 @@ describe Faye::Client do
         stub_response "channel"    => "/meta/handshake",
                       "successful" => true,
                       "version"    => "1.0",
-                      "supportedConnectionTypes" => ["websocket"],
+                      "supportedConnectionTypes" => ["long-polling", "websocket"],
                       "clientId"   => "fakeid"
       end
 
@@ -120,16 +120,26 @@ describe Faye::Client do
         @client.handshake
         @client.state.should == :CONNECTED
       end
-
-      it "selects a new transport based on what the server supports" do
-        Faye::Transport.should_receive(:get).with(instance_of(Faye::Client), ["websocket"]).
-                                             and_return(transport)
-        @client.handshake
-      end
-
+      
       it "registers any pre-existing subscriptions" do
         @client.should_receive(:subscribe).with([], true)
         @client.handshake
+      end
+      
+      it "selects a new transport based on what the server supports" do
+        Faye::Transport.should_receive(:get).with(instance_of(Faye::Client), ["long-polling", "websocket"]).
+                                             and_return(transport)
+        @client.handshake
+      end
+      
+      describe "with websocket disabled" do
+        before { @client.disable("websocket") }
+        
+        it "selects a new transport, excluding websocket" do
+          Faye::Transport.should_receive(:get).with(instance_of(Faye::Client), ["long-polling"]).
+                                              and_return(transport)
+          @client.handshake
+        end
       end
     end
 

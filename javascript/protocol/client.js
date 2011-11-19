@@ -18,6 +18,7 @@ Faye.Client = Faye.Class({
     
     this.endpoint   = endpoint || this.DEFAULT_ENDPOINT;
     this._options   = options || {};
+    this._disabled  = [];
     
     this._selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
     
@@ -35,6 +36,10 @@ Faye.Client = Faye.Class({
     
     if (Faye.Event) Faye.Event.on(Faye.ENV, 'beforeunload',
                                   this.disconnect, this);
+  },
+  
+  disable: function(feature) {
+    this._disabled.push(feature);
   },
   
   getClientId: function() {
@@ -89,7 +94,12 @@ Faye.Client = Faye.Class({
         this._state     = this.CONNECTED;
         this._clientId  = response.clientId;
         
-        this._selectTransport(response.supportedConnectionTypes);
+        var connectionTypes = response.supportedConnectionTypes;
+        Faye.each(this._disabled, function(feature) {
+          var index = Faye.indexOf(connectionTypes, feature);
+          if (index >= 0) connectionTypes.splice(index, 1);
+        }, this);
+        this._selectTransport(connectionTypes);
         
         this.info('Handshake successful: ?', this._clientId);
         

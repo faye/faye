@@ -25,6 +25,7 @@ module Faye
       
       @endpoint   = endpoint || RackAdapter::DEFAULT_ENDPOINT
       @options    = options
+      @disabled   = []
 
       select_transport(MANDATORY_CONNECTION_TYPES)
       
@@ -39,6 +40,10 @@ module Faye
         'interval'  => 1000.0 * (@options[:interval] || Engine::INTERVAL),
         'timeout'   => 1000.0 * (@options[:timeout]  || CONNECTION_TIMEOUT)
       }
+    end
+    
+    def disable(feature)
+      @disabled << feature
     end
     
     def state
@@ -88,7 +93,8 @@ module Faye
           @state     = CONNECTED
           @client_id = response['clientId']
           
-          select_transport(response['supportedConnectionTypes'])
+          connection_types = response['supportedConnectionTypes'] - @disabled
+          select_transport(connection_types)
           
           info('Handshake successful: ?', @client_id)
           
