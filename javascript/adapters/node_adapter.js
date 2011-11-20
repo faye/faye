@@ -66,9 +66,12 @@ Faye.NodeAdapter = Faye.Class({
             ? { key:  fs.readFileSync(sslOptions.key),
                 cert: fs.readFileSync(sslOptions.cert)
               }
-            : null,
-        
-        httpServer = ssl
+            : null;
+    
+    if (ssl && sslOptions.ca)
+      ssl.ca = Faye.map(sslOptions.ca, function(ca) { return fs.readFileSync(ca) });
+    
+    var httpServer = ssl
                    ? https.createServer(ssl, function() {})
                    : http.createServer(function() {});
     
