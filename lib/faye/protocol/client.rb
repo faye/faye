@@ -93,8 +93,8 @@ module Faye
           @state     = CONNECTED
           @client_id = response['clientId']
           
-          connection_types = response['supportedConnectionTypes'] - @disabled
-          select_transport(connection_types)
+          connection_types = response['supportedConnectionTypes']
+          select_transport(connection_types - @disabled) if connection_types
           
           info('Handshake successful: ?', @client_id)
           

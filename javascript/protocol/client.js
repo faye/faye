@@ -98,11 +98,13 @@ Faye.Client = Faye.Class({
         this._clientId  = response.clientId;
         
         var connectionTypes = response.supportedConnectionTypes;
-        Faye.each(this._disabled, function(feature) {
-          var index = Faye.indexOf(connectionTypes, feature);
-          if (index >= 0) connectionTypes.splice(index, 1);
-        }, this);
-        this._selectTransport(connectionTypes);
+        if (connectionTypes) {
+          Faye.each(this._disabled, function(feature) {
+            var index = Faye.indexOf(connectionTypes, feature);
+            if (index >= 0) connectionTypes.splice(index, 1);
+          }, this);
+          this._selectTransport(connectionTypes);
+        }
         
         this.info('Handshake successful: ?', this._clientId);
         
