@@ -56,6 +56,14 @@ Soapbox = {
       msg.val('');
       return false;
     });
+    
+    // Detect network problems and disable the form when offline
+    this._bayeux.bind('transport:down', function() {
+      this._post.find('textarea,input').attr('disabled', true);
+    }, this);
+    this._bayeux.bind('transport:up', function() {
+      this._post.find('textarea,input').attr('disabled', false);
+    }, this);
   },
   
   /**
