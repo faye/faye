@@ -47,7 +47,7 @@ module Faye
             close.call
           end
         else
-          @parser.close(code, reason)
+          @parser.close(code, reason) if @parser.respond_to?(:close)
           close.call
         end
       end

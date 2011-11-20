@@ -35,7 +35,7 @@ Faye.WebSocket.API = {
       if (this._parser.close) this._parser.close(code, reason, close, this);
       else close.call(this);
     } else {
-      this._parser.close(code, reason);
+      if (this._parser.close) this._parser.close(code, reason);
       close.call(this);
     }
   },
