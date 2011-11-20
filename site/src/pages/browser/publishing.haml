@@ -1,0 +1,36 @@
+.content
+  = partial 'browser_navigation'
+  
+  :textile
+    h4. Sending messages
+    
+    Clients do not send each other messages directly, instead they send
+    their messages to channels, and the server figures out which clients
+    need to receive the message. You can send a message using the @#publish()@
+    method, passing in the channel name and a message object.
+    
+    <pre class="prettyprint">client.publish('/foo', {text: 'Hi there'});</pre>
+    
+    The message object can be any arbitrary JavaScript object that can
+    be serialized to JSON, so it can contain strings, numbers, booleans,
+    arrays and other objects. There are no required fields, and the
+    object will be delivered verbatim to any subscriber functions
+    listening to that channel.
+    
+    Just like @subscribe()@, the @publish()@ method lets you add callbacks
+    to find out whether it was successful. Bear in mind that 'success' here
+    just means the server received and routed the message successfully, not
+    that it has been received by all other clients. An error means the server
+    found a problem processing the message. Network errors are not covered
+    by this.
+    
+    <pre class="prettyprint">var publication = client.publish('/foo', {text: 'Hi there'});
+    
+    publication.callback(function() {
+      alert('Message received by server!');
+    });
+    
+    publication.errback(function(error) {
+      alert('There was a problem: ' + error.message);
+    });</pre>
+    
