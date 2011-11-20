@@ -77,7 +77,7 @@ module Faye
     end
     
     def fail
-      @web_socket.close(nil, nil, false)
+      @web_socket.close(1006, '', false)
     end
     
     def write(data)

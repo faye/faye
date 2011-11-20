@@ -67,7 +67,7 @@ module Faye
         end
         
         def unbind
-          parent.close(nil, nil, false)
+          parent.close(1006, '', false)
         end
         
         def write(data)

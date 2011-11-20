@@ -26,7 +26,7 @@ Faye.WebSocket.API = {
     var close = function() {
       this.readyState = Faye.WebSocket.CLOSED;
       this._stream.end();
-      var event = new Faye.WebSocket.Event('close', {code: code, reason: reason});
+      var event = new Faye.WebSocket.Event('close', {code: code || 1000, reason: reason || ''});
       event.initEvent('close', false, false);
       this.dispatchEvent(event);
     };

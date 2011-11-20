@@ -35,7 +35,7 @@ module Faye
         close = lambda do
           @ready_state = CLOSED
           @stream.close_connection_after_writing
-          event = Event.new('close', :code => code, :reason => reason)
+          event = Event.new('close', :code => code || 1000, :reason => reason || '')
           event.init_event('close', false, false)
           dispatch_event(event)
         end
