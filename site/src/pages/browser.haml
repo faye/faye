@@ -4,26 +4,24 @@
   :textile
     h4. Setting up
     
-    In order to use the browser client, you'll need to start up a Faye
-    server to handle message delivery between clients. See the
-    "Node.js":/node.html or "Ruby":/ruby.html documentation for more
-    information.
+    In order to use the browser client, you'll need to start up a Faye server to
+    handle message delivery between clients. See the "Node.js":/node.html or
+    "Ruby":/ruby.html documentation for more information.
     
-    With the server up and running, you just need to include the
-    client script in your page. Let's assume you've mounted a server
-    at @http://localhost:8000/faye@.
+    With the server up and running, you just need to include the client script
+    in your page. Let's assume you've mounted a server at @http://localhost:8000/faye@.
     
     <pre class="prettyprint"><script type="text/javascript"
             src="http://localhost:8000/faye.js">
             </script></pre>
     
-    You can then create a client. You should make sure you only create
-    one client per target server, since browsers impose a per-host connection
-    limit and creating more clients will saturate the available connections
-    in many browsers.
+    You can then create a client. You should make sure you only create one
+    client per target server, since browsers impose a per-host connection limit
+    and creating more clients will saturate the available connections in many
+    browsers.
     
-    To make a client, all you need is the mount point of the server you
-    want to connect to:
+    To make a client, all you need is the mount point of the server you want to
+    connect to:
     
     <pre class="prettyprint"><script type="text/javascript">
         var client = new Faye.Client('http://localhost:8000/faye');
@@ -31,10 +29,9 @@
     
     h4. Timeouts
     
-    You can optionally specify a timeout; if the server does not send back
-    any data for the given period of time, the client will assume the
-    server has gone away and will attempt to reconnect. Specify the timeout
-    as follows:
+    You can optionally specify a timeout; if the server does not send back any
+    data for the given period of time, the client will assume the server has
+    gone away and will attempt to reconnect. Specify the timeout as follows:
     
     <pre class="prettyprint"><script type="text/javascript">
         var client = new Faye.Client('http://localhost:8000/faye', {
@@ -42,9 +39,9 @@
         });
     </script></pre>
     
-    The timeout is given in seconds and should be larger that the timeout
-    you set up on the server side, so we give the server ample time to
-    respond before assuming there's been a network error.
+    The timeout is given in seconds and should be larger that the timeout you
+    set up on the server side, so we give the server ample time to respond
+    before assuming there's been a network error.
     
     h4. Cross-domain operation
     

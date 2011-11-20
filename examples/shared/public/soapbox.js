@@ -1,8 +1,8 @@
 Soapbox = {
   /**
-   * Initializes the application, passing in the globally shared Bayeux
-   * client. Apps on the same page should share a Bayeux client so
-   * that they may share an open HTTP connection with the server.
+   * Initializes the application, passing in the globally shared Bayeux client.
+   * Apps on the same page should share a Bayeux client so that they may share
+   * an open HTTP connection with the server.
    */
   init: function(bayeux) {
     var self = this;
@@ -25,9 +25,9 @@ Soapbox = {
   },
   
   /**
-   * Starts the application after a username has been entered. A
-   * subscription is made to receive messages that mention this user,
-   * and forms are set up to accept new followers and send messages.
+   * Starts the application after a username has been entered. A subscription is
+   * made to receive messages that mention this user, and forms are set up to
+   * accept new followers and send messages.
    */
   launch: function() {
     var self = this;
@@ -38,8 +38,8 @@ Soapbox = {
       self._app.fadeIn('slow');
     });
     
-    // When we add a follower, subscribe to a channel to which the
-    // followed user will publish messages
+    // When we add a follower, subscribe to a channel to which the followed user
+    // will publish messages
     this._follow.submit(function() {
       var follow = $('#followee'),
           name   = follow.val();
@@ -79,8 +79,8 @@ Soapbox = {
     // Message object to transmit over Bayeux channels
     message = {user: this._username, message: message};
     
-    // Publish to this user's 'from' channel, and to channels for any
-    // @replies found in the message
+    // Publish to this user's 'from' channel, and to channels for any @replies
+    // found in the message
     this._bayeux.publish('/chat/' + this._username, message);
     $.each(mentions, function(i, name) {
       self._bayeux.publish('/members/' + name, message);
@@ -88,9 +88,8 @@ Soapbox = {
   },
   
   /**
-   * Handler for messages received over subscribed channels. Takes the
-   * message object sent by the post() method and displays it in
-   * the user's message list.
+   * Handler for messages received over subscribed channels. Takes the message
+   * object sent by the post() method and displays it in the user's message list.
    */
   accept: function(message) {
     this._stream.prepend('<li><b>' + message.user + ':</b> ' +
