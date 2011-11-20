@@ -77,14 +77,18 @@
     The WebSocket API consists of several event handlers and a method for
     sending messages.
     
-    * @onopen@ fires when the socket connection is established. Event has no
+    * *@onopen@* fires when the socket connection is established. Event has no
       attributes.
-    * @onerror@ fires when the connection attempt fails. Event has no attributes.
-    * @onmessage@ fires when the socket receives a message. Event has one
-      attribute, @data@, which is either a @String@ (for text frames) or a
+    * *@onerror@* fires when the connection attempt fails. Event has no
+      attributes.
+    * *@onmessage@* fires when the socket receives a message. Event has one
+      attribute, *@data@*, which is either a @String@ (for text frames) or a
       @Buffer@ (for binary frames).
-    * @onclose@ fires when either the client or the server closes the connection.
-      Event has two optional attributes, @code@ and @reason@, that expose the
-      status code and message sent by the peer that closed the connection.
-    * @send()@ accepts either a @String@ or a @Buffer@ and sends a text or
+    * *@onclose@* fires when either the client or the server closes the
+      connection. Event has two optional attributes, *@code@* and *@reason@*,
+      that expose the status code and message sent by the peer that closed the
+      connection.
+    * *@send(message)@* accepts either a @String@ or @Buffer@ and sends a text or
       binary message over the connection to the other peer.
+    * *@close(code, reason)@* closes the connection, sending the given status
+      code and reason text, both of which are optional.
