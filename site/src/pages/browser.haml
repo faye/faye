@@ -51,3 +51,35 @@
     Faye clients and servers transparently support cross-domain communication,
     so your client can connect to a server on any domain you like without
     further configuration.
+    
+    h4. Disabling specific transports
+    
+    For some applications you may need to exclude some transports from use. For
+    example you may know your deployment environment cannot support WebSockets,
+    or you have reasons to stick to polling. In such situations you can disable
+    a transport like so:
+    
+    <pre class="prettyprint">client.disable('websocket');</pre>
+    
+    You can disable any transport, but bear in mind some transports are
+    essential for establishing a connection so disabling them can render the
+    client useless. These mandatory transports are:
+    
+    * *@long-polling@* - Based on @XMLHttpRequest@, used for same-domain
+      connections
+    * *@callback-polling@* - Based on JSON-P, used for cross-domain connections
+    * *@in-process@* - used for server-side clients in the same process as the
+      server
+    
+    h4. Turning off auto-disconnect
+    
+    When running in a web browser, the client listens to the @beforeunload@
+    event and sends a disconnection message to the server. If this message is
+    not sent, the server will eventually clean up the client's data due to
+    inactivity, but having clients explicitly disconnect helps reduce the work
+    the periodic garbage collection has to do.
+    
+    If this behaviour causes problems for your application, you can stop the
+    client automatically disconnecting like so:
+    
+    <pre class="prettyprint">client.disable('autodisconnect');</pre>
