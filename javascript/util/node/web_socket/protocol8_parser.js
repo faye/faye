@@ -89,7 +89,7 @@ Faye.WebSocket.Protocol8Parser = Faye.Class({
           connection = this._headers.Connection;
       
       return upgrade && /^websocket$/i.test(upgrade) &&
-             connection && connection.split(/\s*,\s*/).indexOf('Upgrade') >= 0 &&
+             connection && Faye.indexOf(connection.split(/\s*,\s*/), 'Upgrade') >= 0 &&
              this._headers['Sec-WebSocket-Accept'] === this._accept;
     }
   }),
