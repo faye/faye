@@ -1,6 +1,6 @@
 var faye   = require('../../../build/faye-node'),
     port   = process.argv[2] || 7000,
-    socket = new faye.WebSocket.Client('socket://localhost:' + port + '/');
+    socket = new faye.WebSocket.Client('ws://localhost:' + port + '/');
 
 socket.onopen = function(event) {
   console.log('open');

@@ -4,7 +4,7 @@ require File.expand_path('../../../../lib/faye', __FILE__)
 port = ARGV[0] || 7000
 
 EM.run {
-  socket = Faye::WebSocket::Client.new("socket://localhost:#{port}/")
+  socket = Faye::WebSocket::Client.new("ws://localhost:#{port}/")
   
   socket.onopen = lambda do |event|
     p [:open]
