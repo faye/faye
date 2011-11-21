@@ -4,13 +4,12 @@ var crypto = require('crypto'),
     https  = require('https'),
     net    = require('net'),
     path   = require('path'),
-    sys    = require('sys'),
     tls    = require('tls'),
     url    = require('url'),
     querystring = require('querystring');
 
 Faye.logger = function(message) {
-  sys.puts(message);
+  console.log(message);
 };
 
 Faye.withDataFor = function(transport, callback, scope) {
