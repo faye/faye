@@ -5,7 +5,7 @@ var port = process.argv[2] || 7000;
 
 var server = http.createServer();
 server.addListener('upgrade', function(request, socket, head) {
-  var socket = new faye.WebSocket(request, head);
+  var socket = new faye.WebSocket(request, socket, head);
   
   socket.onmessage = function(event) {
     socket.send(event.data);

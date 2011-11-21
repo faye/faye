@@ -8,7 +8,7 @@
  **/
 
 Faye.WebSocket = Faye.Class({
-  initialize: function(request, head) {
+  initialize: function(request, socket, head) {
     this.request = request;
     this._stream = request.socket;
     

@@ -30,7 +30,7 @@
     var server = http.createServer();
     
     server.addListener('upgrade', function(request, socket, head) {
-      var ws = new faye.WebSocket(request, head);
+      var ws = new faye.WebSocket(request, socket, head);
       
       ws.onmessage = function(event) {
         ws.send(event.data);
