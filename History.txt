@@ -1,3 +1,15 @@
+=== 0.7.0 / 2011-11-21
+TestSwarm build: http://swarm.jcoglan.com/job/104/
+
+* Provide an event API for monitoring engine events on the server side
+* Implement server-side WebSocket connections for improved latency
+* Fix WebSocket protocol bugs and expose APIs for developers to use
+* Make server-side HTTP transports support SSL and cookies
+* Allow clients to disable selected transports and autodisconnection
+* Add callback/errback API to Client#publish() interface
+* Add 'socket' setting for the Redis engine for connecting through a Unix socket
+
+
 === 0.6.7 / 2011-10-20
 TestSwarm build: http://swarm.jcoglan.com/job/101/
 
