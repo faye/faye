@@ -1,4 +1,4 @@
-=== 0.7.0 / 2011-11-21
+=== 0.7.0 / 2011-11-22
 TestSwarm build: http://swarm.jcoglan.com/job/104/
 
 * Provide an event API for monitoring engine events on the server side
