@@ -26,6 +26,7 @@
     
     <pre class="prettyprint">require 'faye'
     require 'rack'
+    require 'eventmachine'
     
     app = lambda do |env|
       if env['HTTP_UPGRADE']
@@ -65,22 +66,25 @@
     at least up to version 17.
     
     <pre class="prettyprint">require 'faye'
+    require 'eventmachine'
     
-    ws = Faye::WebSocket::Client.new('ws://www.example.com/')
-    
-    ws.onopen = lambda do |event|
-      p :open
-      ws.send('Hello, world!')
-    end
-    
-    ws.onmessage = lambda do |event|
-      p event.data
-    end
-    
-    ws.onclose = lambda do |event|
-      p [:close, event.code, event.reason]
-      ws = nil
-    end</pre>
+    EM.run {
+      ws = Faye::WebSocket::Client.new('ws://www.example.com/')
+      
+      ws.onopen = lambda do |event|
+        p :open
+        ws.send('Hello, world!')
+      end
+      
+      ws.onmessage = lambda do |event|
+        p event.data
+      end
+      
+      ws.onclose = lambda do |event|
+        p [:close, event.code, event.reason]
+        ws = nil
+      end
+    }</pre>
     
     h4. WebSocket API
     
