@@ -90,18 +90,6 @@ JS.ENV.Server.HandshakeSpec = JS.Test.describe("Server handshake", function() { 
             }, response)
         })
       }})
-      
-      it("returns a successful response for local clients", function() { with(this) {
-        expect(engine, "createClient").yields(["clientid"])
-        server.handshake(message, true, function(response) {
-          assertEqual({
-              channel:    "/meta/handshake",
-              successful: true,
-              version:    "1.0",
-              clientId:   "clientid"
-            }, response)
-        })
-      }})
     }})
     
     describe("with no matching supportedConnectionTypes", function() { with(this) {

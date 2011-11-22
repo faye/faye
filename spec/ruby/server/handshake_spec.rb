@@ -92,18 +92,6 @@ describe "server handshake" do
           }
         end
       end
-      
-      it "returns a successful response for local clients" do
-        engine.stub(:create_client).and_yield "clientid"
-        server.handshake(message, true) do |response|
-          response.should == {
-            "channel"    => "/meta/handshake",
-            "successful" => true,
-            "version"    => "1.0",
-            "clientId"   => "clientid"
-          }
-        end
-      end
     end
     
     describe "with no matching supportedConnectionTypes" do

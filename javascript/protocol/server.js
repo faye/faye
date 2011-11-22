@@ -139,18 +139,16 @@ Faye.Server = Faye.Class({
     var clientConns = message.supportedConnectionTypes,
         commonConns;
     
-    if (!local) {
-      response.supportedConnectionTypes = Faye.CONNECTION_TYPES;
-      
-      if (clientConns) {
-        commonConns = Faye.filter(clientConns, function(conn) {
-          return Faye.indexOf(Faye.CONNECTION_TYPES, conn) >= 0;
-        });
-        if (commonConns.length === 0)
-          response.error = Faye.Error.conntypeMismatch(clientConns);
-      } else {
-        response.error = Faye.Error.parameterMissing('supportedConnectionTypes');
-      }
+    response.supportedConnectionTypes = Faye.CONNECTION_TYPES;
+    
+    if (clientConns) {
+      commonConns = Faye.filter(clientConns, function(conn) {
+        return Faye.indexOf(Faye.CONNECTION_TYPES, conn) >= 0;
+      });
+      if (commonConns.length === 0)
+        response.error = Faye.Error.conntypeMismatch(clientConns);
+    } else {
+      response.error = Faye.Error.parameterMissing('supportedConnectionTypes');
     }
     
     response.successful = !response.error;

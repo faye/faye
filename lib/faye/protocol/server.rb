@@ -125,15 +125,13 @@ module Faye
       
       client_conns = message['supportedConnectionTypes']
       
-      unless local
-        response['supportedConnectionTypes'] = CONNECTION_TYPES
-        
-        if client_conns
-          common_conns = client_conns.select { |c| CONNECTION_TYPES.include?(c) }
-          response['error'] = Error.conntype_mismatch(*client_conns) if common_conns.empty?
-        else
-          response['error'] = Error.parameter_missing('supportedConnectionTypes')
-        end
+      response['supportedConnectionTypes'] = CONNECTION_TYPES
+      
+      if client_conns
+        common_conns = client_conns.select { |c| CONNECTION_TYPES.include?(c) }
+        response['error'] = Error.conntype_mismatch(*client_conns) if common_conns.empty?
+      else
+        response['error'] = Error.parameter_missing('supportedConnectionTypes')
       end
       
       response['successful'] = response['error'].nil?
