@@ -13,7 +13,9 @@ module Faye
         @ready_state = CONNECTING
         @buffered_amount = 0
         
-        EventMachine.connect(@uri.host, @uri.port || 80, Connection) do |conn|
+        port = @uri.port || (@uri.scheme == 'wss' ? 443 : 80)
+        
+        EventMachine.connect(@uri.host, port, Connection) do |conn|
           @stream = conn
           conn.parent = self
         end
