@@ -19,10 +19,10 @@
     
     h4. Writing a WebSocket server
     
-    You can handle WebSockets on the server side by listening to Node's @upgrade@
-    event on an HTTP server, and creating a new socket for the request. This
-    socket object exposes the usual WebSocket methods for receiving and sending
-    messages. For example this is how you'd implement an echo server:
+    You can handle WebSockets on the server side by listening for HTTP Upgrade
+    requests, and creating a new socket for the request. This socket object
+    exposes the usual WebSocket methods for receiving and sending messages. For
+    example this is how you'd implement an echo server:
     
     <pre class="prettyprint">var http = require('http'),
         faye = require('faye');
