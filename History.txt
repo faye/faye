@@ -1,5 +1,5 @@
 === 0.7.0 / 2011-11-22
-TestSwarm build: http://swarm.jcoglan.com/job/104/
+TestSwarm build: http://swarm.jcoglan.com/job/107/
 
 * Provide an event API for monitoring engine events on the server side
 * Implement server-side WebSocket connections for improved latency
