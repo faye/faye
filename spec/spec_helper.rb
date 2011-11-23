@@ -1,6 +1,5 @@
 require 'bundler/setup'
 dir = File.expand_path(File.dirname(__FILE__))
-require dir + '/../vendor/faye-websocket-ruby/lib/faye/websocket'
 require dir + '/../lib/faye'
 require dir + '/../vendor/em-rspec/lib/em-rspec'
 require 'rack/test'
