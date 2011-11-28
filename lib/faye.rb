@@ -4,6 +4,7 @@ require 'digest/sha1'
 require 'em-http'
 require 'em-http/version'
 require 'eventmachine'
+require 'faye/websocket'
 require 'forwardable'
 require 'json'
 require 'rack'
@@ -15,7 +16,6 @@ module Faye
   VERSION = '0.7.0'
   
   ROOT = File.expand_path(File.dirname(__FILE__))
-  require ROOT + '/../vendor/faye-websocket-ruby/lib/faye/websocket'
   
   autoload :Publisher,    File.join(ROOT, 'faye', 'mixins', 'publisher')
   autoload :Timeouts,     File.join(ROOT, 'faye', 'mixins', 'timeouts')

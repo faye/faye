@@ -4,6 +4,3 @@
 [submodule "vendor/em-rspec"]
 	path = vendor/em-rspec
 	url = git://github.com/jcoglan/em-rspec.git
-[submodule "vendor/faye-websocket-ruby"]
-	path = vendor/faye-websocket-ruby
-	url = git://github.com/jcoglan/faye-websocket-ruby.git
