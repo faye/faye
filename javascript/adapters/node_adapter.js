@@ -8,6 +8,8 @@ var crypto = require('crypto'),
     url    = require('url'),
     querystring = require('querystring');
 
+Faye.WebSocket = require('faye-websocket');
+
 Faye.logger = function(message) {
   console.log(message);
 };
