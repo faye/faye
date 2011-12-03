@@ -108,16 +108,6 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   check_different_messages: function(a, b, resume) {
     this.assertNotSame(this._inboxes[a][0], this._inboxes[b][0])
     resume()
-  },
-  
-  clean_redis_db: function(resume) {
-    this.engine.disconnect()
-    var redis = require('redis').createClient(6379, 'localhost', {no_ready_check: true})
-    redis.auth(this.engineOpts.password)
-    redis.flushall(function() {
-      redis.end()
-      resume()
-    })
   }
 })
 

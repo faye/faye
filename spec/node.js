@@ -38,7 +38,6 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
               'ChannelSpec',
               'EngineSpec',
               'Engine.MemorySpec',
-              'Engine.RedisSpec',
               'ServerSpec',
               'Server.HandshakeSpec',
               'Server.ConnectSpec',
