@@ -55,7 +55,7 @@ Faye.Engine.Redis.prototype = {
   },
   
   createClient: function(callback, scope) {
-    var clientId = Faye.random(), self = this;
+    var clientId = this._server.generateId(), self = this;
     this._server.debug('Created new client ?', clientId);
     this._redis.zadd(this._ns + '/clients', 0, clientId, function(error, added) {
       if (added === 0) return self.createClient(callback, scope);
@@ -129,12 +129,11 @@ Faye.Engine.Redis.prototype = {
     });
   },
   
-  publish: function(message) {
+  publish: function(message, channels) {
     this._server.debug('Publishing message ?', message);
     
     var self        = this,
         jsonMessage = JSON.stringify(message),
-        channels    = Faye.Channel.expand(message.channel),
         keys        = Faye.map(channels, function(c) { return self._ns + '/channels' + c });
     
     var notify = function(error, clients) {

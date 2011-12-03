@@ -84,11 +84,10 @@ Faye.Engine.Memory.prototype = {
     if (callback) callback.call(scope, true);
   },
   
-  publish: function(message) {
+  publish: function(message, channels) {
     this._server.debug('Publishing message ?', message);
 
-    var channels = Faye.Channel.expand(message.channel),
-        messages = this._messages,
+    var messages = this._messages,
         clients  = new Faye.Set();
     
     Faye.each(channels, function(channel) {

@@ -46,12 +46,6 @@ Faye.Engine.Proxy = Faye.Class({
     delete this._connections[clientId];
   },
   
-  flush: function(clientId) {
-    this.debug('Flushing message queue for ?', clientId);
-    var conn = this._connections[clientId];
-    if (conn) conn.flush();
-  },
-  
   deliver: function(clientId, messages) {
     if (!messages || messages.length === 0) return false;
     var conn = this.connection(clientId, false);
@@ -60,8 +54,23 @@ Faye.Engine.Proxy = Faye.Class({
     return true;
   },
   
+  generateId: function() {
+    return Faye.random();
+  },
+  
+  flush: function(clientId) {
+    this.debug('Flushing message queue for ?', clientId);
+    var conn = this._connections[clientId];
+    if (conn) conn.flush();
+  },
+  
   disconnect: function() {
     if (this._engine.disconnect) return this._engine.disconnect();
+  },
+  
+  publish: function(message) {
+    var channels = Faye.Channel.expand(message.channel);
+    return this._engine.publish(message, channels);
   },
   
   createClient: function() {
@@ -86,10 +95,6 @@ Faye.Engine.Proxy = Faye.Class({
   
   unsubscribe: function() {
     return this._engine.unsubscribe.apply(this._engine, arguments);
-  },
-  
-  publish: function() {
-    return this._engine.publish.apply(this._engine, arguments);
   }
 });
 
