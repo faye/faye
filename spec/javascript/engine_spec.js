@@ -122,15 +122,14 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
 })
 
 JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) {
-  include(JS.Test.Helpers)
-  
-  define("create_engine", function() { with(this) {
-    var opts = Faye.extend(options(), engineOpts)
-    return new Faye.Engine.Proxy(opts)
-  }})
-  
   sharedExamplesFor("faye engine", function() { with(this) {
+    include(JS.Test.Helpers)
     include(EngineSteps)
+  
+    define("create_engine", function() { with(this) {
+      var opts = Faye.extend(options(), engineOpts)
+      return new Faye.Engine.Proxy(opts)
+    }})
     
     define("options", function() { return {timeout: 1} })
     
@@ -390,7 +389,14 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
   }})
   
   sharedBehavior("distributed engine", function() { with(this) {
+    include(JS.Test.Helpers)
     include(EngineSteps)
+  
+    define("create_engine", function() { with(this) {
+      var opts = Faye.extend(options(), engineOpts)
+      return new Faye.Engine.Proxy(opts)
+    }})
+    
     define("options", function() { return {timeout: 1} })
     
     before(function() { with(this) {
@@ -416,35 +422,6 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         connect("alice", right)
         expect_message("alice", [{channel: "/foo", data: "first"}, {channel: "/foo", data: "second"}])
       }})
-    }})
-  }})
-  
-  describe("Faye.Engine.Memory", function() { with(this) {
-    before(function() {
-      this.engineOpts = {type: Faye.Engine.Memory}
-    })
-    
-    itShouldBehaveLike("faye engine")
-  }})
-  
-  describe("Faye.Engine.Redis", function() { with(this) {
-    before(function() {
-      this.engineOpts = {type: Faye.Engine.Redis, password: "foobared", namespace: new Date().getTime().toString()}
-    })
-    after(function() { this.clean_redis_db() })
-    
-    itShouldBehaveLike("faye engine")
-    
-    describe("distribution", function() { with(this) {
-      itShouldBehaveLike("distributed engine")
-    }})
-    
-    describe("using a Unix socket", function() { with(this) {
-      before(function() { with(this) {
-        this.engineOpts.socket = "/tmp/redis.sock"
-      }})
-      
-      itShouldBehaveLike("faye engine")
     }})
   }})
 }})

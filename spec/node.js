@@ -30,12 +30,15 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
     }
   })
   
+  JS.ENV.Engine = {}
   JS.ENV.Server = {}
   
   JS.require( 'FayeSpec',
               'GrammarSpec',
               'ChannelSpec',
               'EngineSpec',
+              'Engine.MemorySpec',
+              'Engine.RedisSpec',
               'ServerSpec',
               'Server.HandshakeSpec',
               'Server.ConnectSpec',
