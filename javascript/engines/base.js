@@ -1,36 +1,38 @@
 Faye.Engine = {
-  register: function(type, klass) {
-    this._backends = this._backends || {};
-    this._backends[type] = klass;
-  },
-  
   get: function(options) {
-    options = options || {};
-    var klass = this._backends[options.type] || Faye.Engine.Memory;
-    return new klass(options);
+    return new Faye.Engine.Proxy(options);
   }
 };
 
-Faye.Engine.Base = Faye.Class({
+Faye.Engine.Proxy = Faye.Class({
   MAX_DELAY:  <%= Faye::Engine::MAX_DELAY %>,
   INTERVAL:   <%= Faye::Engine::INTERVAL %>,
   TIMEOUT:    <%= Faye::Engine::TIMEOUT %>,
+  
+  className: 'Engine',
   
   initialize: function(options) {
     this._options     = options || {};
     this._connections = {};
     this.interval     = this._options.interval || this.INTERVAL;
     this.timeout      = this._options.timeout  || this.TIMEOUT;
-
+    
+    var engineClass = this._options.type || Faye.Engine.Memory;
+    this._engine    = engineClass.create(this, this._options);
+    
     this.debug('Created new engine: ?', this._options);
   },
   
   connect: function(clientId, options, callback, scope) {
     this.debug('Accepting connection from ?', clientId);
-    this.ping(clientId);
+    this._engine.ping(clientId);
     var conn = this.connection(clientId, true);
     conn.connect(options, callback, scope);
-    this.emptyQueue(clientId);
+    this._engine.emptyQueue(clientId);
+  },
+  
+  hasConnection: function(clientId) {
+    return this._connections.hasOwnProperty(clientId);
   },
   
   connection: function(clientId, create) {
@@ -48,8 +50,48 @@ Faye.Engine.Base = Faye.Class({
     this.debug('Flushing message queue for ?', clientId);
     var conn = this._connections[clientId];
     if (conn) conn.flush();
+  },
+  
+  deliver: function(clientId, messages) {
+    if (!messages || messages.length === 0) return false;
+    var conn = this.connection(clientId, false);
+    if (!conn) return false;
+    Faye.each(messages, conn.deliver, conn);
+    return true;
+  },
+  
+  disconnect: function() {
+    if (this._engine.disconnect) return this._engine.disconnect();
+  },
+  
+  createClient: function() {
+    return this._engine.createClient.apply(this._engine, arguments);
+  },
+  
+  clientExists: function() {
+    return this._engine.clientExists.apply(this._engine, arguments);
+  },
+  
+  destroyClient: function() {
+    return this._engine.destroyClient.apply(this._engine, arguments);
+  },
+  
+  ping: function() {
+    return this._engine.ping.apply(this._engine, arguments);
+  },
+  
+  subscribe: function() {
+    return this._engine.subscribe.apply(this._engine, arguments);
+  },
+  
+  unsubscribe: function() {
+    return this._engine.unsubscribe.apply(this._engine, arguments);
+  },
+  
+  publish: function() {
+    return this._engine.publish.apply(this._engine, arguments);
   }
 });
 
-Faye.extend(Faye.Engine.Base.prototype, Faye.Publisher);
-Faye.extend(Faye.Engine.Base.prototype, Faye.Logging);
+Faye.extend(Faye.Engine.Proxy.prototype, Faye.Publisher);
+Faye.extend(Faye.Engine.Proxy.prototype, Faye.Logging);

@@ -126,7 +126,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
   
   define("create_engine", function() { with(this) {
     var opts = Faye.extend(options(), engineOpts)
-    return new engineKlass(opts)
+    return new Faye.Engine.Proxy(opts)
   }})
   
   sharedExamplesFor("faye engine", function() { with(this) {
@@ -421,8 +421,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
   
   describe("Faye.Engine.Memory", function() { with(this) {
     before(function() {
-      this.engineKlass = Faye.Engine.Memory
-      this.engineOpts  = {}
+      this.engineOpts = {type: Faye.Engine.Memory}
     })
     
     itShouldBehaveLike("faye engine")
@@ -430,8 +429,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
   
   describe("Faye.Engine.Redis", function() { with(this) {
     before(function() {
-      this.engineKlass = Faye.Engine.Redis
-      this.engineOpts  = {password: "foobared", namespace: new Date().getTime().toString()}
+      this.engineOpts = {type: Faye.Engine.Redis, password: "foobared", namespace: new Date().getTime().toString()}
     })
     after(function() { this.clean_redis_db() })
     

@@ -1,20 +1,22 @@
-Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
-  className: 'Engine.Memory',
+Faye.Engine.Memory = function(server, options) {
+  this._server    = server;
+  this._options   = options || {};
+  this._namespace = new Faye.Namespace();
+  this._clients   = {};
+  this._channels  = {};
+  this._messages  = {};
+};
 
-  initialize: function(options) {
-    this._namespace = new Faye.Namespace();
-    this._clients   = {};
-    this._channels  = {};
-    this._messages  = {};
-    
-    Faye.Engine.Base.prototype.initialize.call(this, options);
-  },
-  
+Faye.Engine.Memory.create = function(server, options) {
+  return new this(server, options);
+};
+
+Faye.Engine.Memory.prototype = {
   createClient: function(callback, scope) {
     var clientId = this._namespace.generate();
-    this.debug('Created new client ?', clientId);
+    this._server.debug('Created new client ?', clientId);
     this.ping(clientId);
-    this.trigger('handshake', clientId);
+    this._server.trigger('handshake', clientId);
     callback.call(scope, clientId);
   },
   
@@ -28,8 +30,8 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     this.removeTimeout(clientId);
     this._namespace.release(clientId);
     delete this._messages[clientId];
-    this.debug('Destroyed client ?', clientId);
-    this.trigger('disconnect', clientId);
+    this._server.debug('Destroyed client ?', clientId);
+    this._server.trigger('disconnect', clientId);
     if (callback) callback.call(scope);
   },
   
@@ -38,10 +40,12 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
   },
   
   ping: function(clientId) {
-    if (typeof this.timeout !== 'number') return;
-    this.debug('Ping ?, ?', clientId, this.timeout);
+    var timeout = this._server.timeout;
+    if (typeof timeout !== 'number') return;
+    
+    this._server.debug('Ping ?, ?', clientId, timeout);
     this.removeTimeout(clientId);
-    this.addTimeout(clientId, 2 * this.timeout, function() {
+    this.addTimeout(clientId, 2 * timeout, function() {
       this.destroyClient(clientId);
     }, this);
   },
@@ -55,8 +59,8 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     channels[channel] = channels[channel] || new Faye.Set();
     channels[channel].add(clientId);
     
-    this.debug('Subscribed client ? to channel ?', clientId, channel);
-    if (trigger) this.trigger('subscribe', clientId, channel);
+    this._server.debug('Subscribed client ? to channel ?', clientId, channel);
+    if (trigger) this._server.trigger('subscribe', clientId, channel);
     if (callback) callback.call(scope, true);
   },
   
@@ -75,13 +79,13 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
       if (channels[channel].isEmpty()) delete channels[channel];
     }
     
-    this.debug('Unsubscribed client ? from channel ?', clientId, channel);
-    if (trigger) this.trigger('unsubscribe', clientId, channel);
+    this._server.debug('Unsubscribed client ? from channel ?', clientId, channel);
+    if (trigger) this._server.trigger('unsubscribe', clientId, channel);
     if (callback) callback.call(scope, true);
   },
   
   publish: function(message) {
-    this.debug('Publishing message ?', message);
+    this._server.debug('Publishing message ?', message);
 
     var channels = Faye.Channel.expand(message.channel),
         messages = this._messages,
@@ -94,24 +98,19 @@ Faye.Engine.Memory = Faye.Class(Faye.Engine.Base, {
     }, this);
     
     clients.forEach(function(clientId) {
-      this.debug('Queueing for client ?: ?', clientId, message);
+      this._server.debug('Queueing for client ?: ?', clientId, message);
       messages[clientId] = messages[clientId] || [];
       messages[clientId].push(Faye.copyObject(message));
       this.emptyQueue(clientId);
     }, this);
     
-    this.trigger('publish', message.clientId, message.channel, message.data);
+    this._server.trigger('publish', message.clientId, message.channel, message.data);
   },
   
   emptyQueue: function(clientId) {
-    var conn = this.connection(clientId, false),
-        messages = this._messages[clientId];
-    
-    if (!conn || !messages) return;
+    if (!this._server.hasConnection(clientId)) return;
+    this._server.deliver(clientId, this._messages[clientId]);
     delete this._messages[clientId];
-    Faye.each(messages, conn.deliver, conn);
   }
-});
+};
 Faye.extend(Faye.Engine.Memory.prototype, Faye.Timeouts);
-
-Faye.Engine.register('memory', Faye.Engine.Memory);

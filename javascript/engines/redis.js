@@ -1,48 +1,51 @@
-Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
+Faye.Engine.Redis = function(server, options) {
+  this._server  = server;
+  this._options = options || {};
+
+  var redis  = require('redis'),
+      host   = this._options.host     || this.DEFAULT_HOST,
+      port   = this._options.port     || this.DEFAULT_PORT,
+      db     = this._options.database || this.DEFAULT_DATABASE,
+      auth   = this._options.password,
+      gc     = this._options.gc       || this.DEFAULT_GC,
+      socket = this._options.socket;
+  
+  this._ns  = this._options.namespace || '';
+  
+  if (socket) {
+    this._redis = redis.createClient(socket, {no_ready_check: true});
+    this._subscriber = redis.createClient(socket, {no_ready_check: true});
+  } else {
+    this._redis = redis.createClient(port, host, {no_ready_check: true});
+    this._subscriber = redis.createClient(port, host, {no_ready_check: true});
+  }
+  
+  if (auth) {
+    this._redis.auth(auth);
+    this._subscriber.auth(auth);
+  }
+  this._redis.select(db);
+  this._subscriber.select(db);
+  
+  var self = this;
+  this._subscriber.subscribe(this._ns + '/notifications');
+  this._subscriber.on('message', function(topic, message) {
+    self.emptyQueue(message);
+  });
+  
+  this._gc = setInterval(function() { self.gc() }, gc * 1000);
+};
+
+Faye.Engine.Redis.create = function(server, options) {
+  return new this(server, options);
+};
+
+Faye.Engine.Redis.prototype = {
   DEFAULT_HOST:     '<%= Faye::Engine::Redis::DEFAULT_HOST %>',
   DEFAULT_PORT:     <%= Faye::Engine::Redis::DEFAULT_PORT %>,
   DEFAULT_DATABASE: <%= Faye::Engine::Redis::DEFAULT_DATABASE %>,
   DEFAULT_GC:       <%= Faye::Engine::Redis::DEFAULT_GC %>,
   LOCK_TIMEOUT:     <%= Faye::Engine::Redis::LOCK_TIMEOUT %>,
-  
-  className: 'Engine.Redis',
-  
-  initialize: function(options) {
-    Faye.Engine.Base.prototype.initialize.call(this, options);
-    
-    var redis  = require('redis'),
-        host   = this._options.host     || this.DEFAULT_HOST,
-        port   = this._options.port     || this.DEFAULT_PORT,
-        db     = this._options.database || this.DEFAULT_DATABASE,
-        auth   = this._options.password,
-        gc     = this._options.gc       || this.DEFAULT_GC,
-        socket = this._options.socket;
-    
-    this._ns  = this._options.namespace || '';
-    
-    if (socket) {
-      this._redis = redis.createClient(socket, {no_ready_check: true});
-      this._subscriber = redis.createClient(socket, {no_ready_check: true});
-    } else {
-      this._redis = redis.createClient(port, host, {no_ready_check: true});
-      this._subscriber = redis.createClient(port, host, {no_ready_check: true});
-    }
-    
-    if (auth) {
-      this._redis.auth(auth);
-      this._subscriber.auth(auth);
-    }
-    this._redis.select(db);
-    this._subscriber.select(db);
-    
-    var self = this;
-    this._subscriber.subscribe(this._ns + '/notifications');
-    this._subscriber.on('message', function(topic, message) {
-      self.emptyQueue(message);
-    });
-    
-    this._gc = setInterval(function() { self.gc() }, gc * 1000);
-  },
   
   disconnect: function() {
     this._redis.end();
@@ -53,11 +56,11 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   
   createClient: function(callback, scope) {
     var clientId = Faye.random(), self = this;
-    this.debug('Created new client ?', clientId);
+    this._server.debug('Created new client ?', clientId);
     this._redis.zadd(this._ns + '/clients', 0, clientId, function(error, added) {
       if (added === 0) return self.createClient(callback, scope);
       self.ping(clientId);
-      self.trigger('handshake', clientId);
+      self._server.trigger('handshake', clientId);
       callback.call(scope, clientId);
     });
   },
@@ -70,7 +73,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     this._redis.smembers(this._ns + '/clients/' + clientId + '/channels', function(error, channels) {
       var n = channels.length, i = 0;
       if (n === 0) {
-        self.trigger('disconnect', clientId);
+        self._server.trigger('disconnect', clientId);
         if (callback) callback.call(scope);
         return;
       }
@@ -79,8 +82,8 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
         self.unsubscribe(clientId, channel, function() {
           i += 1;
           if (i === n) {
-            self.debug('Destroyed client ?', clientId);
-            self.trigger('disconnect', clientId);
+            self._server.debug('Destroyed client ?', clientId);
+            self._server.trigger('disconnect', clientId);
             if (callback) callback.call(scope);
           }
         });
@@ -95,22 +98,22 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   },
   
   ping: function(clientId) {
-    if (typeof this.timeout !== 'number') return;
+    var timeout = this._server.timeout;
+    if (typeof timeout !== 'number') return;
     
-    var time = new Date().getTime(),
-        self = this;
+    var time = new Date().getTime();
     
-    this.debug('Ping ?, ?', clientId, time);
+    this._server.debug('Ping ?, ?', clientId, time);
     this._redis.zadd(this._ns + '/clients', time, clientId);
   },
   
   subscribe: function(clientId, channel, callback, scope) {
     var self = this;
     this._redis.sadd(this._ns + '/clients/' + clientId + '/channels', channel, function(error, added) {
-      if (added === 1) self.trigger('subscribe', clientId, channel);
+      if (added === 1) self._server.trigger('subscribe', clientId, channel);
     });
     this._redis.sadd(this._ns + '/channels' + channel, clientId, function() {
-      self.debug('Subscribed client ? to channel ?', clientId, channel);
+      self._server.debug('Subscribed client ? to channel ?', clientId, channel);
       if (callback) callback.call(scope);
     });
   },
@@ -118,16 +121,16 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
   unsubscribe: function(clientId, channel, callback, scope) {
     var self = this;
     this._redis.srem(this._ns + '/clients/' + clientId + '/channels', channel, function(error, removed) {
-      if (removed === 1) self.trigger('unsubscribe', clientId, channel);
+      if (removed === 1) self._server.trigger('unsubscribe', clientId, channel);
     });
     this._redis.srem(this._ns + '/channels' + channel, clientId, function() {
-      self.debug('Unsubscribed client ? from channel ?', clientId, channel);
+      self._server.debug('Unsubscribed client ? from channel ?', clientId, channel);
       if (callback) callback.call(scope);
     });
   },
   
   publish: function(message) {
-    this.debug('Publishing message ?', message);
+    this._server.debug('Publishing message ?', message);
     
     var self        = this,
         jsonMessage = JSON.stringify(message),
@@ -136,7 +139,7 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     
     var notify = function(error, clients) {
       Faye.each(clients, function(clientId) {
-        self.debug('Queueing for client ?: ?', clientId, message);
+        self._server.debug('Queueing for client ?: ?', clientId, message);
         self._redis.rpush(self._ns + '/clients/' + clientId + '/messages', jsonMessage);
         self._redis.publish(self._ns + '/notifications', clientId);
       });
@@ -144,30 +147,29 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
     keys.push(notify);
     this._redis.sunion.apply(this._redis, keys);
     
-    this.trigger('publish', message.clientId, message.channel, message.data);
+    this._server.trigger('publish', message.clientId, message.channel, message.data);
   },
   
   emptyQueue: function(clientId) {
-    var conn = this.connection(clientId, false);
-    if (!conn) return;
+    if (!this._server.hasConnection(clientId)) return;
     
     var key   = this._ns + '/clients/' + clientId + '/messages',
         multi = this._redis.multi(),
         self  = this;
-    
     multi.lrange(key, 0, -1, function(error, jsonMessages) {
-      Faye.each(jsonMessages, function(jsonMessage) {
-        conn.deliver(JSON.parse(jsonMessage));
-      });
+      var messages = Faye.map(jsonMessages, function(json) { return JSON.parse(json) });
+      self._server.deliver(clientId, messages);
     });
     multi.del(key);
     multi.exec();
   },
   
   gc: function() {
-    if (typeof this.timeout !== 'number') return;
+    var timeout = this._server.timeout;
+    if (typeof timeout !== 'number') return;
+    
     this._withLock('gc', function(releaseLock) {
-      var cutoff = new Date().getTime() - 1000 * 2 * this.timeout,
+      var cutoff = new Date().getTime() - 1000 * 2 * timeout,
           self   = this;
       
       this._redis.zrangebyscore(this._ns + '/clients', 0, cutoff, function(error, clients) {
@@ -210,6 +212,4 @@ Faye.Engine.Redis = Faye.Class(Faye.Engine.Base, {
       });
     });
   }
-});
-
-Faye.Engine.register('redis', Faye.Engine.Redis);
+};
