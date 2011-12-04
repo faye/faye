@@ -1,7 +1,9 @@
 Faye.Engine = {
   get: function(options) {
     return new Faye.Engine.Proxy(options);
-  }
+  },
+  
+  METHODS: ['createClient', 'clientExists', 'destroyClient', 'ping', 'subscribe', 'unsubscribe']
 };
 
 Faye.Engine.Proxy = Faye.Class({
@@ -71,32 +73,14 @@ Faye.Engine.Proxy = Faye.Class({
   publish: function(message) {
     var channels = Faye.Channel.expand(message.channel);
     return this._engine.publish(message, channels);
-  },
-  
-  createClient: function() {
-    return this._engine.createClient.apply(this._engine, arguments);
-  },
-  
-  clientExists: function() {
-    return this._engine.clientExists.apply(this._engine, arguments);
-  },
-  
-  destroyClient: function() {
-    return this._engine.destroyClient.apply(this._engine, arguments);
-  },
-  
-  ping: function() {
-    return this._engine.ping.apply(this._engine, arguments);
-  },
-  
-  subscribe: function() {
-    return this._engine.subscribe.apply(this._engine, arguments);
-  },
-  
-  unsubscribe: function() {
-    return this._engine.unsubscribe.apply(this._engine, arguments);
   }
 });
+
+Faye.Engine.METHODS.forEach(function(method) {
+  Faye.Engine.Proxy.prototype[method] = function() {
+    return this._engine[method].apply(this._engine, arguments);
+  };
+})
 
 Faye.extend(Faye.Engine.Proxy.prototype, Faye.Publisher);
 Faye.extend(Faye.Engine.Proxy.prototype, Faye.Logging);

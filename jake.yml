@@ -39,7 +39,7 @@ packages:
       - util/node/web_socket/draft75_parser
       - util/node/web_socket/draft76_parser
       - util/node/web_socket/protocol8_parser
-      - engines/base
+      - engines/proxy
       - engines/connection
       - engines/memory
       - protocol/server
