@@ -42,7 +42,6 @@ packages:
       - engines/base
       - engines/connection
       - engines/memory
-      - engines/redis
       - protocol/server
       - transport/node_local
       - transport/web_socket
