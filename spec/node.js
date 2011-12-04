@@ -1,5 +1,4 @@
-JSCLASS_PATH = 'vendor/js.class/build/src'
-require('../' + JSCLASS_PATH + '/loader')
+require('jsclass')
 
 JS.Packages(function() { with(this) {
   file('build/faye-node.js').provides('Faye')

@@ -15,11 +15,7 @@ job = TestSwarm::Job.create(
   :diff       => ["javascript", "spec/javascript"],
   :inject     => "spec/browser.html",
   
-  :build      => [
-    "cd vendor/js.class && jake",
-    "rm -rf build",
-    "jake"
-  ]
+  :build      => ["npm install", "rm -rf build", "jake"]
 )
 
 exit unless job.new?

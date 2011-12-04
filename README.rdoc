@@ -34,10 +34,7 @@ should get you up and running:
   bundle install
   npm install
   
-  # Build test tools and Faye itself
-  cd vendor/js.class
-  jake
-  cd ../../
+  # Build Faye
   jake
   
   # Run tests

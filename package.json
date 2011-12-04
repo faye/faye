@@ -1,24 +1,25 @@
-{ "name"          : "faye"
-, "description"   : "Simple pub/sub messaging for the web"
-, "homepage"      : "http://faye.jcoglan.com"
-, "author"        : "James Coglan <jcoglan@gmail.com> (http://jcoglan.com/)"
-, "keywords"      : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
+{ "name"            : "faye"
+, "description"     : "Simple pub/sub messaging for the web"
+, "homepage"        : "http://faye.jcoglan.com"
+, "author"          : "James Coglan <jcoglan@gmail.com> (http://jcoglan.com/)"
+, "keywords"        : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
 
-, "version"       : "0.7.0"
-, "engines"       : {"node": ">=0.1.96"}
-, "main"          : "./faye-node"
-, "dependencies"  : {"cookiejar": ""}
+, "version"         : "0.7.0"
+, "engines"         : {"node": ">=0.1.96"}
+, "main"            : "./faye-node"
+, "dependencies"    : {"cookiejar": ""}
+, "devDependencies" : {"jsclass": ""}
 
-, "bugs"          : "http://github.com/jcoglan/faye/issues"
+, "bugs"            : "http://github.com/jcoglan/faye/issues"
 
-, "licenses"      : [ { "type"    : "MIT"
-                      , "url"     : "http://www.opensource.org/licenses/mit-license.php"
-                      }
-                    ]
+, "licenses"        : [ { "type"    : "MIT"
+                        , "url"     : "http://www.opensource.org/licenses/mit-license.php"
+                        }
+                      ]
 
-, "repositories"  : [ { "type"    : "git"
-                      , "url"     : "git://github.com/jcoglan/faye.git"
-                      }
-                    ]
+, "repositories"    : [ { "type"    : "git"
+                        , "url"     : "git://github.com/jcoglan/faye.git"
+                        }
+                      ]
 }
 
