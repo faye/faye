@@ -416,22 +416,5 @@ describe "Pub/sub engines" do
       end
     end
   end
-  
-  describe Faye::Engine::Memory do
-    let(:engine_opts)  { {:type => Faye::Engine::Memory} }
-    it_should_behave_like "faye engine"
-  end
-  
-  describe Faye::Engine::Redis do
-    let(:engine_opts)  { {:type => Faye::Engine::Redis, :password => "foobared", :namespace => Time.now.to_i.to_s} }
-    after { clean_redis_db }
-    it_should_behave_like "faye engine"
-    it_should_behave_like "distributed engine"
-    
-    describe "using a Unix socket" do
-      before { engine_opts[:socket] = "/tmp/redis.sock" }
-      it_should_behave_like "faye engine"
-    end
-  end
 end
 

@@ -22,3 +22,6 @@ module EncodingHelper
     @parser.parse(bytes.map { |b| b.chr } * '')
   end
 end
+
+require "ruby/engine"
+
