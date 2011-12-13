@@ -118,13 +118,14 @@ EngineSteps = EM::RSpec.async_steps do
 end
 
 describe "Pub/sub engines" do
-  def create_engine
-    engine_klass.new(options.merge(engine_opts))
-  end
-  
   shared_examples_for "faye engine" do
     include EncodingHelper
     include EngineSteps
+    
+    def create_engine
+      opts = options.merge(engine_opts)
+      Faye::Engine::Proxy.new(opts)
+    end
     
     let(:options) { {:timeout => 1} }
     let(:engine) { create_engine }
@@ -382,6 +383,11 @@ describe "Pub/sub engines" do
   shared_examples_for "distributed engine" do
     include EngineSteps
     
+    def create_engine
+      opts = options.merge(engine_opts)
+      Faye::Engine::Proxy.new(opts)
+    end
+    
     let(:options) { {} }
     let(:left)  { create_engine }
     let(:right) { create_engine }
@@ -412,14 +418,12 @@ describe "Pub/sub engines" do
   end
   
   describe Faye::Engine::Memory do
-    let(:engine_klass) { Faye::Engine::Memory }
-    let(:engine_opts)  { {} }
+    let(:engine_opts)  { {:type => Faye::Engine::Memory} }
     it_should_behave_like "faye engine"
   end
   
   describe Faye::Engine::Redis do
-    let(:engine_klass) { Faye::Engine::Redis }
-    let(:engine_opts)  { {:password => "foobared", :namespace => Time.now.to_i.to_s} }
+    let(:engine_opts)  { {:type => Faye::Engine::Redis, :password => "foobared", :namespace => Time.now.to_i.to_s} }
     after { clean_redis_db }
     it_should_behave_like "faye engine"
     it_should_behave_like "distributed engine"

@@ -1,12 +1,21 @@
 module Faye
   module Engine
 
-    class Redis < Base
+    class Redis
       DEFAULT_HOST     = 'localhost'
       DEFAULT_PORT     = 6379
       DEFAULT_DATABASE = 0
       DEFAULT_GC       = 60
       LOCK_TIMEOUT     = 120
+      
+      def self.create(server, options)
+        new(server, options)
+      end
+      
+      def initialize(server, options)
+        @server  = server
+        @options = options
+      end
       
       def init
         return if @redis
@@ -14,7 +23,7 @@ module Faye
         
         host   = @options[:host]      || DEFAULT_HOST
         port   = @options[:port]      || DEFAULT_PORT
-        db     = @options[:database]  || 0
+        db     = @options[:database]  || DEFAULT_DATABASE
         auth   = @options[:password]
         gc     = @options[:gc]        || DEFAULT_GC
         @ns    = @options[:namespace] || ''
@@ -27,7 +36,6 @@ module Faye
           @redis      = EventMachine::Hiredis::Client.connect(host, port)
           @subscriber = EventMachine::Hiredis::Client.connect(host, port)
         end
-        
         if auth
           @redis.auth(auth)
           @subscriber.auth(auth)
@@ -50,15 +58,15 @@ module Faye
       
       def create_client(&callback)
         init
-        client_id = Faye.random
+        client_id = @server.generate_id
         @redis.zadd(@ns + '/clients', 0, client_id) do |added|
           if added == 0
             create_client(&callback)
           else
-            debug 'Created new client ?', client_id
+            @server.debug 'Created new client ?', client_id
             ping(client_id)
+            @server.trigger(:handshake, client_id)
             callback.call(client_id)
-            trigger(:handshake, client_id)
           end
         end
       end
@@ -71,17 +79,17 @@ module Faye
         @redis.smembers(@ns + "/clients/#{client_id}/channels") do |channels|
           n, i = channels.size, 0
           if n == 0
-            debug 'Destroyed client ?', client_id
+            @server.debug 'Destroyed client ?', client_id
+            @server.trigger(:disconnect, client_id)
             callback.call if callback
-            trigger(:disconnect, client_id)
           else
             channels.each do |channel|
               unsubscribe(client_id, channel) do
                 i += 1
                 if i == n
-                  debug 'Destroyed client ?', client_id
+                  @server.debug 'Destroyed client ?', client_id
+                  @server.trigger(:disconnect, client_id)
                   callback.call if callback
-                  trigger(:disconnect, client_id)
                 end
               end
             end
@@ -98,20 +106,21 @@ module Faye
       
       def ping(client_id)
         init
-        return unless Numeric === @timeout
+        timeout = @server.timeout
+        return unless Numeric === timeout
         
         time = get_current_time
-        debug 'Ping ?, ?', client_id, time
+        @server.debug 'Ping ?, ?', client_id, time
         @redis.zadd(@ns + '/clients', time, client_id)
       end
       
       def subscribe(client_id, channel, &callback)
         init
         @redis.sadd(@ns + "/clients/#{client_id}/channels", channel) do |added|
-          trigger(:subscribe, client_id, channel) if added == 1
+          @server.trigger(:subscribe, client_id, channel) if added == 1
         end
         @redis.sadd(@ns + "/channels#{channel}", client_id) do
-          debug 'Subscribed client ? to channel ?', client_id, channel
+          @server.debug 'Subscribed client ? to channel ?', client_id, channel
           callback.call if callback
         end
       end
@@ -119,17 +128,17 @@ module Faye
       def unsubscribe(client_id, channel, &callback)
         init
         @redis.srem(@ns + "/clients/#{client_id}/channels", channel) do |removed|
-          trigger(:unsubscribe, client_id, channel) if removed == 1
+          @server.trigger(:unsubscribe, client_id, channel) if removed == 1
         end
         @redis.srem(@ns + "/channels#{channel}", client_id) do
-          debug 'Unsubscribed client ? from channel ?', client_id, channel
+          @server.debug 'Unsubscribed client ? from channel ?', client_id, channel
           callback.call if callback
         end
       end
       
-      def publish(message)
+      def publish(message, channels)
         init
-        debug 'Publishing message ?', message
+        @server.debug 'Publishing message ?', message
         
         json_message = JSON.dump(message)
         channels     = Channel.expand(message['channel'])
@@ -137,23 +146,17 @@ module Faye
         
         @redis.sunion(*keys) do |clients|
           clients.each do |client_id|
-            debug 'Queueing for client ?: ?', client_id, message
+            @server.debug 'Queueing for client ?: ?', client_id, message
             @redis.rpush(@ns + "/clients/#{client_id}/messages", json_message)
             @redis.publish(@ns + '/notifications', client_id)
           end
         end
         
-        trigger(:publish, message['clientId'], message['channel'], message['data'])
-      end
-      
-    private
-      
-      def get_current_time
-        (Time.now.to_f * 1000).to_i
+        @server.trigger(:publish, message['clientId'], message['channel'], message['data'])
       end
       
       def empty_queue(client_id)
-        return unless conn = connection(client_id, false)
+        return unless @server.has_connection?(client_id)
         init
         
         key = @ns + "/clients/#{client_id}/messages"
@@ -162,16 +165,23 @@ module Faye
         @redis.lrange(key, 0, -1)
         @redis.del(key)
         @redis.exec.callback  do |json_messages, deleted|
-          json_messages.each do |json_message|
-            conn.deliver(JSON.parse(json_message))
-          end
+          messages = json_messages.map { |json| JSON.parse(json) }
+          @server.deliver(client_id, messages)
         end
       end
       
+    private
+      
+      def get_current_time
+        (Time.now.to_f * 1000).to_i
+      end
+      
       def gc
-        return unless Numeric === @timeout
+        timeout = @server.timeout
+        return unless Numeric === timeout
+        
         with_lock 'gc' do |release_lock|
-          cutoff = get_current_time - 1000 * 2 * @timeout
+          cutoff = get_current_time - 1000 * 2 * timeout
           @redis.zrangebyscore(@ns + '/clients', 0, cutoff) do |clients|
             i, n = 0, clients.size
             if i == n
@@ -218,8 +228,6 @@ module Faye
       end
       
     end
-    
-    register 'redis', Redis
     
   end
 end

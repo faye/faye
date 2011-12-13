@@ -21,8 +21,8 @@ Faye.Engine.Memory.prototype = {
   },
   
   destroyClient: function(clientId, callback, scope) {
-    var clients = this._clients;
     if (!this._namespace.exists(clientId)) return;
+    var clients = this._clients;
     
     if (clients[clientId])
       clients[clientId].forEach(function(channel) { this.unsubscribe(clientId, channel) }, this);

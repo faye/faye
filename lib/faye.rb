@@ -27,7 +27,7 @@ module Faye
   
   autoload :Namespace,    File.join(ROOT, 'faye', 'util', 'namespace')
   
-  autoload :Engine,       File.join(ROOT, 'faye', 'engines', 'base')
+  autoload :Engine,       File.join(ROOT, 'faye', 'engines', 'proxy')
   
   autoload :Grammar,      File.join(ROOT, 'faye', 'protocol', 'grammar')
   autoload :Extensible,   File.join(ROOT, 'faye', 'protocol', 'extensible')
