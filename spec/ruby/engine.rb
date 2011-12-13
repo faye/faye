@@ -109,12 +109,6 @@ EngineSteps = EM::RSpec.async_steps do
     @inboxes[a].first.should_not be_equal(@inboxes[b].first)
     resume.call
   end
-  
-  def clean_redis_db(&resume)
-    engine.disconnect
-    redis = EM::Hiredis::Client.connect
-    redis.flushall(&resume)
-  end
 end
 
 describe "Pub/sub engines" do

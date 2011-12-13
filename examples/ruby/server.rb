@@ -8,8 +8,7 @@ require File.expand_path(dir + '/app')
 
 server = Faye::RackAdapter.new(Sinatra::Application,
   :mount   => '/bayeux',
-  :timeout => 25,
-  :engine  => {:type => 'redis'}
+  :timeout => 25
 )
 
 port   = ARGV[0] || 9292

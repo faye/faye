@@ -8,7 +8,6 @@ module Faye
     
     autoload :Connection, ROOT + '/faye/engines/connection'
     autoload :Memory,     ROOT + '/faye/engines/memory'
-    autoload :Redis,      ROOT + '/faye/engines/redis'
     
     def self.get(options)
       Proxy.new(options)
