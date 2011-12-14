@@ -57,10 +57,10 @@
     different channels.
     
     Being an event-driven application, Faye only works with event-driven servers.
-    It currently only supports Thin, and makes some extensions to Thin in order
-    to support WebSockets. If you use @rackup@ you'll need to specify Thin as
-    the web server, and set the environment to @production@ so that Rack does
-    not load the development middlewares that are not compatible with Thin's
-    async protocol.
+    Though it is a Rack application, the only web server it currently supports
+    is Thin, since it uses asynchronous responses to deal with long-running
+    connections. For this reason you should use @thin@ rather than @rackup@ to
+    start the app; @rackup@ in development mode adds middleware that is not
+    compatible with async servers.
     
-    <pre class="prettyprint">rackup config.ru -s thin -E production</pre>
+    <pre class="prettyprint">thin start -R config.ru -p 9292</pre>
