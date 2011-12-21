@@ -34,7 +34,6 @@ packages:
     files:
       - util/set
       - engines/proxy
-      - engines/base
       - engines/connection
       - engines/memory
       - protocol/server
