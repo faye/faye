@@ -2,7 +2,7 @@
 
 * http://faye.jcoglan.com
 * http://groups.google.com/group/faye-users
-* http://github.com/jcoglan/faye
+* http://github.com/faye/faye
 
 Faye is a set of tools for dirt-simple publish-subscribe messaging between web
 clients. It ships with easy-to-use message routing servers for Node.js and Rack
@@ -26,7 +26,7 @@ package. There are also a few submodules we use for testing. The following
 should get you up and running:
 
   # Download the code from Git
-  git clone git://github.com/jcoglan/faye.git
+  git clone git://github.com/faye/faye.git
   cd faye
   git submodule update --init --recursive
   

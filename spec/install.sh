@@ -68,7 +68,7 @@ sudo perl -MCPAN -eshell
 
 # Check out and build Faye project
 cd ~
-git clone git://github.com/jcoglan/faye.git
+git clone git://github.com/faye/faye.git
 cd faye
 git checkout $FAYE_BRANCH
 git submodule update --init --recursive
