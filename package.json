@@ -9,7 +9,7 @@
 , "main"          : "./faye-node"
 , "dependencies"  : {"hiredis": "", "redis": "", "cookiejar": ""}
 
-, "bugs"          : "http://github.com/jcoglan/faye/issues"
+, "bugs"          : "http://github.com/faye/faye/issues"
 
 , "licenses"      : [ { "type"    : "MIT"
                       , "url"     : "http://www.opensource.org/licenses/mit-license.php"
@@ -17,7 +17,7 @@
                     ]
 
 , "repositories"  : [ { "type"    : "git"
-                      , "url"     : "git://github.com/jcoglan/faye.git"
+                      , "url"     : "git://github.com/faye/faye.git"
                       }
                     ]
 }

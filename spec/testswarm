@@ -9,7 +9,7 @@ project = client.project('faye', :auth => '6d26e250d81b32099fccc59db53a3a0e648f0
 job = TestSwarm::Job.create(
   :rcs        => {
     :type     => "git",
-    :url      => "git://github.com/jcoglan/faye.git"
+    :url      => "git://github.com/faye/faye.git"
   },
   :directory  => "/home/jcoglan/www/swarm.jcoglan.com/app/changeset/#{project.name}",
   :diff       => ["javascript", "spec/javascript"],
