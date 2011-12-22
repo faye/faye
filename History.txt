@@ -1,3 +1,9 @@
+=== 0.7.1 / 2011-12-22
+
+* Extension added() and removed() methods now receive the extended object
+* Detection of WebSockets in RackAdapter is more strict
+
+
 === 0.7.0 / 2011-11-22
 TestSwarm build: http://swarm.jcoglan.com/job/107/
 

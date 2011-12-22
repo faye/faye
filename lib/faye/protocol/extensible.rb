@@ -5,14 +5,14 @@ module Faye
     def add_extension(extension)
       @extensions ||= []
       @extensions << extension
-      extension.added if extension.respond_to?(:added)
+      extension.added(self) if extension.respond_to?(:added)
     end
     
     def remove_extension(extension)
       return unless @extensions
       @extensions.delete_if do |ext|
         if ext == extension
-          extension.removed if extension.respond_to?(:removed)
+          extension.removed(self) if extension.respond_to?(:removed)
           true
         else
           false
