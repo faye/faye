@@ -2,7 +2,7 @@ Faye.Extensible = {
   addExtension: function(extension) {
     this._extensions = this._extensions || [];
     this._extensions.push(extension);
-    if (extension.added) extension.added();
+    if (extension.added) extension.added(this);
   },
   
   removeExtension: function(extension) {
@@ -11,7 +11,7 @@ Faye.Extensible = {
     while (i--) {
       if (this._extensions[i] !== extension) continue;
       this._extensions.splice(i,1);
-      if (extension.removed) extension.removed();
+      if (extension.removed) extension.removed(this);
     }
   },
   
