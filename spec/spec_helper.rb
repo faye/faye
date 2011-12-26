@@ -4,6 +4,8 @@ require dir + '/../lib/faye'
 require dir + '/../vendor/em-rspec/lib/em-rspec'
 require 'rack/test'
 
+MultiJson.engine = :json_gem
+
 module EncodingHelper
   def encode(string)
     return string unless string.respond_to?(:force_encoding)
