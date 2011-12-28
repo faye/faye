@@ -161,6 +161,11 @@
     On receipt of a message, the engine should call
     @proxy.trigger('publish', message.clientId, message.channel, message.data)@.
     
+    Where applicable, the engine must make sure that any published message
+    reaches all the clients that should receive it, whichever Faye server
+    instance they are connected to. How the message is routed to other Faye
+    processes is up to the engine.
+    
     h4. @engine.emptyQueue(clientId)@
     
     The server calls this when a client connects to flush any queued messages
@@ -182,7 +187,7 @@
     * Delete the client, calling @proxy.trigger('disconnect', clientId)@
     * Delete any other state associated with the client's session
     
-    The strategy for cleaning up inactive clients is up to the user, but the
+    The strategy for cleaning up inactive clients is up to the engine, but the
     important point is it will _not_ be explicitly initiated by the server; the
     engine must make sure this clean-up happens by itself and must trigger
     events so the user can monitor these timeouts.
