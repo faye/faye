@@ -87,6 +87,10 @@
     engine does not need to reimplement any of this, it simply needs to
     implement the messaging semantics.
     
+    There are automated tests in the Faye project that you can use to make sure
+    your engine conforms to the spec. See the "faye-redis":http://github.com/faye/faye-redis-ruby
+    project for an example of using these tests.
+    
     h4. @engine.create_client { |client_id| ... }@
     
     Should generate and return a new unique Faye client ID. You can use
