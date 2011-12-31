@@ -1,10 +1,10 @@
 require 'sinatra'
-PUBLIC_DIR = File.dirname(__FILE__) + '/../shared/public'
-set :public, PUBLIC_DIR
+ROOT_DIR = File.dirname(__FILE__) + '/../shared'
+set :root, ROOT_DIR
 set :logging, false
 
 get('/') {
-  File.read(PUBLIC_DIR + '/index.html')
+  File.read(ROOT_DIR + '/public/index.html')
 }
 
 get('/post') {
