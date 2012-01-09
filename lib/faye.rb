@@ -47,7 +47,7 @@ module Faye
   
   def self.ensure_reactor_running!
     Thread.new { EM.run } unless EM.reactor_running?
-    while not EM.reactor_running?; end
+    Thread.pass until EM.reactor_running?
   end
   
   def self.random(bitlength = ID_LENGTH)
