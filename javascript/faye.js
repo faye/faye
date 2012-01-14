@@ -40,7 +40,19 @@ Faye.extend(Faye, {
   },
   
   copyObject: function(object) {
-    return JSON.parse(Faye.toJSON(object));
+    var clone, i, key;
+    if (object instanceof Array) {
+      clone = [];
+      i = object.length;
+      while (i--) clone[i] = Faye.copyObject(object[i]);
+      return clone;
+    } else if (typeof object === 'object') {
+      clone = {};
+      for (key in object) clone[key] = Faye.copyObject(object[key]);
+      return clone;
+    } else {
+      return object;
+    }
   },
   
   commonElement: function(lista, listb) {

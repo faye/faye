@@ -59,7 +59,18 @@ module Faye
   end
   
   def self.copy_object(object)
-    Marshal.load(Marshal.dump(object))
+    case object
+    when Hash
+      clone = {}
+      object.each { |k,v| clone[k] = copy_object(v) }
+      clone
+    when Array
+      clone = []
+      object.each { |v| clone << copy_object(v) }
+      clone
+    else
+      object
+    end
   end
   
   def self.to_json(value)
