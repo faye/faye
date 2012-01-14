@@ -7,7 +7,7 @@
 , "version"         : "0.8.0"
 , "engines"         : {"node": ">=0.1.96"}
 , "main"            : "./faye-node"
-, "dependencies"    : {"cookiejar": "", "faye-websocket": ">=0.2.0"}
+, "dependencies"    : {"cookiejar": "", "faye-websocket": ">=0.3.0"}
 , "devDependencies" : {"jsclass": ""}
 
 , "bugs"            : "http://github.com/faye/faye/issues"
