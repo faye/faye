@@ -352,7 +352,7 @@ module Faye
     end
     
     def deliver_message(message)
-      return unless message['channel'] and message['data']
+      return unless message['channel'] and !message['data'].nil?
       info('Client ? calling listeners for ? with ?', @client_id, message['channel'], message['data'])
       @channels.distribute_message(message)
     end

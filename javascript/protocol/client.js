@@ -356,7 +356,7 @@ Faye.Client = Faye.Class({
   },
   
   _deliverMessage: function(message) {
-    if (!message.channel || !message.data) return;
+    if (!message.channel || message.data === undefined) return;
     this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
     this._channels.distributeMessage(message);
   },
