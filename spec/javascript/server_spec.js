@@ -20,19 +20,19 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
     
     it("returns an empty response for no messages", function() { with(this) {
       var response = null
-      server.process([], false, function(r) { response = r})
+      server.process([], false, null, function(r) { response = r})
       assertEqual( [], response )
     }})
     
     it("ignores invalid messages", function() { with(this) {
       var response = null
-      server.process([{}, {channel: "invalid"}], false, function(r) { response = r})
+      server.process([{}, {channel: "invalid"}], false, null, function(r) { response = r})
       assertEqual( [], response )
     }})
     
     it("routes single messages to appropriate handlers", function() { with(this) {
       expect(server, "handshake").given(handshake, false).yielding([{}])
-      server.process(handshake, false, function() {})
+      server.process(handshake, false, null, function() {})
     }})
     
     it("routes a list of messages to appropriate handlers", function() { with(this) {
@@ -50,18 +50,18 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
 
       expect(engine, "publish").given(publish)
       
-      server.process([handshake, connect, disconnect, subscribe, unsubscribe, publish], false, function() {})
+      server.process([handshake, connect, disconnect, subscribe, unsubscribe, publish], false, null, function() {})
     }})
     
     describe("publishing a message", function() { with(this) {
       it("tells the engine to publish the message", function() { with(this) {
         expect(engine, "publish").given(publish)
-        server.process(publish, false, function() {})
+        server.process(publish, false, null, function() {})
       }})
       
       it("returns no response", function() { with(this) {
         stub(engine, "publish")
-        server.process(publish, false, function(response) {
+        server.process(publish, false, null, function(response) {
           assertEqual( [], response)
         })
       }})
@@ -73,12 +73,12 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         
         it("does not tell the engine to publish the message", function() { with(this) {
           expect(engine, "publish").exactly(0)
-          server.process(publish, false, function() {})
+          server.process(publish, false, null, function() {})
         }})
         
         it("returns no response", function() { with(this) {
           stub(engine, "publish")
-          server.process(publish, false, function(response) {
+          server.process(publish, false, null, function(response) {
             assertEqual( [], response)
           })
         }})
@@ -91,7 +91,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
 
         it("does not tell the engine to publish the message", function() { with(this) {
           expect(engine, "publish").exactly(0)
-          server.process(publish, false, function() {})
+          server.process(publish, false, null, function() {})
         }})
       }})
     }})
@@ -102,7 +102,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       }})
       
       it("returns the handshake response with advice", function() { with(this) {
-        server.process(handshake, false, function(response) {
+        server.process(handshake, false, null, function(response) {
           assertEqual([
               { channel: "/meta/handshake",
                 successful: true,
@@ -120,7 +120,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       }})
       
       it("returns the new messages", function() { with(this) {
-        server.process(connect, false, function(response) {
+        server.process(connect, false, null, function(response) {
           assertEqual( messages, response )
         })
       }})

@@ -35,7 +35,6 @@ Faye.NodeAdapter = Faye.Class({
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
     this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]*)*(\\.js)?$');
     this._server     = new Faye.Server(this._options);
-    this._failed     = {};
     
     var extensions = this._options.extensions;
     if (!extensions) return;
@@ -145,30 +144,20 @@ Faye.NodeAdapter = Faye.Class({
     var socket = new Faye.WebSocket(request, socket, head),
         self   = this;
     
-    var send = function(messages) {
-      self.debug('Sending via WebSocket[' + socket.version + ']: ?', messages);
-      if (!socket.send(JSON.stringify(messages)))
-        self._failed[socket.clientId] = messages;
+    socket.onmessage = function(event) {
+      try {
+        var message = JSON.parse(event.data);
+        self.debug('Received via WebSocket[' + socket.version + ']: ?', message);
+        
+        self._server.process(message, false, socket, function(replies) {
+          if (socket) socket.send(JSON.stringify(replies));
+        });
+      } catch (e) {}
     };
     
-    socket.onmessage = function(message) {
-      try {
-        var message  = JSON.parse(message.data),
-            clientId = self._server.determineClient(message),
-            failed   = null;
-        
-        self.debug('Received via WebSocket[' + socket.version + ']: ?', message);
-
-        if (clientId) {
-          socket.clientId = clientId;
-          if (failed = self._failed[clientId]) {
-            delete self._failed[clientId];
-            send(failed);
-          }
-        }
-        
-        self._server.process(message, false, send);
-      } catch (e) {}
+    socket.onclose = function(event) {
+      self._server.flushConnection(socket);
+      socket = null;
     };
   },
   
@@ -206,7 +195,7 @@ Faye.NodeAdapter = Faye.Class({
       this.debug('Received ?: ?', request.method, message);
       if (isGet) this._server.flushConnection(message);
       
-      this._server.process(message, false, function(replies) {
+      this._server.process(message, false, null, function(replies) {
         var body    = JSON.stringify(replies),
             headers = Faye.extend({}, type),
             origin  = request.headers.origin;

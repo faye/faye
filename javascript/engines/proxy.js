@@ -48,6 +48,12 @@ Faye.Engine.Proxy = Faye.Class({
     delete this._connections[clientId];
   },
   
+  openSocket: function(clientId, socket) {
+    var conn = this.connection(clientId, true);
+    conn.socket = socket;
+    socket.clientId = clientId;
+  },
+  
   deliver: function(clientId, messages) {
     if (!messages || messages.length === 0) return false;
     var conn = this.connection(clientId, false);
@@ -61,9 +67,9 @@ Faye.Engine.Proxy = Faye.Class({
   },
   
   flush: function(clientId) {
-    this.debug('Flushing message queue for ?', clientId);
-    var conn = this._connections[clientId];
-    if (conn) conn.flush();
+    this.debug('Flushing connection queue for ?', clientId);
+    var conn = this.connection(clientId, false);
+    if (conn) conn.flush(true);
   },
   
   disconnect: function() {
