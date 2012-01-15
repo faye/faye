@@ -5,7 +5,7 @@ module Faye
       include EventMachine::Deferrable
       include Timeouts
       
-      attr_reader :id
+      attr_accessor :socket
       
       def initialize(engine, id, options = {})
         @engine  = engine
@@ -15,6 +15,7 @@ module Faye
       end
       
       def deliver(message)
+        return socket.send(JSON.unparse([message])) if socket
         return unless @inbox.add?(message)
         begin_delivery_timeout
       end
@@ -24,28 +25,24 @@ module Faye
         timeout = options['timeout'] ? options['timeout'] / 1000.0 : @engine.timeout
         
         set_deferred_status(:deferred)
-        
         callback(&block)
-        return if @connected
-        
-        @connected = true
         
         begin_delivery_timeout
         begin_connection_timeout(timeout)
       end
       
-      def flush!
-        release_connection!
+      def flush!(force = false)
+        release_connection!(force)
         set_deferred_status(:succeeded, @inbox.entries)
+        @inbox = []
       end
       
     private
       
-      def release_connection!
-        @engine.close_connection(@id)
+      def release_connection!(force = false)
+        @engine.close_connection(@id) if force or socket.nil?
         remove_timeout(:connection)
         remove_timeout(:delivery)
-        @connected = false
       end
       
       def begin_delivery_timeout

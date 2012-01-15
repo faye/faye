@@ -1,4 +1,8 @@
 module Faye
+  class WebSocket
+    attr_accessor :client_id
+  end
+  
   class RackAdapter
     
     include Logging
@@ -126,21 +130,25 @@ module Faye
     end
     
     def handle_websocket(env)
-      socket = Faye::WebSocket.new(env)
+      ws = Faye::WebSocket.new(env)
       
-      socket.onmessage = lambda do |message|
+      ws.onmessage = lambda do |event|
         begin
-          message = JSON.parse(message.data)
-          debug "Received via WebSocket[#{socket.version}]: ?", message
-          @server.process(message, false) do |replies|
-            debug "Sending via WebSocket[#{socket.version}]: ?", replies
-            socket.send(JSON.unparse(replies))
+          message = JSON.parse(event.data)
+          debug "Received via WebSocket[#{ws.version}]: ?", message
+          @server.process(message, false, ws) do |replies|
+            ws.send(JSON.unparse(replies)) if ws
           end
         rescue
         end
       end
       
-      socket.rack_response
+      ws.onclose = lambda do |event|
+        @server.flush_connection(ws)
+        ws = nil
+      end
+      
+      ws.rack_response
     end
     
     def message_from_request(request)

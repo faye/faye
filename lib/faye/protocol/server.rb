@@ -16,14 +16,16 @@ module Faye
     end
     
     def flush_connection(messages)
-      [messages].flatten.each do |message|
-        client_id = message["clientId"]
-        info 'Flushing connection for ?', client_id
-        @engine.flush(client_id) if client_id
-      end
+      client_id = messages.respond_to?(:client_id) ?
+                  messages.client_id :
+                  [messages].flatten.first['clientId']
+      
+      return unless client_id
+      info 'Flushing connection for ?', client_id
+      @engine.flush(client_id) if client_id
     end
     
-    def process(messages, local = false, &callback)
+    def process(messages, local = false, socket = nil, &callback)
       messages = [messages].flatten
       info 'Processing messages: ? (local: ?)', messages, local
 
@@ -54,7 +56,7 @@ module Faye
       
       messages.each do |message|
         pipe_through_extensions(:incoming, message) do |piped_message|
-          handle(piped_message, local, &handle_reply)
+          handle(piped_message, local, socket, &handle_reply)
         end
       end
     end
@@ -70,13 +72,13 @@ module Faye
       response
     end
     
-    def handle(message, local = false, &callback)
+    def handle(message, local = false, socket = nil, &callback)
       return callback.call([]) if !message
       info 'Handling message: ? (local: ?)', message, local
       
       channel_name = message['channel']
       
-      return handle_meta(message, local, &callback) if Channel.meta?(channel_name)
+      return handle_meta(message, local, socket, &callback) if Channel.meta?(channel_name)
       
       @engine.publish(message) unless message['error'] or Grammar::CHANNEL_NAME !~ channel_name
       
@@ -89,8 +91,11 @@ module Faye
       end
     end
     
-    def handle_meta(message, local, &callback)
-      method = Channel.parse(message['channel'])[1]
+    def handle_meta(message, local, socket, &callback)
+      method    = Channel.parse(message['channel'])[1]
+      client_id = message['clientId']
+      
+      @engine.open_socket(client_id, socket) if socket
       
       __send__(method, message, local) do |responses|
         responses = [responses].flatten

@@ -57,6 +57,12 @@ module Faye
         @connections.delete(client_id)
       end
       
+      def open_socket(client_id, socket)
+        conn = connection(client_id, true)
+        conn.socket = socket
+        socket.client_id = client_id
+      end
+      
       def deliver(client_id, messages)
         return if !messages || messages.empty?
         conn = connection(client_id, false)
@@ -70,9 +76,9 @@ module Faye
       end
       
       def flush(client_id)
-        debug 'Flushing message queue for ?', client_id
-        conn = @connections[client_id]
-        conn.flush! if conn
+        debug 'Flushing connection for ?', client_id
+        conn = connection(client_id, false)
+        conn.flush!(true) if conn
       end
       
       def disconnect
