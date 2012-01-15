@@ -6,7 +6,6 @@ module Faye
     extend Forwardable
     def_delegators "@server.engine", :bind, :unbind
 
-    # Only supported under Thin
     ASYNC_RESPONSE = [-1, {}, []].freeze
     
     DEFAULT_ENDPOINT  = '/bayeux'
@@ -41,6 +40,7 @@ module Faye
     end
     
     def listen(port, ssl_options = nil)
+      Faye::WebSocket.load_adapter('thin')
       handler = Rack::Handler.get('thin')
       handler.run(self, :Port => port) do |s|
         if ssl_options
@@ -72,7 +72,7 @@ module Faye
       
       return serve_client_script(env) if request.path_info =~ /\.js$/
       return handle_options(request)  if env['REQUEST_METHOD'] == 'OPTIONS'
-      return handle_upgrade(request)  if env['HTTP_CONNECTION'] =~ /\bUpgrade\b/i
+      return handle_websocket(env)    if Faye::WebSocket.websocket?(env)
       
       handle_request(request)
     end
@@ -106,20 +106,18 @@ module Faye
       headers  = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
       origin   = request.env['HTTP_ORIGIN']
       callback = request.env['async.callback']
-      body     = DeferredBody.new
       
       debug 'Received ?: ?', request.env['REQUEST_METHOD'], json_msg
       @server.flush_connection(message) if request.get?
       
       headers['Access-Control-Allow-Origin'] = origin if origin
       headers['Cache-Control'] = 'no-cache, no-store' if request.get?
-      callback.call [200, headers, body]
       
       @server.process(message, false) do |replies|
         response = JSON.unparse(replies)
         response = "#{ jsonp }(#{ response });" if request.get?
         debug 'Returning ?', response
-        body.succeed(response)
+        callback.call [200, headers, [response]]
       end
       
       ASYNC_RESPONSE
@@ -127,8 +125,8 @@ module Faye
       [400, TYPE_TEXT, ['Bad request']]
     end
     
-    def handle_upgrade(request)
-      socket = Faye::WebSocket.new(request.env)
+    def handle_websocket(env)
+      socket = Faye::WebSocket.new(env)
       
       socket.onmessage = lambda do |message|
         begin
@@ -141,7 +139,8 @@ module Faye
         rescue
         end
       end
-      ASYNC_RESPONSE
+      
+      socket.rack_response
     end
     
     def message_from_request(request)
@@ -169,11 +168,6 @@ module Faye
         'Access-Control-Allow-Headers'      => 'Accept, Content-Type, X-Requested-With'
       }
       [200, headers, ['']]
-    end
-    
-    class DeferredBody
-      include EventMachine::Deferrable
-      alias :each :callback
     end
     
   end

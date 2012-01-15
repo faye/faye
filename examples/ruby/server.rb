@@ -1,45 +1,44 @@
 require 'rubygems'
 
-dir = File.dirname(__FILE__)
-require File.expand_path(dir + '/../../lib/faye')
-require File.expand_path(dir + '/app')
-
-# Faye::Logging.log_level = :debug
-
-server = Faye::RackAdapter.new(Sinatra::Application,
-  :mount   => '/bayeux',
-  :timeout => 25
-)
-
 port   = ARGV[0] || 9292
 secure = ARGV[1] == 'ssl'
+engine = ARGV[2] || 'thin'
+shared = File.expand_path('../../shared', __FILE__)
 
-EM.run {
-  thin = Rack::Handler.get('thin')
-  thin.run(server, :Port => port) do |s|
-    
-    if secure
-      s.ssl = true
-      s.ssl_options = {
-        :private_key_file => dir + '/../shared/server.key',
-        :cert_chain_file  => dir + '/../shared/server.crt'
-      }
+require File.expand_path('../app', __FILE__)
+Faye::WebSocket.load_adapter(engine)
+# Faye::Logging.log_level = :debug
+
+case engine
+
+when 'goliath'
+  class FayeServer < Goliath::API
+    def response(env)
+      App.call(env)
     end
   end
-  
-  server.get_client.subscribe '/chat/*' do |message|
-    puts "[#{ message['user'] }]: #{ message['message'] }"
-  end
 
-  server.bind(:subscribe) do |client_id, channel|
-    puts "[  SUBSCRIBE] #{client_id} -> #{channel}"
-  end
+when 'rainbows'
+  rackup = Unicorn::Configurator::RACKUP
+  rackup[:port] = port
+  rackup[:set_listener] = true
+  options = rackup[:options]
+  options[:config_file] = File.expand_path('../rainbows.conf', __FILE__)
+  Rainbows::HttpServer.new(App, options).start.join
 
-  server.bind(:unsubscribe) do |client_id, channel|
-    puts "[UNSUBSCRIBE] #{client_id} -> #{channel}"
-  end
+when 'thin'
+  EM.run {
+    thin = Rack::Handler.get('thin')
+    thin.run(App, :Port => port) do |s|
+      
+      if secure
+        s.ssl = true
+        s.ssl_options = {
+          :private_key_file => shared + '/server.key',
+          :cert_chain_file  => shared + '/server.crt'
+        }
+      end
+    end
+  }
+end
 
-  server.bind(:disconnect) do |client_id|
-    puts "[ DISCONNECT] #{client_id}"
-  end
-}
