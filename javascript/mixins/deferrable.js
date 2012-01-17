@@ -9,10 +9,10 @@ Faye.Deferrable = {
     this._callbacks.push([callback, scope]);
   },
   
-  timeout: function(seconds) {
+  timeout: function(seconds, message) {
     var _this = this;
     var timer = Faye.ENV.setTimeout(function() {
-      _this.setDeferredStatus('failed', 'Timed out after ' + seconds + ' seconds.');
+      _this.setDeferredStatus('failed', message);
     }, seconds * 1000);
     this._timer = timer;
   },
