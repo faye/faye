@@ -30,15 +30,16 @@ EM.run {
         end
       end
       
-      sub_a = A.subscribe('/a', &handle.call(A, '/b'))
-      sub_b = B.subscribe('/b', &handle.call(B, '/a'))
+      sub_a = A.subscribe('/chat/a', &handle.call(A, '/chat/b'))
+      sub_b = B.subscribe('/chat/b', &handle.call(B, '/chat/a'))
       
       sub_a.callback do
         sub_b.callback do
           puts 'START'
-          A.publish('/b', 'n' => 0)
+          A.publish('/chat/b', 'n' => 0)
         end
       end
     end
   end
 }
+

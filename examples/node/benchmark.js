@@ -25,14 +25,15 @@ A.connect(function() {
       };
     };
     
-    var subA = A.subscribe('/a', handle(A, '/b')),
-        subB = B.subscribe('/b', handle(B, '/a'));
+    var subA = A.subscribe('/chat/a', handle(A, '/chat/b')),
+        subB = B.subscribe('/chat/b', handle(B, '/chat/a'));
     
     subA.callback(function() {
       subB.callback(function() {
         console.log('START');
-        A.publish('/b', {n: 0});
+        A.publish('/chat/b', {n: 0});
       });
     });
   });
 });
+
