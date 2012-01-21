@@ -19,9 +19,9 @@ A.connect(function() {
     };
     
     var handle = function(client, channel) {
-      return function(message) {
-        if (message.n === MAX) return stop();
-        client.publish(channel, {n: message.n + 1});
+      return function(n) {
+        if (n === MAX) return stop();
+        client.publish(channel, n + 1);
       };
     };
     
@@ -31,7 +31,7 @@ A.connect(function() {
     subA.callback(function() {
       subB.callback(function() {
         console.log('START');
-        A.publish('/chat/b', {n: 0});
+        A.publish('/chat/b', 0);
       });
     });
   });

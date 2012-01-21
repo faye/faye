@@ -21,11 +21,11 @@ EM.run {
       end
       
       handle = lambda do |client, channel|
-        lambda do |message|
-          if message['n'] == MAX
+        lambda do |n|
+          if n == MAX
             stop.call
           else
-            client.publish(channel, 'n' => message['n'] + 1)
+            client.publish(channel, n + 1)
           end
         end
       end
@@ -36,7 +36,7 @@ EM.run {
       sub_a.callback do
         sub_b.callback do
           puts 'START'
-          A.publish('/chat/b', 'n' => 0)
+          A.publish('/chat/b', 0)
         end
       end
     end
