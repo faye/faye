@@ -149,10 +149,13 @@ Faye.NodeAdapter = Faye.Class({
     
     ws.onmessage = function(event) {
       try {
-        var message = JSON.parse(event.data);
-        self.debug('Received via WebSocket[' + ws.version + ']: ?', message);
+        var message  = JSON.parse(event.data),
+            clientId = message.clientId || message[0].clientId;
         
-        self._server.process(message, false, ws, function(replies) {
+        self.debug('Received via WebSocket[' + ws.version + ']: ?', message);
+        self._server.openSocket(clientId, ws);
+        
+        self._server.process(message, false, function(replies) {
           if (ws) ws.send(JSON.stringify(replies));
         });
       } catch (e) {}
@@ -198,7 +201,7 @@ Faye.NodeAdapter = Faye.Class({
       this.debug('Received ?: ?', request.method, message);
       if (isGet) this._server.flushConnection(message);
       
-      this._server.process(message, false, null, function(replies) {
+      this._server.process(message, false, function(replies) {
         var body    = JSON.stringify(replies),
             headers = Faye.extend({}, type),
             origin  = request.headers.origin;

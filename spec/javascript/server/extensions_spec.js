@@ -19,14 +19,14 @@ JS.ENV.Server.ExtensionsSpec = JS.Test.describe("Server extensions", function() 
     
     it("passes incoming messages through the extension", function() { with(this) {
       expect(engine, "publish").given({channel: "/foo", data: "hello", ext: {auth: "password"}})
-      server.process(message, false, null, function() {})
+      server.process(message, false, function() {})
     }})
     
     it("does not pass outgoing messages through the extension", function() { with(this) {
       stub(server, "handshake").yields([message])
       stub(engine, "publish")
       var response = null
-      server.process({channel: "/meta/handshake"}, false, null, function(r) { response = r })
+      server.process({channel: "/meta/handshake"}, false, function(r) { response = r })
       assertEqual( [{channel: "/foo", data: "hello"}], response )
     }})
   }})
@@ -45,14 +45,14 @@ JS.ENV.Server.ExtensionsSpec = JS.Test.describe("Server extensions", function() 
     
     it("does not pass incoming messages through the extension", function() { with(this) {
       expect(engine, "publish").given({channel: "/foo", data: "hello"})
-      server.process(message, false, null, function() {})
+      server.process(message, false, function() {})
     }})
     
     it("passes outgoing messages through the extension", function() { with(this) {
       stub(server, "handshake").yields([message])
       stub(engine, "publish")
       var response = null
-      server.process({channel: "/meta/handshake"}, false, null, function(r) { response = r })
+      server.process({channel: "/meta/handshake"}, false, function(r) { response = r })
       assertEqual( [{channel: "/foo", data: "hello", ext: {auth: "password"}}], response )
     }})
   }})

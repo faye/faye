@@ -3,7 +3,7 @@ Faye.Transport.NodeLocal = Faye.extend(Faye.Class(Faye.Transport, {
   
   request: function(message, timeout) {
     message = Faye.copyObject(message);
-    this._endpoint.process(message, true, null, function(responses) {
+    this._endpoint.process(message, true, function(responses) {
       this.receive(Faye.copyObject(responses));
     }, this);
   }

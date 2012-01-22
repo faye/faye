@@ -15,7 +15,11 @@ Faye.Server = Faye.Class({
     this._engine.flush(clientId);
   },
   
-  process: function(messages, local, socket, callback, context) {
+  openSocket: function(clientId, socket) {
+    this._engine.openSocket(clientId, socket);
+  },
+  
+  process: function(messages, local, callback, context) {
     messages = [].concat(messages);
     this.info('Processing messages: ? (local: ?)', messages, local);
 
@@ -51,7 +55,7 @@ Faye.Server = Faye.Class({
     
     for (var i = 0, n = messages.length; i < n; i++) {
       this.pipeThroughExtensions('incoming', messages[i], function(pipedMessage) {
-        this._handle(pipedMessage, local, socket, handleReply, this);
+        this._handle(pipedMessage, local, handleReply, this);
       }, this);
     }
   },
@@ -68,14 +72,14 @@ Faye.Server = Faye.Class({
     return response;
   },
   
-  _handle: function(message, local, socket, callback, context) {
+  _handle: function(message, local, callback, context) {
     if (!message) return callback.call(context, []);
     this.info('Handling message: ? (local: ?)', message, local);
     
     var channelName = message.channel, response;
     
     if (Faye.Channel.isMeta(channelName))
-      return this._handleMeta(message, local, socket, callback, context);
+      return this._handleMeta(message, local, callback, context);
     
     if (!message.error && Faye.Grammar.CHANNEL_NAME.test(channelName))
       this._engine.publish(message);
@@ -89,11 +93,9 @@ Faye.Server = Faye.Class({
     }
   },
   
-  _handleMeta: function(message, local, socket, callback, context) {
+  _handleMeta: function(message, local, callback, context) {
     var method   = Faye.Channel.parse(message.channel)[1],
         clientId = message.clientId;
-    
-    if (socket) this._engine.openSocket(clientId, socket);
     
     this[method](message, local, function(responses) {
       responses = [].concat(responses);
