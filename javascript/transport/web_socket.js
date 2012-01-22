@@ -58,7 +58,8 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
       
       if (wasConnected) return self.resend();
       
-      Faye.ENV.setTimeout(function() { self.connect() }, 5000);
+      var retry = self._client.retry * 1000;
+      Faye.ENV.setTimeout(function() { self.connect() }, retry);
       self.trigger('down');
     };
   },

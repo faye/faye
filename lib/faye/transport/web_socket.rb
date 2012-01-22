@@ -83,7 +83,7 @@ module Faye
         
         next resend if was_connected
         
-        EventMachine.add_timer(5) { connect }
+        EventMachine.add_timer(@client.retry) { connect }
         trigger(:down)
       end
     end

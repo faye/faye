@@ -16,9 +16,10 @@ module Faye
     NONE                = 'none'
     
     CONNECTION_TIMEOUT  = 60.0
+    DEFAULT_RETRY       = 5.0
     
     attr_accessor :cookies
-    attr_reader :endpoint, :client_id
+    attr_reader :endpoint, :client_id, :retry
     
     def initialize(endpoint = nil, options = {})
       info('New client created for ?', endpoint)
@@ -26,6 +27,7 @@ module Faye
       @endpoint   = endpoint || RackAdapter::DEFAULT_ENDPOINT
       @options    = options
       @disabled   = []
+      @retry      = @options[:retry] || DEFAULT_RETRY
 
       select_transport(MANDATORY_CONNECTION_TYPES)
       

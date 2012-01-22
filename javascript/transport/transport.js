@@ -49,11 +49,14 @@ Faye.Transport = Faye.extend(Faye.Class({
   },
   
   retry: function(message, timeout) {
-    var self = this, called = false;
+    var called = false,
+        retry  = this._client.retry * 1000,
+        self   = this;
+    
     return function() {
       if (called) return;
       called = true;
-      Faye.ENV.setTimeout(function() { self.request(message, timeout) }, 5000);
+      Faye.ENV.setTimeout(function() { self.request(message, timeout) }, retry);
     };
   }
   

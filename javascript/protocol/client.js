@@ -9,6 +9,7 @@ Faye.Client = Faye.Class({
   NONE:                 '<%= Faye::Client::NONE %>',
   
   CONNECTION_TIMEOUT:   <%= Faye::Client::CONNECTION_TIMEOUT %>,
+  DEFAULT_RETRY:        <%= Faye::Client::DEFAULT_RETRY %>,
   
   DEFAULT_ENDPOINT:     '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   INTERVAL:             <%= Faye::Engine::INTERVAL %>,
@@ -19,6 +20,7 @@ Faye.Client = Faye.Class({
     this.endpoint   = endpoint || this.DEFAULT_ENDPOINT;
     this._options   = options || {};
     this._disabled  = [];
+    this.retry      = this._options.retry || this.DEFAULT_RETRY;
     
     this._selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
     
