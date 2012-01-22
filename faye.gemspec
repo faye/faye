@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency "jake"
   s.add_development_dependency "rake"
-  s.add_development_dependency "rspec", "~> 2.5.0"
+  s.add_development_dependency "rspec", "~> 2.8.0"
   s.add_development_dependency "rack-proxy"
   s.add_development_dependency "rack-test"
   s.add_development_dependency "rainbows", ">= 1.0.0"
