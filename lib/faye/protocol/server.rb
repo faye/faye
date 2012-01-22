@@ -172,13 +172,13 @@ module Faye
         
         response['successful'] = response['error'].nil?
         
-        if response['successful']
-          @engine.connect(response['clientId'], message['advice']) do |events|
-            callback.call([response] + events)
-          end
-        else
+        if !response['successful']
           response.delete('clientId')
-          callback.call(response)
+          next callback.call(response)
+        end
+        
+        @engine.connect(response['clientId'], message['advice']) do |events|
+          callback.call([response] + events)
         end
       end
     end

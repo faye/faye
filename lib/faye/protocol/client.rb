@@ -207,16 +207,15 @@ module Faye
           'subscription'  => channels
           
         }) do |response|
-          if response['successful']
-            
-            channels = [response['subscription']].flatten
-            info('Subscription acknowledged for ? to ?', @client_id, channels)
-            @channels.subscribe(channels, block)
-            
-            subscription.set_deferred_status(:succeeded)
-          else
-            subscription.set_deferred_status(:failed, Error.parse(response['error']))
+          unless response['successful']
+            next subscription.set_deferred_status(:failed, Error.parse(response['error']))
           end
+          
+          channels = [response['subscription']].flatten
+          info('Subscription acknowledged for ? to ?', @client_id, channels)
+          @channels.subscribe(channels, block)
+          
+          subscription.set_deferred_status(:succeeded)
         end
       }
       subscription
@@ -251,11 +250,10 @@ module Faye
           'subscription'  => channels
           
         }) do |response|
-          if response['successful']
+          next unless response['successful']
             
-            channels = [response['subscription']].flatten
-            info('Unsubscription acknowledged for ? from ?', @client_id, channels)
-          end
+          channels = [response['subscription']].flatten
+          info('Unsubscription acknowledged for ? from ?', @client_id, channels)
         end
       }
     end
@@ -292,17 +290,17 @@ module Faye
     
     def receive_message(message)
       pipe_through_extensions(:incoming, message) do |message|
-        if message
-          handle_advice(message['advice']) if message['advice']
-          
-          callback = @response_callbacks[message['id']]
-          if callback
-            @response_callbacks.delete(message['id'])
-            callback.call(message)
-          end
-          
-          deliver_message(message)
+        next unless message
+        
+        handle_advice(message['advice']) if message['advice']
+        
+        callback = @response_callbacks[message['id']]
+        if callback
+          @response_callbacks.delete(message['id'])
+          callback.call(message)
         end
+        
+        deliver_message(message)
       end
     end
     

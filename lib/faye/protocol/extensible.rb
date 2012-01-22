@@ -11,12 +11,9 @@ module Faye
     def remove_extension(extension)
       return unless @extensions
       @extensions.delete_if do |ext|
-        if ext == extension
-          extension.removed(self) if extension.respond_to?(:removed)
-          true
-        else
-          false
-        end
+        next false unless ext == extension
+        extension.removed(self) if extension.respond_to?(:removed)
+        true
       end
     end
     
@@ -27,19 +24,15 @@ module Faye
       extensions = @extensions.dup
       
       pipe = lambda do |message|
-        if !message
-          callback.call(message)
+        next callback.call(message) unless message
+        
+        extension = extensions.shift
+        next callback.call(message) unless extension
+        
+        if extension.respond_to?(stage)
+          extension.__send__(stage, message, pipe)
         else
-          extension = extensions.shift
-          if (!extension)
-            callback.call(message)
-          else
-            if extension.respond_to?(stage)
-              extension.__send__(stage, message, pipe)
-            else
-              pipe.call(message)
-            end
-          end
+          pipe.call(message)
         end
       end
       pipe.call(message)
