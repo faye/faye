@@ -134,9 +134,13 @@ module Faye
       
       ws.onmessage = lambda do |event|
         begin
-          message = JSON.parse(event.data)
+          message   = JSON.parse(event.data)
+          client_id = [message].flatten[0]['clientId']
+          
           debug "Received via WebSocket[#{ws.version}]: ?", message
-          @server.process(message, false, ws) do |replies|
+          @server.open_socket(client_id, ws)
+          
+          @server.process(message, false) do |replies|
             ws.send(JSON.unparse(replies)) if ws
           end
         rescue
