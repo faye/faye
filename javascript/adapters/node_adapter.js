@@ -129,7 +129,7 @@ Faye.NodeAdapter = Faye.Class({
       return this._handleOptions(request, response);
     
     if (Faye.EventSource.isEventSource(request))
-      return this.handleEventSource(request, response, requestUrl.pathname);
+      return this.handleEventSource(request, response);
     
     if (requestMethod === 'GET')
       return this._callWithParams(request, response, requestUrl.query);
@@ -171,12 +171,12 @@ Faye.NodeAdapter = Faye.Class({
     };
   },
   
-  handleEventSource: function(request, response, pathname) {
-    var clientId = pathname.split('/').pop(),
-        es       = new Faye.EventSource(request, response),
+  handleEventSource: function(request, response) {
+    var es       = new Faye.EventSource(request, response),
+        clientId = es.url.split('/').pop(),
         self     = this;
     
-    this.debug('Opened EventSource connection to ?', pathname);
+    this.debug('Opened EventSource connection for ?', clientId);
     this._server.openSocket(clientId, es);
     
     es.onclose = function(event) {
