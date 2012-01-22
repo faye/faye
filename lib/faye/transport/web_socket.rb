@@ -37,7 +37,6 @@ module Faye
     end
     
     def request(messages, timeout = nil)
-      @timeout    = timeout || @timeout
       @messages ||= {}
       messages.each { |message| @messages[message['id']] = message }
       with_socket { |socket| socket.send(JSON.unparse(messages)) }
@@ -82,13 +81,10 @@ module Faye
         @state = UNCONNECTED
         @socket = nil
         
-        if was_connected
-          resend
-        else
-          EventMachine.add_timer(@timeout) { connect }
-          @timeout = @timeout * 2
-          trigger(:down)
-        end
+        next resend if was_connected
+        
+        EventMachine.add_timer(5) { connect }
+        trigger(:down)
       end
     end
     

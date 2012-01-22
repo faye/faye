@@ -16,13 +16,19 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     };
     
     xhr.onload = function() {
+      var parsedMessage = null;
       try {
-        self.receive(JSON.parse(xhr.responseText));
+        parsedMessage = JSON.parse(xhr.responseText);
+      } catch (e) {}
+      
+      cleanUp();
+      
+      if (parsedMessage) {
+        self.receive(parsedMessage);
         self.trigger('up');
-      } catch(e) {
+      } else {
         retry();
-      } finally {
-        cleanUp();
+        self.trigger('down');
       }
     };
     

@@ -6,7 +6,6 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   batching:     false,
   
   request: function(messages, timeout) {
-    this._timeout = timeout || this._timeout;
     this._messages = this._messages || {};
     Faye.each(messages, function(message) {
       this._messages[message.id] = message;
@@ -59,9 +58,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
       
       if (wasConnected) return self.resend();
       
-      Faye.ENV.setTimeout(function() { self.connect() }, 1000 * self._timeout);
-      self._timeout = self._timeout * 2;
-      
+      Faye.ENV.setTimeout(function() { self.connect() }, 5000);
       self.trigger('down');
     };
   },
@@ -79,8 +76,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   },
   
   getClass: function() {
-    if (Faye.WebSocket) return Faye.WebSocket.Client;
-    return Faye.ENV.WebSocket || Faye.ENV.MozWebSocket;
+    return (Faye.WebSocket && Faye.WebSocket.Client) ||
+            Faye.ENV.WebSocket ||
+            Faye.ENV.MozWebSocket;
   },
   
   isUsable: function(endpoint, callback, scope) {

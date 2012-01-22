@@ -9,42 +9,65 @@ module Faye
       retry_block = retry_block(message, timeout)
       
       @client.cookies ||= CookieJar::Jar.new
-      cookies = @client.cookies.get_cookies(@endpoint)
       
       content = JSON.unparse(message)
-      params = {
-        :head => {
-          'Content-Length'  => content.length,
-          'Content-Type'    => 'application/json',
-          'Cookie'          => cookies * '; ',
-          'Host'            => URI.parse(@endpoint).host
-        },
-        :body    => content,
-        :timeout => -1  # for em-http-request < 1.0
-      }
-      if EventMachine::HttpRequest::VERSION.split('.')[0].to_i >= 1
-        options = {   # for em-http-request >= 1.0
-          :inactivity_timeout => 0,    # connection inactivity (post-setup) timeout (0 = disable timeout)
-        }
-        request = EventMachine::HttpRequest.new(@endpoint, options).post(params)
-      else
-        request = EventMachine::HttpRequest.new(@endpoint).post(params)
-      end
+      cookies = @client.cookies.get_cookies(@endpoint)
+      params  = build_params(URI.parse(@endpoint), content, cookies)
+      request = create_request(params)
+      
       request.callback do
-        begin
-          cookies = [*request.response_header['SET_COOKIE']]
-          cookies.each do |cookie|
-            @client.cookies.set_cookie(@endpoint, cookie)
-          end
-          receive(JSON.parse(request.response))
-          trigger(:up)
-        rescue
-          retry_block.call
-        end
+        handle_response(request.response, retry_block)
+        store_cookies([*request.response_header['SET_COOKIE']])
       end
       request.errback do
         retry_block.call
         trigger(:down)
+      end
+    end
+    
+  private
+    
+    def build_params(uri, content, cookies)
+      {
+        :head => {
+          'Content-Length'  => content.bytesize,
+          'Content-Type'    => 'application/json',
+          'Cookie'          => cookies * '; ',
+          'Host'            => uri.host
+        },
+        :body    => content,
+        :timeout => -1  # for em-http-request < 1.0
+      }
+    end
+    
+    def create_request(params)
+      version = EventMachine::HttpRequest::VERSION.split('.')[0].to_i
+      client  = if version >= 1
+                  options = {                 # for em-http-request >= 1.0
+                    :inactivity_timeout => 0  # connection inactivity (post-setup) timeout (0 = disable timeout)
+                  }
+                  EventMachine::HttpRequest.new(@endpoint, options)
+                else
+                  EventMachine::HttpRequest.new(@endpoint)
+                end
+      
+      client.post(params)
+    end
+    
+    def handle_response(response, retry_block)
+      message = JSON.parse(response) rescue nil
+      if message
+        receive(message)
+        trigger(:up)
+      else
+        retry_block.call
+        trigger(:down)
+      end
+    end
+    
+    def store_cookies(cookies)
+      cookies.each do |cookie|
+        @client.cookies.set_cookie(@endpoint, cookie)
       end
     end
   end

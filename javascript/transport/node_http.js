@@ -5,50 +5,19 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
     var uri      = url.parse(this._endpoint),
         secure   = (uri.protocol === 'https:'),
         client   = secure ? https : http,
-        port     = uri.port || (secure ? 443 : 80),
-        content  = new Buffer(JSON.stringify(message)),
-        response = null,
-        body     = '',
+        content  = new Buffer(JSON.stringify(message), 'utf8'),
         retry    = this.retry(message, timeout),
         self     = this;
     
     this._client.cookies = this._client.cookies || new CookieJar();
-    var cookies = this._client.cookies.getCookies({domain: uri.hostname, path: uri.pathname});
     
-    var request = client.request({
-      method:   'POST',
-      host:     uri.hostname,
-      port:     port,
-      path:     uri.pathname,
-      headers:  {
-        'Content-Length': content.length,
-        'Content-Type':   'application/json',
-        'Cookie':         cookies.toValueString(),
-        'Host':           uri.hostname
-      }
-    });
+    var cookies = this._client.cookies.getCookies({domain: uri.hostname, path: uri.pathname}),
+        params  = this._buildParams(uri, content, cookies, secure),
+        request = client.request(params);
     
-    request.addListener('response', function(stream) {
-      response = stream;
-      
-      var cookies = response.headers['set-cookie'], cookie;
-      if (cookies) {
-        for (var i = 0, n = cookies.length; i < n; i++) {
-          cookie = self._client.cookies.setCookie(cookies[i]);
-          cookie = cookie[0] || cookie;
-          cookie.domain = cookie.domain || uri.hostname;
-        }
-      }
-      
-      response.addListener('data', function(c) { body += c.toString('utf8', 0, c.length) });
-      response.addListener('end', function() {
-        try {
-          self.receive(JSON.parse(body));
-          self.trigger('up');
-        } catch (e) {
-          retry();
-        }
-      });
+    request.addListener('response', function(response) {
+      self._handleResponse(response, retry);
+      self._storeCookies(uri.hostname, response.headers['set-cookie']);
     });
     
     request.addListener('error', function() {
@@ -57,7 +26,55 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
     });
     request.write(content);
     request.end();
+  },
+  
+  _buildParams: function(uri, content, cookies, secure) {
+    return {
+      method:   'POST',
+      host:     uri.hostname,
+      port:     uri.port || (secure ? 443 : 80),
+      path:     uri.pathname,
+      headers:  {
+        'Content-Length': content.length,
+        'Content-Type':   'application/json',
+        'Cookie':         cookies.toValueString(),
+        'Host':           uri.hostname
+      }
+    };
+  },
+  
+  _handleResponse: function(response, retry) {
+    var message = null,
+        body    = '',
+        self    = this;
+    
+    response.addListener('data', function(c) { body += c.toString('utf8', 0, c.length) });
+    response.addListener('end', function() {
+      try {
+        message = JSON.parse(body);
+      } catch (e) {}
+      
+      if (message) {
+        self.receive(message);
+        self.trigger('up');
+      } else {
+        retry();
+        self.trigger('down');
+      }
+    });
+  },
+  
+  _storeCookies: function(hostname, cookies) {
+    if (!cookies) return;
+    var cookie;
+    
+    for (var i = 0, n = cookies.length; i < n; i++) {
+      cookie = this._client.cookies.setCookie(cookies[i]);
+      cookie = cookie[0] || cookie;
+      cookie.domain = cookie.domain || hostname;
+    }
   }
+  
 }), {
   isUsable: function(endpoint, callback, scope) {
     callback.call(scope, typeof endpoint === 'string');

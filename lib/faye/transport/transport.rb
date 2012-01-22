@@ -60,7 +60,7 @@ module Faye
     
     def retry_block(message, timeout)
       lambda do
-        EventMachine.add_timer(timeout) { request(message, 2 * timeout) }
+        EventMachine.add_timer(5) { request(message, timeout) }
       end
     end
     
