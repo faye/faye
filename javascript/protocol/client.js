@@ -99,10 +99,8 @@ Faye.Client = Faye.Class({
         this._state     = this.CONNECTED;
         this._clientId  = response.clientId;
         
-        var connectionTypes = response.supportedConnectionTypes;
-        Faye.each(this._disabled, function(feature) {
-          var index = Faye.indexOf(connectionTypes, feature);
-          if (index >= 0) connectionTypes.splice(index, 1);
+        var connectionTypes = Faye.filter(response.supportedConnectionTypes, function(connType) {
+          return Faye.indexOf(this._disabled, connType) < 0;
         }, this);
         this._selectTransport(connectionTypes);
         
@@ -191,14 +189,15 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   subscribe: function(channels, callback, context) {
-    if (channels instanceof Array)
-      return  Faye.each(channels, function(channel) {
-                this.subscribe(channel, callback, context);
-              }, this);
+    if (channels instanceof Array) {
+      for (var i = 0, n = channels.length; i < n; i++) {
+        this.subscribe(channels[i], callback, context);
+      }
+      return;
+    }
     
-    var subscription = new Faye.Subscription(this, channels, callback, context);
-    
-    var force = (callback === true);
+    var subscription = new Faye.Subscription(this, channels, callback, context),
+        force        = (callback === true);
     
     if (!force && this._channels.hasSubscription(channels)) {
       this._channels.subscribe([channels], callback, context);
@@ -224,7 +223,6 @@ Faye.Client = Faye.Class({
         
         subscription.setDeferredStatus('succeeded');
       }, this);
-      
     }, this);
     
     return subscription;
@@ -241,10 +239,12 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   unsubscribe: function(channels, callback, context) {
-    if (channels instanceof Array)
-      return  Faye.each(channels, function(channel) {
-                this.unsubscribe(channel, callback, context);
-              }, this);
+    if (channels instanceof Array) {
+      for (var i = 0, n = channels.length; i < n; i++) {
+        this.unsubscribe(channels[i], callback, context);
+      }
+      return;
+    }
     
     var dead = this._channels.unsubscribe(channels, callback, context);
     if (!dead) return;
@@ -263,7 +263,6 @@ Faye.Client = Faye.Class({
         var channels = [].concat(response.subscription);
         this.info('Unsubscription acknowledged for ? from ?', this._clientId, channels);
       }, this);
-      
     }, this);
   },
   

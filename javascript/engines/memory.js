@@ -88,13 +88,14 @@ Faye.Engine.Memory.prototype = {
     this._server.debug('Publishing message ?', message);
 
     var messages = this._messages,
-        clients  = new Faye.Set();
+        clients  = new Faye.Set(),
+        subs;
     
-    Faye.each(channels, function(channel) {
-      var subs = this._channels[channel];
-      if (!subs) return;
+    for (var i = 0, n = channels.length; i < n; i++) {
+      subs = this._channels[channels[i]];
+      if (!subs) continue;
       subs.forEach(clients.add, clients);
-    }, this);
+    }
     
     clients.forEach(function(clientId) {
       this._server.debug('Queueing for client ?: ?', clientId, message);

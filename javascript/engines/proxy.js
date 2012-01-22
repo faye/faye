@@ -56,9 +56,13 @@ Faye.Engine.Proxy = Faye.Class({
   
   deliver: function(clientId, messages) {
     if (!messages || messages.length === 0) return false;
+    
     var conn = this.connection(clientId, false);
     if (!conn) return false;
-    Faye.each(messages, conn.deliver, conn);
+    
+    for (var i = 0, n = messages.length; i < n; i++) {
+      conn.deliver(messages[i]);
+    }
     return true;
   },
   

@@ -12,11 +12,11 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   connect: function(name, engine, resume) {
     var clientId = this._clients[name]
     var inboxes  = this._inboxes
-    engine.connect(clientId, {}, function(m) {
-      Faye.each(m, function(message) {
-        delete message.id
-        inboxes[name].push(message)
-      })
+    engine.connect(clientId, {}, function(messages) {
+      for (var i = 0, n = messages.length; i < n; i++) {
+        delete messages[i].id
+        inboxes[name].push(messages[i])
+      }
     })
     setTimeout(resume, 10)
   },
@@ -32,7 +32,7 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   
   check_num_clients: function(n, resume) {
     var ids = new JS.Set()
-    Faye.each(this._clients, function(name, id) { ids.add(id) })
+    for (var key in this._clients) ids.add(this._clients[key])
     this.assertEqual(n, ids.count())
     resume()
   },
@@ -55,10 +55,10 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   
   publish: function(messages, resume) {
     messages = [].concat(messages)
-    Faye.each(messages, function(message) {
-      message = Faye.extend({id: Faye.random()}, message)
+    for (var i = 0, n = messages.length; i < n; i++) {
+      var message = Faye.extend({id: Faye.random()}, messages[i])
       this.engine.publish(message)
-    }, this)
+    }
     setTimeout(resume, 20)
   },
   

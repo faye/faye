@@ -77,7 +77,7 @@ Faye.extend(Faye.Channel, {
     
     getKeys: function() {
       var keys = [];
-      Faye.each(this._channels, function(k,v) { keys.push(k) });
+      for (var key in this._channels) keys.push(key);
       return keys;
     },
     
@@ -91,10 +91,12 @@ Faye.extend(Faye.Channel, {
     
     subscribe: function(names, callback, context) {
       if (!callback) return;
-      Faye.each(names, function(name) {
+      var name;
+      for (var i = 0, n = names.length; i < n; i++) {
+        name = names[i];
         var channel = this._channels[name] = this._channels[name] || new Faye.Channel(name);
         channel.bind('message', callback, context);
-      }, this);
+      }
     },
     
     unsubscribe: function(name, callback, context) {
@@ -112,10 +114,11 @@ Faye.extend(Faye.Channel, {
     
     distributeMessage: function(message) {
       var channels = Faye.Channel.expand(message.channel);
-      Faye.each(channels, function(name) {
-        var channel = this._channels[name];
+      
+      for (var i = 0, n = channels.length; i < n; i++) {
+        var channel = this._channels[channels[i]];
         if (channel) channel.trigger('message', message.data);
-      }, this);
+      }
     }
   })
 });

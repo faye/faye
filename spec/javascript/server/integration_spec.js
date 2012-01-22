@@ -28,16 +28,17 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
     var n = channels.length
     if (n === 0) return this._clients[name].connect(callback)
     
-    Faye.each(channels, function(channel) {
-      var subscription = this._clients[name].subscribe(channel, function(message) {
-        this._inboxes[name][channel] = this._inboxes[name][channel] || []
-        this._inboxes[name][channel].push(message)
-      }, this)
-      subscription.callback(function() {
-        n -= 1
-        if (n === 0) callback()
-      })
-    }, this)
+    for (var i = 0; i < n; i++)
+      (function(channel) {
+        var subscription = this._clients[name].subscribe(channel, function(message) {
+          this._inboxes[name][channel] = this._inboxes[name][channel] || []
+          this._inboxes[name][channel].push(message)
+        }, this)
+        subscription.callback(function() {
+          n -= 1
+          if (n === 0) callback()
+        })
+      }).call(this, channels[i]);
   },
   
   publish: function(name, channel, message, callback) {

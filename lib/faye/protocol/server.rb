@@ -63,11 +63,12 @@ module Faye
     
     def make_response(message)
       response = {}
-      %w[id clientId channel error].each do |field|
-        if message[field]
-          response[field] = message[field]
-        end
-      end
+      
+      response['id']       = message['id']       if message['id']
+      response['clientId'] = message['clientId'] if message['clientId']
+      response['channel']  = message['channel']  if message['channel']
+      response['error']    = message['error']    if message['error']
+      
       response['successful'] = !response['error']
       response
     end

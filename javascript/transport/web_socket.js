@@ -7,9 +7,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   
   request: function(messages, timeout) {
     this._messages = this._messages || {};
-    Faye.each(messages, function(message) {
-      this._messages[message.id] = message;
-    }, this);
+    for (var i = 0, n = messages.length; i < n; i++) {
+      this._messages[messages[i].id] = messages[i];
+    }
     this.withSocket(function(socket) { socket.send(Faye.toJSON(messages)) });
   },
   
@@ -44,9 +44,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     
     this._socket.onmessage = function(event) {
       var messages = [].concat(JSON.parse(event.data));
-      Faye.each(messages, function(message) {
-        delete self._messages[message.id];
-      });
+      for (var i = 0, n = messages.length; i < n; i++) {
+        delete self._messages[messages[i].id];
+      }
       self.receive(messages);
     };
     

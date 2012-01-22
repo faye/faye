@@ -64,68 +64,38 @@ Faye.extend(Faye, {
   },
   
   indexOf: function(list, needle) {
+    if (list.indexOf) return list.indexOf(needle);
+    
     for (var i = 0, n = list.length; i < n; i++) {
       if (list[i] === needle) return i;
     }
     return -1;
   },
   
-  each: function(object, callback, context) {
-    if (object instanceof Array) {
-      for (var i = 0, n = object.length; i < n; i++) {
-        if (object[i] !== undefined)
-          callback.call(context || null, object[i], i);
-      }
-    } else {
-      for (var key in object) {
-        if (object.hasOwnProperty(key))
-          callback.call(context || null, key, object[key]);
-      }
-    }
-  },
-  
   map: function(object, callback, context) {
     if (object.map) return object.map(callback, context);
     var result = [];
-    this.each(object, function() {
-      result.push(callback.apply(context || null, arguments));
-    });
+    
+    if (object instanceof Array) {
+      for (var i = 0, n = object.length; i < n; i++) {
+        result.push(callback.call(context || null, object[i], i));
+      }
+    } else {
+      for (var key in object) {
+        if (!object.hasOwnProperty(key)) continue;
+        result.push(callback.call(context || null, key, object[key]));
+      }
+    }
     return result;
   },
   
   filter: function(array, callback, context) {
     var result = [];
-    this.each(array, function() {
-      if (callback.apply(context, arguments))
-        result.push(arguments[0]);
-    });
-    return result;
-  },
-  
-  size: function(object) {
-    var size = 0;
-    this.each(object, function() { size += 1 });
-    return size;
-  },
-  
-  enumEqual: function(actual, expected) {
-    if (expected instanceof Array) {
-      if (!(actual instanceof Array)) return false;
-      var i = actual.length;
-      if (i !== expected.length) return false;
-      while (i--) {
-        if (actual[i] !== expected[i]) return false;
-      }
-      return true;
-    } else {
-      if (!(actual instanceof Object)) return false;
-      if (this.size(expected) !== this.size(actual)) return false;
-      var result = true;
-      this.each(actual, function(key, value) {
-        result = result && (expected[key] === value);
-      });
-      return result;
+    for (var i = 0, n = array.length; i < n; i++) {
+      if (callback.call(context || null, array[i], i))
+        result.push(array[i]);
     }
+    return result;
   },
   
   asyncEach: function(list, iterator, callback, context) {

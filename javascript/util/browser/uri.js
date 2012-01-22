@@ -1,9 +1,10 @@
 Faye.URI = Faye.extend(Faye.Class({
   queryString: function() {
-    var pairs = [], key;
-    Faye.each(this.params, function(key, value) {
-      pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
-    });
+    var pairs = [];
+    for (var key in this.params) {
+      if (!this.params.hasOwnProperty(key)) continue;
+      pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(this.params[key]));
+    }
     return pairs.join('&');
   },
   

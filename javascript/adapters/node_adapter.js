@@ -38,7 +38,10 @@ Faye.NodeAdapter = Faye.Class({
     
     var extensions = this._options.extensions;
     if (!extensions) return;
-    Faye.each([].concat(extensions), this.addExtension, this);
+    
+    extensions = [].concat(extensions);
+    for (var i = 0, n = extensions.length; i < n; i++)
+      this.addExtension(extensions[i]);
   },
   
   addExtension: function(extension) {

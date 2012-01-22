@@ -39,28 +39,31 @@ Faye.Server = Faye.Class({
       var extended = 0, expected = replies.length;
       if (expected === 0) gatherReplies(replies);
       
-      Faye.each(replies, function(reply, i) {
-        this.debug('Processing reply: ?', reply);
-        this.pipeThroughExtensions('outgoing', reply, function(message) {
+      for (var i = 0, n = replies.length; i < n; i++) {
+        this.debug('Processing reply: ?', replies[i]);
+        this.pipeThroughExtensions('outgoing', replies[i], function(message) {
           replies[i] = message;
           extended  += 1;
           if (extended === expected) gatherReplies(replies);
         });
-      }, this);
+      }
     };
     
-    Faye.each(messages, function(message) {
-      this.pipeThroughExtensions('incoming', message, function(pipedMessage) {
+    for (var i = 0, n = messages.length; i < n; i++) {
+      this.pipeThroughExtensions('incoming', messages[i], function(pipedMessage) {
         this._handle(pipedMessage, local, socket, handleReply, this);
       }, this);
-    }, this);
+    }
   },
   
   _makeResponse: function(message) {
     var response = {};
-    Faye.each(['id', 'clientId', 'channel', 'error'], function(field) {
-      if (message[field]) response[field] = message[field];
-    });
+    
+    if (message.id)       response.id       = message.id;
+    if (message.clientId) response.clientId = message.clientId;
+    if (message.channel)  response.channel  = message.channel;
+    if (message.error)    response.error    = message.error;
+    
     response.successful = !response.error;
     return response;
   },
@@ -94,7 +97,7 @@ Faye.Server = Faye.Class({
     
     this[method](message, local, function(responses) {
       responses = [].concat(responses);
-      Faye.each(responses, this._advize, this);
+      for (var i = 0, n = responses.length; i < n; i++) this._advize(responses[i]);
       callback.call(context, responses);
     }, this);
   },
@@ -208,7 +211,8 @@ Faye.Server = Faye.Class({
   subscribe: function(message, local, callback, context) {
     var response     = this._makeResponse(message),
         clientId     = message.clientId,
-        subscription = message.subscription;
+        subscription = message.subscription,
+        channel;
     
     subscription = subscription ? [].concat(subscription) : [];
     
@@ -219,14 +223,16 @@ Faye.Server = Faye.Class({
       
       response.subscription = message.subscription || [];
       
-      Faye.each(subscription, function(channel) {
+      for (var i = 0, n = subscription.length; i < n; i++) {
+        channel = subscription[i];
+        
         if (response.error) return;
         if (!local && !Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
         if (!Faye.Channel.isValid(channel))                  response.error = Faye.Error.channelInvalid(channel);
         
         if (response.error) return;
         this._engine.subscribe(clientId, channel);
-      }, this);
+      }
       
       response.successful = !response.error;
       callback.call(context, response);
@@ -240,7 +246,8 @@ Faye.Server = Faye.Class({
   unsubscribe: function(message, local, callback, context) {
     var response     = this._makeResponse(message),
         clientId     = message.clientId,
-        subscription = message.subscription;
+        subscription = message.subscription,
+        channel;
     
     subscription = subscription ? [].concat(subscription) : [];
     
@@ -251,14 +258,16 @@ Faye.Server = Faye.Class({
       
       response.subscription = message.subscription || [];
       
-      Faye.each(subscription, function(channel) {
+      for (var i = 0, n = subscription.length; i < n; i++) {
+        channel = subscription[i];
+        
         if (response.error) return;
         if (!local && !Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
         if (!Faye.Channel.isValid(channel))                  response.error = Faye.Error.channelInvalid(channel);
         
         if (response.error) return;
         this._engine.unsubscribe(clientId, channel);
-      }, this);
+      }
       
       response.successful = !response.error;
       callback.call(context, response);

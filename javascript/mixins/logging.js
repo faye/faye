@@ -38,9 +38,12 @@ Faye.Logging = {
   }
 };
 
-Faye.each(Faye.Logging.LOG_LEVELS, function(level, value) {
-  Faye.Logging[level] = function() {
-    this.log(arguments, level);
-  };
-});
+(function() {
+  for (var key in Faye.Logging.LOG_LEVELS)
+    (function(level, value) {
+      Faye.Logging[level] = function() {
+        this.log(arguments, level);
+      };
+    })(key, Faye.Logging.LOG_LEVELS[key]);
+})();
 
