@@ -10,10 +10,10 @@ Faye.Set = Faye.Class({
     return true;
   },
   
-  forEach: function(block, scope) {
+  forEach: function(block, context) {
     for (var key in this._index) {
       if (this._index.hasOwnProperty(key))
-        block.call(scope, this._index[key]);
+        block.call(context, this._index[key]);
     }
   },
   

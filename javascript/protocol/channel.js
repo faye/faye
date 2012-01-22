@@ -89,18 +89,18 @@ Faye.extend(Faye.Channel, {
       return this._channels.hasOwnProperty(name);
     },
     
-    subscribe: function(names, callback, scope) {
+    subscribe: function(names, callback, context) {
       if (!callback) return;
       Faye.each(names, function(name) {
         var channel = this._channels[name] = this._channels[name] || new Faye.Channel(name);
-        channel.bind('message', callback, scope);
+        channel.bind('message', callback, context);
       }, this);
     },
     
-    unsubscribe: function(name, callback, scope) {
+    unsubscribe: function(name, callback, context) {
       var channel = this._channels[name];
       if (!channel) return false;
-      channel.unbind('message', callback, scope);
+      channel.unbind('message', callback, context);
       
       if (channel.isUnused()) {
         this.remove(name);

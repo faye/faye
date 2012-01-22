@@ -70,33 +70,33 @@ Faye.extend(Faye, {
     return -1;
   },
   
-  each: function(object, callback, scope) {
+  each: function(object, callback, context) {
     if (object instanceof Array) {
       for (var i = 0, n = object.length; i < n; i++) {
         if (object[i] !== undefined)
-          callback.call(scope || null, object[i], i);
+          callback.call(context || null, object[i], i);
       }
     } else {
       for (var key in object) {
         if (object.hasOwnProperty(key))
-          callback.call(scope || null, key, object[key]);
+          callback.call(context || null, key, object[key]);
       }
     }
   },
   
-  map: function(object, callback, scope) {
-    if (object.map) return object.map(callback, scope);
+  map: function(object, callback, context) {
+    if (object.map) return object.map(callback, context);
     var result = [];
     this.each(object, function() {
-      result.push(callback.apply(scope || null, arguments));
+      result.push(callback.apply(context || null, arguments));
     });
     return result;
   },
   
-  filter: function(array, callback, scope) {
+  filter: function(array, callback, context) {
     var result = [];
     this.each(array, function() {
-      if (callback.apply(scope, arguments))
+      if (callback.apply(context, arguments))
         result.push(arguments[0]);
     });
     return result;
@@ -128,7 +128,7 @@ Faye.extend(Faye, {
     }
   },
   
-  asyncEach: function(list, iterator, callback, scope) {
+  asyncEach: function(list, iterator, callback, context) {
     var n       = list.length,
         i       = -1,
         calls   = 0,
@@ -137,7 +137,7 @@ Faye.extend(Faye, {
     var iterate = function() {
       calls -= 1;
       i += 1;
-      if (i === n) return callback && callback.call(scope);
+      if (i === n) return callback && callback.call(context);
       iterator(list[i], resume);
     };
 

@@ -12,12 +12,12 @@ Faye.Engine.Connection = Faye.Class({
     this._beginDeliveryTimeout();
   },
   
-  connect: function(options, callback, scope) {
+  connect: function(options, callback, context) {
     options = options || {};
     var timeout = (options.timeout !== undefined) ? options.timeout / 1000 : this._engine.timeout;
     
     this.setDeferredStatus('deferred');
-    this.callback(callback, scope);
+    this.callback(callback, context);
     
     this._beginDeliveryTimeout();
     this._beginConnectionTimeout(timeout);

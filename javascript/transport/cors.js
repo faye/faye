@@ -45,18 +45,18 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     xhr.send('message=' + encodeURIComponent(Faye.toJSON(message)));
   }
 }), {
-  isUsable: function(endpoint, callback, scope) {
+  isUsable: function(endpoint, callback, context) {
     if (Faye.URI.parse(endpoint).isLocal())
-      return callback.call(scope, false);
+      return callback.call(context, false);
     
     if (Faye.ENV.XDomainRequest)
-      return callback.call(scope, true);
+      return callback.call(context, true);
     
     if (Faye.ENV.XMLHttpRequest) {
       var xhr = new Faye.ENV.XMLHttpRequest();
-      return callback.call(scope, xhr.withCredentials !== undefined);
+      return callback.call(context, xhr.withCredentials !== undefined);
     }
-    return callback.call(scope, false);
+    return callback.call(context, false);
   }
 });
 

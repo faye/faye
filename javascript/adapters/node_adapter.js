@@ -14,11 +14,11 @@ Faye.logger = function(message) {
   console.log(message);
 };
 
-Faye.withDataFor = function(transport, callback, scope) {
+Faye.withDataFor = function(transport, callback, context) {
   var data = '';
   transport.addListener('data', function(chunk) { data += chunk });
   transport.addListener('end', function() {
-    callback.call(scope, data);
+    callback.call(context, data);
   });
 };
 
@@ -61,7 +61,7 @@ Faye.NodeAdapter = Faye.Class({
     return this._client = this._client || new Faye.Client(this._server);
   },
   
-  listen: function(port, sslOptions, callback, scope) {
+  listen: function(port, sslOptions, callback, context) {
     var ssl = sslOptions && sslOptions.cert
             ? { key:  fs.readFileSync(sslOptions.key),
                 cert: fs.readFileSync(sslOptions.cert)
@@ -77,14 +77,14 @@ Faye.NodeAdapter = Faye.Class({
     
     this.attach(httpServer);
     httpServer.listen(port, function() {
-      if (callback) callback.call(scope);
+      if (callback) callback.call(context);
     });
     this._httpServer = httpServer;
   },
   
-  stop: function(callback, scope) {
+  stop: function(callback, context) {
     this._httpServer.addListener('close', function() {
-      if (callback) callback.call(scope);
+      if (callback) callback.call(context);
     });
     this._httpServer.close();
   },

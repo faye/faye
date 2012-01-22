@@ -79,7 +79,7 @@ Faye.Client = Faye.Class({
   //                * ext                                        * ext
   //                * id                                         * id
   //                * authSuccessful
-  handshake: function(callback, scope) {
+  handshake: function(callback, context) {
     if (this._advice.reconnect === this.NONE) return;
     if (this._state !== this.UNCONNECTED) return;
     
@@ -109,11 +109,11 @@ Faye.Client = Faye.Class({
         this.info('Handshake successful: ?', this._clientId);
         
         this.subscribe(this._channels.getKeys(), true);
-        if (callback) callback.call(scope);
+        if (callback) callback.call(context);
         
       } else {
         this.info('Handshake unsuccessful');
-        Faye.ENV.setTimeout(function() { self.handshake(callback, scope) }, this._advice.interval);
+        Faye.ENV.setTimeout(function() { self.handshake(callback, context) }, this._advice.interval);
         this._state = this.UNCONNECTED;
       }
     }, this);
@@ -128,14 +128,14 @@ Faye.Client = Faye.Class({
   //                                                     * ext
   //                                                     * id
   //                                                     * timestamp
-  connect: function(callback, scope) {
+  connect: function(callback, context) {
     if (this._advice.reconnect === this.NONE) return;
     if (this._state === this.DISCONNECTED) return;
     
     if (this._state === this.UNCONNECTED)
-      return this.handshake(function() { this.connect(callback, scope) }, this);
+      return this.handshake(function() { this.connect(callback, context) }, this);
     
-    this.callback(callback, scope);
+    this.callback(callback, context);
     if (this._state !== this.CONNECTED) return;
     
     this.info('Calling deferred actions for ?', this._clientId);
@@ -190,18 +190,18 @@ Faye.Client = Faye.Class({
   //                                                     * ext
   //                                                     * id
   //                                                     * timestamp
-  subscribe: function(channels, callback, scope) {
+  subscribe: function(channels, callback, context) {
     if (channels instanceof Array)
       return  Faye.each(channels, function(channel) {
-                this.subscribe(channel, callback, scope);
+                this.subscribe(channel, callback, context);
               }, this);
     
-    var subscription = new Faye.Subscription(this, channels, callback, scope);
+    var subscription = new Faye.Subscription(this, channels, callback, context);
     
     var force = (callback === true);
     
     if (!force && this._channels.hasSubscription(channels)) {
-      this._channels.subscribe([channels], callback, scope);
+      this._channels.subscribe([channels], callback, context);
       subscription.setDeferredStatus('succeeded');
       return subscription;
     }
@@ -220,7 +220,7 @@ Faye.Client = Faye.Class({
         
         var channels = [].concat(response.subscription);
         this.info('Subscription acknowledged for ? to ?', this._clientId, channels);
-        if (!force) this._channels.subscribe(channels, callback, scope);
+        if (!force) this._channels.subscribe(channels, callback, context);
         
         subscription.setDeferredStatus('succeeded');
       }, this);
@@ -240,13 +240,13 @@ Faye.Client = Faye.Class({
   //                                                     * ext
   //                                                     * id
   //                                                     * timestamp
-  unsubscribe: function(channels, callback, scope) {
+  unsubscribe: function(channels, callback, context) {
     if (channels instanceof Array)
       return  Faye.each(channels, function(channel) {
-                this.unsubscribe(channel, callback, scope);
+                this.unsubscribe(channel, callback, context);
               }, this);
     
-    var dead = this._channels.unsubscribe(channels, callback, scope);
+    var dead = this._channels.unsubscribe(channels, callback, context);
     if (!dead) return;
     
     this.connect(function() {
@@ -331,9 +331,9 @@ Faye.Client = Faye.Class({
     }, this);
   },
   
-  _send: function(message, callback, scope) {
+  _send: function(message, callback, context) {
     message.id = this._generateMessageId();
-    if (callback) this._responseCallbacks[message.id] = [callback, scope];
+    if (callback) this._responseCallbacks[message.id] = [callback, context];
 
     this.pipeThroughExtensions('outgoing', message, function(message) {
       if (!message) return;

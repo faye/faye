@@ -76,8 +76,8 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
   }
   
 }), {
-  isUsable: function(endpoint, callback, scope) {
-    callback.call(scope, typeof endpoint === 'string');
+  isUsable: function(endpoint, callback, context) {
+    callback.call(context, typeof endpoint === 'string');
   }
 });
 

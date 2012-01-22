@@ -15,11 +15,11 @@ Faye.Server = Faye.Class({
     this._engine.flush(clientId);
   },
   
-  process: function(messages, local, socket, callback, scope) {
+  process: function(messages, local, socket, callback, context) {
     messages = [].concat(messages);
     this.info('Processing messages: ? (local: ?)', messages, local);
 
-    if (messages.length === 0) return callback.call(scope, []);
+    if (messages.length === 0) return callback.call(context, []);
     var processed = 0, responses = [], self = this;
     
     var gatherReplies = function(replies) {
@@ -32,7 +32,7 @@ Faye.Server = Faye.Class({
         if (!responses[n]) responses.splice(n,1);
       }
       self.info('Returning replies: ?', responses);
-      callback.call(scope, responses);
+      callback.call(context, responses);
     };
     
     var handleReply = function(replies) {
@@ -65,14 +65,14 @@ Faye.Server = Faye.Class({
     return response;
   },
   
-  _handle: function(message, local, socket, callback, scope) {
-    if (!message) return callback.call(scope, []);
+  _handle: function(message, local, socket, callback, context) {
+    if (!message) return callback.call(context, []);
     this.info('Handling message: ? (local: ?)', message, local);
     
     var channelName = message.channel, response;
     
     if (Faye.Channel.isMeta(channelName))
-      return this._handleMeta(message, local, socket, callback, scope);
+      return this._handleMeta(message, local, socket, callback, context);
     
     if (!message.error && Faye.Grammar.CHANNEL_NAME.test(channelName))
       this._engine.publish(message);
@@ -80,13 +80,13 @@ Faye.Server = Faye.Class({
     if (message.clientId) {
       response = this._makeResponse(message);
       response.successful = !response.error;
-      callback.call(scope, [response]);
+      callback.call(context, [response]);
     } else {
-      callback.call(scope, []);
+      callback.call(context, []);
     }
   },
   
-  _handleMeta: function(message, local, socket, callback, scope) {
+  _handleMeta: function(message, local, socket, callback, context) {
     var method   = Faye.Channel.parse(message.channel)[1],
         clientId = message.clientId;
     
@@ -95,7 +95,7 @@ Faye.Server = Faye.Class({
     this[method](message, local, function(responses) {
       responses = [].concat(responses);
       Faye.each(responses, this._advize, this);
-      callback.call(scope, responses);
+      callback.call(context, responses);
     }, this);
   },
   
@@ -120,7 +120,7 @@ Faye.Server = Faye.Class({
   // MAY contain   * minimumVersion
   //               * ext
   //               * id
-  handshake: function(message, local, callback, scope) {
+  handshake: function(message, local, callback, context) {
     var response = this._makeResponse(message);
     response.version = Faye.BAYEUX_VERSION;
     
@@ -143,11 +143,11 @@ Faye.Server = Faye.Class({
     }
     
     response.successful = !response.error;
-    if (!response.successful) return callback.call(scope, response);
+    if (!response.successful) return callback.call(context, response);
     
     this._engine.createClient(function(clientId) {
       response.clientId = clientId;
-      callback.call(scope, response);
+      callback.call(context, response);
     }, this);
   },
   
@@ -155,7 +155,7 @@ Faye.Server = Faye.Class({
   //               * connectionType
   // MAY contain   * ext
   //               * id
-  connect: function(message, local, callback, scope) {
+  connect: function(message, local, callback, context) {
     var response       = this._makeResponse(message),
         clientId       = message.clientId,
         connectionType = message.connectionType;
@@ -173,11 +173,11 @@ Faye.Server = Faye.Class({
       
       if (!response.successful) {
         delete response.clientId;
-        return callback.call(scope, response);
+        return callback.call(context, response);
       }
       
       this._engine.connect(response.clientId, message.advice, function(events) {
-        callback.call(scope, [response].concat(events));
+        callback.call(context, [response].concat(events));
       });
     }, this);
   },
@@ -185,7 +185,7 @@ Faye.Server = Faye.Class({
   // MUST contain  * clientId
   // MAY contain   * ext
   //               * id
-  disconnect: function(message, local, callback, scope) {
+  disconnect: function(message, local, callback, context) {
     var response = this._makeResponse(message),
         clientId = message.clientId;
     
@@ -197,7 +197,7 @@ Faye.Server = Faye.Class({
       if (!response.successful) delete response.clientId;
       
       if (response.successful) this._engine.destroyClient(clientId);
-      callback.call(scope, response);
+      callback.call(context, response);
     }, this);
   },
   
@@ -205,7 +205,7 @@ Faye.Server = Faye.Class({
   //               * subscription
   // MAY contain   * ext
   //               * id
-  subscribe: function(message, local, callback, scope) {
+  subscribe: function(message, local, callback, context) {
     var response     = this._makeResponse(message),
         clientId     = message.clientId,
         subscription = message.subscription;
@@ -229,7 +229,7 @@ Faye.Server = Faye.Class({
       }, this);
       
       response.successful = !response.error;
-      callback.call(scope, response);
+      callback.call(context, response);
     }, this);
   },
   
@@ -237,7 +237,7 @@ Faye.Server = Faye.Class({
   //               * subscription
   // MAY contain   * ext
   //               * id
-  unsubscribe: function(message, local, callback, scope) {
+  unsubscribe: function(message, local, callback, context) {
     var response     = this._makeResponse(message),
         clientId     = message.clientId,
         subscription = message.subscription;
@@ -261,7 +261,7 @@ Faye.Server = Faye.Class({
       }, this);
       
       response.successful = !response.error;
-      callback.call(scope, response);
+      callback.call(context, response);
     }, this);
   }
 });

@@ -1,8 +1,8 @@
 Faye.Event = {
   _registry: [],
   
-  on: function(element, eventName, callback, scope) {
-    var wrapped = function() { callback.call(scope) };
+  on: function(element, eventName, callback, context) {
+    var wrapped = function() { callback.call(context) };
     
     if (element.addEventListener)
       element.addEventListener(eventName, wrapped, false);
@@ -13,12 +13,12 @@ Faye.Event = {
       _element:   element,
       _type:      eventName,
       _callback:  callback,
-      _scope:     scope,
+      _context:     context,
       _handler:   wrapped
     });
   },
   
-  detach: function(element, eventName, callback, scope) {
+  detach: function(element, eventName, callback, context) {
     var i = this._registry.length, register;
     while (i--) {
       register = this._registry[i];
@@ -26,7 +26,7 @@ Faye.Event = {
       if ((element    && element    !== register._element)   ||
           (eventName  && eventName  !== register._type)      ||
           (callback   && callback   !== register._callback)  ||
-          (scope      && scope      !== register._scope))
+          (context      && context      !== register._context))
         continue;
       
       if (register._element.removeEventListener)

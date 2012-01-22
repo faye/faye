@@ -42,8 +42,8 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
     return '__jsonp' + this._cbCount + '__';
   },
   
-  isUsable: function(endpoint, callback, scope) {
-    callback.call(scope, true);
+  isUsable: function(endpoint, callback, context) {
+    callback.call(context, true);
   }
 });
 

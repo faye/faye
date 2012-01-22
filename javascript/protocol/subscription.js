@@ -1,15 +1,15 @@
 Faye.Subscription = Faye.Class({
-  initialize: function(client, channels, callback, scope) {
+  initialize: function(client, channels, callback, context) {
     this._client    = client;
     this._channels  = channels;
     this._callback  = callback;
-    this._scope     = scope;
+    this._context     = context;
     this._cancelled = false;
   },
   
   cancel: function() {
     if (this._cancelled) return;
-    this._client.unsubscribe(this._channels, this._callback, this._scope);
+    this._client.unsubscribe(this._channels, this._callback, this._context);
     this._cancelled = true;
   },
   

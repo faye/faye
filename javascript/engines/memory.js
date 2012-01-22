@@ -12,15 +12,15 @@ Faye.Engine.Memory.create = function(server, options) {
 };
 
 Faye.Engine.Memory.prototype = {
-  createClient: function(callback, scope) {
+  createClient: function(callback, context) {
     var clientId = this._namespace.generate();
     this._server.debug('Created new client ?', clientId);
     this.ping(clientId);
     this._server.trigger('handshake', clientId);
-    callback.call(scope, clientId);
+    callback.call(context, clientId);
   },
   
-  destroyClient: function(clientId, callback, scope) {
+  destroyClient: function(clientId, callback, context) {
     if (!this._namespace.exists(clientId)) return;
     var clients = this._clients;
     
@@ -32,11 +32,11 @@ Faye.Engine.Memory.prototype = {
     delete this._messages[clientId];
     this._server.debug('Destroyed client ?', clientId);
     this._server.trigger('disconnect', clientId);
-    if (callback) callback.call(scope);
+    if (callback) callback.call(context);
   },
   
-  clientExists: function(clientId, callback, scope) {
-    callback.call(scope, this._namespace.exists(clientId));
+  clientExists: function(clientId, callback, context) {
+    callback.call(context, this._namespace.exists(clientId));
   },
   
   ping: function(clientId) {
@@ -50,7 +50,7 @@ Faye.Engine.Memory.prototype = {
     }, this);
   },
   
-  subscribe: function(clientId, channel, callback, scope) {
+  subscribe: function(clientId, channel, callback, context) {
     var clients = this._clients, channels = this._channels;
     
     clients[clientId] = clients[clientId] || new Faye.Set();
@@ -61,10 +61,10 @@ Faye.Engine.Memory.prototype = {
     
     this._server.debug('Subscribed client ? to channel ?', clientId, channel);
     if (trigger) this._server.trigger('subscribe', clientId, channel);
-    if (callback) callback.call(scope, true);
+    if (callback) callback.call(context, true);
   },
   
-  unsubscribe: function(clientId, channel, callback, scope) {
+  unsubscribe: function(clientId, channel, callback, context) {
     var clients  = this._clients,
         channels = this._channels,
         trigger  = false;
@@ -81,7 +81,7 @@ Faye.Engine.Memory.prototype = {
     
     this._server.debug('Unsubscribed client ? from channel ?', clientId, channel);
     if (trigger) this._server.trigger('unsubscribe', clientId, channel);
-    if (callback) callback.call(scope, true);
+    if (callback) callback.call(context, true);
   },
   
   publish: function(message, channels) {

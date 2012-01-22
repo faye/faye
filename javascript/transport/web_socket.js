@@ -13,8 +13,8 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     this.withSocket(function(socket) { socket.send(Faye.toJSON(messages)) });
   },
   
-  withSocket: function(callback, scope) {
-    this.callback(callback, scope);
+  withSocket: function(callback, context) {
+    this.callback(callback, context);
     this.connect();
   },
   
@@ -82,9 +82,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
             Faye.ENV.MozWebSocket;
   },
   
-  isUsable: function(endpoint, callback, scope) {
+  isUsable: function(endpoint, callback, context) {
     var ws = this.getClass();
-    if (!ws) return callback.call(scope, false);
+    if (!ws) return callback.call(context, false);
     
     var connected = false,
         called    = false,
@@ -94,13 +94,13 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     socket.onopen = function() {
       connected = true;
       socket.close();
-      callback.call(scope, true);
+      callback.call(context, true);
       called = true;
       socket = null;
     };
     
     var notconnected = function() {
-      if (!called && !connected) callback.call(scope, false);
+      if (!called && !connected) callback.call(context, false);
       called = true;
     };
     

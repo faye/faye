@@ -25,11 +25,11 @@ Faye.Engine.Proxy = Faye.Class({
     this.debug('Created new engine: ?', this._options);
   },
   
-  connect: function(clientId, options, callback, scope) {
+  connect: function(clientId, options, callback, context) {
     this.debug('Accepting connection from ?', clientId);
     this._engine.ping(clientId);
     var conn = this.connection(clientId, true);
-    conn.connect(options, callback, scope);
+    conn.connect(options, callback, context);
     this._engine.emptyQueue(clientId);
   },
   

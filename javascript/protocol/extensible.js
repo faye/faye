@@ -15,17 +15,17 @@ Faye.Extensible = {
     }
   },
   
-  pipeThroughExtensions: function(stage, message, callback, scope) {
+  pipeThroughExtensions: function(stage, message, callback, context) {
     this.debug('Passing through ? extensions: ?', stage, message);
 
-    if (!this._extensions) return callback.call(scope, message);
+    if (!this._extensions) return callback.call(context, message);
     var extensions = this._extensions.slice();
     
     var pipe = function(message) {
-      if (!message) return callback.call(scope, message);
+      if (!message) return callback.call(context, message);
       
       var extension = extensions.shift();
-      if (!extension) return callback.call(scope, message);
+      if (!extension) return callback.call(context, message);
       
       if (extension[stage]) extension[stage](message, pipe);
       else pipe(message);

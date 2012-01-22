@@ -8,8 +8,8 @@ Faye.Transport.NodeLocal = Faye.extend(Faye.Class(Faye.Transport, {
     }, this);
   }
 }), {
-  isUsable: function(endpoint, callback, scope) {
-    callback.call(scope, endpoint instanceof Faye.Server);
+  isUsable: function(endpoint, callback, context) {
+    callback.call(context, endpoint instanceof Faye.Server);
   }
 });
 
