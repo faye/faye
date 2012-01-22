@@ -49,6 +49,7 @@ packages:
       - util/browser/uri
       - util/browser/json
       - transport/web_socket
+      - transport/event_source
       - transport/xhr
       - transport/cors
       - transport/jsonp

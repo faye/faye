@@ -9,6 +9,7 @@ var crypto = require('crypto'),
     querystring = require('querystring');
 
 Faye.WebSocket = require('faye-websocket');
+Faye.EventSource = Faye.WebSocket.EventSource;
 
 Faye.logger = function(message) {
   console.log(message);
@@ -127,6 +128,9 @@ Faye.NodeAdapter = Faye.Class({
     if (requestMethod === 'OPTIONS')
       return this._handleOptions(request, response);
     
+    if (Faye.EventSource.isEventSource(request))
+      return this.handleEventSource(request, response, requestUrl.pathname);
+    
     if (requestMethod === 'GET')
       return this._callWithParams(request, response, requestUrl.query);
     
@@ -164,6 +168,19 @@ Faye.NodeAdapter = Faye.Class({
     ws.onclose = function(event) {
       self._server.flushConnection(ws);
       ws = null;
+    };
+  },
+  
+  handleEventSource: function(request, response, pathname) {
+    var clientId = pathname.split('/').pop(),
+        es       = new Faye.EventSource(request, response),
+        self     = this;
+    
+    this._server.openSocket(clientId, es);
+    
+    es.onclose = function(event) {
+      self._server.flushConnection(es);
+      socket = null;
     };
   },
   

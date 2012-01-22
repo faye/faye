@@ -6,7 +6,7 @@ JS.ENV.Server.HandshakeSpec = JS.Test.describe("Server handshake", function() { 
     
     this.connectionTypes = ["long-polling", "cross-origin-long-polling",
                             "callback-polling","websocket",
-                            "in-process"]
+                            "eventsource","in-process"]
   }})
   
   describe("#handshake", function() { with(this) {

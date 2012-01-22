@@ -99,14 +99,23 @@ Faye.Server = Faye.Class({
     
     this[method](message, local, function(responses) {
       responses = [].concat(responses);
-      for (var i = 0, n = responses.length; i < n; i++) this._advize(responses[i]);
+      for (var i = 0, n = responses.length; i < n; i++) this._advize(responses[i], message.connectionType);
       callback.call(context, responses);
     }, this);
   },
   
-  _advize: function(response) {
+  _advize: function(response, connectionType) {
     if (Faye.indexOf([Faye.Channel.HANDSHAKE, Faye.Channel.CONNECT], response.channel) < 0)
       return;
+    
+    var interval, timeout;
+    if (connectionType === 'eventsource') {
+      interval = Math.floor(this._engine.timeout * 1000);
+      timeout  = 0;
+    } else {
+      interval = Math.floor(this._engine.interval * 1000);
+      timeout  = Math.floor(this._engine.timeout * 1000);
+    }
     
     response.advice = response.advice || {};
     if (response.error) {
@@ -114,8 +123,8 @@ Faye.Server = Faye.Class({
     } else {
       Faye.extend(response.advice, {
         reconnect:  'retry',
-        interval:   Math.floor(this._engine.interval * 1000),
-        timeout:    Math.floor(this._engine.timeout * 1000)
+        interval:   interval,
+        timeout:    timeout
       }, false);
     }
   },
@@ -181,6 +190,10 @@ Faye.Server = Faye.Class({
         return callback.call(context, response);
       }
       
+      if (message.connectionType === 'eventsource') {
+        message.advice = message.advice || {};
+        message.advice.timeout = 0;
+      }
       this._engine.connect(response.clientId, message.advice, function(events) {
         callback.call(context, [response].concat(events));
       });
