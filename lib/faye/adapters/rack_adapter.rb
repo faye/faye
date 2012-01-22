@@ -2,6 +2,9 @@ module Faye
   class WebSocket
     attr_accessor :client_id
   end
+  class EventSource
+    attr_accessor :client_id
+  end
   
   class RackAdapter
     
@@ -77,6 +80,7 @@ module Faye
       return serve_client_script(env) if request.path_info =~ /\.js$/
       return handle_options(request)  if env['REQUEST_METHOD'] == 'OPTIONS'
       return handle_websocket(env)    if Faye::WebSocket.websocket?(env)
+      return handle_eventsource(env)  if Faye::EventSource.eventsource?(env)
       
       handle_request(request)
     end
@@ -153,6 +157,21 @@ module Faye
       end
       
       ws.rack_response
+    end
+    
+    def handle_eventsource(env)
+      es        = Faye::EventSource.new(env)
+      client_id = es.url.split('/').pop
+      
+      debug 'Opened EventSource connection for ?', client_id
+      @server.open_socket(client_id, es)
+      
+      es.onclose = lambda do |event|
+        @server.flush_connection(es)
+        es = nil
+      end
+      
+      es.rack_response
     end
     
     def message_from_request(request)

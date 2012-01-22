@@ -102,21 +102,29 @@ module Faye
       
       __send__(method, message, local) do |responses|
         responses = [responses].flatten
-        responses.each(&method(:advize))
+        responses.each { |r| advize(r, message['connectionType']) }
         callback.call(responses)
       end
     end
     
-    def advize(response)
+    def advize(response, connection_type)
       return unless [Channel::HANDSHAKE, Channel::CONNECT].include?(response['channel'])
+      
+      if connection_type == 'eventsource'
+        interval = (@engine.timeout * 1000).floor
+        timeout  = 0
+      else
+        interval = (@engine.interval * 1000).floor
+        timeout  = (@engine.timeout * 1000).floor
+      end
       
       advice = response['advice'] ||= {}
       if response['error']
         advice['reconnect'] ||= 'handshake'
       else
         advice['reconnect'] ||= 'retry'
-        advice['interval']  ||= (@engine.interval * 1000).floor
-        advice['timeout']   ||= (@engine.timeout * 1000).floor
+        advice['interval']  ||= interval
+        advice['timeout']   ||= timeout
       end
     end
     
@@ -175,6 +183,11 @@ module Faye
         if !response['successful']
           response.delete('clientId')
           next callback.call(response)
+        end
+        
+        if message['connectionType'] == 'eventsource'
+          message['advice'] ||= {}
+          message['advice']['timeout'] = 0
         end
         
         @engine.connect(response['clientId'], message['advice']) do |events|

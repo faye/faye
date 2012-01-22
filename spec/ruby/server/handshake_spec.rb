@@ -4,6 +4,10 @@ describe "server handshake" do
   let(:engine) { mock "engine" }
   let(:server) { Faye::Server.new }
   
+  let :connection_types do
+    ["long-polling","cross-origin-long-polling","callback-polling","websocket","eventsource","in-process"]
+  end
+  
   before do
     Faye::Engine.stub(:get).and_return engine
   end
@@ -27,7 +31,7 @@ describe "server handshake" do
             "channel"    => "/meta/handshake",
             "successful" => true,
             "version"    => "1.0",
-            "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket","in-process"],
+            "supportedConnectionTypes" => connection_types,
             "clientId"   => "clientid"
           }
         end
@@ -43,7 +47,7 @@ describe "server handshake" do
               "channel"    => "/meta/handshake",
               "successful" => true,
               "version"    => "1.0",
-              "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket","in-process"],
+              "supportedConnectionTypes" => connection_types,
               "clientId"   => "clientid",
               "id"         => "foo"
             }
@@ -67,7 +71,7 @@ describe "server handshake" do
             "successful" => false,
             "error"      => "402:version:Missing required parameter",
             "version"    => "1.0",
-            "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket","in-process"]
+            "supportedConnectionTypes" => connection_types
           }
         end
       end
@@ -88,7 +92,7 @@ describe "server handshake" do
             "successful" => false,
             "error"      => "402:supportedConnectionTypes:Missing required parameter",
             "version"    => "1.0",
-            "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket","in-process"]
+            "supportedConnectionTypes" => connection_types
           }
         end
       end
@@ -109,7 +113,7 @@ describe "server handshake" do
             "successful" => false,
             "error"      => "301:iframe,flash:Connection types not supported",
             "version"    => "1.0",
-            "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket","in-process"]
+            "supportedConnectionTypes" => connection_types
           }
         end
       end
@@ -130,7 +134,7 @@ describe "server handshake" do
             "successful" => false,
             "error"      => "invalid",
             "version"    => "1.0",
-            "supportedConnectionTypes" => ["long-polling","cross-origin-long-polling","callback-polling","websocket","in-process"]
+            "supportedConnectionTypes" => connection_types
           }
         end
       end
