@@ -176,6 +176,7 @@ Faye.NodeAdapter = Faye.Class({
         es       = new Faye.EventSource(request, response),
         self     = this;
     
+    this.debug('Opened EventSource connection to ?', pathname);
     this._server.openSocket(clientId, es);
     
     es.onclose = function(event) {
