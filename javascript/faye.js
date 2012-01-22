@@ -1,4 +1,4 @@
-if (!this.Faye) Faye = {};
+var Faye = (typeof Faye === 'object') ? Faye : {};
 
 Faye.extend = function(dest, source, overwrite) {
   if (!source) return dest;

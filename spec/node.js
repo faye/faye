@@ -1,7 +1,7 @@
 require('jsclass')
+Faye = require('../build/faye-node')
 
 JS.Packages(function() { with(this) {
-  file('build/faye-node.js').provides('Faye')
   autoload(/.*Spec/, {from: 'spec/javascript'})
 }})
 
