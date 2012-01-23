@@ -181,7 +181,7 @@ Faye.NodeAdapter = Faye.Class({
     
     es.onclose = function(event) {
       self._server.flushConnection(es);
-      socket = null;
+      es = null;
     };
   },
   
