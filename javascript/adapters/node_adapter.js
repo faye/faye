@@ -148,13 +148,14 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   handleUpgrade: function(request, socket, head) {
-    var ws   = new Faye.WebSocket(request, socket, head),
-        self = this;
+    var ws       = new Faye.WebSocket(request, socket, head),
+        clientId = null,
+        self     = this;
     
     ws.onmessage = function(event) {
       try {
-        var message  = JSON.parse(event.data),
-            clientId = message.clientId || message[0].clientId;
+        var message = JSON.parse(event.data);
+        clientId = [].concat(message)[0].clientId;
         
         self.debug('Received via WebSocket[' + ws.version + ']: ?', message);
         self._server.openSocket(clientId, ws);
@@ -166,7 +167,7 @@ Faye.NodeAdapter = Faye.Class({
     };
     
     ws.onclose = function(event) {
-      self._server.flushConnection(ws);
+      self._server.closeSocket(clientId);
       ws = null;
     };
   },
@@ -180,7 +181,7 @@ Faye.NodeAdapter = Faye.Class({
     this._server.openSocket(clientId, es);
     
     es.onclose = function(event) {
-      self._server.flushConnection(es);
+      self._server.closeSocket(clientId);
       es = null;
     };
   },

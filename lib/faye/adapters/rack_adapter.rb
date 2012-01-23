@@ -1,11 +1,4 @@
 module Faye
-  class WebSocket
-    attr_accessor :client_id
-  end
-  class EventSource
-    attr_accessor :client_id
-  end
-  
   class RackAdapter
     
     include Logging
@@ -134,7 +127,8 @@ module Faye
     end
     
     def handle_websocket(env)
-      ws = Faye::WebSocket.new(env)
+      ws        = Faye::WebSocket.new(env)
+      client_id = nil
       
       ws.onmessage = lambda do |event|
         begin
@@ -152,7 +146,7 @@ module Faye
       end
       
       ws.onclose = lambda do |event|
-        @server.flush_connection(ws)
+        @server.close_socket(client_id)
         ws = nil
       end
       
@@ -167,7 +161,7 @@ module Faye
       @server.open_socket(client_id, es)
       
       es.onclose = lambda do |event|
-        @server.flush_connection(es)
+        @server.close_socket(client_id)
         es = nil
       end
       

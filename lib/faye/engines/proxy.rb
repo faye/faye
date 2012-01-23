@@ -60,7 +60,6 @@ module Faye
       def open_socket(client_id, socket)
         conn = connection(client_id, true)
         conn.socket = socket
-        socket.client_id = client_id
       end
       
       def deliver(client_id, messages)

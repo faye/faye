@@ -9,7 +9,7 @@ Faye.Server = Faye.Class({
   },
   
   flushConnection: function(messages) {
-    var clientId = messages.clientId || [].concat(messages)[0].clientId;
+    var clientId = [].concat(messages)[0].clientId;
     if (!clientId) return;
     this.info('Flushing connection for ?', clientId);
     this._engine.flush(clientId);
@@ -17,6 +17,10 @@ Faye.Server = Faye.Class({
   
   openSocket: function(clientId, socket) {
     this._engine.openSocket(clientId, socket);
+  },
+  
+  closeSocket: function(clientId) {
+    this._engine.flush(clientId);
   },
   
   process: function(messages, local, callback, context) {

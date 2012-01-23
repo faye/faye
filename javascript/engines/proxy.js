@@ -51,7 +51,6 @@ Faye.Engine.Proxy = Faye.Class({
   openSocket: function(clientId, socket) {
     var conn = this.connection(clientId, true);
     conn.socket = socket;
-    socket.clientId = clientId;
   },
   
   deliver: function(clientId, messages) {

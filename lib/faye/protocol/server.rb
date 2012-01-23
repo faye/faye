@@ -16,10 +16,7 @@ module Faye
     end
     
     def flush_connection(messages)
-      client_id = messages.respond_to?(:client_id) ?
-                  messages.client_id :
-                  [messages].flatten.first['clientId']
-      
+      client_id = [messages].flatten.first['clientId']
       return unless client_id
       info 'Flushing connection for ?', client_id
       @engine.flush(client_id) if client_id
@@ -27,6 +24,10 @@ module Faye
     
     def open_socket(client_id, socket)
       @engine.open_socket(client_id, socket)
+    end
+    
+    def close_socket(client_id)
+      @engine.flush(client_id)
     end
     
     def process(messages, local = false, &callback)
