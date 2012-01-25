@@ -27,7 +27,15 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
     it("ignores invalid messages", function() { with(this) {
       var response = null
       server.process([{}, {channel: "invalid"}], false, function(r) { response = r})
-      assertEqual( [], response )
+      assertEqual([
+        { successful: false,
+          error:      "405::Invalid channel"
+        },
+        { channel:    "invalid",
+          successful: false,
+          error:      "405:invalid:Invalid channel"
+        }
+      ], response)
     }})
     
     it("routes single messages to appropriate handlers", function() { with(this) {

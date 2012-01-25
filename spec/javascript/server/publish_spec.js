@@ -13,29 +13,15 @@ JS.ENV.Server.PublishSpec = JS.Test.describe("Server publish", function() { with
       server.process(message, false, function() {})
     }})
     
-    it("returns no response", function() { with(this) {
+    it("returns a successful response", function() { with(this) {
       stub(engine, "publish")
       server.process(message, false, function(response) {
-        assertEqual( [], response)
+        assertEqual([
+          { channel:    "/some/channel",
+            successful: true
+          }
+        ], response)
       })
-    }})
-    
-    describe("with a clientId", function() { with(this) {
-      before(function() { with(this) {
-        message.clientId = "fakeclientid"
-      }})
-      
-      it("returns a successful response", function() { with(this) {
-        stub(engine, "publish")
-        server.process(message, false, function(response) {
-          assertEqual([
-            { channel:    "/some/channel",
-              clientId:   "fakeclientid",
-              successful: true
-            }
-          ], response)
-        })
-      }})
     }})
     
     describe("with an invalid channel", function() { with(this) {
@@ -48,23 +34,16 @@ JS.ENV.Server.PublishSpec = JS.Test.describe("Server publish", function() { with
         server.process(message, false, function() {})
       }})
       
-      describe("with a clientId", function() { with(this) {
-        before(function() { with(this) {
-          message.clientId = "fakeclientid"
-        }})
-        
-        it("returns an unsuccessful response", function() { with(this) {
-          stub(engine, "publish")
-          server.process(message, false, function(response) {
-            assertEqual([
-              { channel:    "channel",
-                clientId:   "fakeclientid",
-                successful: false,
-                error:      "405:channel:Invalid channel"
-              }
-            ], response)
-          })
-        }})
+      it("returns an unsuccessful response", function() { with(this) {
+        stub(engine, "publish")
+        server.process(message, false, function(response) {
+          assertEqual([
+            { channel:    "channel",
+              successful: false,
+              error:      "405:channel:Invalid channel"
+            }
+          ], response)
+        })
       }})
     }})
     
@@ -78,10 +57,15 @@ JS.ENV.Server.PublishSpec = JS.Test.describe("Server publish", function() { with
         server.process(message, false, function() {})
       }})
       
-      it("returns no response", function() { with(this) {
+      it("returns an unsuccessful response", function() { with(this) {
         stub(engine, "publish")
         server.process(message, false, function(response) {
-          assertEqual( [], response)
+          assertEqual([
+            { channel:    "/some/channel",
+              successful: false,
+              error:      "invalid"
+            }
+          ], response)
         })
       }})
     }})

@@ -92,14 +92,10 @@ Faye.Server = Faye.Class({
     
     if (!error) this._engine.publish(message);
     
-    if (message.clientId) {
-      response = this._makeResponse(message);
-      if (error) response.error = error;
-      response.successful = !response.error;
-      callback.call(context, [response]);
-    } else {
-      callback.call(context, []);
-    }
+    response = this._makeResponse(message);
+    if (error) response.error = error;
+    response.successful = !response.error;
+    callback.call(context, [response]);
   },
   
   _handleMeta: function(message, local, callback, context) {
