@@ -80,16 +80,21 @@ Faye.Server = Faye.Class({
     if (!message) return callback.call(context, []);
     this.info('Handling message: ? (local: ?)', message, local);
     
-    var channelName = message.channel, response;
+    var channelName = message.channel,
+        error       = message.error,
+        response;
     
     if (Faye.Channel.isMeta(channelName))
       return this._handleMeta(message, local, callback, context);
     
-    if (!message.error && Faye.Grammar.CHANNEL_NAME.test(channelName))
-      this._engine.publish(message);
+    if (!Faye.Grammar.CHANNEL_NAME.test(channelName))
+      error = Faye.Error.channelInvalid(channelName);
+    
+    if (!error) this._engine.publish(message);
     
     if (message.clientId) {
       response = this._makeResponse(message);
+      if (error) response.error = error;
       response.successful = !response.error;
       callback.call(context, [response]);
     } else {

@@ -53,49 +53,6 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       server.process([handshake, connect, disconnect, subscribe, unsubscribe, publish], false, function() {})
     }})
     
-    describe("publishing a message", function() { with(this) {
-      it("tells the engine to publish the message", function() { with(this) {
-        expect(engine, "publish").given(publish)
-        server.process(publish, false, function() {})
-      }})
-      
-      it("returns no response", function() { with(this) {
-        stub(engine, "publish")
-        server.process(publish, false, function(response) {
-          assertEqual( [], response)
-        })
-      }})
-      
-      describe("with an error", function() { with(this) {
-        before(function() { with(this) {
-          publish.error = "invalid"
-        }})
-        
-        it("does not tell the engine to publish the message", function() { with(this) {
-          expect(engine, "publish").exactly(0)
-          server.process(publish, false, function() {})
-        }})
-        
-        it("returns no response", function() { with(this) {
-          stub(engine, "publish")
-          server.process(publish, false, function(response) {
-            assertEqual( [], response)
-          })
-        }})
-      }})
-
-      describe("to an invalid channel", function() { with(this) {
-        before(function() { with(this) {
-          publish.channel = "/invalid/*"
-        }})
-
-        it("does not tell the engine to publish the message", function() { with(this) {
-          expect(engine, "publish").exactly(0)
-          server.process(publish, false, function() {})
-        }})
-      }})
-    }})
-    
     describe("handshaking", function() { with(this) {
       before(function() { with(this) {
         expect(server, "handshake").given(handshake, false).yielding([{channel: "/meta/handshake", successful: true}])

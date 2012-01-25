@@ -583,11 +583,6 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       client.publish("/messages/foo", {hello: "world"})
     }})
     
-    it("throws an error when publishing to an invalid channel", function() { with(this) {
-      expect(transport, "send").given(objectIncluding({channel: "/messages/*"}), 60).exactly(0)
-      assertThrows(Error, function() { client.publish("/messages/*", {hello: "world"}) })
-    }})
-    
     describe("on publish failure", function() { with(this) {
       before(function() { with(this) {
         stubResponse({channel:    "/messages/foo",

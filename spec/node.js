@@ -43,6 +43,7 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
               'Server.DisconnectSpec',
               'Server.SubscribeSpec',
               'Server.UnsubscribeSpec',
+              'Server.PublishSpec',
               'Server.ExtensionsSpec',
               'Server.IntegrationSpec',
               'NodeAdapterSpec',

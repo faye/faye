@@ -273,9 +273,6 @@ Faye.Client = Faye.Class({
   //                * id                                 * error
   //                * ext                                * ext
   publish: function(channel, data) {
-    if (!Faye.Grammar.CHANNEL_NAME.test(channel))
-      throw new Error("Cannot publish: '" + channel + "' is not a valid channel name");
-    
     var publication = new Faye.Publication();
     
     this.connect(function() {
