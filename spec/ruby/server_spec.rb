@@ -30,7 +30,15 @@ describe Faye::Server do
     it "ignores invalid messages" do
       response = nil
       server.process([{}, {"channel" => "invalid"}], false) { |r| response = r }
-      response.should == []
+      response.should == [
+        { "successful"  => false,
+          "error"       => "405::Invalid channel"
+        },
+        { "channel"     => "invalid",
+          "successful"  => false,
+          "error"       =>"405:invalid:Invalid channel"
+        }
+      ]
     end
     
     it "routes single messages to appropriate handlers" do
@@ -53,41 +61,6 @@ describe Faye::Server do
       engine.should_receive(:publish).with(publish)
       
       server.process([handshake, connect, disconnect, subscribe, unsubscribe, publish], false)
-    end
-    
-    describe "publishing a message" do
-      it "tells the engine to publish the message" do
-        engine.should_receive(:publish).with(publish)
-        server.process(publish, false) {}
-      end
-      
-      it "returns no response" do
-        engine.stub(:publish)
-        server.process(publish, false) { |r| r.should == [] }
-      end
-      
-      describe "with an error" do
-        before { publish["error"] = "invalid" }
-        
-        it "does not tell the engine to publish the message" do
-          engine.should_not_receive(:publish)
-          server.process(publish, false) {}
-        end
-        
-        it "returns no response" do
-          engine.stub(:publish)
-          server.process(publish, false) { |r| r.should == [] }
-        end
-      end
-
-      describe "to an invalid channel" do
-        before { publish["channel"] = "/invalid/*" }
-
-        it "does not tell the engine to publish the message" do
-          engine.should_not_receive(:publish)
-          server.process(publish, false) {}
-        end
-      end
     end
     
     describe "handshaking" do

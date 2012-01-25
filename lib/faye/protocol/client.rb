@@ -265,10 +265,6 @@ module Faye
     #                * id                                 * error
     #                * ext                                * ext
     def publish(channel, data)
-      unless Grammar::CHANNEL_NAME =~ channel
-        raise "Cannot publish: '#{channel}' is not a valid channel name"
-      end
-      
       publication = Publication.new
       connect {
         info('Client ? queueing published message to ?: ?', @client_id, channel, data)
