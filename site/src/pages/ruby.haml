@@ -16,17 +16,19 @@
     @bayeux.listen@ will block if EventMachine is not already running. The
     @RackAdapter@ class supports these options during setup:
     
-    * @:mount@: the path on the host at which the Faye service is available. In
-      this example, clients would connect to @http://localhost:9292/faye@ to
-      talk to the server.
-    * @:timeout@: the maximum time to hold a connection open before returning
+    * *@:mount@* - the path on the host at which the Faye service is available.
+      In this example, clients would connect to @http://localhost:9292/faye@ to
+      talk to the server. The server will handle _any_ request whose path begins
+      with the @:mount@ path; this is so that it can interoperate with clients
+      that use different request paths for different channels.
+    * *@:timeout@* - the maximum time to hold a connection open before returning
       the response. This is given in seconds and must be smaller than the
       timeout on your frontend webserver. Faye uses Thin as its webserver, whose
       default timeout is 30 seconds.
-    * @:extensions@: (optional) a list of extensions to add to the server,
+    * *@:extensions@* - (optional) a list of extensions to add to the server,
       useful when using @RackAdapter@ as middleware.
-    * @:engine@: (optional) the type and parameters for the engine you want to
-      use - see 'Engines' below.
+    * *@:engine@* - (optional) the type and parameters for the engine you want
+      to use - see the "engines documentation":/ruby/engines.html
     
     The @listen()@ method can take options that specify the key and certificate
     files to use, which if given make the server respond to SSL traffic.
@@ -49,18 +51,24 @@
     
     run Sinatra::Application</pre>
     
-    h4. Notes
-    
-    A note about the mount point: mounting the server at @/faye@ will make the
-    Faye server respond to any request whose path begins @/faye@; this is so
-    that it can interoperate with clients that use different request paths for
-    different channels.
+    h4. Running your Faye application
     
     Being an event-driven application, Faye only works with event-driven servers.
-    Though it is a Rack application, the only web server it currently supports
-    is Thin, since it uses asynchronous responses to deal with long-running
-    connections. For this reason you should use @thin@ rather than @rackup@ to
-    start the app; @rackup@ in development mode adds middleware that is not
-    compatible with async servers.
+    It currently supports the same set of servers as
+    "faye-websocket":http://github.com/faye/faye-websocket-ruby, namely
+    "Thin":http://code.macournoyer.com/thin/,
+    "Rainbows":http://rainbows.rubyforge.org/ and
+    "Goliath":http://postrank-labs.github.com/goliath/. The faye-websocket
+    documentation has plenty of information on running Rack applications with
+    these servers (see "Running your socket application":http://rubydoc.info/gems/faye-websocket/file/README.rdoc#Running_your_socket_application),
+    but it's worth restating here that you must tell @Faye::WebSocket@ which
+    web server you're using before booting the application, so it can load
+    adapters for it. For example to load the Thin adapter:
     
-    <pre class="prettyprint">thin start -R config.ru -p 9292</pre>
+    <pre class="prettyprint"># config.ru
+    require 'faye'
+    Faye::WebSocket.load_adapter('thin')
+    
+    app = Faye::RackAdapter.new(:mount => '/faye', :timeout => 25)
+    
+    run app</pre>

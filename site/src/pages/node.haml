@@ -17,12 +17,16 @@
     
     The @NodeAdapter@ class supports these options during setup:
     
-    * @mount@: the path on the host at which the Faye service is available. In
-      this example, clients would connect to @http://localhost:8000/faye@ to
-      talk to the server.
-    * @timeout@: the maximum time to hold a connection open before returning the
-      response. This is given in seconds and must be smaller than the timeout on
-      your frontend webserver.
+    * *@mount@* - the path on the host at which the Faye service is available.
+      In this example, clients would connect to @http://localhost:8000/faye@ to
+      talk to the server. The server will handle _any_ request whose path begins
+      with the @mount@ path; this is so that it can interoperate with clients
+      that use different request paths for different channels.
+    * *@timeout@* - the maximum time to hold a connection open before returning
+      the response. This is given in seconds and must be smaller than the
+      timeout on your frontend webserver.
+    * *@engine@* - (optional) the type and parameters for the engine you want to
+      use - see the "engines documentation":/node/engines.html
     
     The @listen()@ method can take options that specify the key and certificate
     files to use, which if given make the server respond to SSL traffic.
@@ -50,10 +54,3 @@
     
     bayeux.attach(server);
     server.listen(8000);</pre>
-    
-    h4. Notes
-    
-    A note about the mount point: mounting the server at @/faye@ will make the
-    Faye server respond to any request whose path begins @/faye@; this is so
-    that it can interoperate with clients that use different request paths for
-    different channels.
