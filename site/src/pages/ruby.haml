@@ -43,7 +43,7 @@
     
     <pre class="prettyprint"># config.ru
     require 'faye'
-    require File.dirname(__FILE__) + '/app'
+    require File.expand_path('../app', __FILE__)
     
     use Faye::RackAdapter, :mount      => '/faye',
                            :timeout    => 25,
