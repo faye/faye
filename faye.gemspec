@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
             Dir.glob("{spec,lib}/**/*")
   
   s.add_dependency "cookiejar", ">= 0.3.0"
-  s.add_dependency "em-http-request", "~> 0.3.0"
+  s.add_dependency "em-http-request", ">= 0.3.0"
   s.add_dependency "eventmachine", ">= 0.12.0"
   s.add_dependency "faye-websocket", ">= 0.3.0"
   s.add_dependency "json", ">= 1.0.0"
