@@ -11,6 +11,7 @@ node_js:
 before_script:
   - git submodule update --init --recursive
   - bundle exec jake
+  - npm install
 
 script:
   - bundle exec rspec spec/
