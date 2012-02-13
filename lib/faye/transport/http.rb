@@ -17,7 +17,7 @@ module Faye
       
       request.callback do
         handle_response(request.response, retry_block)
-        store_cookies([*request.response_header['SET_COOKIE']])
+        store_cookies([*request.response_header['SET_COOKIE']].compact)
       end
       request.errback do
         retry_block.call
