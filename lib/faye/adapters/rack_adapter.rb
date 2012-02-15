@@ -11,6 +11,7 @@ module Faye
     
     DEFAULT_ENDPOINT  = '/bayeux'
     SCRIPT_PATH       = File.join(ROOT, 'faye-browser-min.js')
+    DEFAULT_MAX_NESTING = 64
     
     TYPE_JSON   = {'Content-Type' => 'application/json'}
     TYPE_SCRIPT = {'Content-Type' => 'text/javascript'}
@@ -23,6 +24,7 @@ module Faye
       @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
       @endpoint_re = Regexp.new('^' + @endpoint + '(/[^/]*)*(\\.js)?$')
       @server      = Server.new(@options)
+      @max_nesting = @options[:max_nesting] || DEFAULT_MAX_NESTING
       
       return unless extensions = @options[:extensions]
       [*extensions].each { |extension| add_extension(extension) }
@@ -101,7 +103,7 @@ module Faye
     
     def handle_request(request)
       json_msg = message_from_request(request)
-      message  = JSON.parse(json_msg)
+      message  = JSON.parse(json_msg, :max_nesting => @max_nesting)
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
       headers  = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
       origin   = request.env['HTTP_ORIGIN']
@@ -116,7 +118,7 @@ module Faye
       callback.call [200, headers, body]
       
       @server.process(message, false) do |replies|
-        response = JSON.unparse(replies)
+        response = JSON.unparse(replies, :max_nesting => @max_nesting)
         response = "#{ jsonp }(#{ response });" if request.get?
         debug 'Returning ?', response
         body.succeed(response)
@@ -132,11 +134,11 @@ module Faye
       
       socket.onmessage = lambda do |message|
         begin
-          message = JSON.parse(message.data)
+          message = JSON.parse(message.data, :max_nesting => @max_nesting)
           debug "Received via WebSocket[#{socket.version}]: ?", message
           @server.process(message, false) do |replies|
             debug "Sending via WebSocket[#{socket.version}]: ?", replies
-            socket.send(JSON.unparse(replies))
+            socket.send(JSON.unparse(replies, :max_nesting => @max_nesting))
           end
         rescue
         end
