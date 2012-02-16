@@ -109,7 +109,6 @@ module Faye
       origin   = request.env['HTTP_ORIGIN']
       callback = request.env['async.callback']
       body     = DeferredBody.new
-      
       debug 'Received ?: ?', request.env['REQUEST_METHOD'], json_msg
       @server.flush_connection(message) if request.get?
       
@@ -125,8 +124,12 @@ module Faye
       end
       
       ASYNC_RESPONSE
-    rescue
+    rescue JSON::ParserError => e
+      debug 'Bad request: ?', e
       [400, TYPE_TEXT, ['Bad request']]
+    rescue Exception => e
+      log_error e
+      [500, TYPE_TEXT, ['Internal server error']]
     end
     
     def handle_upgrade(request)
