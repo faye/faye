@@ -102,7 +102,7 @@ module Faye
     
     def handle_request(request)
       json_msg = message_from_request(request)
-      message  = JSON.parse(json_msg)
+      message  = Yajl::Parser.parse(json_msg)
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
       headers  = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
       origin   = request.env['HTTP_ORIGIN']
@@ -115,7 +115,7 @@ module Faye
       headers['Cache-Control'] = 'no-cache, no-store' if request.get?
       
       @server.process(message, false) do |replies|
-        response = JSON.unparse(replies)
+        response = Faye.to_json(replies)
         response = "#{ jsonp }(#{ response });" if request.get?
         debug 'Returning ?', response
         callback.call [200, headers, [response]]
@@ -132,14 +132,14 @@ module Faye
       
       ws.onmessage = lambda do |event|
         begin
-          message   = JSON.parse(event.data)
+          message   = Yajl::Parser.parse(event.data)
           client_id = [message].flatten[0]['clientId']
           
           debug "Received via WebSocket[#{ws.version}]: ?", message
           @server.open_socket(client_id, ws)
           
           @server.process(message, false) do |replies|
-            ws.send(JSON.unparse(replies)) if ws
+            ws.send(Faye.to_json(replies)) if ws
           end
         rescue
         end

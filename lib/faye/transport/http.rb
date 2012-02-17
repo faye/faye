@@ -10,7 +10,7 @@ module Faye
       
       @client.cookies ||= CookieJar::Jar.new
       
-      content = JSON.unparse(message)
+      content = Faye.to_json(message)
       cookies = @client.cookies.get_cookies(@endpoint)
       params  = build_params(URI.parse(@endpoint), content, cookies)
       request = create_request(params)
@@ -55,7 +55,7 @@ module Faye
     end
     
     def handle_response(response, retry_block)
-      message = JSON.parse(response) rescue nil
+      message = Yajl::Parser.parse(response) rescue nil
       if message
         receive(message)
         trigger(:up)

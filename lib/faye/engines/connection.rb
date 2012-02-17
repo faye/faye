@@ -15,7 +15,7 @@ module Faye
       end
       
       def deliver(message)
-        return socket.send(JSON.unparse([message])) if socket
+        return socket.send(Faye.to_json([message])) if socket
         return unless @inbox.add?(message)
         begin_delivery_timeout
       end

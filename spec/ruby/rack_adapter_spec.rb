@@ -13,7 +13,7 @@ describe Faye::RackAdapter do
   let(:content_type)          { last_response["Content-Type"] }
   let(:cache_control)         { last_response["Cache-Control"] }
   let(:access_control_origin) { last_response["Access-Control-Allow-Origin"] }
-  let(:json)                  { JSON.parse(body) }
+  let(:json)                  { Yajl::Parser.parse(body) }
   let(:body)                  { last_response.body }
   let(:status)                { last_response.status.to_i }
   

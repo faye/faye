@@ -39,7 +39,7 @@ module Faye
     def request(messages, timeout = nil)
       @messages ||= {}
       messages.each { |message| @messages[message['id']] = message }
-      with_socket { |socket| socket.send(JSON.unparse(messages)) }
+      with_socket { |socket| socket.send(Faye.to_json(messages)) }
     end
     
     def with_socket(&resume)
@@ -70,7 +70,7 @@ module Faye
       end
       
       @socket.onmessage = lambda do |event|
-        messages = [JSON.parse(event.data)].flatten
+        messages = [Yajl::Parser.parse(event.data)].flatten
         messages.each { |message| @messages.delete(message['id']) }
         receive(messages)
       end
