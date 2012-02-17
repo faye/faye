@@ -1,11 +1,4 @@
 module Faye
-  
-  class << self
-    attr_accessor :logger
-  end
-  
-  self.logger = method(:puts)
-  
   module Logging
     
     DEFAULT_LOG_LEVEL = :error
@@ -42,7 +35,7 @@ module Faye
       timestamp = Time.now.strftime('%Y-%m-%d %H:%M:%S')
       banner = " [#{ level.to_s.upcase }] [#{ self.class.name }] "
       
-      puts(timestamp + banner + message)
+      Faye.logger.call(timestamp + banner + message)
     end
     
     LOG_LEVELS.each do |level, value|

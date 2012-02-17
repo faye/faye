@@ -45,6 +45,11 @@ module Faye
   
   MANDATORY_CONNECTION_TYPES = %w[long-polling callback-polling in-process]
   
+  class << self
+    attr_accessor :logger
+  end
+  self.logger = method(:puts)
+  
   def self.ensure_reactor_running!
     Thread.new { EM.run } unless EM.reactor_running?
     Thread.pass until EM.reactor_running?

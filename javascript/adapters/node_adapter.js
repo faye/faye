@@ -163,7 +163,9 @@ Faye.NodeAdapter = Faye.Class({
         self._server.process(message, false, function(replies) {
           if (ws) ws.send(JSON.stringify(replies));
         });
-      } catch (e) {}
+      } catch (e) {
+        self.error(e.message + '\nBacktrace:\n' + e.stack);
+      }
     };
     
     ws.onclose = function(event) {
@@ -237,6 +239,7 @@ Faye.NodeAdapter = Faye.Class({
         response.end();
       }, this);
     } catch (e) {
+      this.error(e.message + '\nBacktrace:\n' + e.stack);
       this._returnError(response);
     }
   },

@@ -1,5 +1,6 @@
 require('jsclass')
 Faye = require('../build/faye-node')
+Faye.logger = function() {}
 
 JS.Packages(function() { with(this) {
   autoload(/.*Spec/, {from: 'spec/javascript'})

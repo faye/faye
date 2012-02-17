@@ -122,7 +122,8 @@ module Faye
       end
       
       ASYNC_RESPONSE
-    rescue
+    rescue => e
+      error "#{e.message}\nBacktrace:\n#{e.backtrace * "\n"}"
       [400, TYPE_TEXT, ['Bad request']]
     end
     
@@ -141,7 +142,8 @@ module Faye
           @server.process(message, false) do |replies|
             ws.send(Faye.to_json(replies)) if ws
           end
-        rescue
+        rescue => e
+          error "#{e.message}\nBacktrace:\n#{e.backtrace * "\n"}"
         end
       end
       
