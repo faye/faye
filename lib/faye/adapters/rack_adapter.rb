@@ -127,7 +127,7 @@ module Faye
     end
     
     def handle_websocket(env)
-      ws        = Faye::WebSocket.new(env)
+      ws        = Faye::WebSocket.new(env, nil, :ping => @options[:ping])
       client_id = nil
       
       ws.onmessage = lambda do |event|
@@ -154,7 +154,7 @@ module Faye
     end
     
     def handle_eventsource(env)
-      es        = Faye::EventSource.new(env)
+      es        = Faye::EventSource.new(env, :ping => @options[:ping])
       client_id = es.url.split('/').pop
       
       debug 'Opened EventSource connection for ?', client_id

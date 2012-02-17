@@ -148,7 +148,7 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   handleUpgrade: function(request, socket, head) {
-    var ws       = new Faye.WebSocket(request, socket, head),
+    var ws       = new Faye.WebSocket(request, socket, head, null, {ping: this._options.ping}),
         clientId = null,
         self     = this;
     
@@ -173,7 +173,7 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   handleEventSource: function(request, response) {
-    var es       = new Faye.EventSource(request, response),
+    var es       = new Faye.EventSource(request, response, {ping: this._options.ping}),
         clientId = es.url.split('/').pop(),
         self     = this;
     
