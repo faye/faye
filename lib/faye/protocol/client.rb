@@ -183,38 +183,40 @@ module Faye
     #                                                     * ext
     #                                                     * id
     #                                                     * timestamp
-    def subscribe(channels, force = false, &block)
-      if Array === channels
-        return channels.each do |channel|
+    def subscribe(channel, force = false, &block)
+      if Array === channel
+        return channel.each do |channel|
           subscribe(channel, force, &block)
         end
       end
       
-      subscription = Subscription.new(self, channels, block)
+      subscription  = Subscription.new(self, channel, block)
+      has_subscribe = @channels.has_subscription?(channel)
       
-      if not force and @channels.has_subscription?(channels)
-        @channels.subscribe([channels], block)
-        subscription.set_deferred_status(:succeeded)
-        return subscription
+      unless force
+        @channels.subscribe([channel], block)
+        if has_subscribe
+          subscription.set_deferred_status(:succeeded)
+          return subscription
+        end
       end
       
       connect {
-        info('Client ? attempting to subscribe to ?', @client_id, channels)
+        info('Client ? attempting to subscribe to ?', @client_id, channel)
         
         send({
           'channel'       => Channel::SUBSCRIBE,
           'clientId'      => @client_id,
-          'subscription'  => channels
+          'subscription'  => channel
           
         }) do |response|
           unless response['successful']
-            next subscription.set_deferred_status(:failed, Error.parse(response['error']))
+            subscription.set_deferred_status(:failed, Error.parse(response['error']))
+            next @channels.unsubscribe(channel, block)
           end
           
           channels = [response['subscription']].flatten
           info('Subscription acknowledged for ? to ?', @client_id, channels)
-          @channels.subscribe(channels, block)
-          
           subscription.set_deferred_status(:succeeded)
         end
       }
@@ -231,23 +233,23 @@ module Faye
     #                                                     * ext
     #                                                     * id
     #                                                     * timestamp
-    def unsubscribe(channels, &block)
-      if Array === channels
-        return channels.each do |channel|
+    def unsubscribe(channel, &block)
+      if Array === channel
+        return channel.each do |channel|
           unsubscribe(channel, &block)
         end
       end
       
-      dead = @channels.unsubscribe(channels, block)
+      dead = @channels.unsubscribe(channel, block)
       return unless dead
       
       connect {
-        info('Client ? attempting to unsubscribe from ?', @client_id, channels)
+        info('Client ? attempting to unsubscribe from ?', @client_id, channel)
         
         send({
           'channel'       => Channel::UNSUBSCRIBE,
           'clientId'      => @client_id,
-          'subscription'  => channels
+          'subscription'  => channel
           
         }) do |response|
           next unless response['successful']

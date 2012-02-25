@@ -188,39 +188,42 @@ Faye.Client = Faye.Class({
   //                                                     * ext
   //                                                     * id
   //                                                     * timestamp
-  subscribe: function(channels, callback, context) {
-    if (channels instanceof Array) {
-      for (var i = 0, n = channels.length; i < n; i++) {
-        this.subscribe(channels[i], callback, context);
+  subscribe: function(channel, callback, context) {
+    if (channel instanceof Array) {
+      for (var i = 0, n = channel.length; i < n; i++) {
+        this.subscribe(channel[i], callback, context);
       }
       return;
     }
     
-    var subscription = new Faye.Subscription(this, channels, callback, context),
-        force        = (callback === true);
+    var subscription = new Faye.Subscription(this, channel, callback, context),
+        force        = (callback === true),
+        hasSubscribe = this._channels.hasSubscription(channel);
     
-    if (!force && this._channels.hasSubscription(channels)) {
-      this._channels.subscribe([channels], callback, context);
-      subscription.setDeferredStatus('succeeded');
-      return subscription;
+    if (!force) {
+      this._channels.subscribe([channel], callback, context);
+      if (hasSubscribe) {
+        subscription.setDeferredStatus('succeeded');
+        return subscription;
+      }
     }
     
     this.connect(function() {
-      this.info('Client ? attempting to subscribe to ?', this._clientId, channels);
+      this.info('Client ? attempting to subscribe to ?', this._clientId, channel);
       
       this._send({
         channel:      Faye.Channel.SUBSCRIBE,
         clientId:     this._clientId,
-        subscription: channels
+        subscription: channel
         
       }, function(response) {
-        if (!response.successful)
-          return subscription.setDeferredStatus('failed', Faye.Error.parse(response.error));
+        if (!response.successful) {
+          subscription.setDeferredStatus('failed', Faye.Error.parse(response.error));
+          return this._channels.unsubscribe(channel, callback, context);
+        }
         
         var channels = [].concat(response.subscription);
         this.info('Subscription acknowledged for ? to ?', this._clientId, channels);
-        if (!force) this._channels.subscribe(channels, callback, context);
-        
         subscription.setDeferredStatus('succeeded');
       }, this);
     }, this);
@@ -238,24 +241,24 @@ Faye.Client = Faye.Class({
   //                                                     * ext
   //                                                     * id
   //                                                     * timestamp
-  unsubscribe: function(channels, callback, context) {
-    if (channels instanceof Array) {
-      for (var i = 0, n = channels.length; i < n; i++) {
-        this.unsubscribe(channels[i], callback, context);
+  unsubscribe: function(channel, callback, context) {
+    if (channel instanceof Array) {
+      for (var i = 0, n = channel.length; i < n; i++) {
+        this.unsubscribe(channel[i], callback, context);
       }
       return;
     }
     
-    var dead = this._channels.unsubscribe(channels, callback, context);
+    var dead = this._channels.unsubscribe(channel, callback, context);
     if (!dead) return;
     
     this.connect(function() {
-      this.info('Client ? attempting to unsubscribe from ?', this._clientId, channels);
+      this.info('Client ? attempting to unsubscribe from ?', this._clientId, channel);
       
       this._send({
         channel:      Faye.Channel.UNSUBSCRIBE,
         clientId:     this._clientId,
-        subscription: channels
+        subscription: channel
         
       }, function(response) {
         if (!response.successful) return;
