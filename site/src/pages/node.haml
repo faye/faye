@@ -27,6 +27,9 @@
       timeout on your frontend webserver.
     * *@engine@* - (optional) the type and parameters for the engine you want to
       use - see the "engines documentation":/node/engines.html
+    * *@ping@* - (optional) how often, in seconds, to send keep-alive ping
+      messages over WebSocket and EventSource connections. Use this if your Faye
+      server will be accessed through a proxy that kills idle connections.
     
     The @listen()@ method can take options that specify the key and certificate
     files to use, which if given make the server respond to SSL traffic.
