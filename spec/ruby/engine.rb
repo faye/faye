@@ -1,6 +1,17 @@
 # encoding=utf-8
 
-require "spec_helper"
+root = File.expand_path('../../..', __FILE__)
+
+require root + '/vendor/em-rspec/lib/em-rspec'
+require root + '/spec/encoding_helper'
+
+require root + '/lib/faye/mixins/logging'
+require root + '/lib/faye/mixins/publisher'
+require root + '/lib/faye/mixins/timeouts'
+
+require root + '/lib/faye/protocol/channel'
+require root + '/lib/faye/protocol/grammar'
+require root + '/lib/faye/engines/proxy'
 
 EngineSteps = EM::RSpec.async_steps do
   def create_client(name, &resume)
@@ -57,14 +68,14 @@ EngineSteps = EM::RSpec.async_steps do
   def publish(messages, &resume)
     messages = [messages].flatten
     messages.each do |message|
-      message = {"id" => Faye.random}.merge(message)
+      message = {"id" => Faye::Engine.random}.merge(message)
       engine.publish(message)
     end
     EM.add_timer(0.01, &resume)
   end
   
   def publish_by(name, message, &resume)
-    message = {"clientId" => @clients[name], "id" => Faye.random}.merge(message)
+    message = {"clientId" => @clients[name], "id" => Faye::Engine.random}.merge(message)
     engine.publish(message)
     EM.add_timer(0.01, &resume)
   end
@@ -125,7 +136,8 @@ describe "Pub/sub engines" do
     let(:engine) { create_engine }
     
     before do
-      Faye.ensure_reactor_running!
+      Faye.stub(:logger)
+      Faye::Engine.ensure_reactor_running!
       create_client :alice
       create_client :bob
       create_client :carol
@@ -389,7 +401,8 @@ describe "Pub/sub engines" do
     alias :engine :left
     
     before do
-      Faye.ensure_reactor_running!
+      Faye.stub(:logger)
+      Faye::Engine.ensure_reactor_running!
       create_client :alice
       create_client :bob
       

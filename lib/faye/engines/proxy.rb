@@ -5,12 +5,26 @@ module Faye
     MAX_DELAY = 0.0
     INTERVAL  = 0.0
     TIMEOUT   = 60.0
+    ID_LENGTH = 128
     
-    autoload :Connection, ROOT + '/faye/engines/connection'
-    autoload :Memory,     ROOT + '/faye/engines/memory'
+    autoload :Connection, File.expand_path('../connection', __FILE__)
+    autoload :Memory,     File.expand_path('../memory', __FILE__)
+    
+    def self.ensure_reactor_running!
+      Thread.new { EM.run } unless EM.reactor_running?
+      Thread.pass until EM.reactor_running?
+    end
     
     def self.get(options)
       Proxy.new(options)
+    end
+    
+    def self.random(bitlength = ID_LENGTH)
+      limit    = 2 ** bitlength - 1
+      max_size = limit.to_s(36).size
+      string   = rand(limit).to_s(36)
+      string = '0' + string while string.size < max_size
+      string
     end
     
     class Proxy
@@ -71,7 +85,7 @@ module Faye
       end
       
       def generate_id
-        Faye.random
+        Engine.random
       end
       
       def flush(client_id)

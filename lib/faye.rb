@@ -39,7 +39,6 @@ module Faye
   autoload :RackAdapter,  File.join(ROOT, 'faye', 'adapters', 'rack_adapter')
   
   BAYEUX_VERSION   = '1.0'
-  ID_LENGTH        = 128
   JSONP_CALLBACK   = 'jsonpcallback'
   CONNECTION_TYPES = %w[long-polling cross-origin-long-polling callback-polling websocket eventsource in-process]
   
@@ -51,16 +50,11 @@ module Faye
   self.logger = method(:puts)
   
   def self.ensure_reactor_running!
-    Thread.new { EM.run } unless EM.reactor_running?
-    Thread.pass until EM.reactor_running?
+    Engine.ensure_reactor_running!
   end
   
-  def self.random(bitlength = ID_LENGTH)
-    limit    = 2 ** bitlength - 1
-    max_size = limit.to_s(36).size
-    string   = rand(limit).to_s(36)
-    string = '0' + string while string.size < max_size
-    string
+  def self.random(*args)
+    Engine.random(*args)
   end
   
   def self.copy_object(object)
