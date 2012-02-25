@@ -7,5 +7,5 @@ require 'rack/test'
 Faye.logger = lambda { |*| }
 
 require 'encoding_helper'
-require 'ruby/engine'
+require 'ruby/engine_examples'
 
