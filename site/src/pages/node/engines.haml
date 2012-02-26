@@ -110,9 +110,9 @@
     @clientId@ as disconnected. No further messages will be sent by the client
     after this happens.
     
-    The engine should call @proxy.trigger('disconnect', clientId) after deleting
-    the client's data. If a callback is given it should be called after the
-    client has been deleted.
+    The engine should call @proxy.trigger('disconnect', clientId)@ after
+    deleting the client's data. If a callback is given it should be called after
+    the client has been deleted.
     
     h4. @engine.clientExists(clientId, function(exists) {})@
     

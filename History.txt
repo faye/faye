@@ -1,3 +1,20 @@
+=== 0.8.0 / 2012-02-26
+TestSwarm build: http://swarm.jcoglan.com/job/123/
+
+* Extract the Redis engine into a separate library, faye-redis
+* Stabilize and document the Engine API so others can write backends
+* Extract WebSocket and EventSource tools into a separate library, faye-websocket
+* Improve use of WebSocket so messages are immediately pushed rather than polling
+* Introduce new EventSource-based transport, for proxies that block WebSocket
+* Support the Rainbows and Goliath web servers for Ruby, same as faye-websocket
+* Improve detection of network errors and switch to fixed-interval for reconnecting
+* Add setHeader() method to Client (e.g. for connecting to Salesforce API)
+* Add timeout() method to Faye.Deferrable to match EventMachine::Deferrable
+* Fix some bugs in client-side message handlers created with subscribe()
+* Improve speed and memory consumption of copyObject()
+* Switch from JSON to Yajl for JSON parsing in Ruby
+
+
 === 0.7.1 / 2011-12-22
 
 * Extension added() and removed() methods now receive the extended object

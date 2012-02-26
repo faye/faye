@@ -33,15 +33,33 @@
     data for the given period of time, the client will assume the server has
     gone away and will attempt to reconnect. Specify the timeout as follows:
     
-    <pre class="prettyprint"><script type="text/javascript">
-        var client = new Faye.Client('http://localhost:8000/faye', {
-            timeout: 120
-        });
-    </script></pre>
+    <pre class="prettyprint">var client = new Faye.Client('http://localhost:8000/faye', {
+        timeout: 120
+    });</pre>
     
     The timeout is given in seconds and should be larger that the timeout you
     set up on the server side, so we give the server ample time to respond
     before assuming there's been a network error.
+    
+    h4. Retry interval
+    
+    If the connection to the server is lost, the client will periodically try to
+    reconnect and redeliver dropped messages. You can control how often these
+    retries happen using the @retry@ setting. It sets how often, in seconds, the
+    client will try to reconnect:
+    
+    <pre class="prettyprint">var client = new Faye.Client('http://localhost:8000/faye', {
+        retry: 5
+    });</pre>
+    
+    h4. Custom headers
+    
+    Some services require the use of additional HTTP headers to connect to their
+    Bayeux server. You can add these headers using the @setHeader()@ method, and
+    they will be sent if the underlying transport supports user-defined headers
+    (currently @long-polling@ only).
+    
+    <pre class="prettyprint">client.setHeader('Authorization', 'OAuth abcd-1234');</pre>
     
     h4. Cross-domain operation
     

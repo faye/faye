@@ -19,12 +19,19 @@
     <pre class="prettyprint">require 'eventmachine'
     
     EM.run {
+      client = Faye::Client.new('http://localhost:9292/faye')
+      
       client.subscribe('/foo') do |message|
         puts message.inspect
       end
       
       client.publish('/foo', 'text' => 'Hello world')
     }</pre>
+    
+    If you need to set custom headers to talk to your Bayeux server, use the
+    @set_header@ method:
+    
+    <pre class="prettyprint">client.set_header('Authorization', 'OAuth abcd-1234')</pre>
     
     The server has its own client attached to it so you can use the server to
     send messages to browsers. This client has direct access to the server

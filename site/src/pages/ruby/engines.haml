@@ -107,9 +107,9 @@
     @client_id@ as disconnected. No further messages will be sent by the client
     after this happens.
     
-    The engine should call @proxy.trigger(:disconnect, client_id) after deleting
-    the client's data. If a block is given it should be called after the client
-    has been deleted.
+    The engine should call @proxy.trigger(:disconnect, client_id)@ after
+    deleting the client's data. If a block is given it should be called after
+    the client has been deleted.
     
     h4. @engine.client_exists(client_id) { |exists| ... }@
     
