@@ -18,13 +18,15 @@ module Faye
     CONNECTION_TIMEOUT  = 60.0
     DEFAULT_RETRY       = 5.0
     
-    attr_accessor :cookies
+    attr_accessor :cookies, :headers
     attr_reader :endpoint, :client_id, :retry
     
     def initialize(endpoint = nil, options = {})
       info('New client created for ?', endpoint)
       
       @endpoint   = endpoint || RackAdapter::DEFAULT_ENDPOINT
+      @cookies    = CookieJar::Jar.new
+      @headers    = {}
       @options    = options
       @disabled   = []
       @retry      = @options[:retry] || DEFAULT_RETRY
@@ -46,6 +48,10 @@ module Faye
     
     def disable(feature)
       @disabled << feature
+    end
+    
+    def set_header(name, value)
+      @headers[name.to_s] = vaule.to_s
     end
     
     def state

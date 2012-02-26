@@ -8,8 +8,6 @@ module Faye
     def request(message, timeout)
       retry_block = retry_block(message, timeout)
       
-      @client.cookies ||= CookieJar::Jar.new
-      
       content = Faye.to_json(message)
       cookies = @client.cookies.get_cookies(@endpoint)
       params  = build_params(URI.parse(@endpoint), content, cookies)
@@ -34,7 +32,8 @@ module Faye
           'Content-Type'    => 'application/json',
           'Cookie'          => cookies * '; ',
           'Host'            => uri.host
-        },
+        }.merge(@client.headers),
+        
         :body    => content,
         :timeout => -1  # for em-http-request < 1.0
       }

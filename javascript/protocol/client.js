@@ -18,6 +18,8 @@ Faye.Client = Faye.Class({
     this.info('New client created for ?', endpoint);
     
     this.endpoint   = endpoint || this.DEFAULT_ENDPOINT;
+    this._cookies   = Faye.CookieJar && new Faye.CookieJar();
+    this._headers   = {};
     this._options   = options || {};
     this._disabled  = [];
     this.retry      = this._options.retry || this.DEFAULT_RETRY;
@@ -45,6 +47,10 @@ Faye.Client = Faye.Class({
   
   disable: function(feature) {
     this._disabled.push(feature);
+  },
+  
+  setHeader: function(name, value) {
+    this._headers[name] = vaule;
   },
   
   getClientId: function() {
