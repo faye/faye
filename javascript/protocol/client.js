@@ -50,7 +50,7 @@ Faye.Client = Faye.Class({
   },
   
   setHeader: function(name, value) {
-    this._headers[name] = vaule;
+    this._headers[name] = value;
   },
   
   getClientId: function() {

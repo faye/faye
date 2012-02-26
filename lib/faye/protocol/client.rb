@@ -50,7 +50,7 @@ module Faye
     end
     
     def set_header(name, value)
-      @headers[name.to_s] = vaule.to_s
+      @headers[name.to_s] = value.to_s
     end
     
     def state
