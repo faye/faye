@@ -11,6 +11,12 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     
+    var headers = this._client._headers;
+    for (var key in headers) {
+      if (!headers.hasOwnProperty(key)) continue;
+      xhr.setRequestHeader(key, headers[key]);
+    }
+    
     var abort = function() { xhr.abort() };
     Faye.Event.on(Faye.ENV, 'beforeunload', abort);
     
