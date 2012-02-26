@@ -5,6 +5,8 @@ module Faye
     include Publisher
     include Timeouts
     
+    attr_accessor :cookies, :headers
+    
     def initialize(client, endpoint)
       debug('Created new ? transport for ?', connection_type, endpoint)
       @client   = client

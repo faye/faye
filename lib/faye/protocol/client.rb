@@ -18,7 +18,6 @@ module Faye
     CONNECTION_TIMEOUT  = 60.0
     DEFAULT_RETRY       = 5.0
     
-    attr_accessor :cookies, :headers
     attr_reader :endpoint, :client_id, :retry
     
     def initialize(endpoint = nil, options = {})
@@ -313,6 +312,8 @@ module Faye
     def select_transport(transport_types)
       Transport.get(self, transport_types) do |transport|
         @transport = transport
+        @transport.cookies = @cookies
+        @transport.headers = @headers
         
         transport.bind :down do
           if @transport_up.nil? or @transport_up

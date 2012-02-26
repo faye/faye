@@ -7,7 +7,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         retry    = this.retry(message, timeout),
         self     = this;
     
-    var cookies = this._client._cookies.getCookies({domain: uri.hostname, path: uri.pathname}),
+    var cookies = this.cookies.getCookies({domain: uri.hostname, path: uri.pathname}),
         params  = this._buildParams(uri, content, cookies, secure),
         request = client.request(params);
     
@@ -35,7 +35,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         'Content-Type':   'application/json',
         'Cookie':         cookies.toValueString(),
         'Host':           uri.hostname
-      }, this._client._headers)
+      }, this.headers)
     };
   },
   
@@ -65,7 +65,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
     var cookie;
     
     for (var i = 0, n = cookies.length; i < n; i++) {
-      cookie = this._client._cookies.setCookie(cookies[i]);
+      cookie = this.cookies.setCookie(cookies[i]);
       cookie = cookie[0] || cookie;
       cookie.domain = cookie.domain || hostname;
     }

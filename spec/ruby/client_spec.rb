@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Faye::Client do
   let :transport do
-    transport = mock("transport")
+    transport = mock("transport", :cookies= => nil, :headers= => nil)
     transport.stub(:connection_type).and_return "fake"
     transport.stub(:send)
     transport.extend(Faye::Publisher)

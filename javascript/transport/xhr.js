@@ -11,7 +11,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     
-    var headers = this._client._headers;
+    var headers = this.headers;
     for (var key in headers) {
       if (!headers.hasOwnProperty(key)) continue;
       xhr.setRequestHeader(key, headers[key]);
