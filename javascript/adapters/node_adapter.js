@@ -156,7 +156,7 @@ Faye.NodeAdapter = Faye.Class({
     ws.onmessage = function(event) {
       try {
         var message = JSON.parse(event.data);
-        clientId = [].concat(message)[0].clientId;
+        clientId = Faye.clientIdFromMessages(message);
         
         self.debug('Received via WebSocket[' + ws.version + ']: ?', message);
         self._server.openSocket(clientId, ws);

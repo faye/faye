@@ -72,6 +72,7 @@ module Faye
       end
       
       def open_socket(client_id, socket)
+        return unless client_id
         conn = connection(client_id, true)
         conn.socket = socket
       end
@@ -89,6 +90,7 @@ module Faye
       end
       
       def flush(client_id)
+        return unless client_id
         debug 'Flushing connection for ?', client_id
         conn = connection(client_id, false)
         conn.flush!(true) if conn

@@ -16,8 +16,7 @@ module Faye
     end
     
     def flush_connection(messages)
-      client_id = [messages].flatten.first['clientId']
-      return unless client_id
+      client_id = Faye.client_id_from_messages(messages)
       info 'Flushing connection for ?', client_id
       @engine.flush(client_id) if client_id
     end

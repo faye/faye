@@ -40,6 +40,11 @@ Faye.extend(Faye, {
     return string;
   },
   
+  clientIdFromMessages: function(messages) {
+    var first = [].concat(messages)[0];
+    return first && first.clientId;
+  },
+  
   copyObject: function(object) {
     var clone, i, key;
     if (object instanceof Array) {

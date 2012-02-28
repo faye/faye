@@ -134,7 +134,7 @@ module Faye
       ws.onmessage = lambda do |event|
         begin
           message   = Yajl::Parser.parse(event.data)
-          client_id = [message].flatten[0]['clientId']
+          client_id = Faye.client_id_from_messages(message)
           
           debug "Received via WebSocket[#{ws.version}]: ?", message
           @server.open_socket(client_id, ws)

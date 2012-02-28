@@ -57,6 +57,11 @@ module Faye
     Engine.random(*args)
   end
   
+  def self.client_id_from_messages(messages)
+    first = [messages].flatten.first
+    first && first['clientId']
+  end
+  
   def self.copy_object(object)
     case object
     when Hash

@@ -9,8 +9,7 @@ Faye.Server = Faye.Class({
   },
   
   flushConnection: function(messages) {
-    var clientId = [].concat(messages)[0].clientId;
-    if (!clientId) return;
+    var clientId = Faye.clientIdFromMessages(messages);
     this.info('Flushing connection for ?', clientId);
     this._engine.flush(clientId);
   },
