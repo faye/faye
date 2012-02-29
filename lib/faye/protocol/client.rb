@@ -198,16 +198,15 @@ module Faye
       subscription  = Subscription.new(self, channel, block)
       has_subscribe = @channels.has_subscription?(channel)
       
-      unless force
+      if has_subscribe and not force
         @channels.subscribe([channel], block)
-        if has_subscribe
-          subscription.set_deferred_status(:succeeded)
-          return subscription
-        end
+        subscription.set_deferred_status(:succeeded)
+        return subscription
       end
       
       connect {
         info('Client ? attempting to subscribe to ?', @client_id, channel)
+        @channels.subscribe([channel], block) unless force
         
         send({
           'channel'       => Channel::SUBSCRIBE,

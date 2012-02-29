@@ -206,16 +206,15 @@ Faye.Client = Faye.Class({
         force        = (callback === true),
         hasSubscribe = this._channels.hasSubscription(channel);
     
-    if (!force) {
+    if (hasSubscribe && !force) {
       this._channels.subscribe([channel], callback, context);
-      if (hasSubscribe) {
-        subscription.setDeferredStatus('succeeded');
-        return subscription;
-      }
+      subscription.setDeferredStatus('succeeded');
+      return subscription;
     }
     
     this.connect(function() {
       this.info('Client ? attempting to subscribe to ?', this._clientId, channel);
+      if (!force) this._channels.subscribe([channel], callback, context);
       
       this._send({
         channel:      Faye.Channel.SUBSCRIBE,
