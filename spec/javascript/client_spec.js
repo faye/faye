@@ -606,6 +606,22 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
     }})
     
+    describe("on receipt of the published message", function() { with(this) {
+      before(function() { with(this) {
+        stubResponse({channel:    "/messages/foo",
+                      data:       {text: "hi"},
+                      clientId:   "fakeid" })
+      }})
+      
+      it("does not trigger the callbacks", function() { with(this) {
+        var published = false
+        var publication = client.publish("/messages/foo", {text: "hi"})
+        publication.callback(function() { published = true })
+        publication.errback(function() { published = true })
+        assert( !published )
+      }})
+    }})
+    
     describe("with an outgoing extension installed", function() { with(this) {
       before(function() { with(this) {
         var extension = {

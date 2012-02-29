@@ -615,6 +615,22 @@ describe Faye::Client do
         error.message.should == "Failed to publish"
       end
     end
+    
+    describe "on receipt of the published message" do
+      before do
+        stub_response "channel"      => "/messages/foo",
+                      "data"         => {"text" => "hi"},
+                      "clientId"     => "fakeid"
+      end
+
+      it "does not trigger the callbacks" do
+        published = false
+        publication = @client.publish("/messages/foo", "text" => "hi")
+        publication.callback { published = true }
+        publication.errback { published = true }
+        published.should be_false
+      end
+    end
 
     describe "with an outgoing extension installed" do
       before do

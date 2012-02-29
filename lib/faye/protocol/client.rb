@@ -296,14 +296,15 @@ module Faye
         next unless message
         
         handle_advice(message['advice']) if message['advice']
+        deliver_message(message)
+        
+        next unless message.has_key?('successful')
         
         callback = @response_callbacks[message['id']]
-        if callback
-          @response_callbacks.delete(message['id'])
-          callback.call(message)
-        end
+        next unless callback
         
-        deliver_message(message)
+        @response_callbacks.delete(message['id'])
+        callback.call(message)
       end
     end
     

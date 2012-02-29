@@ -307,14 +307,15 @@ Faye.Client = Faye.Class({
       if (!message) return;
       
       if (message.advice) this._handleAdvice(message.advice);
+      this._deliverMessage(message);
+      
+      if (message.successful === undefined) return;
       
       var callback = this._responseCallbacks[message.id];
-      if (callback) {
-        delete this._responseCallbacks[message.id];
-        callback[0].call(callback[1], message);
-      }
+      if (!callback) return;
       
-      this._deliverMessage(message);
+      delete this._responseCallbacks[message.id];
+      callback[0].call(callback[1], message);
     }, this);
   },
   
