@@ -232,7 +232,7 @@ Faye.NodeAdapter = Faye.Class({
       this._server.process(message, false, function(replies) {
         var body = JSON.stringify(replies);
         if (isGet) body = jsonp + '(' + body + ');';
-        headers['Content-Length'] = new Buffer(body).length.toString();
+        headers['Content-Length'] = new Buffer(body, 'utf8').length.toString();
         
         this.debug('Returning ?', body);
         response.writeHead(200, headers);
