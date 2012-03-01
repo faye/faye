@@ -197,6 +197,7 @@ Faye.NodeAdapter = Faye.Class({
     var headers = Faye.extend({}, this.TYPE_SCRIPT),
         ims     = request.headers['if-modified-since'];
     
+    headers['Content-Length'] = this._clientScript.length;
     headers['ETag'] = this._clientDigest;
     headers['Last-Modified'] = this._clientMtime.toGMTString();
     
@@ -218,21 +219,20 @@ Faye.NodeAdapter = Faye.Class({
       var message = JSON.parse(params.message),
           jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
-          type    = isGet ? this.TYPE_SCRIPT : this.TYPE_JSON;
+          type    = isGet ? this.TYPE_SCRIPT : this.TYPE_JSON,
+          headers = Faye.extend({}, type),
+          origin  = request.headers.origin;
 
       this.debug('Received ?: ?', request.method, message);
       if (isGet) this._server.flushConnection(message);
       
+      if (origin) headers['Access-Control-Allow-Origin'] = origin;
+      if (isGet)  headers['Cache-Control'] = 'no-cache, no-store';
+      
       this._server.process(message, false, function(replies) {
-        var body    = JSON.stringify(replies),
-            headers = Faye.extend({}, type),
-            origin  = request.headers.origin;
-        
-        if (isGet) {
-          body = jsonp + '(' + body + ');';
-          headers['Cache-Control'] = 'no-cache, no-store';
-        }
-        if (origin) headers['Access-Control-Allow-Origin'] = origin;
+        var body = JSON.stringify(replies);
+        if (isGet) body = jsonp + '(' + body + ');';
+        headers['Content-Length'] = new Buffer(body).length.toString();
         
         this.debug('Returning ?', body);
         response.writeHead(200, headers);

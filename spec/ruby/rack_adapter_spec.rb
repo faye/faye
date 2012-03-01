@@ -11,6 +11,7 @@ describe Faye::RackAdapter do
   after { app.stop }
   
   let(:content_type)          { last_response["Content-Type"] }
+  let(:content_length)        { last_response["Content-Length"] }
   let(:cache_control)         { last_response["Cache-Control"] }
   let(:access_control_origin) { last_response["Access-Control-Allow-Origin"] }
   let(:json)                  { Yajl::Parser.parse(body) }
@@ -45,6 +46,7 @@ describe Faye::RackAdapter do
           post "/bayeux", "message=%5B%5D"
           status.should == 200
           content_type.should == "application/json"
+          content_length.should == "31"
           json.should == ["channel" => "/meta/handshake"]
         end
         
@@ -95,6 +97,7 @@ describe Faye::RackAdapter do
         post "/bayeux", '[]'
         status.should == 200
         content_type.should == "application/json"
+          content_length.should == "31"
         json.should == ["channel" => "/meta/handshake"]
       end
       
@@ -124,6 +127,7 @@ describe Faye::RackAdapter do
         post "/bayeux", :message => '[]'
         status.should == 200
         content_type.should == "application/json"
+        content_length.should == "31"
         json.should == ["channel" => "/meta/handshake"]
       end
       
@@ -161,6 +165,7 @@ describe Faye::RackAdapter do
         get "/bayeux", params
         status.should == 200
         content_type.should == "text/javascript"
+        content_length.should == "42"
         body.should == 'callback([{"channel":"/meta/handshake"}]);'
       end
       
@@ -191,6 +196,7 @@ describe Faye::RackAdapter do
         get "/bayeux", params
         status.should == 200
         content_type.should == "text/javascript"
+        content_length.should == "47"
         body.should == 'jsonpcallback([{"channel":"/meta/handshake"}]);'
       end
     end

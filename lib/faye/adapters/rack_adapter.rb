@@ -88,6 +88,7 @@ module Faye
       headers = TYPE_SCRIPT.dup
       ims     = env['HTTP_IF_MODIFIED_SINCE']
       
+      headers['Content-Length'] = @client_script.bytesize.to_s
       headers['ETag'] = @client_digest
       headers['Last-Modified'] = @client_mtime.httpdate
       
@@ -117,6 +118,7 @@ module Faye
       @server.process(message, false) do |replies|
         response = Faye.to_json(replies)
         response = "#{ jsonp }(#{ response });" if request.get?
+        headers['Content-Length'] = response.bytesize.to_s
         debug 'Returning ?', response
         callback.call [200, headers, [response]]
       end

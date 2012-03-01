@@ -84,6 +84,11 @@ JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
     resume()
   },
   
+  check_content_length: function(length, resume) {
+    this.assertEqual(length, this._response.headers["content-length"])
+    resume()
+  },
+  
   check_body: function(body, resume) {
     if (typeof body === "string")
       this.assertEqual(body, this._responseBody)
@@ -136,6 +141,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
           post("/bayeux", "message=%5B%5D")
           check_status(200)
           check_content_type("application/json")
+          check_content_length("31")
           check_json([{channel: "/meta/handshake"}])
         }})
         
@@ -179,6 +185,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
         post("/bayeux", "[]")
         check_status(200)
         check_content_type("application/json")
+        check_content_length("31")
         check_json([{channel: "/meta/handshake"}])
       }})
       
@@ -201,6 +208,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
         post("/bayeux", {message: "[]"})
         check_status(200)
         check_content_type("application/json")
+        check_content_length("31")
         check_json([{channel: "/meta/handshake"}])
       }})
       
@@ -233,6 +241,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
         get("/bayeux", params)
         check_status(200)
         check_content_type("text/javascript")
+        check_content_length("42")
         check_body('callback([{"channel":"/meta/handshake"}]);')
       }})
       
@@ -254,6 +263,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
         get("/bayeux", params)
         check_status(200)
         check_content_type("text/javascript")
+        check_content_length("47")
         check_body('jsonpcallback([{"channel":"/meta/handshake"}]);')
       }})
     }})
