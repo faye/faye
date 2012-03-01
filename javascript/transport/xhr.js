@@ -2,12 +2,14 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
     var retry = this.retry(message, timeout),
         path  = Faye.URI.parse(this._endpoint).pathname,
+        body  = Faye.toJSON(message),
         self  = this,
         xhr   = Faye.ENV.ActiveXObject
               ? new ActiveXObject("Microsoft.XMLHTTP")
               : new XMLHttpRequest();
     
     xhr.open('POST', path, true);
+    xhr.setRequestHeader('Content-Length', unescape(encodeURIComponent(body)).length.toString());
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     
@@ -56,7 +58,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
       }
     };
 
-    xhr.send(Faye.toJSON(message));
+    xhr.send(body);
   }
 }), {
   isUsable: function(endpoint, callback, context) {
