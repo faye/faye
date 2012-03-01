@@ -6,7 +6,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   batching:     false,
   
   request: function(messages, timeout) {
+    if (messages.length === 0) return;
     this._messages = this._messages || {};
+    
     for (var i = 0, n = messages.length; i < n; i++) {
       this._messages[messages[i].id] = messages[i];
     }

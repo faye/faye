@@ -37,6 +37,7 @@ module Faye
     end
     
     def request(messages, timeout = nil)
+      return if messages.empty?
       @messages ||= {}
       messages.each { |message| @messages[message['id']] = message }
       with_socket { |socket| socket.send(Faye.to_json(messages)) }
