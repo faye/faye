@@ -15,6 +15,11 @@ module Faye
     TYPE_SCRIPT = {'Content-Type' => 'text/javascript'}
     TYPE_TEXT   = {'Content-Type' => 'text/plain'}
     
+    # This header is passed by Rack::Proxy during testing. Rack::Proxy seems to
+    # set content-length for you, and setting it in here really slows the tests
+    # down. Better suggestions welcome.
+    HTTP_X_NO_CONTENT_LENGTH = 'HTTP_X_NO_CONTENT_LENGTH'
+    
     def initialize(app = nil, options = nil)
       @app      = app if app.respond_to?(:call)
       @options  = [app, options].grep(Hash).first || {}
@@ -88,7 +93,7 @@ module Faye
       headers = TYPE_SCRIPT.dup
       ims     = env['HTTP_IF_MODIFIED_SINCE']
       
-      headers['Content-Length'] = @client_script.bytesize.to_s
+      headers['Content-Length'] = @client_script.bytesize.to_s unless env[HTTP_X_NO_CONTENT_LENGTH]
       headers['ETag'] = @client_digest
       headers['Last-Modified'] = @client_mtime.httpdate
       
@@ -118,7 +123,7 @@ module Faye
       @server.process(message, false) do |replies|
         response = Faye.to_json(replies)
         response = "#{ jsonp }(#{ response });" if request.get?
-        headers['Content-Length'] = response.bytesize.to_s
+        headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
         debug 'Returning ?', response
         callback.call [200, headers, [response]]
       end
