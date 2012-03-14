@@ -12,20 +12,20 @@ class ThinProxy < Rack::Proxy
     handler = Rack::Handler.get('thin')
     
     EM.stop if EM.reactor_running?
-    sleep 0.001 while EM.reactor_running?
+    Thread.pass while EM.reactor_running?
     
     Thread.new {
       handler.run(rack_app, :Host => HOST, :Port => PORT) do |server|
         @server = server
       end
     }
-    sleep 0.001 until EM.reactor_running?
+    Thread.pass until EM.reactor_running?
   end
   
   def stop
     EM.stop
     @server.stop
-    sleep 0.001 while EM.reactor_running?
+    Thread.pass while EM.reactor_running?
   end
   
   def rewrite_env(env)
