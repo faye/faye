@@ -229,15 +229,17 @@ JS.ENV.Server.SubscribeSpec = JS.Test.describe("Server subscribe", function() { 
         server.subscribe(message, false, function() {})
       }})
       
-      it("returns an unsuccessful response", function() { with(this) {
+      it("returns an unsuccessful response", function(resume) { with(this) {
         server.subscribe(message, false, function(response) {
-          assertEqual({
-              channel:      "/meta/subscribe",
-              successful:   false,
-              error:        "invalid",
-              clientId:     clientId,
-              subscription: "/foo"
-            }, response)
+          resume(function() {
+            assertEqual({
+                channel:      "/meta/subscribe",
+                successful:   false,
+                error:        "invalid",
+                clientId:     clientId,
+                subscription: "/foo"
+              }, response)
+          })
         })
       }})
     }})

@@ -245,11 +245,11 @@ Faye.Server = Faye.Class({
       for (var i = 0, n = subscription.length; i < n; i++) {
         channel = subscription[i];
         
-        if (response.error) return;
+        if (response.error) break;
         if (!local && !Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
         if (!Faye.Channel.isValid(channel))                  response.error = Faye.Error.channelInvalid(channel);
         
-        if (response.error) return;
+        if (response.error) break;
         this._engine.subscribe(clientId, channel);
       }
       
@@ -280,11 +280,11 @@ Faye.Server = Faye.Class({
       for (var i = 0, n = subscription.length; i < n; i++) {
         channel = subscription[i];
         
-        if (response.error) return;
+        if (response.error) break;
         if (!local && !Faye.Channel.isSubscribable(channel)) response.error = Faye.Error.channelForbidden(channel);
         if (!Faye.Channel.isValid(channel))                  response.error = Faye.Error.channelInvalid(channel);
         
-        if (response.error) return;
+        if (response.error) break;
         this._engine.unsubscribe(clientId, channel);
       }
       
