@@ -33,7 +33,7 @@ Faye.Publisher = {
     
     if (!this._subscribers || !this._subscribers[eventType]) return;
     
-    var listeners = this._subscribers[eventType],
+    var listeners = this._subscribers[eventType].slice(),
         listener;
     
     for (var i = 0, n = listeners.length; i < n; i++) {

@@ -21,9 +21,8 @@ module Faye
     
     def trigger(event_type, *args)
       return unless @subscribers and @subscribers[event_type]
-      @subscribers[event_type].each do |listener|
-        listener.call(*args)
-      end
+      listeners = @subscribers[event_type].dup
+      listeners.each { |listener| listener.call(*args) }
     end
     
   end
