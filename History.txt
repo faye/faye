@@ -1,3 +1,15 @@
+=== 0.8.1 / 2012-03-15
+TestSwarm build: http://swarm.jcoglan.com/job/124/
+
+* Make Publisher#trigger safe for event listeners that modify the listener list
+* Make Server#subscribe return a response if the incoming message has an error
+* Fix edge case in code that identifies the clientId of socket connections
+* Return Content-Length headers for HTTP responses
+* Don't send empty lists of messages from the WebSocket transport
+* Stop client sending multiple /meta/subscribe messages for subscriptions made before handshaking
+* Stop client treating incoming published messages as responses to /meta/* messages
+
+
 === 0.8.0 / 2012-02-26
 TestSwarm build: http://swarm.jcoglan.com/job/123/
 

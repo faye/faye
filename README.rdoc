@@ -35,7 +35,7 @@ should get you up and running:
   npm install
   
   # Build Faye
-  jake
+  bundle exec jake
   
   # Run tests
   bundle exec rspec -c spec/
