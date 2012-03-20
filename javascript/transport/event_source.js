@@ -6,6 +6,14 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     var socket = new EventSource(endpoint + '/' + client.getClientId()),
         self   = this;
     
+    socket.onopen = function() {
+      self.trigger('up');
+    };
+    
+    socket.onerror = function() {
+      self.trigger('down');
+    };
+    
     socket.onmessage = function(event) {
       self.receive(JSON.parse(event.data));
     };
