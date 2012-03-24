@@ -12,10 +12,6 @@ Faye.WebSocket   = require('faye-websocket');
 Faye.EventSource = Faye.WebSocket.EventSource;
 Faye.CookieJar   = require('cookiejar').CookieJar;
 
-Faye.logger = function(message) {
-  console.log(message);
-};
-
 Faye.withDataFor = function(transport, callback, context) {
   var data = '';
   transport.addListener('data', function(chunk) { data += chunk });

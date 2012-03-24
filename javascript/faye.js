@@ -143,6 +143,10 @@ Faye.extend(Faye, {
     return JSON.stringify(object);
   },
   
+  logger: function(message) {
+    if (typeof console !== 'undefined') console.log(message);
+  },
+  
   timestamp: function() {
     var date   = new Date(),
         year   = date.getFullYear(),
