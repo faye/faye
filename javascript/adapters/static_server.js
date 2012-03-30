@@ -32,7 +32,8 @@ Faye.StaticServer = Faye.Class({
       return response.end();
     }
     
-    var headers = Faye.extend({}, Faye.NodeAdapter.prototype.TYPE_SCRIPT),
+    var type    = /\.js$/.test(pathname) ? 'TYPE_SCRIPT' : 'TYPE_JSON',
+        headers = Faye.extend({}, Faye.NodeAdapter.prototype[type]),
         ims     = request.headers['if-modified-since'];
     
     headers['Content-Length'] = '0';
