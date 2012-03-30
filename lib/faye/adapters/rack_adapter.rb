@@ -93,7 +93,7 @@ module Faye
       headers = TYPE_SCRIPT.dup
       ims     = env['HTTP_IF_MODIFIED_SINCE']
       
-      headers['Content-Length'] = @client_script.bytesize.to_s unless env[HTTP_X_NO_CONTENT_LENGTH]
+      headers['Content-Length'] = '0'
       headers['ETag'] = @client_digest
       headers['Last-Modified'] = @client_mtime.httpdate
       
@@ -102,6 +102,7 @@ module Faye
       elsif ims and @client_mtime <= Time.httpdate(ims)
         [304, headers, ['']]
       else
+        headers['Content-Length'] = @client_script.bytesize.to_s unless env[HTTP_X_NO_CONTENT_LENGTH]
         [200, headers, [@client_script]]
       end
     end

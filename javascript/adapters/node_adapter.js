@@ -193,7 +193,7 @@ Faye.NodeAdapter = Faye.Class({
     var headers = Faye.extend({}, this.TYPE_SCRIPT),
         ims     = request.headers['if-modified-since'];
     
-    headers['Content-Length'] = this._clientScript.length;
+    headers['Content-Length'] = '0';
     headers['ETag'] = this._clientDigest;
     headers['Last-Modified'] = this._clientMtime.toGMTString();
     
@@ -204,6 +204,7 @@ Faye.NodeAdapter = Faye.Class({
       response.writeHead(304, headers);
       response.end();
     } else {
+      headers['Content-Length'] = this._clientScript.length.toString();
       response.writeHead(200, headers);
       response.write(this._clientScript);
       response.end();
