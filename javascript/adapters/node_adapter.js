@@ -22,7 +22,7 @@ Faye.withDataFor = function(transport, callback, context) {
 
 Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
-  SCRIPT_PATH:      path.dirname(__filename) + '/faye-browser-min.js',
+  SCRIPT_PATH:      'faye-browser-min.js',
   
   TYPE_JSON:    {'Content-Type': 'application/json'},
   TYPE_SCRIPT:  {'Content-Type': 'text/javascript'},
@@ -35,7 +35,8 @@ Faye.NodeAdapter = Faye.Class({
     this._server     = new Faye.Server(this._options);
     
     this._static = new Faye.StaticServer(path.dirname(__filename), /\.(?:js|map)$/);
-    this._static.map(path.basename(this._endpoint) + '.js', 'faye-browser-min.js');
+    this._static.map(path.basename(this._endpoint) + '.js', this.SCRIPT_PATH);
+    this._static.map('client.js', this.SCRIPT_PATH);
     
     var extensions = this._options.extensions;
     if (!extensions) return;

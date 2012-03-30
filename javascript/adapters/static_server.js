@@ -23,9 +23,14 @@ Faye.StaticServer = Faye.Class({
     var cache    = this._index[pathname],
         fullpath = path.join(this._directory, pathname);
     
-    cache.content = cache.content || fs.readFileSync(fullpath);
-    cache.digest  = cache.digest  || crypto.createHash('sha1').update(cache.content).digest('hex');
-    cache.mtime   = cache.mtime   || fs.statSync(fullpath).mtime;
+    try {
+      cache.content = cache.content || fs.readFileSync(fullpath);
+      cache.digest  = cache.digest  || crypto.createHash('sha1').update(cache.content).digest('hex');
+      cache.mtime   = cache.mtime   || fs.statSync(fullpath).mtime;
+    } catch (e) {
+      response.writeHead(404, {});
+      return response.end();
+    }
     
     var headers = Faye.extend({}, Faye.NodeAdapter.prototype.TYPE_SCRIPT),
         ims     = request.headers['if-modified-since'];
