@@ -93,7 +93,7 @@ module Faye
       headers = TYPE_SCRIPT.dup
       ims     = env['HTTP_IF_MODIFIED_SINCE']
       
-      headers['Content-Length'] = '0'
+      headers['Content-Length'] = '0' unless env[HTTP_X_NO_CONTENT_LENGTH]
       headers['ETag'] = @client_digest
       headers['Last-Modified'] = @client_mtime.httpdate
       
