@@ -35,16 +35,15 @@ Faye.StaticServer = Faye.Class({
     var headers = Faye.extend({}, Faye.NodeAdapter.prototype.TYPE_SCRIPT),
         ims     = request.headers['if-modified-since'];
     
+    headers['Content-Length'] = '0';
     headers['ETag'] = cache.digest;
     headers['Last-Modified'] = cache.mtime.toGMTString();
     
     if (request.headers['if-none-match'] === cache.digest) {
-      headers['Content-Length'] = '0';
       response.writeHead(304, headers);
       response.end();
     }
     else if (ims && cache.mtime <= new Date(ims)) {
-      headers['Content-Length'] = '0';
       response.writeHead(304, headers);
       response.end();
     }
