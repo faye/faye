@@ -124,7 +124,7 @@ Faye.NodeAdapter = Faye.Class({
         self          = this;
     
     if (this._static.test(requestUrl.pathname))
-      return this._static.serve(requestUrl.pathname, request, response);
+      return this._static.call(request, response);
     
     if (requestMethod === 'OPTIONS')
       return this._handleOptions(request, response);

@@ -14,7 +14,8 @@ Faye.StaticServer = Faye.Class({
     return this._pathRegex.test(pathname);
   },
   
-  serve: function(pathname, request, response) {
+  call: function(request, response) {
+    var pathname = url.parse(request.url, true).pathname;
     pathname = path.basename(pathname);
     pathname = this._pathMap[pathname] || pathname;
     
