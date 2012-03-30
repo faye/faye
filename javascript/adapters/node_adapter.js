@@ -31,8 +31,11 @@ Faye.NodeAdapter = Faye.Class({
   initialize: function(options) {
     this._options    = options || {};
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
-    this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]*)*(\\.js)?$');
+    this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]+)*(\\.[^\\.]+)?$');
     this._server     = new Faye.Server(this._options);
+    
+    this._static = new Faye.StaticServer(path.dirname(__filename), /\.(?:js|map)$/);
+    this._static.map(path.basename(this._endpoint) + '.js', 'faye-browser-min.js');
     
     var extensions = this._options.extensions;
     if (!extensions) return;
@@ -119,8 +122,8 @@ Faye.NodeAdapter = Faye.Class({
         requestMethod = request.method,
         self          = this;
     
-    if (/\.js$/.test(requestUrl.pathname))
-      return this._serveClientScript(request, response);
+    if (this._static.test(requestUrl.pathname))
+      return this._static.serve(requestUrl.pathname, request, response);
     
     if (requestMethod === 'OPTIONS')
       return this._handleOptions(request, response);
@@ -183,31 +186,6 @@ Faye.NodeAdapter = Faye.Class({
       self._server.closeSocket(clientId);
       es = null;
     };
-  },
-  
-  _serveClientScript: function(request, response) {
-    this._clientScript = this._clientScript || fs.readFileSync(this.SCRIPT_PATH);
-    this._clientDigest = this._clientDigest || crypto.createHash('sha1').update(this._clientScript).digest('hex');
-    this._clientMtime  = this._clientMtime  || fs.statSync(this.SCRIPT_PATH).mtime;
-    
-    var headers = Faye.extend({}, this.TYPE_SCRIPT),
-        ims     = request.headers['if-modified-since'];
-    
-    headers['Content-Length'] = this._clientScript.length;
-    headers['ETag'] = this._clientDigest;
-    headers['Last-Modified'] = this._clientMtime.toGMTString();
-    
-    if (request.headers['if-none-match'] === this._clientDigest) {
-      response.writeHead(304, headers);
-      response.end();
-    } else if (ims && this._clientMtime <= new Date(ims)) {
-      response.writeHead(304, headers);
-      response.end();
-    } else {
-      response.writeHead(200, headers);
-      response.write(this._clientScript);
-      response.end();
-    }
   },
   
   _callWithParams: function(request, response, params) {
