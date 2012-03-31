@@ -75,8 +75,8 @@ describe "server integration" do
   
   shared_examples_for "message bus" do
     it "delivers a message between clients" do
-      publish :alice, "/foo", {"hello" => "world"}
-      check_inbox :bob, "/foo", [{"hello" => "world"}]
+      publish :alice, "/foo", {"hello" => "world", "extra" => nil}
+      check_inbox :bob, "/foo", [{"hello" => "world", "extra" => nil}]
     end
     
     it "does not deliver messages for unsubscribed channels" do

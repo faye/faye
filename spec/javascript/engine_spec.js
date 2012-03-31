@@ -243,7 +243,7 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
     
     describe("publish", function() { with(this) {
       before(function() { with(this) {
-        this.message = {"channel": "/messages/foo", "data": "ok"}
+        this.message = {"channel": "/messages/foo", "data": "ok", "blank": null}
         connect("alice", engine)
         connect("bob", engine)
         connect("carol", engine)

@@ -253,7 +253,7 @@ describe "Pub/sub engines" do
     
     describe :publish do
       before do
-        @message = {"channel" => "/messages/foo", "data" => "ok"}
+        @message = {"channel" => "/messages/foo", "data" => "ok", "blank" => nil}
         connect :alice, engine
         connect :bob,   engine
         connect :carol, engine

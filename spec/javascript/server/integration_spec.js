@@ -66,8 +66,8 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
     after(function() { this.stop() })
     
     it("delivers a message between clients", function() { with(this) {
-      publish("alice", "/foo", {hello: "world"})
-      check_inbox("bob", "/foo", [{hello: "world"}])
+      publish("alice", "/foo", {hello: "world", extra: null})
+      check_inbox("bob", "/foo", [{hello: "world", extra: null}])
     }})
     
     it("does not deliver messages for unsubscribed channels", function() { with(this) {

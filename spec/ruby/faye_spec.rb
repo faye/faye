@@ -11,4 +11,20 @@ describe Faye do
       ids.should be_all { |id| id.size == 25 }
     end
   end
+  
+  describe :copy_obect do
+    let(:object) { {"foo" => "bar", "qux" => 42, "hey" => nil, "obj" => {"bar" => 67}} }
+    
+    it "returns an equal object" do
+      Faye.copy_object(object).should == {"foo" => "bar", "qux" => 42, "hey" => nil, "obj" => {"bar" => 67}}
+    end
+    
+    it "does not return the same object" do
+      Faye.copy_object(object).should_not be_equal(object)
+    end
+    
+    it "performs a deep clone" do
+      Faye.copy_object(object)["obj"].should_not be_equal(object["obj"])
+    end
+  end
 end
