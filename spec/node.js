@@ -1,5 +1,5 @@
 require('jsclass')
-Faye = require('../build/faye-node')
+Faye = require('../build/node/faye-node')
 Faye.logger = function() {}
 
 JS.Packages(function() { with(this) {

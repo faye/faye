@@ -29,7 +29,7 @@ packages:
     - protocol/client
     - transport/transport
 
-  faye-node:
+  node/faye-node:
     extends: core
     files:
       - util/set
@@ -43,7 +43,7 @@ packages:
       - adapters/node_adapter
       - adapters/static_server
 
-  faye-browser:
+  browser/faye-browser:
     extends: core
     files:
       - util/browser/event

@@ -1,4 +1,4 @@
-var faye = require('../../build/faye-node');
+var faye = require('../../build/node/faye-node');
 // faye.Logging.logLevel = 'debug';
 
 var servers = {

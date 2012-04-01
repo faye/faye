@@ -34,7 +34,7 @@ Faye.NodeAdapter = Faye.Class({
     this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]+)*(\\.[^\\.]+)?$');
     this._server     = new Faye.Server(this._options);
     
-    this._static = new Faye.StaticServer(path.dirname(__filename), /\.(?:js|map)$/);
+    this._static = new Faye.StaticServer(path.dirname(__filename) + '/../browser', /\.(?:js|map)$/);
     this._static.map(path.basename(this._endpoint) + '.js', this.SCRIPT_PATH);
     this._static.map('client.js', this.SCRIPT_PATH);
     

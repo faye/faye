@@ -7,7 +7,7 @@
 // The client connects to the chat server and logs all messages sent by all
 // connected users.
 
-var faye = require('../../build/faye-node'),
+var faye = require('../../build/node/faye-node'),
     
     port     = process.argv[2] || 8000,
     path     = process.argv[3] || 'bayeux',
