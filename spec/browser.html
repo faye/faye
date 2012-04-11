@@ -19,7 +19,7 @@
       JS.cacheBust = true
       
       JS.Packages(function() { with(this) {
-        file('../build/faye-browser-min.js').provides('Faye')
+        file('../build/browser/faye-browser-min.js').provides('Faye')
         autoload(/.*Spec/, {from: './javascript'})
       }})
 
