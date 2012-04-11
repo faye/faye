@@ -6,7 +6,9 @@ jake_hook :build_complete do |build|
   FileUtils.cp browser_min, DIR + '/lib/faye-browser-min.js'
   
   [['node/faye-node', :min], ['core', :src], [:core, :min]].each do |(pkg,typ)|
-    FileUtils.rm build.package(pkg).build_path(typ)
+    path = build.package(pkg).build_path(typ)
+    FileUtils.rm path
+    FileUtils.rm path + '.map' if File.file? path + '.map'
   end
   
   FileUtils.cp 'package.json', File.join(build.build_dir, 'package.json')

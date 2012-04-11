@@ -9,6 +9,7 @@ builds:
   min:
     shrink_vars:    true
     private:        true
+    source_map:     src
 
 packages:
 

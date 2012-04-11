@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.add_dependency "yajl-ruby", ">= 1.0.0"
 
   s.add_development_dependency "compass", "~> 0.10.0"
-  s.add_development_dependency "jake"
+  s.add_development_dependency "jake", ">= 1.1.1"
   s.add_development_dependency "rake"
   s.add_development_dependency "rspec", "~> 2.8.0"
   s.add_development_dependency "rack-proxy"
