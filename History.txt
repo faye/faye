@@ -1,3 +1,13 @@
+=== 0.8.2 / 2012-04-12
+TestSwarm build: http://swarm.jcoglan.com/job/125/
+
+* Fix replacement of null with {} in copyObject()
+* Make EventSource transport trigger transport:up/down events
+* Supply source map for minified JavaScript client, and include source in gem
+* Return Content-Length: 0 for 304 responses
+* Handle pre-flight CORS requests from old versions of Safari
+
+
 === 0.8.1 / 2012-03-15
 TestSwarm build: http://swarm.jcoglan.com/job/124/
 

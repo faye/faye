@@ -13,7 +13,7 @@ require 'uri'
 require 'yajl'
 
 module Faye
-  VERSION = '0.8.1'
+  VERSION = '0.8.2'
   
   ROOT = File.expand_path(File.dirname(__FILE__))
   
