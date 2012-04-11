@@ -37,6 +37,7 @@ module Faye
   autoload :Error,        File.join(ROOT, 'faye', 'error')
   
   autoload :RackAdapter,  File.join(ROOT, 'faye', 'adapters', 'rack_adapter')
+  autoload :StaticServer, File.join(ROOT, 'faye', 'adapters', 'static_server')
   
   BAYEUX_VERSION   = '1.0'
   JSONP_CALLBACK   = 'jsonpcallback'

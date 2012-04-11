@@ -2,7 +2,7 @@ var fs    = require('fs'),
     path  = require('path'),
     http  = require('http'),
     https = require('https'),
-    faye  = require('../../build/faye-node');
+    faye  = require('../../build/node/faye-node');
 
 // faye.Logging.logLevel = 'debug';
 

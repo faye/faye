@@ -9,7 +9,7 @@ module Faye
     ASYNC_RESPONSE = [-1, {}, []].freeze
     
     DEFAULT_ENDPOINT  = '/bayeux'
-    SCRIPT_PATH       = File.join(ROOT, 'faye-browser-min.js')
+    SCRIPT_PATH       = 'faye-browser-min.js'
     
     TYPE_JSON   = {'Content-Type' => 'application/json'}
     TYPE_SCRIPT = {'Content-Type' => 'text/javascript'}
@@ -25,8 +25,12 @@ module Faye
       @options  = [app, options].grep(Hash).first || {}
       
       @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
-      @endpoint_re = Regexp.new('^' + @endpoint + '(/[^/]*)*(\\.js)?$')
+      @endpoint_re = Regexp.new('^' + @endpoint + '(/[^/]+)*(\\.[^\\.]+)?$')
       @server      = Server.new(@options)
+      
+      @static = StaticServer.new(ROOT, /\.(?:js|map)$/)
+      @static.map(File.basename(@endpoint) + '.js', SCRIPT_PATH)
+      @static.map('client.js', SCRIPT_PATH)
       
       return unless extensions = @options[:extensions]
       [*extensions].each { |extension| add_extension(extension) }
@@ -80,7 +84,7 @@ module Faye
         return handle_options(request)
       end
       
-      return serve_client_script(env) if request.path_info =~ /\.js$/
+      return @static.call(env)        if @static =~ request.path_info
       return handle_websocket(env)    if Faye::WebSocket.websocket?(env)
       return handle_eventsource(env)  if Faye::EventSource.eventsource?(env)
       
@@ -88,28 +92,6 @@ module Faye
     end
     
   private
-    
-    def serve_client_script(env)
-      @client_script ||= File.read(SCRIPT_PATH)
-      @client_digest ||= Digest::SHA1.hexdigest(@client_script)
-      @client_mtime  ||= File.mtime(SCRIPT_PATH)
-      
-      headers = TYPE_SCRIPT.dup
-      ims     = env['HTTP_IF_MODIFIED_SINCE']
-      
-      headers['Content-Length'] = '0' unless env[HTTP_X_NO_CONTENT_LENGTH]
-      headers['ETag'] = @client_digest
-      headers['Last-Modified'] = @client_mtime.httpdate
-      
-      if env['HTTP_IF_NONE_MATCH'] == @client_digest
-        [304, headers, ['']]
-      elsif ims and @client_mtime <= Time.httpdate(ims)
-        [304, headers, ['']]
-      else
-        headers['Content-Length'] = @client_script.bytesize.to_s unless env[HTTP_X_NO_CONTENT_LENGTH]
-        [200, headers, [@client_script]]
-      end
-    end
     
     def handle_request(request)
       json_msg = message_from_request(request)

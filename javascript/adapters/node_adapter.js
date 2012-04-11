@@ -22,7 +22,7 @@ Faye.withDataFor = function(transport, callback, context) {
 
 Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
-  SCRIPT_PATH:      path.dirname(__filename) + '/faye-browser-min.js',
+  SCRIPT_PATH:      'faye-browser-min.js',
   
   TYPE_JSON:    {'Content-Type': 'application/json'},
   TYPE_SCRIPT:  {'Content-Type': 'text/javascript'},
@@ -31,8 +31,12 @@ Faye.NodeAdapter = Faye.Class({
   initialize: function(options) {
     this._options    = options || {};
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
-    this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]*)*(\\.js)?$');
+    this._endpointRe = new RegExp('^' + this._endpoint + '(/[^/]+)*(\\.[^\\.]+)?$');
     this._server     = new Faye.Server(this._options);
+    
+    this._static = new Faye.StaticServer(path.dirname(__filename) + '/../browser', /\.(?:js|map)$/);
+    this._static.map(path.basename(this._endpoint) + '.js', this.SCRIPT_PATH);
+    this._static.map('client.js', this.SCRIPT_PATH);
     
     var extensions = this._options.extensions;
     if (!extensions) return;
@@ -119,8 +123,8 @@ Faye.NodeAdapter = Faye.Class({
         requestMethod = request.method,
         self          = this;
     
-    if (/\.js$/.test(requestUrl.pathname))
-      return this._serveClientScript(request, response);
+    if (this._static.test(requestUrl.pathname))
+      return this._static.call(request, response);
     
     // http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
     if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST')
@@ -184,32 +188,6 @@ Faye.NodeAdapter = Faye.Class({
       self._server.closeSocket(clientId);
       es = null;
     };
-  },
-  
-  _serveClientScript: function(request, response) {
-    this._clientScript = this._clientScript || fs.readFileSync(this.SCRIPT_PATH);
-    this._clientDigest = this._clientDigest || crypto.createHash('sha1').update(this._clientScript).digest('hex');
-    this._clientMtime  = this._clientMtime  || fs.statSync(this.SCRIPT_PATH).mtime;
-    
-    var headers = Faye.extend({}, this.TYPE_SCRIPT),
-        ims     = request.headers['if-modified-since'];
-    
-    headers['Content-Length'] = '0';
-    headers['ETag'] = this._clientDigest;
-    headers['Last-Modified'] = this._clientMtime.toGMTString();
-    
-    if (request.headers['if-none-match'] === this._clientDigest) {
-      response.writeHead(304, headers);
-      response.end();
-    } else if (ims && this._clientMtime <= new Date(ims)) {
-      response.writeHead(304, headers);
-      response.end();
-    } else {
-      headers['Content-Length'] = this._clientScript.length.toString();
-      response.writeHead(200, headers);
-      response.write(this._clientScript);
-      response.end();
-    }
   },
   
   _callWithParams: function(request, response, params) {
