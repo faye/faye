@@ -75,8 +75,12 @@ module Faye
                       [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
       end
       
+      # http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
+      if env['REQUEST_METHOD'] == 'OPTIONS' or env['HTTP_ACCESS_CONTROL_REQUEST_METHOD'] == 'POST'
+        return handle_options(request)
+      end
+      
       return serve_client_script(env) if request.path_info =~ /\.js$/
-      return handle_options(request)  if env['REQUEST_METHOD'] == 'OPTIONS'
       return handle_websocket(env)    if Faye::WebSocket.websocket?(env)
       return handle_eventsource(env)  if Faye::EventSource.eventsource?(env)
       

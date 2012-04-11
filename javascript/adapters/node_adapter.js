@@ -122,7 +122,8 @@ Faye.NodeAdapter = Faye.Class({
     if (/\.js$/.test(requestUrl.pathname))
       return this._serveClientScript(request, response);
     
-    if (requestMethod === 'OPTIONS')
+    // http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
+    if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST')
       return this._handleOptions(request, response);
     
     if (Faye.EventSource.isEventSource(request))
