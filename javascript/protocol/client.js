@@ -24,6 +24,7 @@ Faye.Client = Faye.Class({
     this._disabled  = [];
     this.retry      = this._options.retry || this.DEFAULT_RETRY;
     
+    this.transportEndpoints = options.transportEndpoints || {};
     this._selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
     
     this._state     = this.UNCONNECTED;
