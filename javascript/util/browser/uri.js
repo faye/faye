@@ -20,41 +20,28 @@ Faye.URI = Faye.extend(Faye.Class({
   
   toURL: function() {
     var query = this.queryString();
-    return this.protocol + this.hostname + ':' + this.port +
+    return this.protocol + this.hostname + (this.port ? ':' + this.port : '') +
            this.pathname + (query ? '?' + query : '');
   }
 }), {
   parse: function(url, params) {
     if (typeof url !== 'string') return url;
     
-    var location = new this();
+    var a   = document.createElement('a'),
+        uri = new this();
     
-    var consume = function(name, pattern) {
-      url = url.replace(pattern, function(match) {
-        if (match) location[name] = match;
-        return '';
-      });
-    };
-    consume('protocol', /^https?\:\/+/);
-    consume('hostname', /^[^\/\:]+/);
-    consume('port',     /^:[0-9]+/);
+    a.href = url;
     
-    Faye.extend(location, {
-      protocol:   Faye.ENV.location.protocol + '//',
-      hostname:   Faye.ENV.location.hostname,
-      port:       Faye.ENV.location.port
-    }, false);
+    uri.protocol = a.protocol + '//';
+    uri.hostname = a.hostname;
+    uri.port     = a.port;
+    uri.pathname = a.pathname;
     
-    if (!location.port) location.port = (location.protocol === 'https://') ? '443' : '80';
-    location.port = location.port.replace(/\D/g, '');
-    
-    var parts = url.split('?'),
-        path  = parts.shift(),
-        query = parts.join('?'),
-    
-        pairs = query ? query.split('&') : [],
+    var query = a.search.replace(/^\?/, ''),
+        pairs = query.split('&'),
         n     = pairs.length,
-        data  = {};
+        data  = {},
+        parts;
     
     while (n--) {
       parts = pairs[n].split('=');
@@ -62,10 +49,9 @@ Faye.URI = Faye.extend(Faye.Class({
     }
     if (typeof params === 'object') Faye.extend(data, params);
     
-    location.pathname = path;
-    location.params = data;
+    uri.params = data;
     
-    return location;
+    return uri;
   }
 });
 
