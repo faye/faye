@@ -38,7 +38,7 @@ Faye.URI = Faye.extend(Faye.Class({
     uri.pathname = a.pathname;
     
     var query = a.search.replace(/^\?/, ''),
-        pairs = query.split('&'),
+        pairs = query ? query.split('&') : [],
         n     = pairs.length,
         data  = {},
         parts;
