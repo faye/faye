@@ -44,7 +44,8 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         body    = '',
         self    = this;
     
-    response.addListener('data', function(c) { body += c.toString('utf8', 0, c.length) });
+    response.setEncoding('utf8');
+    response.addListener('data', function(chunk) { body += chunk });
     response.addListener('end', function() {
       try {
         message = JSON.parse(body);

@@ -14,6 +14,7 @@ Faye.CookieJar   = require('cookiejar').CookieJar;
 
 Faye.withDataFor = function(transport, callback, context) {
   var data = '';
+  transport.setEncoding('utf8');
   transport.addListener('data', function(chunk) { data += chunk });
   transport.addListener('end', function() {
     callback.call(context, data);
