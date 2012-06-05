@@ -68,6 +68,11 @@
     extension calls the @callback@, as failing to do so could block delivery of
     other messages in the same request.
     
+    *When implementing authentication, remember that a message published to
+    channel @/foo/bar/qux@ will be routed to subscriptions to @/foo/bar/qux@,
+    @/foo/bar/*@, @/foo/bar/**@, @/foo/**@ and @/**@. Take appropriate measures
+    in your extensions to correctly authenticate subscriptions.*
+    
     On the client side, you'll need to make sure the client sends the right auth
     token to satisfy the server. We do this by adding an _outgoing_ extension on
     the client side.
