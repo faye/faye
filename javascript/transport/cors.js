@@ -50,7 +50,8 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
       return callback.call(context, false);
     
     if (Faye.ENV.XDomainRequest)
-      return callback.call(context, true);
+      return callback.call(context, Faye.URI.parse(endpoint).protocol ===
+                                    Faye.URI.parse(Faye.ENV.location).protocol);
     
     if (Faye.ENV.XMLHttpRequest) {
       var xhr = new Faye.ENV.XMLHttpRequest();
