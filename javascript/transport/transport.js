@@ -71,8 +71,8 @@ Faye.Transport = Faye.extend(Faye.Class({
       var connType = pair[0], klass = pair[1];
       if (Faye.indexOf(connectionTypes, connType) < 0) return resume();
       
-      klass.isUsable(endpoint, function(isUsable) {
-        if (isUsable) callback.call(context, new klass(client, endpoint));
+      klass.isUsable(client.transportEndpoints[connType] || endpoint, function(isUsable) {
+        if (isUsable) callback.call(context, new klass(client, client.transportEndpoints[connType] || endpoint));
         else resume();
       });
     }, function() {
