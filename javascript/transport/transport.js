@@ -68,11 +68,13 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (connectionTypes === undefined) connectionTypes = this.supportedConnectionTypes();
     
     Faye.asyncEach(this._transports, function(pair, resume) {
-      var connType = pair[0], klass = pair[1];
+      var connType     = pair[0], klass = pair[1],
+          connEndpoint = client.endpoints[connType] || endpoint;
+      
       if (Faye.indexOf(connectionTypes, connType) < 0) return resume();
       
-      klass.isUsable(client.transportEndpoints[connType] || endpoint, function(isUsable) {
-        if (isUsable) callback.call(context, new klass(client, client.transportEndpoints[connType] || endpoint));
+      klass.isUsable(connEndpoint, function(isUsable) {
+        if (isUsable) callback.call(context, new klass(client, connEndpoint));
         else resume();
       });
     }, function() {
