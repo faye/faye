@@ -1,6 +1,6 @@
 JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
   before(function() { with(this) {
-    this.client = {endpoint: "http://example.com/"}
+    this.client = {endpoint: "http://example.com/", endpoints: {}}
     
     if (Faye.Transport.NodeLocal) {
       this.LocalTransport = Faye.Transport.NodeLocal

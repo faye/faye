@@ -67,6 +67,20 @@
     so your client can connect to a server on any domain you like without
     further configuration.
     
+    h4. Per-transport endpoints
+    
+    Sometimes, you may need to have the Faye client use different endpoints for
+    different transports. For example, you want to send all normal HTTP traffic
+    to @http://example.com/faye@ but send WebSocket connections to
+    @http://ws.example.com/@. You can set per-transport endpoints using the
+    @endpoints@ option:
+    
+    <pre class="prettyprint">var client = new Faye.Client('http://example.com/faye', {
+        endpoints: {
+          websocket: 'http://ws.example.com/'
+        }
+    });</pre>
+    
     h4. Disabling specific transports
     
     For some applications you may need to exclude some transports from use. For

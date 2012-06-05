@@ -76,10 +76,11 @@ module Faye
         connection_types ||= supported_connection_types
         
         select = lambda do |(conn_type, klass), resume|
+          conn_endpoint = client.endpoints[conn_type] || endpoint
           if connection_types.include?(conn_type)
-            klass.usable?(endpoint) do |is_usable|
+            klass.usable?(conn_endpoint) do |is_usable|
               if is_usable
-                callback.call(klass.new(client, endpoint))
+                callback.call(klass.new(client, conn_endpoint))
               else
                 resume.call
               end

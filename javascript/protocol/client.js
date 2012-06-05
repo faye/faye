@@ -17,11 +17,11 @@ Faye.Client = Faye.Class({
   initialize: function(endpoint, options) {
     this.info('New client created for ?', endpoint);
     
+    this._options   = options || {};
     this.endpoint   = endpoint || this.DEFAULT_ENDPOINT;
-    this.endpoints  = options.endpoints || {};
+    this.endpoints  = this._options.endpoints || {};
     this._cookies   = Faye.CookieJar && new Faye.CookieJar();
     this._headers   = {};
-    this._options   = options || {};
     this._disabled  = [];
     this.retry      = this._options.retry || this.DEFAULT_RETRY;
     

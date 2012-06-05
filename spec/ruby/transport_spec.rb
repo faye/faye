@@ -4,6 +4,7 @@ describe Faye::Transport do
   let :client do
     client = mock("client")
     client.stub(:endpoint).and_return("http://example.com/")
+    client.stub(:endpoints).and_return({})
     client
   end
   

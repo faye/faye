@@ -18,15 +18,16 @@ module Faye
     CONNECTION_TIMEOUT  = 60.0
     DEFAULT_RETRY       = 5.0
     
-    attr_reader :endpoint, :client_id, :retry
+    attr_reader :endpoint, :endpoints, :client_id, :retry
     
     def initialize(endpoint = nil, options = {})
       info('New client created for ?', endpoint)
       
+      @options    = options
       @endpoint   = endpoint || RackAdapter::DEFAULT_ENDPOINT
+      @endpoints  = @options[:endpoints] || {}
       @cookies    = CookieJar::Jar.new
       @headers    = {}
-      @options    = options
       @disabled   = []
       @retry      = @options[:retry] || DEFAULT_RETRY
 
