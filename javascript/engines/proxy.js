@@ -41,6 +41,7 @@ Faye.Engine.Proxy = Faye.Class({
   connection: function(clientId, create) {
     var conn = this._connections[clientId];
     if (conn || !create) return conn;
+	this.emit('openConnection', clientId);
     return this._connections[clientId] = new Faye.Engine.Connection(this, clientId);
   },
   
