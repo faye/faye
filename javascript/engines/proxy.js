@@ -40,11 +40,13 @@ Faye.Engine.Proxy = Faye.Class({
   connection: function(clientId, create) {
     var conn = this._connections[clientId];
     if (conn || !create) return conn;
+    this.trigger('openConnection', clientId);
     return this._connections[clientId] = new Faye.Engine.Connection(this, clientId);
   },
   
   closeConnection: function(clientId) {
     this.debug('Closing connection for ?', clientId);
+	this.trigger('closeConnection', clientId);
     delete this._connections[clientId];
   },
   
