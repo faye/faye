@@ -63,11 +63,13 @@ module Faye
       def connection(client_id, create)
         conn = @connections[client_id]
         return conn if conn or not create
+        trigger(:openConnection, client_id)
         @connections[client_id] = Connection.new(self, client_id)
       end
       
       def close_connection(client_id)
         debug 'Closing connection for ?', client_id
+        trigger(:closeConnection, client_id)
         @connections.delete(client_id)
       end
       
