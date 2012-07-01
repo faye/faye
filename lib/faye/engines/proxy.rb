@@ -44,7 +44,11 @@ module Faye
         
         engine_class = @options[:type] || Memory
         @engine      = engine_class.create(self, @options)
-
+        
+        bind :disconnect do |client_id|
+          EM.add_timer(0.01) { close_connection(client_id) }
+        end
+        
         debug 'Created new engine: ?', @options
       end
       
@@ -68,6 +72,8 @@ module Faye
       
       def close_connection(client_id)
         debug 'Closing connection for ?', client_id
+        conn = @connections[client_id]
+        conn.socket.close if conn and conn.socket
         @connections.delete(client_id)
       end
       
