@@ -34,7 +34,7 @@ Faye.URI = Faye.extend(Faye.Class({
     
     uri.protocol = a.protocol + '//';
     uri.hostname = a.hostname;
-    uri.pathname = a.pathname;
+    uri.pathname = a.pathname.replace(/^\/?/, '/');
     
     if (a.port === '0' || a.port === '')
       uri.port = (a.protocol === 'https:') ? '443' : '80';
