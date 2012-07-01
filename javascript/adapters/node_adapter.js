@@ -210,6 +210,7 @@ Faye.NodeAdapter = Faye.Class({
         var body = JSON.stringify(replies);
         if (isGet) body = jsonp + '(' + body + ');';
         headers['Content-Length'] = new Buffer(body, 'utf8').length.toString();
+        headers['Connection'] = 'close';
         
         this.debug('Returning ?', body);
         response.writeHead(200, headers);
