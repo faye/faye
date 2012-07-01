@@ -34,8 +34,13 @@ Faye.URI = Faye.extend(Faye.Class({
     
     uri.protocol = a.protocol + '//';
     uri.hostname = a.hostname;
-    uri.port     = a.port;
     uri.pathname = a.pathname;
+    
+    if ((a.port === "0") || (a.port === "")) {
+      uri.port = "80";
+    } else {
+      uri.port = a.port;
+    }
     
     var query = a.search.replace(/^\?/, ''),
         pairs = query ? query.split('&') : [],
