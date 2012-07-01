@@ -316,20 +316,29 @@ describe Faye::Client do
       
       # The Bayeux spec says the server should accept a list of subscriptions
       # in one message but the cometD server doesn't actually support this
-      it "sends multiple subscribe messages if given an array" do
-        transport.should_receive(:send).with({
-          "channel"      => "/meta/subscribe",
-          "clientId"     => "fakeid",
-          "subscription" => "/foo",
-          "id"           => instance_of(String)
-        }, 60)
-        transport.should_receive(:send).with({
-          "channel"      => "/meta/subscribe",
-          "clientId"     => "fakeid",
-          "subscription" => "/bar",
-          "id"           => instance_of(String)
-        }, 60)
-        @client.subscribe(["/foo", "/bar"])
+      describe "with an array of subscriptions" do
+        it "sends multiple subscribe messages" do
+          transport.should_receive(:send).with({
+            "channel"      => "/meta/subscribe",
+            "clientId"     => "fakeid",
+            "subscription" => "/foo",
+            "id"           => instance_of(String)
+          }, 60)
+          transport.should_receive(:send).with({
+            "channel"      => "/meta/subscribe",
+            "clientId"     => "fakeid",
+            "subscription" => "/bar",
+            "id"           => instance_of(String)
+          }, 60)
+          @client.subscribe(["/foo", "/bar"])
+        end
+        
+        it "returns an array of subscriptions" do
+          transport.stub(:send)
+          subs = @client.subscribe(["/foo", "/bar"])
+          subs.size.should == 2
+          subs.should be_all { |s| Faye::Subscription === s }
+        end
       end
       
       describe "on successful response" do

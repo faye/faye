@@ -196,12 +196,10 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   subscribe: function(channel, callback, context) {
-    if (channel instanceof Array) {
-      for (var i = 0, n = channel.length; i < n; i++) {
-        this.subscribe(channel[i], callback, context);
-      }
-      return;
-    }
+    if (channel instanceof Array)
+      return Faye.map(channel, function(c) {
+        return this.subscribe(c, callback, context);
+      }, this);
     
     var subscription = new Faye.Subscription(this, channel, callback, context),
         force        = (callback === true),
@@ -248,12 +246,10 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   unsubscribe: function(channel, callback, context) {
-    if (channel instanceof Array) {
-      for (var i = 0, n = channel.length; i < n; i++) {
-        this.unsubscribe(channel[i], callback, context);
-      }
-      return;
-    }
+    if (channel instanceof Array)
+      return Faye.map(channel, function(c) {
+        return this.unsubscribe(c, callback, context);
+      }, this);
     
     var dead = this._channels.unsubscribe(channel, callback, context);
     if (!dead) return;

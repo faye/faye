@@ -313,20 +313,29 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       
       // The Bayeux spec says the server should accept a list of subscriptions
       // in one message but the cometD server doesn't actually support this
-      it("sends multiple subscribe messages if given an array", function() { with(this) {
-        expect(transport, "send").given({
-          channel:      "/meta/subscribe",
-          clientId:     "fakeid",
-          subscription: "/foo",
-          id:           instanceOf("string")
-        }, 60)
-        expect(transport, "send").given({
-          channel:      "/meta/subscribe",
-          clientId:     "fakeid",
-          subscription: "/bar",
-          id:           instanceOf("string")
-        }, 60)
-        client.subscribe(["/foo", "/bar"])
+      describe("with an array of subscriptions", function() { with(this) {
+        it("sends multiple subscribe messages", function() { with(this) {
+          expect(transport, "send").given({
+            channel:      "/meta/subscribe",
+            clientId:     "fakeid",
+            subscription: "/foo",
+            id:           instanceOf("string")
+          }, 60)
+          expect(transport, "send").given({
+            channel:      "/meta/subscribe",
+            clientId:     "fakeid",
+            subscription: "/bar",
+            id:           instanceOf("string")
+          }, 60)
+          client.subscribe(["/foo", "/bar"])
+        }})
+        
+        it("returns an array of subscriptions", function() { with(this) {
+          stub(transport, "send")
+          var subs = client.subscribe(["/foo", "/bar"])
+          assertEqual( 2, subs.length )
+          assertKindOf( Faye.Subscription, subs[0] )
+        }})
       }})
       
       describe("on successful response", function() { with(this) {

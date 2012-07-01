@@ -191,9 +191,7 @@ module Faye
     #                                                     * timestamp
     def subscribe(channel, force = false, &block)
       if Array === channel
-        return channel.each do |channel|
-          subscribe(channel, force, &block)
-        end
+        return channel.map { |c| subscribe(c, force, &block) }
       end
       
       subscription  = Subscription.new(self, channel, block)
@@ -240,9 +238,7 @@ module Faye
     #                                                     * timestamp
     def unsubscribe(channel, &block)
       if Array === channel
-        return channel.each do |channel|
-          unsubscribe(channel, &block)
-        end
+        return channel.map { |c| unsubscribe(c, &block) }
       end
       
       dead = @channels.unsubscribe(channel, block)
