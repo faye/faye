@@ -27,6 +27,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   },
   
   connect: function() {
+    if (Faye.Transport.WebSocket._unloaded) return;
     if (this._closed) return;
     
     this._state = this._state || this.UNCONNECTED;
@@ -113,3 +114,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
 
 Faye.extend(Faye.Transport.WebSocket.prototype, Faye.Deferrable);
 Faye.Transport.register('websocket', Faye.Transport.WebSocket);
+
+if (Faye.Event)
+  Faye.Event.on(Faye.ENV, 'beforeunload', function() {
+    Faye.Transport.WebSocket._unloaded = true;
+  });
+
