@@ -86,7 +86,10 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   },
   
   isUsable: function(endpoint, callback, context) {
-    var ws = this.getClass();
+    if (this._usableCache[endpoint] !== undefined)
+      return callback.call(context, this._usableCache[endpoint]);
+    
+    var ws = this.getClass(), self = this;
     if (!ws) return callback.call(context, false);
     
     var connected = false,
@@ -97,19 +100,21 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     socket.onopen = function() {
       connected = true;
       socket.close();
-      callback.call(context, true);
+      callback.call(context, self._usableCache[endpoint] = true);
       called = true;
       socket = null;
     };
     
     var notconnected = function() {
-      if (!called && !connected) callback.call(context, false);
+      if (!called && !connected) callback.call(context, self._usableCache[endpoint] = false);
       called = true;
     };
     
     socket.onclose = socket.onerror = notconnected;
     Faye.ENV.setTimeout(notconnected, this.WEBSOCKET_TIMEOUT);
-  }
+  },
+  
+  _usableCache: {}
 });
 
 Faye.extend(Faye.Transport.WebSocket.prototype, Faye.Deferrable);

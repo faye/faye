@@ -21,7 +21,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     this._timeout = timeout;
 
     if (message.channel === Faye.Channel.HANDSHAKE)
-      return this.flush();
+      return this.addTimeout('publish', 0.01, this.flush, this);
 
     if (message.channel === Faye.Channel.CONNECT)
       this._connectMessage = message;
@@ -71,7 +71,10 @@ Faye.Transport = Faye.extend(Faye.Class({
       var connType     = pair[0], klass = pair[1],
           connEndpoint = client.endpoints[connType] || endpoint;
       
-      if (Faye.indexOf(connectionTypes, connType) < 0) return resume();
+      if (Faye.indexOf(connectionTypes, connType) < 0) {
+        klass.isUsable(connEndpoint, function() {});
+        return resume();
+      }
       
       klass.isUsable(connEndpoint, function(isUsable) {
         if (isUsable) callback.call(context, new klass(client, connEndpoint));
