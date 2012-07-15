@@ -15,11 +15,11 @@
     be notified that the client is online or offline.
     
     <pre class="prettyprint">client.bind('transport:down', function() {
-      // the client if offline
+      // the client is offline
     });
     
     client.bind('transport:up', function() {
-      // the client if online
+      // the client is online
     });</pre>
     
     Note that these events _do not_ reflect the status of the client's session,
