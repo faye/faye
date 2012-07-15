@@ -94,14 +94,19 @@ module Faye
   private
     
     def handle_request(request)
-      json_msg = message_from_request(request)
+      unless json_msg = message_from_request(request)
+        error 'Received request with no message: ?', format_request(request)
+        return [400, TYPE_TEXT, ['Bad request']]
+      end
+      
+      debug "Received message via HTTP #{request.request_method}: ?", json_msg
+      
       message  = Yajl::Parser.parse(json_msg)
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
       headers  = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
       origin   = request.env['HTTP_ORIGIN']
       callback = request.env['async.callback']
       
-      debug 'Received ?: ?', request.env['REQUEST_METHOD'], json_msg
       @server.flush_connection(message) if request.get?
       
       headers['Access-Control-Allow-Origin'] = origin if origin
@@ -112,7 +117,7 @@ module Faye
         response = "#{ jsonp }(#{ response });" if request.get?
         headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
         headers['Connection'] = 'close'
-        debug 'Returning ?', response
+        debug 'HTTP response: ?', response
         callback.call [200, headers, [response]]
       end
       
@@ -128,10 +133,11 @@ module Faye
       
       ws.onmessage = lambda do |event|
         begin
+          debug "Received message via WebSocket[#{ws.version}]: ?", event.data
+          
           message   = Yajl::Parser.parse(event.data)
           client_id = Faye.client_id_from_messages(message)
           
-          debug "Received via WebSocket[#{ws.version}]: ?", message
           @server.open_socket(client_id, ws)
           
           @server.process(message, false) do |replies|
@@ -179,6 +185,17 @@ module Faye
       else
         CGI.parse(request.body.read)['message'][0]
       end
+    end
+    
+    def format_request(request)
+      request.body.rewind
+      string = "curl -X #{request.request_method.upcase}"
+      string << " '#{request.url}'"
+      if request.post?
+        string << " -H 'Content-Type: #{request.env['CONTENT_TYPE']}'" 
+        string << " -d '#{request.body.read}'"
+      end
+      string
     end
     
     def handle_options(request)

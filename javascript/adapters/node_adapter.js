@@ -144,6 +144,7 @@ Faye.NodeAdapter = Faye.Class({
                    ? {message: data}
                    : querystring.parse(data);
         
+        request.body = data;
         self._callWithParams(request, response, params);
       });
     
@@ -157,10 +158,11 @@ Faye.NodeAdapter = Faye.Class({
     
     ws.onmessage = function(event) {
       try {
+        self.debug('Received message via WebSocket[' + ws.version + ']: ?', event.data);
+        
         var message = JSON.parse(event.data);
         clientId = Faye.clientIdFromMessages(message);
         
-        self.debug('Received via WebSocket[' + ws.version + ']: ?', message);
         self._server.openSocket(clientId, ws);
         
         self._server.process(message, false, function(replies) {
@@ -192,7 +194,14 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   _callWithParams: function(request, response, params) {
+    if (!params.message) {
+      this.error('Received request with no message: ?', this._formatRequest(request));
+      return this._returnError(response);
+    }
+    
     try {
+      this.debug('Received message via HTTP ' + request.method + ': ?', params.message);
+      
       var message = JSON.parse(params.message),
           jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
@@ -200,7 +209,6 @@ Faye.NodeAdapter = Faye.Class({
           headers = Faye.extend({}, type),
           origin  = request.headers.origin;
 
-      this.debug('Received ?: ?', request.method, message);
       if (isGet) this._server.flushConnection(message);
       
       if (origin) headers['Access-Control-Allow-Origin'] = origin;
@@ -212,7 +220,7 @@ Faye.NodeAdapter = Faye.Class({
         headers['Content-Length'] = new Buffer(body, 'utf8').length.toString();
         headers['Connection'] = 'close';
         
-        this.debug('Returning ?', body);
+        this.debug('HTTP response: ?', body);
         response.writeHead(200, headers);
         response.write(body);
         response.end();
@@ -221,6 +229,18 @@ Faye.NodeAdapter = Faye.Class({
       this.error(e.message + '\nBacktrace:\n' + e.stack);
       this._returnError(response);
     }
+  },
+  
+  _formatRequest: function(request) {
+    var method = request.method.toUpperCase(),
+        string = 'curl -X ' + method;
+    
+    string += " 'http://" + request.headers.host + request.url + "'";
+    if (method === 'POST') {
+      string += " -H 'Content-Type: " + request.headers['content-type'] + "'";
+      string += " -d '" + request.body + "'";
+    }
+    return string;
   },
   
   _handleOptions: function(request, response) {
