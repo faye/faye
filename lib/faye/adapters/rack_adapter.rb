@@ -11,9 +11,9 @@ module Faye
     DEFAULT_ENDPOINT  = '/bayeux'
     SCRIPT_PATH       = 'faye-browser-min.js'
     
-    TYPE_JSON   = {'Content-Type' => 'application/json'}
-    TYPE_SCRIPT = {'Content-Type' => 'text/javascript'}
-    TYPE_TEXT   = {'Content-Type' => 'text/plain'}
+    TYPE_JSON   = {'Content-Type' => 'application/json; charset: utf-8'}
+    TYPE_SCRIPT = {'Content-Type' => 'text/javascript; charset: utf-8'}
+    TYPE_TEXT   = {'Content-Type' => 'text/plain; charset: utf-8'}
     
     # This header is passed by Rack::Proxy during testing. Rack::Proxy seems to
     # set content-length for you, and setting it in here really slows the tests
