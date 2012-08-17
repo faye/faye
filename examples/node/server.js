@@ -4,7 +4,7 @@ var fs    = require('fs'),
     https = require('https'),
     faye  = require('../../build/node/faye-node');
 
-// faye.Logging.logLevel = 'debug';
+faye.Logging.logLevel = 'debug';
 
 var SHARED_DIR = path.dirname(__filename) + '/../shared',
     PUBLIC_DIR = SHARED_DIR + '/public',
@@ -36,9 +36,11 @@ var server = secure
 bayeux.attach(server);
 server.listen(Number(port));
 
+/*
 bayeux.getClient().subscribe('/chat/*', function(message) {
   console.log('[' + message.user + ']: ' + message.message);
 });
+*/
 
 bayeux.bind('subscribe', function(clientId, channel) {
   console.log('[  SUBSCRIBE] ' + clientId + ' -> ' + channel);

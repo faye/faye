@@ -5,8 +5,9 @@
   <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
   <title>Faye demo: chat client</title>
   <link rel="stylesheet" href="/style.css" type="text/css" media="screen">
-  <script src="/mootools.js" type="text/javascript"></script>
   <script src="/jquery.js" type="text/javascript"></script>
+  <script src="/cometd.js" type="text/javascript"></script>
+  <script src="/jquery.cometd.js" type="text/javascript"></script>
   <script src="/bayeux/client.js" type="text/javascript"></script>
   <script src="/soapbox.js" type="text/javascript"></script>
 </head>
@@ -47,7 +48,16 @@
         path   = '/bayeux';
     
     Bayeux = new Faye.Client(scheme + '//' + host + (port ? ':' + port : '') + path);
-    Soapbox.init(Bayeux);
+    // Soapbox.init(Bayeux);
+    
+    $.cometd.init({
+      url: 'http://localhost:8000/bayeux',
+      appendMessageTypeToURL: false,
+      logLevel: 'debug'
+    });
+    $.cometd.subscribe('/ping', function(message) {
+      console.log(message);
+    });
   </script>
 
 </div>  

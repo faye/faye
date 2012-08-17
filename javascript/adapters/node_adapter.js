@@ -152,6 +152,8 @@ Faye.NodeAdapter = Faye.Class({
   },
   
   handleUpgrade: function(request, socket, head) {
+    return;
+    
     var ws       = new Faye.WebSocket(request, socket, head, null, {ping: this._options.ping}),
         clientId = null,
         self     = this;
