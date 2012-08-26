@@ -29,8 +29,8 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     this._socket.close();
   }
 }), {
-  isUsable: function(endpoint, callback, context) {
-    Faye.Transport.XHR.isUsable(endpoint, function(usable) {
+  isUsable: function(client, endpoint, callback, context) {
+    Faye.Transport.XHR.isUsable(client, endpoint, function(usable) {
       callback.call(context, usable && Faye.ENV.EventSource);
     });
   }

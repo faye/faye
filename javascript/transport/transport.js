@@ -72,13 +72,14 @@ Faye.Transport = Faye.extend(Faye.Class({
           connEndpoint = client.endpoints[connType] || endpoint;
       
       if (Faye.indexOf(connectionTypes, connType) < 0) {
-        klass.isUsable(connEndpoint, function() {});
+        klass.isUsable(client, connEndpoint, function() {});
         return resume();
       }
       
-      klass.isUsable(connEndpoint, function(isUsable) {
-        if (isUsable) callback.call(context, new klass(client, connEndpoint));
-        else resume();
+      klass.isUsable(client, connEndpoint, function(isUsable) {
+        if (!isUsable) return resume();
+        var transport = klass.hasOwnProperty('create') ? klass.create(client, connEndpoint) : new klass(client, connEndpoint);
+        callback.call(context, transport);
       });
     }, function() {
       throw new Error('Could not find a usable connection type for ' + endpoint);

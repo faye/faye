@@ -59,7 +59,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
     xhr.send(Faye.toJSON(message));
   }
 }), {
-  isUsable: function(endpoint, callback, context) {
+  isUsable: function(client, endpoint, callback, context) {
     callback.call(context, Faye.URI.parse(endpoint).isLocal());
   }
 });
