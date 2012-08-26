@@ -74,6 +74,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   },
   
   resend: function() {
+    if (!this._messages) return;
     var messages = Faye.map(this._messages, function(id, msg) { return msg });
     this.request(messages);
   }
