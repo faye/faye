@@ -8,7 +8,7 @@ Faye.URI = Faye.extend(Faye.Class({
     return pairs.join('&');
   },
   
-  isLocal: function() {
+  isSameOrigin: function() {
     var host = Faye.URI.parse(Faye.ENV.location.href);
     
     var external = (host.hostname !== this.hostname) ||
@@ -20,32 +20,44 @@ Faye.URI = Faye.extend(Faye.Class({
   
   toURL: function() {
     var query = this.queryString();
-    return this.protocol + this.hostname + (this.port ? ':' + this.port : '') +
-           this.pathname + (query ? '?' + query : '');
+    return this.protocol + '//' + this.hostname + (this.port ? ':' + this.port : '') +
+           this.pathname + (query ? '?' + query : '') + this.hash;
   }
 }), {
   parse: function(url, params) {
     if (typeof url !== 'string') return url;
+    var uri = new this(), parts;
     
-    var a   = document.createElement('a'),
-        uri = new this();
+    var consume = function(name, pattern) {
+      url = url.replace(pattern, function(match) {
+        uri[name] = match;
+        return '';
+      });
+      if (uri[name] === undefined) uri[name] = window.location[name];
+    };
     
-    a.href = url;
+    consume('protocol', /^https?\:/);
+    consume('host',     /^\/\/[^\/]+/);
     
-    uri.protocol = a.protocol + '//';
-    uri.hostname = a.hostname;
-    uri.pathname = a.pathname.replace(/^\/?/, '/');
+    if (!/^\//.test(url)) url = window.location.pathname.replace(/[^\/]*$/, '') + url;
+    consume('pathname', /^\/[^\?#]*/);
+    consume('search',   /^\?[^#]*/);
+    consume('hash',     /^#.*/);
     
-    if (a.port === '0' || a.port === '')
-      uri.port = (a.protocol === 'https:') ? '443' : '80';
-    else
-      uri.port = a.port;
+    if (/^\/\//.test(uri.host)) {
+      uri.host = uri.host.substr(2);
+      parts = uri.host.split(':');
+      uri.hostname = parts[0];
+      uri.port = parts[1] || '';
+    } else {
+      uri.hostname = window.location.hostname;
+      uri.port = window.location.port;
+    }
     
-    var query = a.search.replace(/^\?/, ''),
+    var query = uri.search.replace(/^\?/, ''),
         pairs = query ? query.split('&') : [],
         n     = pairs.length,
-        data  = {},
-        parts;
+        data  = {};
     
     while (n--) {
       parts = pairs[n].split('=');

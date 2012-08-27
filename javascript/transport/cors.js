@@ -46,7 +46,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
   }
 }), {
   isUsable: function(endpoint, callback, context) {
-    if (Faye.URI.parse(endpoint).isLocal())
+    if (Faye.URI.parse(endpoint).isSameOrigin())
       return callback.call(context, false);
     
     if (Faye.ENV.XDomainRequest)

@@ -60,7 +60,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
   }
 }), {
   isUsable: function(endpoint, callback, context) {
-    callback.call(context, Faye.URI.parse(endpoint).isLocal());
+    callback.call(context, Faye.URI.parse(endpoint).isSameOrigin());
   }
 });
 
