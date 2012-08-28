@@ -33,13 +33,13 @@ Faye.URI = Faye.extend(Faye.Class({
         uri[name] = match;
         return '';
       });
-      if (uri[name] === undefined) uri[name] = window.location[name];
+      if (uri[name] === undefined) uri[name] = Faye.ENV.location[name];
     };
     
     consume('protocol', /^https?\:/);
     consume('host',     /^\/\/[^\/]+/);
     
-    if (!/^\//.test(url)) url = window.location.pathname.replace(/[^\/]*$/, '') + url;
+    if (!/^\//.test(url)) url = Faye.ENV.location.pathname.replace(/[^\/]*$/, '') + url;
     consume('pathname', /^\/[^\?#]*/);
     consume('search',   /^\?[^#]*/);
     consume('hash',     /^#.*/);
@@ -50,8 +50,8 @@ Faye.URI = Faye.extend(Faye.Class({
       uri.hostname = parts[0];
       uri.port = parts[1] || '';
     } else {
-      uri.hostname = window.location.hostname;
-      uri.port = window.location.port;
+      uri.hostname = Faye.ENV.location.hostname;
+      uri.port = Faye.ENV.location.port;
     }
     
     var query = uri.search.replace(/^\?/, ''),
