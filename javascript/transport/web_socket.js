@@ -95,9 +95,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   },
   
   create: function(client, endpoint) {
-    client._websockets = client._websockets || {};
-    client._websockets[endpoint] = client._websockets[endpoint] || new this(client, endpoint);
-    return client._websockets[endpoint];
+    var sockets = client.transports.websocket = client.transports.websocket || {};
+    sockets[endpoint] = sockets[endpoint] || new this(client, endpoint);
+    return sockets[endpoint];
   }
 });
 

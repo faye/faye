@@ -20,6 +20,7 @@ Faye.Client = Faye.Class({
     this._options   = options || {};
     this.endpoint   = endpoint || this.DEFAULT_ENDPOINT;
     this.endpoints  = this._options.endpoints || {};
+    this.transports = {};
     this._cookies   = Faye.CookieJar && new Faye.CookieJar();
     this._headers   = {};
     this._disabled  = [];
