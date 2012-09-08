@@ -1,11 +1,20 @@
 Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
-  request: function(message, timeout) {
-    var params       = {message: Faye.toJSON(message)},
+  shouldFlush: function(messages) {
+    var params = {
+      message:  Faye.toJSON(messages),
+      jsonp:    '__jsonp' + Faye.Transport.JSONP._cbCount
+    };
+    var location = Faye.URI.parse(this._endpoint, params).toURL();
+    return location.length >= Faye.Transport.MAX_URL_LENGTH;
+  },
+  
+  request: function(messages, timeout) {
+    var params       = {message: Faye.toJSON(messages)},
         head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = Faye.Transport.JSONP.getCallbackName(),
         location     = Faye.URI.parse(this._endpoint, params),
-        retry        = this.retry(message, timeout),
+        retry        = this.retry(messages, timeout),
         self         = this;
     
     Faye.ENV[callbackName] = function(data) {
