@@ -2,7 +2,7 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
   shouldFlush: function(messages) {
     var params = {
       message:  Faye.toJSON(messages),
-      jsonp:    '__jsonp' + Faye.Transport.JSONP._cbCount
+      jsonp:    '__jsonp' + Faye.Transport.JSONP._cbCount + '__'
     };
     var location = Faye.URI.parse(this._endpoint, params).toURL();
     return location.length >= Faye.Transport.MAX_URL_LENGTH;
