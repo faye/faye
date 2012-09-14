@@ -80,7 +80,7 @@ JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
   },
   
   check_content_type: function(type, resume) {
-    this.assertEqual(type + "; charset: utf-8", this._response.headers["content-type"])
+    this.assertEqual(type + "; charset=utf-8", this._response.headers["content-type"])
     resume()
   },
   

@@ -25,9 +25,9 @@ Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   SCRIPT_PATH:      'faye-browser-min.js',
   
-  TYPE_JSON:    {'Content-Type': 'application/json; charset: utf-8'},
-  TYPE_SCRIPT:  {'Content-Type': 'text/javascript; charset: utf-8'},
-  TYPE_TEXT:    {'Content-Type': 'text/plain; charset: utf-8'},
+  TYPE_JSON:    {'Content-Type': 'application/json; charset=utf-8'},
+  TYPE_SCRIPT:  {'Content-Type': 'text/javascript; charset=utf-8'},
+  TYPE_TEXT:    {'Content-Type': 'text/plain; charset=utf-8'},
   
   initialize: function(options) {
     this._options    = options || {};

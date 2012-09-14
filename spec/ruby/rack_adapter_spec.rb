@@ -45,7 +45,7 @@ describe Faye::RackAdapter do
           server.stub(:process).and_yield ["channel" => "/meta/handshake"]
           post "/bayeux", "message=%5B%5D"
           status.should == 200
-          content_type.should == "application/json; charset: utf-8"
+          content_type.should == "application/json; charset=utf-8"
           content_length.should == "31"
           json.should == ["channel" => "/meta/handshake"]
         end
@@ -54,14 +54,14 @@ describe Faye::RackAdapter do
           server.should_not_receive(:process)
           post "/bayeux", "message=%7B%5B"
           status.should == 400
-          content_type.should == "text/plain; charset: utf-8"
+          content_type.should == "text/plain; charset=utf-8"
         end
         
         it "returns a 404 if the path is not matched" do
           server.should_not_receive(:process)
           post "/blaf", 'message=%5B%5D'
           status.should == 404
-          content_type.should == "text/plain; charset: utf-8"
+          content_type.should == "text/plain; charset=utf-8"
         end
       end
       
@@ -96,7 +96,7 @@ describe Faye::RackAdapter do
         server.stub(:process).and_yield ["channel" => "/meta/handshake"]
         post "/bayeux", '[]'
         status.should == 200
-        content_type.should == "application/json; charset: utf-8"
+        content_type.should == "application/json; charset=utf-8"
           content_length.should == "31"
         json.should == ["channel" => "/meta/handshake"]
       end
@@ -105,14 +105,14 @@ describe Faye::RackAdapter do
         server.should_not_receive(:process)
         post "/bayeux", "[}"
         status.should == 400
-        content_type.should == "text/plain; charset: utf-8"
+        content_type.should == "text/plain; charset=utf-8"
       end
       
       it "returns a 404 if the path is not matched" do
         server.should_not_receive(:process)
         post "/blaf", "[]"
         status.should == 404
-        content_type.should == "text/plain; charset: utf-8"
+        content_type.should == "text/plain; charset=utf-8"
       end
     end
     
@@ -126,7 +126,7 @@ describe Faye::RackAdapter do
         server.stub(:process).and_yield ["channel" => "/meta/handshake"]
         post "/bayeux", :message => '[]'
         status.should == 200
-        content_type.should == "application/json; charset: utf-8"
+        content_type.should == "application/json; charset=utf-8"
         content_length.should == "31"
         json.should == ["channel" => "/meta/handshake"]
       end
@@ -135,14 +135,14 @@ describe Faye::RackAdapter do
         server.should_not_receive(:process)
         post "/bayeux", :message => "[}"
         status.should == 400
-        content_type.should == "text/plain; charset: utf-8"
+        content_type.should == "text/plain; charset=utf-8"
       end
       
       it "returns a 404 if the path is not matched" do
         server.should_not_receive(:process)
         post "/blaf", :message => "[]"
         status.should == 404
-        content_type.should == "text/plain; charset: utf-8"
+        content_type.should == "text/plain; charset=utf-8"
       end
     end
   end
@@ -164,7 +164,7 @@ describe Faye::RackAdapter do
         server.stub(:process).and_yield ["channel" => "/meta/handshake"]
         get "/bayeux", params
         status.should == 200
-        content_type.should == "text/javascript; charset: utf-8"
+        content_type.should == "text/javascript; charset=utf-8"
         content_length.should == "42"
         body.should == 'callback([{"channel":"/meta/handshake"}]);'
       end
@@ -181,7 +181,7 @@ describe Faye::RackAdapter do
         server.should_not_receive(:process)
         get "/blah", params
         status.should == 404
-        content_type.should == "text/plain; charset: utf-8"
+        content_type.should == "text/plain; charset=utf-8"
       end
     end
     
@@ -195,7 +195,7 @@ describe Faye::RackAdapter do
         server.stub(:process).and_yield ["channel" => "/meta/handshake"]
         get "/bayeux", params
         status.should == 200
-        content_type.should == "text/javascript; charset: utf-8"
+        content_type.should == "text/javascript; charset=utf-8"
         content_length.should == "47"
         body.should == 'jsonpcallback([{"channel":"/meta/handshake"}]);'
       end
@@ -210,7 +210,7 @@ describe Faye::RackAdapter do
       it "returns a 400 response" do
         get "/bayeux", params
         status.should == 400
-        content_type.should == "text/plain; charset: utf-8"
+        content_type.should == "text/plain; charset=utf-8"
       end
     end
     
@@ -228,7 +228,7 @@ describe Faye::RackAdapter do
       it "returns the client script" do
         get "/bayeux.js"
         status.should == 200
-        content_type.should == "text/javascript; charset: utf-8"
+        content_type.should == "text/javascript; charset=utf-8"
         body.should =~ /function\(\)\{/
       end
     end
