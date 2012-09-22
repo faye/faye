@@ -26,7 +26,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (message.channel === Faye.Channel.CONNECT)
       this._connectMessage = message;
 
-    if (this.shouldFlush && this.shouldFlush(this._outbox));
+    if (this.shouldFlush && this.shouldFlush(this._outbox))
       return this.flush();
 
     this.addTimeout('publish', this.MAX_DELAY, this.flush, this);
