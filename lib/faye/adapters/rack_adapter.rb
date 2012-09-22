@@ -110,7 +110,7 @@ module Faye
       @server.flush_connection(message) if request.get?
       
       headers['Access-Control-Allow-Origin'] = origin if origin
-      headers['Cache-Control'] = 'no-cache, no-store' if request.get?
+      headers['Cache-Control'] = 'no-cache, no-store'
       
       @server.process(message, false) do |replies|
         response = Faye.to_json(replies)

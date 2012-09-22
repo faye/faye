@@ -212,7 +212,7 @@ Faye.NodeAdapter = Faye.Class({
       if (isGet) this._server.flushConnection(message);
       
       if (origin) headers['Access-Control-Allow-Origin'] = origin;
-      if (isGet)  headers['Cache-Control'] = 'no-cache, no-store';
+      headers['Cache-Control'] = 'no-cache, no-store';
       
       this._server.process(message, false, function(replies) {
         var body = JSON.stringify(replies);
