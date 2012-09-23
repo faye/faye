@@ -46,7 +46,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     xhr.send('message=' + encodeURIComponent(Faye.toJSON(message)));
   }
 }), {
-  isUsable: function(endpoint, callback, context) {
+  isUsable: function(client, endpoint, callback, context) {
     if (Faye.URI.parse(endpoint).isSameOrigin())
       return callback.call(context, false);
     
