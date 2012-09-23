@@ -11,8 +11,8 @@ module Faye
     autoload :Memory,     File.expand_path('../memory', __FILE__)
     
     def self.ensure_reactor_running!
-      Thread.new { EM.run } unless EM.reactor_running?
-      Thread.pass until EM.reactor_running?
+      Thread.new { EventMachine.run } unless EventMachine.reactor_running?
+      Thread.pass until EventMachine.reactor_running?
     end
     
     def self.get(options)
@@ -46,7 +46,7 @@ module Faye
         @engine      = engine_class.create(self, @options)
         
         bind :disconnect do |client_id|
-          EM.add_timer(0.01) { close_connection(client_id) }
+          EventMachine.next_tick { close_connection(client_id) }
         end
         
         debug 'Created new engine: ?', @options
