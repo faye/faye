@@ -1,11 +1,12 @@
 require "spec_helper"
 
 describe Faye::Transport do
+  before do
+    Faye.ensure_reactor_running!
+  end
+  
   let :client do
-    client = mock("client")
-    client.stub(:endpoint).and_return("http://example.com/")
-    client.stub(:endpoints).and_return({})
-    client
+    mock("client", :endpoint => "http://example.com/", :endpoints => {}, :transports => {})
   end
   
   describe :get do

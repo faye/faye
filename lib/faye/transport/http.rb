@@ -1,7 +1,7 @@
 module Faye
   
   class Transport::Http < Transport
-    def self.usable?(endpoint, &callback)
+    def self.usable?(client, endpoint, &callback)
       callback.call(endpoint.is_a?(String))
     end
     

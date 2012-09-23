@@ -33,7 +33,9 @@ module Faye
       @outbox << message
       @timeout = timeout
 
-      return flush if message['channel'] == Channel::HANDSHAKE
+      if message['channel'] == Channel::HANDSHAKE
+        return add_timeout(:publish, 0.01) { flush }
+      end
 
       if message['channel'] == Channel::CONNECT
         @connection_message = message
@@ -77,16 +79,15 @@ module Faye
         
         select = lambda do |(conn_type, klass), resume|
           conn_endpoint = client.endpoints[conn_type] || endpoint
-          if connection_types.include?(conn_type)
-            klass.usable?(conn_endpoint) do |is_usable|
-              if is_usable
-                callback.call(klass.new(client, conn_endpoint))
-              else
-                resume.call
-              end
-            end
-          else
-            resume.call
+          unless connection_types.include?(conn_type)
+            klass.usable?(client, conn_endpoint) { |u| }
+            next resume.call
+          end
+          
+          klass.usable?(client, conn_endpoint) do |is_usable|
+            next resume.call unless is_usable
+            transport = klass.respond_to?(:create) ? klass.create(client, conn_endpoint) : klass.new(client, conn_endpoint)
+            callback.call(transport)
           end
         end
         
