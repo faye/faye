@@ -6,6 +6,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
         self     = this;
     
     xhr.open('POST', this._endpoint, true);
+    if (xhr.setRequestHeader) xhr.setRequestHeader('Pragma', 'no-cache');
     
     var cleanUp = function() {
       if (!xhr) return false;

@@ -9,6 +9,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
     
     xhr.open('POST', path, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Pragma', 'no-cache');
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     
     var headers = this.headers;

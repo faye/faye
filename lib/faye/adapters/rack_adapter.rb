@@ -204,7 +204,7 @@ module Faye
         'Access-Control-Allow-Credentials'  => 'false',
         'Access-Control-Max-Age'            => '86400',
         'Access-Control-Allow-Methods'      => 'POST, GET, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers'      => 'Accept, Content-Type, X-Requested-With'
+        'Access-Control-Allow-Headers'      => 'Accept, Content-Type, Pragma, X-Requested-With'
       }
       [200, headers, ['']]
     end
