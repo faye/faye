@@ -25,9 +25,9 @@ Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   SCRIPT_PATH:      'faye-browser-min.js',
   
-  TYPE_JSON:    {'Content-Type': 'application/json'},
-  TYPE_SCRIPT:  {'Content-Type': 'text/javascript'},
-  TYPE_TEXT:    {'Content-Type': 'text/plain'},
+  TYPE_JSON:    {'Content-Type': 'application/json; charset=utf-8'},
+  TYPE_SCRIPT:  {'Content-Type': 'text/javascript; charset=utf-8'},
+  TYPE_TEXT:    {'Content-Type': 'text/plain; charset=utf-8'},
   
   initialize: function(options) {
     this._options    = options || {};
@@ -212,7 +212,7 @@ Faye.NodeAdapter = Faye.Class({
       if (isGet) this._server.flushConnection(message);
       
       if (origin) headers['Access-Control-Allow-Origin'] = origin;
-      if (isGet)  headers['Cache-Control'] = 'no-cache, no-store';
+      headers['Cache-Control'] = 'no-cache, no-store';
       
       this._server.process(message, false, function(replies) {
         var body = JSON.stringify(replies);
@@ -249,7 +249,7 @@ Faye.NodeAdapter = Faye.Class({
       'Access-Control-Allow-Credentials': 'false',
       'Access-Control-Max-Age':           '86400',
       'Access-Control-Allow-Methods':     'POST, GET, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers':     'Accept, Content-Type, X-Requested-With'
+      'Access-Control-Allow-Headers':     'Accept, Content-Type, Pragma, X-Requested-With'
     };
     response.writeHead(200, headers);
     response.write('');

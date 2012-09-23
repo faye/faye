@@ -11,9 +11,9 @@ module Faye
     DEFAULT_ENDPOINT  = '/bayeux'
     SCRIPT_PATH       = 'faye-browser-min.js'
     
-    TYPE_JSON   = {'Content-Type' => 'application/json'}
-    TYPE_SCRIPT = {'Content-Type' => 'text/javascript'}
-    TYPE_TEXT   = {'Content-Type' => 'text/plain'}
+    TYPE_JSON   = {'Content-Type' => 'application/json; charset=utf-8'}
+    TYPE_SCRIPT = {'Content-Type' => 'text/javascript; charset=utf-8'}
+    TYPE_TEXT   = {'Content-Type' => 'text/plain; charset=utf-8'}
     
     # This header is passed by Rack::Proxy during testing. Rack::Proxy seems to
     # set content-length for you, and setting it in here really slows the tests
@@ -110,7 +110,7 @@ module Faye
       @server.flush_connection(message) if request.get?
       
       headers['Access-Control-Allow-Origin'] = origin if origin
-      headers['Cache-Control'] = 'no-cache, no-store' if request.get?
+      headers['Cache-Control'] = 'no-cache, no-store'
       
       @server.process(message, false) do |replies|
         response = Faye.to_json(replies)
@@ -204,7 +204,7 @@ module Faye
         'Access-Control-Allow-Credentials'  => 'false',
         'Access-Control-Max-Age'            => '86400',
         'Access-Control-Allow-Methods'      => 'POST, GET, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers'      => 'Accept, Content-Type, X-Requested-With'
+        'Access-Control-Allow-Headers'      => 'Accept, Content-Type, Pragma, X-Requested-With'
       }
       [200, headers, ['']]
     end

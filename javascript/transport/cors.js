@@ -6,6 +6,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
         self     = this;
     
     xhr.open('POST', this._endpoint, true);
+    if (xhr.setRequestHeader) xhr.setRequestHeader('Pragma', 'no-cache');
     
     var cleanUp = function() {
       if (!xhr) return false;
@@ -45,8 +46,8 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     xhr.send('message=' + encodeURIComponent(Faye.toJSON(message)));
   }
 }), {
-  isUsable: function(client, endpoint, callback, context) {
-    if (Faye.URI.parse(endpoint).isLocal())
+  isUsable: function(endpoint, callback, context) {
+    if (Faye.URI.parse(endpoint).isSameOrigin())
       return callback.call(context, false);
     
     if (Faye.ENV.XDomainRequest)

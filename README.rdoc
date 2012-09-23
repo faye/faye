@@ -51,18 +51,9 @@ should get you up and running:
 
 == To-do
 
-Notification API:
-
-* Notify listeners of network drop-out (may be transport dependent)
 * Provide reflection API for internal stats on channels, subscriptions, message queues
 * (Maybe) build a monitoring GUI into the server
-
-Sugar:
-
 * Add sugar for authentication extensions for protected subscribe + publish
-
-Missing protocol features:
-
 * Provide support for user-defined <tt>/service/*</tt> channels
 * Let local server-side clients listen to <tt>/meta/*</tt> channels
 

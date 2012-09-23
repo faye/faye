@@ -1,3 +1,14 @@
+=== 0.8.3 / 2012-07-15
+
+* Client#subscribe returns an array of Subscriptions if given an array of channels
+* Allow different endpoints to be specified per-transport
+* Only use IE's XDomainRequest for same-protocol requests
+* Replace URL parser with one that treats relative URLs the same as the browser
+* Improve logging of malformed requests and detect problems earlier
+* Make sure socket connections are closed when a client session is timed out
+* Stop WebSocket reconnecting after window.onbeforeunload
+
+
 === 0.8.2 / 2012-04-12
 TestSwarm build: http://swarm.jcoglan.com/job/125/
 
