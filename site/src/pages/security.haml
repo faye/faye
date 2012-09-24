@@ -1,0 +1,428 @@
+.content
+  :textile
+    h3. Security advice
+    
+    h4. Securing your realtime applications
+    
+    Like any web-accessible service, Faye must be protected against malicious
+    usage by attackers. Out of the box, it is a cross-domain-accessible server
+    with no restrictions on subscribing and publishing, but its extension system
+    allows you to easily impose restrictions appropriate to your application.
+    
+    Though written primarily for Faye, this document contains advice that
+    affects many realtime and socket-based applications. The core concerns with
+    such applications are:
+    
+    * Can a client get access to data it should not have access to?
+    * Can a client trust the origin of the messages it receives?
+    
+    The details of these questions will depend on your application, but the
+    following is a set of general guidelines for avoiding broad classes of
+    mistakes. It is not prescriptive, in that the solutions presented here are
+    not how you _have to_ implement things. They simply try to illustrate
+    patterns of security risks and possible solutions.
+    
+    As will all web applications, it is crucial to remember that any program
+    with Internet access, including server-side scripts and in-browser
+    JavaScript code on other domains, can send requests to your server. It is up
+    to you to protect it and your users from harm.
+    
+    h4. What is Faye?
+    
+    Faye is an implementation of the "Bayeux":http://svn.cometd.com/trunk/bayeux/bayeux.html
+    protocol. Clients send messages to each other via a central server, by
+    sending JSON messages over various flavours of HTTP-based transport,
+    including WebSocket, EventSource, XMLHttpRequest, CORS and JSON-P. Clients
+    that run in the browser are not constrained by the same-origin policy.
+    
+    Messages are routed using subscriptions. When a client publishes a message,
+    the server determines which clients are subscribed to the message's
+    @channel@ and forwards the message to them verbatim.
+    
+    A special set of channels whose names begin with @/meta/@ are used for
+    operating the protocol itself, and messages sent to these channels are
+    never forwarded to other clients.
+    
+    Messages pass through extensions on their way into and out of the clients
+    and server. Data required by extensions is typically sent in the message's
+    @ext@ field.
+    
+    h4. Transport layer security
+    
+    It should go without saying that if you want to keep the messages or any
+    aspect of the HTTP transport layer secret from potential eavesdroppers, you
+    should access the Faye server over a secure connection. The @listen()@
+    method of Faye's server allows you to pass in a key and certificate to run
+    it over SSL, or you can use an SSL terminator like STunnel in front of your
+    Faye server.
+    
+    On the client side, you should make sure you use an @https:@ URL for the
+    client to connect to.
+    
+    h4. Restricting subscription access
+    
+    Most web applications have a concept of access control: some content is only
+    accessible to certain people, and you must be logged in to prove your
+    identity. In Faye, you might want subscriptions to certain channels to
+    require authentication, if you are publishing private data on such channels.
+    This is easily done with a server-side extension that filters incoming
+    @/meta/subscribe@ messages.
+    
+    An important point here is that subscriptions can contain wildcards, and you
+    must protect these. A message published to @/foo/bar/qux@ will be routed to
+    any client subscribed to @/foo/bar/qux@, @/foo/bar/*@, @/foo/bar/**@,
+    @/foo/**@ or @/**@.
+    
+    Adding an @error@ field to any incoming message will stop the server from
+    processing it. The channel the client is attempting to subscribe to will be
+    in the @message.subscription@ field.
+    
+    <pre class="prettyprint">server.addExtension({
+      channels: [
+        '/foo/bar/qux',
+        '/foo/bar/*',
+        '/foo/bar/**',
+        '/foo/**',
+        '/**'
+      ],
+      
+      incoming: function(message, callback) {
+        if (message.channel === '/meta/subscribe') {
+          if (this.channels.indexOf(message.subscription) >= 0) {
+            if (!this.authorized(message))
+              message.error = '403::Authentication required';
+          }
+        }
+        callback(message);
+      },
+      
+      authorized: function(message) {
+        // returns true or false
+      }
+    });</pre>
+    
+    How the @authorized()@ method is implemented depends on your clients'
+    capabilities and is discussed below under 'Authentication'. Note that
+    because extensions are asynchronous (you hand the message back to the server
+    using a callback), your authentication logic can contain async operations,
+    which is useful if you need to do some I/O.
+    
+    A simple extension like this, with properly implemented authentication, will
+    prevent unauthorized access to published data on the selected channel.
+    
+    h4. Restricting publication access
+    
+    Applications typically only allow authenticated users to modify things: you
+    must prove you 'own' a resource or that someone has given you permission
+    before you go and change someone's database. In Faye, publishing is the
+    write operation: publishing a message to the server causes it to be sent to
+    all subscribed clients, which will act based on the data in the message. By
+    publishing a message, you are sending instructions to other clients, and the
+    clients must be able to trust that the data they receive is genuine.
+    
+    If you do not protect publication, your site probably has a Cross-Site
+    Request Forgery (CSRF) vulnerability, and possibly a Cross-Site Scripting
+    (XSS) one too (see 'Publishing JavaScript' below).
+    
+    Protecting publication on the server side is simpler than protecting
+    subscription, because publication messages (those with channels other than
+    @/meta/*@) cannot be addressed to wildcards. So, to protect a channel's
+    publications, you _only_ need to check that literal channel name.
+    
+    The channel the message is being published to will be in the
+    @message.channel@ field. An important fact to remember here is that messages
+    are forwarded verbatim to other clients, so if they contain authentication
+    data you should delete this from the message during the @authorized()@
+    method so it is not leaked to third parties.
+    
+    <pre class="prettyprint">server.addExtension({
+      channel: '/foo/bar/qux',
+      
+      incoming: function(message, callback) {
+        if (message.channel === this.channel) {
+          if (!this.authorized(message))
+      	    message.error = '403::Authentication required';
+        }
+        callback(message);
+      },
+      
+      authorized: function(message) {
+        // returns true or false
+      }
+    });</pre>
+    
+    Again, the implementation of the @authorized()@ method is discussed below
+    under 'Authentication'.
+    
+    h4. Publishing JavaScript
+    
+    Most realtime applications work by pushing data to the client for it to act
+    on. Assuming the data can be trusted by the client, this is a good setup:
+    the client's behaviour is somewhat constrained. It can only do what its code
+    allows it to do, with the caveat that some crafted inputs may lead to
+    unexpected behaviour.
+    
+    However some realtime applications directly script the client by pushing
+    JavaScript code that the client runs with @eval()@. This is extremely
+    dangerous unless you make sure that nobody but your own private servers can
+    publish to your Faye server. I recommend that realtime apps operate by
+    exchanging data, not sending code. If anyone but your own server-side
+    applications can push JavaScript unchecked, your site has a serious XSS
+    problem that can allow an attacker to easily steal the user's session and
+    other private data.
+    
+    To illustrate how easy this is, I have in the past hijacked the browsers of
+    all the attendees at a conference that were running a demo app hosted by the
+    speaker. The speaker put the app's publishing key on the screen and the
+    application ran any JavaScript pushed to it, so was trivial to exploit. Of
+    course, normally this key would have been kept private, but if you don't
+    have any such key your app automatically has an XSS hole.
+    
+    A JavaScript-pushing server can be made secure by turning it into a
+    push-only server.
+    
+    h4. Push-only servers
+    
+    Sometimes you only want to use Faye to push events from your server-side
+    application to your clients, and you don't want clients to be able to
+    publish at all. This can easily be done by requiring a password for
+    publishing. On any non-@/meta/@ message, check for the password. If it's not
+    present, add an error to the message. Finally, delete the password from the
+    message to prevent leaking it to clients.
+    
+    <pre class="prettyprint">server.addExtension({
+      password: 'some long and unguessable application-specific string',
+      
+      incoming: function(message, callback) {
+        if (!message.channel.match(/^\/meta\//)) {
+          var password = message.ext && message.ext.password;
+          if (password !== this.password)
+            message.error = '403::Password required';
+        }
+        callback(message);
+      },
+      
+      outgoing: function(message, callback) {
+        if (message.ext) delete message.ext.password;
+        callback(message);
+      }
+    });</pre>
+    
+    Then you can add a client-side extension to your server-side client to add
+    the password:
+    
+    <pre class="prettyprint">client.addExtension({
+      password: 'some long and unguessable application-specific string',
+      
+      outgoing: function(message, callback) {
+        message.ext = message.ext || {};
+        message.ext.password = this.password;
+        callback(message);
+      }
+    });</pre>
+    
+    If you're using a plain HTTP client to publish messages, include the
+    password in the JSON body:
+    
+    <pre>$ curl -X POST www.example.com/faye \
+        -H 'Content-Type: application/json' \
+        -d '{"channel": "/foo", "data": "hi", "ext": {"password": "..."}}'</pre>
+    
+    Remember to keep the password secret, and do not let it leak out of your
+    servers into the outside world.
+    
+    h4. Authentication
+    
+    Outside the trivial case of just allowing the server to publish, we need a
+    way to authenticate the client connections and decide what each one is
+    allowed to do. Before we get into that, it is worth reviewing the mechanics
+    of the transport mechanisms Faye uses:
+    
+    * *WebSocket* - bidirectional message-passing socket between the client and
+      server. Initiated using an HTTP @GET@ request with an @Upgrade: websocket@
+      header. Can be opened to any origin.
+    * *EventSource* - unidirectional socket that delivers from the server to the
+      client. Initiated by the client using a @GET@ request with the
+      @Accept: text/event-stream@ header. Obeys the same-origin policy.
+    * *XMLHttpRequest (including CORS)* - request/response HTTP client, with
+      some restrictions. Cannot set various headers, e.g. @Cookie@, @Host@,
+      @Origin@, @Referer@. Can only read the response if the server grants
+      permission through the @Access-Control-Allow-Origin@ header. May use a
+      pre-flight @OPTIONS@ request to determine whether the request can be sent
+      at all.
+    * *JSON-P* - cross-domain @GET@ requests based on injecting a @script@ tag
+      and the server enclosing some JSON data in a JavaScript function call. No
+      origin restrictions, @GET@ only, no access to headers.
+    
+    All of these transports have in common that the server will attach any
+    cookies for the target domain to the outgoing request, _regardless_ of where
+    the request originates. This means another site can send any of these
+    requests to your server and the browser will attach your cookies. This is
+    where CSRF attacks come from.
+    
+    Faye may use any of these at any given time, based on what the server, the
+    user's browser, and the intervening network support. If operating a
+    cross-origin connection, it will pick a transport that allows this. The Faye
+    server makes no restrictions based on the @Origin@ of a request, and allows
+    all requests through @Access-Control-Allow-Origin@.
+    
+    h4. Why can't I use cookies?
+    
+    As you will have noticed, Faye hides all details of the underlying transport
+    from you, and for good reason. Cookies are not a good mechanism for securing
+    Faye for several reasons:
+    
+    * They do not prevent CSRF attacks since it's not just your pages that send
+      them.
+    * The Faye server is accessible cross-origin.
+    * There is no one-to-one mapping between Bayeux messages and HTTP requests.
+    * Not all clients will support cookies, for example some server-side clients.
+    * Some transports are long-lived, deliver a lot of messages but only send
+      one cookie on first connection, meaning the information contained can
+      become stale. For example, WebSockets do not play well with self-contained
+      session cookies.
+    
+    For these reasons, security in Bayeux is best implemented in the messaging
+    protocol itself rather than in the transport layer. It's more portable and
+    easier to work with that way.
+    
+    h4. Why can't I use Origin, Referer, etc.?
+    
+    If you only rely on these, a server-side script can forge them and bypass
+    your publication security. This still allows third parties to inject
+    messages into your application, and is especially bad if you have clients
+    that receive JavaScript and @eval()@ it.
+    
+    h4. How should I authenticate clients?
+    
+    The core question you're trying to answer when authenticating a client's
+    subscription or publication message is, how does the server know that the
+    client is acting on behalf of an authorized user? That is, how can the
+    client prove it should be given access to do what it wants?
+    
+    For server-side clients, that run on private hardware rather than running on
+    the web or as part of a native app installed on the user's hardware, this is
+    simple: require a password. You can easily pick a password and require it
+    to be present in messages to perform certain actions. See 'Push-only servers'
+    above for an example of this pattern, and remember to delete the password
+    from messages as they leave the server lest they leak to third parties.
+    
+    For clients running on a web page, acting on behalf of a user, you need to
+    provably associate the client with the user's session. We can take an
+    approach similar to how one prevents CSRF in traditional web apps.
+    
+    To prevent CSRF, we generate an unguessable token from the user's session,
+    embed it in any forms we render, then require that all @POST@ requests
+    contain a valid token for the session. This works because JavaScript on
+    other domains cannot read pages served by your app, or the user's cookies
+    for your domain, so cannot get the token they need to make @POST@ requests.
+    Thus, the presence of such a token proves the request came from one of your
+    pages.
+    
+    Note that this defense relies on third-party JavaScript not being able to
+    get a token. Any resources tied to the user's session _must not_ be
+    accessible cross-domain, that is to say a resource that depends on the
+    request's @Cookie@ should never include @Access-Control-Allow-Origin@ in the
+    response.
+    
+    So, taking inspiration from this approach, we can imagine having our web
+    application expose an endpoint that JavaScript can call and get a token
+    generated from the user's session. Again, make sure this endpoint is _not_
+    accessible through @Access-Control-Allow-Origin@. The Faye client can call
+    this endpoint to get a token before making a subscription request. It embeds
+    the token and the current user ID in the request before sending it.
+    
+    <pre class="prettyprint">var ClientAuth = function(userId) {
+      this._userId = userId;
+    };
+    
+    ClientAuth.prototype.getToken = function(callback) {
+      if (this._token) return callback.call(this, this._token);
+      var self = this;
+      $.get('/auth/token', function(response) {
+        self._token = response;
+        callback.call(self, self._token);
+      });
+    };
+    
+    ClientAuth.prototype.outgoing = function(message, callback) {
+      if (message.channel !== '/meta/subscribe')
+        return callback(message);
+      
+      this.getToken(function(token) {
+        message.ext = message.ext || {};
+        message.ext.userId = this._userId;
+        message.ext.token = token;
+        callback(message);
+      });
+    };
+    
+    client.addExtension(new ClientAuth(18787));</pre>
+    
+    The server would then have an extension that checked incoming
+    @/meta/subscribe@ messages for @ext.userId@ and @ext.token@ and validated
+    these values. If the token/ID pair is not valid, or if the given user is not
+    allowed to subscribe to the given channel, the server refuses the
+    subscription request.
+    
+    h4. How should I generate tokens?
+    
+    There are many potential ways of doing this, depending on what data you
+    decide to send along with the subscription message and the security
+    requirements of your system. If you have questions or are not well-versed in
+    basic cryptography, "please ask the mailing list":http://groups.google.com/group/faye-users -
+    there are plenty of people there who've dealt with these problems.
+    
+    The important thing is that the incoming message contains a user ID, that
+    you're going to use to decide if the request should be allowed. You need to
+    know that the message _really_ came from that user. You must also make sure
+    that the token does not reveal how it was generated, since it will be
+    exposed to any script running in the browser and you must not let third
+    parties discover how to create real-looking tokens.
+    
+    So, when implementing your @/auth/token@ endpoint, an easy solution to this
+    might be to have the server determine the user ID from the session, then
+    sign the ID using a secret key stored on the server. For example:
+    
+    <pre class="prettyprint">var crypto = require('crypto'),
+        hmac   = crypto.createHmac('sha256', 'your secret key'),
+        token  = hmac.update('the user ID').digest('hex');
+    
+    // -> 'cb20f4a58ea060d186fb4fad7949dfad0eea8bcf6ae2f4f9594e9c8f1dc9b509'</pre>
+    
+    Bear in mind that "you should use a Message Authentication Code (MAC) like
+    HMAC for this, rather than a bare hashing function":http://blog.jcoglan.com/2012/06/09/why-you-should-never-use-hash-functions-for-message-authentication/.
+    
+    When the client sends its subscription request, you regenerate the token
+    using the given user ID and your secret key, and check it matches the token
+    in the message. If it does, you know the user ID is genuine and proceed with
+    your access control.
+    
+    Remember that if you are using this technique to protect _publication_, you
+    must delete any credentials using an outgoing extension on the server side
+    to avoid forwarding the credentials to subscribed clients.
+    
+    h4. Other techniques
+    
+    The above is a fairly comprehensive picture of restricting access to your
+    Faye server. The important thing to remember is that when exchanging
+    messages, you just need a way to prove that the data is genuine. This relies
+    heavily on cryptograhpic techniques and you should always use standard
+    functions for this rather than inventing your own.
+    
+    However, sometimes, it's just a case of using data that is very hard to
+    guess. For example, say you want to send messages to one particular user and
+    nobody else. Instead of naming a channel after a username and requiring an
+    access token to subcribe to it, you could just make the channel name
+    _contain_ the access token. For example, the client could call an endpoint
+    on your server to get a channel name for the logged-in user, then subscribe
+    to that channel in Faye. When publishing, you would just regenerate the
+    channel name from the username you want to publish to.
+    
+    These channel names may be a cryptograhpically signed copy of the user's
+    name or ID, or they could simply be very large random numbers (larger than
+    160 bits is advisable) that you store in a database next to each user ID. As
+    long as they cannot be guessed by a third party, you're alright. Just
+    remember that 'cannot be guessed' is surprisingly hard to implement
+    correctly, and you should consult someone with a grounding in crypto if
+    you're not sure what you're doing is safe.
