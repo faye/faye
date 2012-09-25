@@ -166,6 +166,8 @@ var Faye = {
   }
 };
 
-if (typeof window !== 'undefined')
+if (typeof module !== 'undefined')
+  module.exports = Faye;
+else if (typeof window !== 'undefined')
   window.Faye = Faye;
 
