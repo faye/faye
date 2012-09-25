@@ -1,5 +1,6 @@
 var Faye = (typeof Faye === 'object') ? Faye : {};
-if (typeof window !== 'undefined') window.Faye = Faye;
+if (typeof module !== 'undefined') module.exports = Faye;
+else if (typeof window !== 'undefined') window.Faye = Faye;
 
 Faye.extend = function(dest, source, overwrite) {
   if (!source) return dest;
