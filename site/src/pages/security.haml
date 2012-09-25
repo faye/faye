@@ -178,8 +178,9 @@
     course, normally this key would have been kept private, but if you don't
     have any such key your app automatically has an XSS hole.
     
-    A JavaScript-pushing server can be made secure by turning it into a
-    push-only server.
+    A JavaScript-pushing server can be made safe by ensuring your clients only
+    run code sent by your application, and this can be done by turning Faye into
+    a push-only server.
     
     h4. Push-only servers
     
@@ -393,10 +394,35 @@
     Bear in mind that "you should use a Message Authentication Code (MAC) like
     HMAC for this, rather than a bare hashing function":http://blog.jcoglan.com/2012/06/09/why-you-should-never-use-hash-functions-for-message-authentication/.
     
+    The server must only return a token based on the current logged-in user; the
+    client should not be able to specify a different user ID in its request.
+    Otherwise, a client can easily gain authenticated access to other users' 
+    data.
+    
     When the client sends its subscription request, you regenerate the token
     using the given user ID and your secret key, and check it matches the token
     in the message. If it does, you know the user ID is genuine and proceed with
     your access control.
+    
+    You could also have the @/auth/token@ endpoint accept the name of the
+    channel the client wants to subscribe to, and make it sign a combination of
+    the user ID and channel name if the user is allowed to subscribe:
+    
+    <pre class="prettyprint">var crypto  = require('crypto'),
+        userId  = session.userId,
+        channel = params.channel,
+        hmac, token;
+    
+    if (canSubscribe(userId, channel)) {
+      hmac  = crypto.createHmac('sha256', 'your secret key'),
+      token = hmac.update(userId + ':' + channel).digest('hex');
+    } else {
+      token = null;
+    }</pre>
+    
+    The token then acts as proof that your application has granted access to the
+    channel, and all the Faye server has to do is check the token matches the
+    user ID and channel in the message.
     
     Remember that if you are using this technique to protect _publication_, you
     must delete any credentials using an outgoing extension on the server side
