@@ -26,10 +26,10 @@ Faye.extend(Faye, {
   
   random: function(bitlength) {
     bitlength = bitlength || this.ID_LENGTH;
-    if (bitlength > 32) {
-      var parts  = Math.ceil(bitlength / 32),
+    if (bitlength > 40) {
+      var parts  = Math.ceil(bitlength / 40),
           string = '';
-      while (parts--) string += this.random(32);
+      while (parts--) string += this.random(40);
       return string;
     }
     var limit   = Math.pow(2, bitlength) - 1,

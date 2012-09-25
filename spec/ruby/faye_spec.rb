@@ -8,7 +8,7 @@ describe Faye do
     
     it "always produces the same length of string" do
       ids = (1..100).map { Faye.random }
-      ids.should be_all { |id| id.size == 25 }
+      ids.should be_all { |id| id.size == 31 }
     end
   end
   

@@ -5,7 +5,7 @@ module Faye
     MAX_DELAY = 0.0
     INTERVAL  = 0.0
     TIMEOUT   = 60.0
-    ID_LENGTH = 128
+    ID_LENGTH = 160
     
     autoload :Connection, File.expand_path('../connection', __FILE__)
     autoload :Memory,     File.expand_path('../memory', __FILE__)
