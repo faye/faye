@@ -8,8 +8,10 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         self     = this;
     
     var cookies = this.cookies.getCookies({domain: uri.hostname, path: uri.pathname}),
-        params  = this._buildParams(uri, content, cookies, secure),
-        request = client.request(params);
+        params  = this._buildParams(uri, content, cookies, secure)
+        //small hack to pass certs from faye.client call down tls.connect further down the chain
+        Faye.extend(params,this._client._options);
+        var request = client.request(params);
     
     request.addListener('response', function(response) {
       self._handleResponse(response, retry);
