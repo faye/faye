@@ -74,6 +74,20 @@
       are replaced with the values of the other parameters, formatted as
       necessary.
     
+    The @proxy@ also emits two events to let you know when a particular client
+    connects and disconnects from the server. These correspond with the return
+    value of @proxy.has_connection?(client_id)@ changing between @true@ and
+    @false@. You can listen to these events using the @bind()@ method.
+    
+    * *@proxy.bind('connection:open') { |client_id| }@* - Fires when the
+      client with ID @client_id@ connects to the server, either by opening a
+      socket or sending a @/meta/connect@ request.
+    * *@proxy.bind('connection:close') { |client_id| }@* - Fires when the
+      client with ID @client_id@ disconnects from the server, either by closing
+      a socket or by the server sending a @/meta/connect@ response. Note this
+      does not mean the client's session has ended, it just means it does not
+      currently have an open network connection to the server.
+    
     h4. The Faye engine API
     
     The object returned by @Engine.create(proxy, options)@ must implement the
