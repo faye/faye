@@ -8,7 +8,7 @@ JS.ENV.FayeSpec = JS.Test.describe("Faye", function() { with(this) {
     
     it("always produces the same length of string", function() { with(this) {
       var ids = $R(1,100).map(function() { return Faye.random().length })
-      var expected = $R(1,100).map(function() { return 32 })
+      var expected = $R(1,100).map(function() { return 35 })
       assertEqual( expected, ids )
     }})
   }})
