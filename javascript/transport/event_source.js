@@ -1,6 +1,8 @@
 Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
   initialize: function(client, endpoint) {
     Faye.Transport.prototype.initialize.call(this, client, endpoint);
+    if (!Faye.ENV.EventSource) return this.setDeferredStatus('failed');
+    
     this._xhr = new Faye.Transport.XHR(client, endpoint);
     
     var socket = new EventSource(endpoint + '/' + client.getClientId()),
@@ -47,6 +49,7 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     if (!id) return callback.call(context, false);
     
     Faye.Transport.XHR.isUsable(client, endpoint, function(usable) {
+      if (!usable) return callback.call(context, false);
       this.create(client, endpoint).isUsable(callback, context);
     }, this);
   },
