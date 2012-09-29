@@ -318,6 +318,8 @@ Faye.Client = Faye.Class({
   
   _selectTransport: function(transportTypes) {
     Faye.Transport.get(this, transportTypes, function(transport) {
+      this.debug('Selected ? transport for ?', transport.connectionType, transport.endpoint);
+      
       this._transport = transport;
       this._transport.cookies = this._cookies;
       this._transport.headers = this._headers;

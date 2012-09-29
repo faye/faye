@@ -1,7 +1,7 @@
 Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
     var retry = this.retry(message, timeout),
-        path  = Faye.URI.parse(this._endpoint).pathname,
+        path  = Faye.URI.parse(this.endpoint).pathname,
         self  = this,
         xhr   = Faye.ENV.ActiveXObject
               ? new ActiveXObject("Microsoft.XMLHTTP")

@@ -3,17 +3,16 @@ Faye.Transport = Faye.extend(Faye.Class({
   batching:  true,
 
   initialize: function(client, endpoint) {
-    this.debug('Created new ? transport for ?', this.connectionType, endpoint);
-    this._client   = client;
-    this._endpoint = endpoint;
-    this._outbox   = [];
+    this._client  = client;
+    this.endpoint = endpoint;
+    this._outbox  = [];
   },
   
   close: function() {},
   
   send: function(message, timeout) {
     this.debug('Client ? sending message to ?: ?',
-               this._client._clientId, this._endpoint, message);
+               this._client._clientId, this.endpoint, message);
 
     if (!this.batching) return this.request([message], timeout);
 
@@ -46,7 +45,7 @@ Faye.Transport = Faye.extend(Faye.Class({
   
   receive: function(responses) {
     this.debug('Client ? received from ?: ?',
-               this._client._clientId, this._endpoint, responses);
+               this._client._clientId, this.endpoint, responses);
     
     for (var i = 0, n = responses.length; i < n; i++) {
       this._client.receiveMessage(responses[i]);

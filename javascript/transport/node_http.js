@@ -1,6 +1,6 @@
 Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
-    var uri      = url.parse(this._endpoint),
+    var uri      = url.parse(this.endpoint),
         secure   = (uri.protocol === 'https:'),
         client   = secure ? https : http,
         content  = new Buffer(JSON.stringify(message), 'utf8'),

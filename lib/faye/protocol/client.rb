@@ -309,6 +309,8 @@ module Faye
     
     def select_transport(transport_types)
       Transport.get(self, transport_types) do |transport|
+        debug('Selected ? transport for ?', transport.connection_type, transport.endpoint)
+        
         @transport = transport
         @transport.cookies = @cookies
         @transport.headers = @headers

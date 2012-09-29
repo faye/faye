@@ -4,7 +4,7 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
       message:  Faye.toJSON(messages),
       jsonp:    '__jsonp' + Faye.Transport.JSONP._cbCount + '__'
     };
-    var location = Faye.URI.parse(this._endpoint, params).toURL();
+    var location = Faye.URI.parse(this.endpoint, params).toURL();
     return location.length >= Faye.Transport.MAX_URL_LENGTH;
   },
   
@@ -13,7 +13,7 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
         head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = Faye.Transport.JSONP.getCallbackName(),
-        location     = Faye.URI.parse(this._endpoint, params),
+        location     = Faye.URI.parse(this.endpoint, params),
         retry        = this.retry(messages, timeout),
         self         = this;
     
