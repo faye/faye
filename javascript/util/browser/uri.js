@@ -28,16 +28,17 @@ Faye.URI = Faye.extend(Faye.Class({
     if (typeof url !== 'string') return url;
     var uri = new this(), parts;
     
-    var consume = function(name, pattern) {
+    var consume = function(name, pattern, infer) {
       url = url.replace(pattern, function(match) {
         uri[name] = match;
         return '';
       });
-      if (uri[name] === undefined) uri[name] = Faye.ENV.location[name];
+      if (uri[name] === undefined)
+        uri[name] = infer ? Faye.ENV.location[name] : '';
     };
     
-    consume('protocol', /^https?\:/);
-    consume('host',     /^\/\/[^\/]+/);
+    consume('protocol', /^https?\:/,    true);
+    consume('host',     /^\/\/[^\/]+/,  true);
     
     if (!/^\//.test(url)) url = Faye.ENV.location.pathname.replace(/[^\/]*$/, '') + url;
     consume('pathname', /^\/[^\?#]*/);
