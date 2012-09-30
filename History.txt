@@ -1,3 +1,8 @@
+=== 0.8.5 / 2012-09-30
+
+* Fix a bug in URI.parse() that caused Faye endpoints to inherit search and hash from window.location
+
+
 === 0.8.4 / 2012-09-29
 
 * Optimise upgrade process so that WebSocket is tested earlier and the connection is cached
