@@ -38,6 +38,7 @@ packages:
       - engines/connection
       - engines/memory
       - protocol/server
+      - protocol/socket
       - transport/node_local
       - transport/web_socket
       - transport/node_http

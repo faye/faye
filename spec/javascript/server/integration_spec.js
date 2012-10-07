@@ -7,6 +7,13 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
                 : null
     
     this._adapter = new Faye.NodeAdapter({mount: "/bayeux", timeout: 2})
+    this._adapter.addExtension({
+      outgoing: function(message, callback) {
+        if (message.data) message.data.tagged = true
+        callback(message)
+      }
+    })
+    
     this._port = port
     this._secure = ssl
     this._adapter.listen(port, options, callback)
@@ -67,7 +74,7 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
     
     it("delivers a message between clients", function() { with(this) {
       publish("alice", "/foo", {hello: "world", extra: null})
-      check_inbox("bob", "/foo", [{hello: "world", extra: null}])
+      check_inbox("bob", "/foo", [{hello: "world", extra: null, tagged: true}])
     }})
     
     it("does not deliver messages for unsubscribed channels", function() { with(this) {
@@ -78,12 +85,12 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
     it("delivers multiple messages", function() { with(this) {
       publish("alice", "/foo", {hello: "world"})
       publish("alice", "/foo", {hello: "world"})
-      check_inbox("bob", "/foo", [{hello: "world"},{hello: "world"}])
+      check_inbox("bob", "/foo", [{hello: "world", tagged: true}, {hello: "world", tagged: true}])
     }})
     
     it("delivers multibyte strings", function() { with(this) {
       publish("alice", "/foo", {hello: "Apple = "})
-      check_inbox("bob", "/foo", [{hello: "Apple = "}])
+      check_inbox("bob", "/foo", [{hello: "Apple = ", tagged: true}])
     }})
   }})
   

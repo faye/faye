@@ -6,6 +6,13 @@ require "thin"
 Thin::Logging.silent = true
 
 IntegrationSteps = EM::RSpec.async_steps do
+  class Tagger
+    def outgoing(message, callback)
+      message["data"]["tagged"] = true if message["data"]
+      callback.call(message)
+    end
+  end
+  
   def server(port, ssl, &callback)
     shared = File.dirname(__FILE__) + '/../../../examples/shared'
     
@@ -14,7 +21,9 @@ IntegrationSteps = EM::RSpec.async_steps do
               nil
     
     @adapter = Faye::RackAdapter.new(:mount => "/bayeux", :timeout => 25)
+    @adapter.add_extension(Tagger.new)
     @adapter.listen(port, options)
+    
     @port = port
     @secure = ssl
     EM.next_tick(&callback)
@@ -76,7 +85,7 @@ describe "server integration" do
   shared_examples_for "message bus" do
     it "delivers a message between clients" do
       publish :alice, "/foo", {"hello" => "world", "extra" => nil}
-      check_inbox :bob, "/foo", [{"hello" => "world", "extra" => nil}]
+      check_inbox :bob, "/foo", [{"hello" => "world", "extra" => nil, "tagged" => true}]
     end
     
     it "does not deliver messages for unsubscribed channels" do
@@ -87,12 +96,12 @@ describe "server integration" do
     it "delivers multiple messages" do
       publish :alice, "/foo", {"hello" => "world"}
       publish :alice, "/foo", {"hello" => "world"}
-      check_inbox :bob, "/foo", [{"hello" => "world"}, {"hello" => "world"}]
+      check_inbox :bob, "/foo", [{"hello" => "world", "tagged" => true}, {"hello" => "world", "tagged" => true}]
     end
     
     it "delivers multibyte strings" do
-      publish :alice, "/foo", {"hello" => encode("Apple = ")}
-      check_inbox :bob, "/foo", [{"hello" => encode("Apple = ")}]
+      publish :alice, "/foo", {"hello" => encode("Apple = "), "tagged" => true}
+      check_inbox :bob, "/foo", [{"hello" => encode("Apple = "), "tagged" => true}]
     end
   end
   
@@ -107,7 +116,7 @@ describe "server integration" do
     
     describe "with WebSocket transport" do
       before do
-        Faye::Transport::WebSocket.stub(:usable?).and_yield(false)
+        Faye::Transport::WebSocket.stub(:usable?).and_yield(true)
       end
       
       it_should_behave_like "message bus"

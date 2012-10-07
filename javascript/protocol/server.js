@@ -15,7 +15,7 @@ Faye.Server = Faye.Class({
   },
   
   openSocket: function(clientId, socket) {
-    this._engine.openSocket(clientId, socket);
+    this._engine.openSocket(clientId, new Faye.Server.Socket(this, socket));
   },
   
   closeSocket: function(clientId) {

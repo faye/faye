@@ -7,7 +7,7 @@ Faye.Engine.Connection = Faye.Class({
   },
   
   deliver: function(message) {
-    if (this.socket) return this.socket.send(JSON.stringify([message]));
+    if (this.socket) return this.socket.send(message);
     this._inbox.push(message);
     this._beginDeliveryTimeout();
   },

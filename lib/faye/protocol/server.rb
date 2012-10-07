@@ -1,6 +1,8 @@
 module Faye
   class Server
     
+    autoload :Socket, File.join(ROOT, 'faye', 'protocol', 'socket')
+    
     include Logging
     include Extensible
     
@@ -22,7 +24,7 @@ module Faye
     end
     
     def open_socket(client_id, socket)
-      @engine.open_socket(client_id, socket)
+      @engine.open_socket(client_id, Socket.new(self, socket))
     end
     
     def close_socket(client_id)
