@@ -265,5 +265,3 @@ Faye.NodeAdapter = Faye.Class({
 
 Faye.extend(Faye.NodeAdapter.prototype, Faye.Logging);
 
-module.exports = Faye;
-
