@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   # should generate them by running `bundle exec jake` in the project root.
   s.files = %w[History.txt README.rdoc] +
             %w[lib/faye-browser.js lib/faye-browser-min.js lib/faye-browser-min.js.map] +
-            Dir.glob("{spec,lib}/**/*")
+            Dir.glob("lib/**/*")
   
   s.add_dependency "cookiejar", ">= 0.3.0"
   s.add_dependency "em-http-request", ">= 0.3.0"
