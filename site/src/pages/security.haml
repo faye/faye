@@ -77,27 +77,27 @@
     processing it. The channel the client is attempting to subscribe to will be
     in the @message.subscription@ field.
     
-    <pre class="prettyprint">server.addExtension({
-      channels: [
-        '/foo/bar/qux',
-        '/foo/bar/*',
-        '/foo/bar/**',
-        '/foo/**',
-        '/**'
-      ],
-      
+    <pre class="prettyprint">var subscriptions = [
+      '/foo/bar/qux',
+      '/foo/bar/*',
+      '/foo/bar/**',
+      '/foo/**',
+      '/**'
+    ];
+    
+    var authorized = function(message) {
+      // returns true or false
+    };
+    
+    server.addExtension({
       incoming: function(message, callback) {
         if (message.channel === '/meta/subscribe') {
-          if (this.channels.indexOf(message.subscription) >= 0) {
-            if (!this.authorized(message))
+          if (subscriptions.indexOf(message.subscription) >= 0) {
+            if (!authorized(message))
               message.error = '403::Authentication required';
           }
         }
         callback(message);
-      },
-      
-      authorized: function(message) {
-        // returns true or false
       }
     });</pre>
     
@@ -135,19 +135,19 @@
     data you should delete this from the message during the @authorized()@
     method so it is not leaked to third parties.
     
-    <pre class="prettyprint">server.addExtension({
-      channel: '/foo/bar/qux',
-      
+    <pre class="prettyprint">var channel = '/foo/bar/qux';
+    
+    var authorized = function(message) {
+      // returns true or false
+    };
+    
+    server.addExtension({
       incoming: function(message, callback) {
-        if (message.channel === this.channel) {
-          if (!this.authorized(message))
+        if (message.channel === channel) {
+          if (!authorized(message))
       	    message.error = '403::Authentication required';
         }
         callback(message);
-      },
-      
-      authorized: function(message) {
-        // returns true or false
       }
     });</pre>
     
@@ -191,13 +191,13 @@
     present, add an error to the message. Finally, delete the password from the
     message to prevent leaking it to clients.
     
-    <pre class="prettyprint">server.addExtension({
-      password: 'some long and unguessable application-specific string',
-      
+    <pre class="prettyprint">var secret = 'some long and unguessable application-specific string';
+    
+    server.addExtension({
       incoming: function(message, callback) {
         if (!message.channel.match(/^\/meta\//)) {
           var password = message.ext && message.ext.password;
-          if (password !== this.password)
+          if (password !== secret)
             message.error = '403::Password required';
         }
         callback(message);
@@ -212,12 +212,12 @@
     Then you can add a client-side extension to your server-side client to add
     the password:
     
-    <pre class="prettyprint">client.addExtension({
-      password: 'some long and unguessable application-specific string',
-      
+    <pre class="prettyprint">var secret = 'some long and unguessable application-specific string';
+    
+    client.addExtension({
       outgoing: function(message, callback) {
         message.ext = message.ext || {};
-        message.ext.password = this.password;
+        message.ext.password = secret;
         callback(message);
       }
     });</pre>
@@ -327,38 +327,26 @@
     response.
     
     So, taking inspiration from this approach, we can imagine having our web
-    application expose an endpoint that JavaScript can call and get a token
-    generated from the user's session. Again, make sure this endpoint is _not_
-    accessible through @Access-Control-Allow-Origin@. The Faye client can call
-    this endpoint to get a token before making a subscription request. It embeds
-    the token and the current user ID in the request before sending it.
+    application render some JS data into the page that contains the user's ID
+    and a token generated from the session, just like how we would embed a
+    hidden CSRF token field in a rendered form. The Faye client embeds the token
+    and the current user ID in the request before sending it.
     
-    <pre class="prettyprint">var ClientAuth = function(userId) {
-      this._userId = userId;
-    };
+    <pre class="prettyprint">// Rendered by the server:
+    var USER_ID    = 18787,
+       USER_TOKEN = 'ifd63cylqwsyaq9c2ptzywjujgtfpxs';
     
-    ClientAuth.prototype.getToken = function(callback) {
-      if (this._token) return callback.call(this, this._token);
-      var self = this;
-      $.get('/auth/token', function(response) {
-        self._token = response;
-        callback.call(self, self._token);
-      });
-    };
-    
-    ClientAuth.prototype.outgoing = function(message, callback) {
-      if (message.channel !== '/meta/subscribe')
-        return callback(message);
-      
-      this.getToken(function(token) {
+    client.addExtension({
+      outgoing: function(message, callback) {
+        if (message.channel !== '/meta/subscribe')
+          return callback(message);
+        
         message.ext = message.ext || {};
-        message.ext.userId = this._userId;
-        message.ext.token = token;
+        message.ext.userId = USER_ID;
+        message.ext.token = USER_TOKEN;
         callback(message);
-      });
-    };
-    
-    client.addExtension(new ClientAuth(18787));</pre>
+      }
+    });</pre>
     
     The server would then have an extension that checked incoming
     @/meta/subscribe@ messages for @ext.userId@ and @ext.token@ and validated
@@ -466,3 +454,4 @@
     for using Faye.  Your feedback on this document is eagerly solicited; issues
     and pull requests can be submitted on the "Faye project":https://github.com/faye/faye
     on GitHub.
+
