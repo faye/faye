@@ -101,7 +101,7 @@
       }
     });</pre>
     
-    How the @authorized()@ method is implemented depends on your clients'
+    How the @authorized()@ function is implemented depends on your clients'
     capabilities and is discussed below under 'Authentication'. Note that
     because extensions are asynchronous (you hand the message back to the server
     using a callback), your authentication logic can contain async operations,
@@ -133,7 +133,7 @@
     @message.channel@ field. An important fact to remember here is that messages
     are forwarded verbatim to other clients, so if they contain authentication
     data you should delete this from the message during the @authorized()@
-    method so it is not leaked to third parties.
+    function so it is not leaked to third parties.
     
     <pre class="prettyprint">var channel = '/foo/bar/qux';
     
@@ -151,7 +151,7 @@
       }
     });</pre>
     
-    Again, the implementation of the @authorized()@ method is discussed below
+    Again, the implementation of the @authorized()@ function is discussed below
     under 'Authentication'.
     
     h4. Publishing JavaScript
@@ -380,7 +380,8 @@
     // -> 'cb20f4a58ea060d186fb4fad7949dfad0eea8bcf6ae2f4f9594e9c8f1dc9b509'</pre>
     
     Bear in mind that "you should use a Message Authentication Code (MAC) like
-    HMAC for this, rather than a bare hashing function":http://blog.jcoglan.com/2012/06/09/why-you-should-never-use-hash-functions-for-message-authentication/.
+    HMAC for this":http://blog.jcoglan.com/2012/06/09/why-you-should-never-use-hash-functions-for-message-authentication/,
+    rather than a bare hashing function.
     
     The server must only return a token based on the current logged-in user; the
     client should not be able to specify a different user ID in its request.
