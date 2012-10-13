@@ -7,6 +7,8 @@ Faye.Deferrable = {
     
     this._callbacks = this._callbacks || [];
     this._callbacks.push([callback, context]);
+    
+    return this;
   },
   
   timeout: function(seconds, message) {
@@ -15,6 +17,8 @@ Faye.Deferrable = {
       _this.setDeferredStatus('failed', message);
     }, seconds * 1000);
     this._timer = timer;
+    
+    return this;
   },
   
   errback: function(callback, context) {
@@ -25,6 +29,8 @@ Faye.Deferrable = {
 
     this._errbacks = this._errbacks || [];
     this._errbacks.push([callback, context]);
+    
+    return this;
   },
 
   setDeferredStatus: function() {
@@ -48,6 +54,8 @@ Faye.Deferrable = {
     var callback;
     while (callback = callbacks.shift())
       callback[0].apply(callback[1], this._deferredArgs);
+    
+    return this;
   }
 };
 
