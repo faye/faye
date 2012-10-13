@@ -7,6 +7,7 @@
 , "version"         : "0.8.6"
 , "engines"         : {"node": ">=0.1.96"}
 , "main"            : "./node/faye-node"
+, "browserify"      : "./browser/faye-browser.js"
 , "dependencies"    : {"cookiejar": "", "faye-websocket": ">=0.4.0"}
 , "devDependencies" : {"jsclass": ""}
 
