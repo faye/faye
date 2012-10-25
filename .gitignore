@@ -1,9 +1,4 @@
-.DS_Store
 *.gem
-*.rbc
-.redcar
-*.swp
-*.tgz
 build
 dump.rdb
 examples/node/faye*
@@ -11,4 +6,4 @@ Gemfile.lock
 lib/*.js
 lib/*.map
 node_modules
-.rvmrc
+vendor/bundle
