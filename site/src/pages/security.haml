@@ -275,7 +275,8 @@
     
     * They do not prevent CSRF attacks since it's not just your pages that send
       them.
-    * The Faye server is accessible cross-origin.
+    * The Faye server is accessible cross-origin, so authentication based only
+      on cookies would allow third parties to subscribe to private data.
     * There is no one-to-one mapping between Bayeux messages and HTTP requests.
     * Not all clients will support cookies, for example some server-side clients.
     * Some transports are long-lived, deliver a lot of messages but only send
@@ -289,10 +290,15 @@
     
     h4. Why can't I use Origin, Referer, etc.?
     
-    If you only rely on these, a server-side script can forge them and bypass
-    your publication security. This still allows third parties to inject
-    messages into your application, and is especially bad if you have clients
-    that receive JavaScript and @eval()@ it.
+    Although the @Origin@ header was introduced to combat CSRF, these headers
+    can be easily guessed and spoofed by server-side clients, browser
+    extensions and malicious JavaScript applications. They are not
+    cryptographically secure proof that you can trust where the request claims
+    to have come from.
+
+    This still allows third parties to inject messages into your application,
+    and is especially bad if you have clients that receive JavaScript and
+    @eval()@ it.
     
     h4. How should I authenticate clients?
     
