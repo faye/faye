@@ -48,11 +48,13 @@ Faye.Server = Faye.Class({
       
       for (var i = 0, n = replies.length; i < n; i++) {
         this.debug('Processing reply: ?', replies[i]);
-        this.pipeThroughExtensions('outgoing', replies[i], function(message) {
-          replies[i] = message;
-          extended  += 1;
-          if (extended === expected) gatherReplies(replies);
-        });
+		(function(index) {
+		  self.pipeThroughExtensions('outgoing', replies[index], function(message) {
+			replies[index] = message;
+			extended  += 1;
+			if (extended === expected) gatherReplies(replies);
+	      });
+		})(i);
       }
     };
     
