@@ -73,11 +73,9 @@ describe "server integration" do
   include EncodingHelper
   
   before do
-    Faye.ensure_reactor_running!
     server 8000, server_options[:ssl]
     client :alice, []
     client :bob,   ["/foo"]
-    sync
   end
   
   after { stop }
