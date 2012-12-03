@@ -25,9 +25,14 @@ Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
   SCRIPT_PATH:      'faye-browser-min.js',
   
+  // https://github.com/joyent/node/issues/2727
+  CIPHER_ORDER:     'ECDHE-RSA-AES256-SHA384:AES256-SHA256:RC4-SHA:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM',
+  CIPHER_OPTIONS:   require('constants').SSL_OP_CIPHER_SERVER_PREFERENCE,
+  
   TYPE_JSON:    {'Content-Type': 'application/json; charset=utf-8'},
   TYPE_SCRIPT:  {'Content-Type': 'text/javascript; charset=utf-8'},
   TYPE_TEXT:    {'Content-Type': 'text/plain; charset=utf-8'},
+  
   
   initialize: function(options) {
     this._options    = options || {};
@@ -69,8 +74,10 @@ Faye.NodeAdapter = Faye.Class({
   
   listen: function(port, sslOptions, callback, context) {
     var ssl = sslOptions && sslOptions.cert
-            ? { key:  fs.readFileSync(sslOptions.key),
-                cert: fs.readFileSync(sslOptions.cert)
+            ? { key:            fs.readFileSync(sslOptions.key),
+                cert:           fs.readFileSync(sslOptions.cert),
+                ciphers:        this.CIPHER_ORDER,
+                secureOptions:  this.CIPHER_OPTIONS
               }
             : null;
     
