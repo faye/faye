@@ -155,6 +155,12 @@ module Faye
       end
     end
     
+    # :nodoc:
+    def reconnect
+      @state = UNCONNECTED
+      connect
+    end
+    
     # Request                              Response
     # MUST include:  * channel             MUST include:  * channel
     #                * clientId                           * successful

@@ -35,5 +35,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency "sinatra"
   s.add_development_dependency "staticmatic"
   s.add_development_dependency "thin", ">= 1.2.0"
+  s.add_development_dependency "methodphitamine", "1.0.0"
 end
 

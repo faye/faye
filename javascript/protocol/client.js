@@ -161,6 +161,11 @@ Faye.Client = Faye.Class({
     }, this._cycleConnection, this);
   },
   
+  reconnect: function() {
+    this._state = this.UNCONNECTED;
+    this.connect();
+  },
+  
   // Request                              Response
   // MUST include:  * channel             MUST include:  * channel
   //                * clientId                           * successful

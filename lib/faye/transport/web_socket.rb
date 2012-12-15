@@ -78,8 +78,12 @@ module Faye
     end
     
     def resend
-      return unless @messages
-      request(@messages.values)
+      if @messages && !@messages.empty?
+        request(@messages.values)
+      else
+        # needs handshake / connect
+        @client.reconnect
+      end
     end
   end
   
