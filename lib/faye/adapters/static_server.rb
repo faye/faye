@@ -43,8 +43,12 @@ module Faye
       headers['Last-Modified'] = cache[:mtime].httpdate
       
       if env['HTTP_IF_NONE_MATCH'] == cache[:digest]
+        headers.delete('Content-Type')
+        headers.delete('Content-Length')
         [304, headers, ['']]
       elsif ims and cache[:mtime] <= Time.httpdate(ims)
+        headers.delete('Content-Type')
+        headers.delete('Content-Length')
         [304, headers, ['']]
       else
         headers['Content-Length'] = cache[:content].bytesize.to_s unless no_content_length
