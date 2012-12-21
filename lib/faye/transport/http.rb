@@ -54,7 +54,7 @@ module Faye
     end
     
     def handle_response(response, retry_block)
-      message = Yajl::Parser.parse(response) rescue nil
+      message = MultiJson.load(response) rescue nil
       if message
         receive(message)
         trigger(:up)
