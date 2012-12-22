@@ -51,7 +51,10 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     };
 
     this._socket.onmessage = function(event) {
-      var messages = [].concat(JSON.parse(event.data));
+      var messages = JSON.parse(event.data);
+      if (!messages) return;
+      messages = [].concat(messages);
+
       for (var i = 0, n = messages.length; i < n; i++) {
         delete self._messages[messages[i].id];
       }
