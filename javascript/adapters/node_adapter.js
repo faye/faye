@@ -167,10 +167,12 @@ Faye.NodeAdapter = Faye.Class({
       try {
         self.debug('Received message via WebSocket[' + ws.version + ']: ?', event.data);
 
-        var message = JSON.parse(event.data);
-        clientId = Faye.clientIdFromMessages(message);
+        var message = JSON.parse(event.data),
+            cid     = Faye.clientIdFromMessages(message);
 
-        self._server.openSocket(clientId, ws);
+        if (clientId && cid !== clientId) self._server.closeSocket(clientId);
+        self._server.openSocket(cid, ws);
+        clientId = cid;
 
         self._server.process(message, false, function(replies) {
           if (ws) ws.send(JSON.stringify(replies));

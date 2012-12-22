@@ -135,10 +135,12 @@ module Faye
         begin
           debug "Received message via WebSocket[#{ws.version}]: ?", event.data
 
-          message   = Yajl::Parser.parse(event.data)
-          client_id = Faye.client_id_from_messages(message)
+          message = Yajl::Parser.parse(event.data)
+          cid     = Faye.client_id_from_messages(message)
 
-          @server.open_socket(client_id, ws)
+          @server.close_socket(client_id) if client_id and cid != client_id
+          @server.open_socket(cid, ws)
+          client_id = cid
 
           @server.process(message, false) do |replies|
             ws.send(Faye.to_json(replies)) if ws
