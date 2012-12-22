@@ -9,7 +9,7 @@ Faye.URI = Faye.extend(Faye.Class({
   },
   
   isSameOrigin: function() {
-    var host = Faye.URI.parse(Faye.ENV.location.href);
+    var host = Faye.URI.parse(Faye.ENV.location.href, false);
     
     var external = (host.hostname !== this.hostname) ||
                    (host.port !== this.port) ||
@@ -55,19 +55,23 @@ Faye.URI = Faye.extend(Faye.Class({
       uri.port = Faye.ENV.location.port;
     }
     
-    var query = uri.search.replace(/^\?/, ''),
-        pairs = query ? query.split('&') : [],
-        n     = pairs.length,
-        data  = {};
-    
-    while (n--) {
-      parts = pairs[n].split('=');
-      data[decodeURIComponent(parts[0] || '')] = decodeURIComponent(parts[1] || '');
+    if (params === false) {
+      uri.params = {};
+    } else {
+      var query = uri.search.replace(/^\?/, ''),
+          pairs = query ? query.split('&') : [],
+          n     = pairs.length,
+          data  = {};
+      
+      while (n--) {
+        parts = pairs[n].split('=');
+        data[decodeURIComponent(parts[0] || '')] = decodeURIComponent(parts[1] || '');
+      }
+      if (typeof params === 'object') Faye.extend(data, params);
+      
+      uri.params = data;
     }
-    if (typeof params === 'object') Faye.extend(data, params);
-    
-    uri.params = data;
-    
+
     return uri;
   }
 });
