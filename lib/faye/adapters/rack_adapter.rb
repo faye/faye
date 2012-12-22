@@ -101,7 +101,7 @@ module Faye
       
       debug "Received message via HTTP #{request.request_method}: ?", json_msg
       
-      message  = Yajl::Parser.parse(json_msg)
+      message  = MultiJson.load(json_msg)
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
       headers  = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
       origin   = request.env['HTTP_ORIGIN']
@@ -135,7 +135,7 @@ module Faye
         begin
           debug "Received message via WebSocket[#{ws.version}]: ?", event.data
           
-          message   = Yajl::Parser.parse(event.data)
+          message   = MultiJson.load(event.data)
           client_id = Faye.client_id_from_messages(message)
           
           @server.open_socket(client_id, ws)

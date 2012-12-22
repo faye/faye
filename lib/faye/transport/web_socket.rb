@@ -58,7 +58,7 @@ module Faye
       end
       
       @socket.onmessage = lambda do |event|
-        messages = [Yajl::Parser.parse(event.data)].flatten
+        messages = [MultiJson.load(event.data)].flatten
         messages.each { |message| @messages.delete(message['id']) }
         receive(messages)
       end
