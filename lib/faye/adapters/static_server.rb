@@ -32,15 +32,15 @@ module Faye
         return [404, {}, []]
       end
 
-      type    = /\.js$/ =~ fullpath ? RackAdapter::TYPE_SCRIPT : RackAdapter::TYPE_JSON
-      headers = type.dup
-      ims     = env['HTTP_IF_MODIFIED_SINCE']
+      type = /\.js$/ =~ fullpath ? RackAdapter::TYPE_SCRIPT : RackAdapter::TYPE_JSON
+      ims  = env['HTTP_IF_MODIFIED_SINCE']
 
       no_content_length = env[RackAdapter::HTTP_X_NO_CONTENT_LENGTH]
 
-      headers['Content-Length'] = '0' unless no_content_length
-      headers['ETag'] = cache[:digest]
-      headers['Last-Modified'] = cache[:mtime].httpdate
+      headers = {
+        'ETag'          => cache[:digest],
+        'Last-Modified' => cache[:mtime].httpdate
+      }
 
       if env['HTTP_IF_NONE_MATCH'] == cache[:digest]
         [304, headers, ['']]
@@ -48,6 +48,7 @@ module Faye
         [304, headers, ['']]
       else
         headers['Content-Length'] = cache[:content].bytesize.to_s unless no_content_length
+        headers.update(type)
         [200, headers, [cache[:content]]]
       end
     end

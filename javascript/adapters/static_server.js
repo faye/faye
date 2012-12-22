@@ -33,13 +33,13 @@ Faye.StaticServer = Faye.Class({
       return response.end();
     }
 
-    var type    = /\.js$/.test(pathname) ? 'TYPE_SCRIPT' : 'TYPE_JSON',
-        headers = Faye.extend({}, Faye.NodeAdapter.prototype[type]),
-        ims     = request.headers['if-modified-since'];
+    var type = /\.js$/.test(pathname) ? 'TYPE_SCRIPT' : 'TYPE_JSON',
+        ims  = request.headers['if-modified-since'];
 
-    headers['Content-Length'] = '0';
-    headers['ETag'] = cache.digest;
-    headers['Last-Modified'] = cache.mtime.toGMTString();
+    headers = {
+      'ETag':          cache.digest,
+      'Last-Modified': cache.mtime.toGMTString()
+    }
 
     if (request.headers['if-none-match'] === cache.digest) {
       response.writeHead(304, headers);
@@ -51,6 +51,7 @@ Faye.StaticServer = Faye.Class({
     }
     else {
       headers['Content-Length'] = cache.content.length;
+      Faye.extend(headers, Faye.NodeAdapter.prototype[type]);
       response.writeHead(200, headers);
       response.write(cache.content);
       response.end();
