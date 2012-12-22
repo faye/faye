@@ -55,7 +55,10 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
   },
   
   create: function(client, endpoint) {
-    var sockets = client.transports.eventsource = client.transports.eventsource || {};
+    var sockets  = client.transports.eventsource = client.transports.eventsource || {},
+        id       = client.getClientId(),
+        endpoint = endpoint + '/' + (id || '');
+
     sockets[endpoint] = sockets[endpoint] || new this(client, endpoint);
     return sockets[endpoint];
   }
