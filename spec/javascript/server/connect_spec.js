@@ -4,7 +4,7 @@ JS.ENV.Server.ConnectSpec = JS.Test.describe("Server connect", function() { with
     stub(Faye.Engine, "get").returns(engine)
     this.server = new Faye.Server()
   }})
-  
+
   describe("#connect", function() { with(this) {
     before(function() { with(this) {
       this.clientId = "fakeclientid"
@@ -12,18 +12,18 @@ JS.ENV.Server.ConnectSpec = JS.Test.describe("Server connect", function() { with
                       clientId: "fakeclientid",
                       connectionType: "long-polling"}
     }})
-    
+
     describe("with valid parameters", function() { with(this) {
       before(function() { with(this) {
         message.advice = {timeout: 60}
         expect(engine, "clientExists").given(clientId).yielding([true])
       }})
-      
+
       it("connects to the engine to wait for new messages", function() { with(this) {
         expect(engine, "connect").given(clientId, {timeout: 60}).yielding([[]])
         server.connect(message, false, function() {})
       }})
-      
+
       it("returns a successful response and any queued messages", function() { with(this) {
         stub(engine, "connect").yields([{channel: "/x", data: "hello"}])
         server.connect(message, false, function(response) {
@@ -38,10 +38,10 @@ JS.ENV.Server.ConnectSpec = JS.Test.describe("Server connect", function() { with
           ], response)
         })
       }})
-      
+
       describe("with a message id", function() { with(this) {
         before(function() { this.message.id = "foo" })
-        
+
         it("returns the same id", function() { with(this) {
           stub(engine, "connect")
           server.connect(message, false, function(response) {
@@ -55,17 +55,17 @@ JS.ENV.Server.ConnectSpec = JS.Test.describe("Server connect", function() { with
         }})
       }})
     }})
-    
+
     describe("with an unknown client", function() { with(this) {
       before(function() { with(this) {
         expect(engine, "clientExists").given(clientId).yielding([false])
       }})
-      
+
       it("does not connect to the engine", function() { with(this) {
         expect(engine, "connect").exactly(0)
         server.connect(message, false, function() {})
       }})
-      
+
       it("returns an unsuccessful response", function() { with(this) {
         server.connect(message, false, function(response) {
           assertEqual({
@@ -76,18 +76,18 @@ JS.ENV.Server.ConnectSpec = JS.Test.describe("Server connect", function() { with
         })
       }})
     }})
-    
+
     describe("missing clientId", function() { with(this) {
       before(function() { with(this) {
         delete message.clientId
         expect(engine, "clientExists").given(undefined).yielding([false])
       }})
-      
+
       it("does not connect to the engine", function() { with(this) {
         expect(engine, "connect").exactly(0)
         server.connect(message, false, function() {})
       }})
-      
+
       it("returns an unsuccessful response", function() { with(this) {
         server.connect(message, false, function(response) {
           assertEqual({
@@ -98,18 +98,18 @@ JS.ENV.Server.ConnectSpec = JS.Test.describe("Server connect", function() { with
         })
       }})
     }})
-    
+
     describe("missing connectionType", function() { with(this) {
       before(function() { with(this) {
         delete message.connectionType
         expect(engine, "clientExists").given(clientId).yielding([true])
       }})
-      
+
       it("does not connect to the engine", function() { with(this) {
         expect(engine, "connect").exactly(0)
         server.connect(message, false, function() {})
       }})
-      
+
       it("returns an unsuccessful response", function() { with(this) {
         server.connect(message, false, function(response) {
           assertEqual({
@@ -120,18 +120,18 @@ JS.ENV.Server.ConnectSpec = JS.Test.describe("Server connect", function() { with
         })
       }})
     }})
-    
+
     describe("with an unknown connectionType", function() { with(this) {
       before(function() { with(this) {
         message.connectionType = "flash"
         expect(engine, "clientExists").given(clientId).yielding([true])
       }})
-      
+
       it("does not connect to the engine", function() { with(this) {
         expect(engine, "connect").exactly(0)
         server.connect(message, false, function() {})
       }})
-      
+
       it("returns an unsuccessful response", function() { with(this) {
         server.connect(message, false, function(response) {
           assertEqual({
@@ -142,18 +142,18 @@ JS.ENV.Server.ConnectSpec = JS.Test.describe("Server connect", function() { with
         })
       }})
     }})
-    
+
     describe("with an error", function() { with(this) {
       before(function() { with(this) {
         message.error = "invalid"
         expect(engine, "clientExists").given(clientId).yielding([true])
       }})
-      
+
       it("does not connect to the engine", function() { with(this) {
         expect(engine, "connect").exactly(0)
         server.connect(message, false, function() {})
       }})
-      
+
       it("returns an unsuccessful response", function() { with(this) {
         server.connect(message, false, function(response) {
           assertEqual({

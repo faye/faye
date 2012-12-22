@@ -4,7 +4,7 @@ Faye.Error = Faye.Class({
     this.params  = Array.prototype.slice.call(params);
     this.message = message;
   },
-  
+
   toString: function() {
     return this.code + ':' +
            this.params.join(',') + ':' +
@@ -36,7 +36,7 @@ Faye.Error.parse = function(message) {
        EXT_UNKNOWN
        PUBLISH_FAILED
        SERVER_ERROR ].each do |error_type|
-  
+
   code, message = Faye::Error.const_get(error_type)
   js_method = error_type.downcase.gsub(/_(.)/) { $1.upcase }
 %>

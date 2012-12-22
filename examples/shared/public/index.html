@@ -12,40 +12,40 @@
 </head>
 <body>
 <div class="container">
-  
+
   <h1><em>Soapbox</em> | a Twitter-style chat app</h1>
-  
+
   <form id="enterUsername">
     <label for="username">Pick a username</label>
     <input type="text" name="username" id="username">
     <input type="submit" value="Go">
   </form>
-  
+
   <div id="app">
     <form id="addFollowee">
       <label for="followee">Follow</label>
       <input type="text" name="followee" id="followee">
       <input type="submit" value="Follow">
     </form>
-    
+
     <form id="postMessage">
       <label for="message">Post a message</label><br>
       <textarea name="message" id="message" rows="3" cols="40"></textarea>
       <input type="submit" value="Send">
     </form>
-    
+
     <ul id="stream">
     </ul>
   </div>
-  
+
   <script type="text/javascript">
     Faye.Logging.logLevel = 'debug';
-    
+
     var scheme = window.location.protocol,
         host   = location.hostname,
         port   = location.port,
         path   = '/bayeux';
-    
+
     Bayeux = new Faye.Client(scheme + '//' + host + (port ? ':' + port : '') + path);
     Soapbox.init(Bayeux);
   </script>

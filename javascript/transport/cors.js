@@ -4,10 +4,10 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
         xhr      = new xhrClass(),
         retry    = this.retry(message, timeout),
         self     = this;
-    
+
     xhr.open('POST', this.endpoint, true);
     if (xhr.setRequestHeader) xhr.setRequestHeader('Pragma', 'no-cache');
-    
+
     var cleanUp = function() {
       if (!xhr) return false;
       xhr.onload = xhr.onerror = xhr.ontimeout = xhr.onprogress = null;
@@ -15,15 +15,15 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
       Faye.ENV.clearTimeout(timer);
       return true;
     };
-    
+
     xhr.onload = function() {
       var parsedMessage = null;
       try {
         parsedMessage = JSON.parse(xhr.responseText);
       } catch (e) {}
-      
+
       cleanUp();
-      
+
       if (parsedMessage) {
         self.receive(parsedMessage);
         self.trigger('up');
@@ -32,7 +32,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
         self.trigger('down');
       }
     };
-    
+
     var onerror = function() {
       cleanUp();
       retry();
@@ -41,7 +41,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     var timer = Faye.ENV.setTimeout(onerror, 1.5 * 1000 * timeout);
     xhr.onerror = onerror;
     xhr.ontimeout = onerror;
-    
+
     xhr.onprogress = function() {};
     xhr.send('message=' + encodeURIComponent(Faye.toJSON(message)));
   }
@@ -49,11 +49,11 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
   isUsable: function(client, endpoint, callback, context) {
     if (Faye.URI.parse(endpoint).isSameOrigin())
       return callback.call(context, false);
-    
+
     if (Faye.ENV.XDomainRequest)
       return callback.call(context, Faye.URI.parse(endpoint).protocol ===
                                     Faye.URI.parse(Faye.ENV.location).protocol);
-    
+
     if (Faye.ENV.XMLHttpRequest) {
       var xhr = new Faye.ENV.XMLHttpRequest();
       return callback.call(context, xhr.withCredentials !== undefined);

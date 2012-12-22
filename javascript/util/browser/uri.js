@@ -7,17 +7,17 @@ Faye.URI = Faye.extend(Faye.Class({
     }
     return pairs.join('&');
   },
-  
+
   isSameOrigin: function() {
     var host = Faye.URI.parse(Faye.ENV.location.href, false);
-    
+
     var external = (host.hostname !== this.hostname) ||
                    (host.port !== this.port) ||
                    (host.protocol !== this.protocol);
-    
+
     return !external;
   },
-  
+
   toURL: function() {
     var query = this.queryString();
     return this.protocol + '//' + this.hostname + (this.port ? ':' + this.port : '') +
@@ -27,7 +27,7 @@ Faye.URI = Faye.extend(Faye.Class({
   parse: function(url, params) {
     if (typeof url !== 'string') return url;
     var uri = new this(), parts;
-    
+
     var consume = function(name, pattern, infer) {
       url = url.replace(pattern, function(match) {
         uri[name] = match;
@@ -36,15 +36,15 @@ Faye.URI = Faye.extend(Faye.Class({
       if (uri[name] === undefined)
         uri[name] = infer ? Faye.ENV.location[name] : '';
     };
-    
+
     consume('protocol', /^https?\:/,    true);
     consume('host',     /^\/\/[^\/]+/,  true);
-    
+
     if (!/^\//.test(url)) url = Faye.ENV.location.pathname.replace(/[^\/]*$/, '') + url;
     consume('pathname', /^\/[^\?#]*/);
     consume('search',   /^\?[^#]*/);
     consume('hash',     /^#.*/);
-    
+
     if (/^\/\//.test(uri.host)) {
       uri.host = uri.host.substr(2);
       parts = uri.host.split(':');
@@ -54,7 +54,7 @@ Faye.URI = Faye.extend(Faye.Class({
       uri.hostname = Faye.ENV.location.hostname;
       uri.port = Faye.ENV.location.port;
     }
-    
+
     if (params === false) {
       uri.params = {};
     } else {
@@ -62,13 +62,13 @@ Faye.URI = Faye.extend(Faye.Class({
           pairs = query ? query.split('&') : [],
           n     = pairs.length,
           data  = {};
-      
+
       while (n--) {
         parts = pairs[n].split('=');
         data[decodeURIComponent(parts[0] || '')] = decodeURIComponent(parts[1] || '');
       }
       if (typeof params === 'object') Faye.extend(data, params);
-      
+
       uri.params = data;
     }
 

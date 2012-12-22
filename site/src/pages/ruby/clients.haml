@@ -1,43 +1,43 @@
 .content
   = partial 'ruby_navigation'
-  
+
   :textile
     h4. Server-side Ruby clients
-    
+
     You can use Faye clients on the server side to send messages to in-browser
     clients or to other server-side processes. The API is identical to the
     "browser client":/browser.html.
-    
+
     To create a client, just supply the host you want to connect to:
-    
+
     <pre class="prettyprint">client = Faye::Client.new('http://localhost:9292/faye')</pre>
-    
+
     You can then use @client.subscribe()@ and @client.publish()@ to send
     messages to other clients; the API is similar to the "browser client":/browser.html
     only you need to run the client inside EventMachine:
-    
+
     <pre class="prettyprint">require 'eventmachine'
-    
+
     EM.run {
       client = Faye::Client.new('http://localhost:9292/faye')
-      
+
       client.subscribe('/foo') do |message|
         puts message.inspect
       end
-      
+
       client.publish('/foo', 'text' => 'Hello world')
     }</pre>
-    
+
     If you need to set custom headers to talk to your Bayeux server, use the
     @set_header@ method:
-    
+
     <pre class="prettyprint">client.set_header('Authorization', 'OAuth abcd-1234')</pre>
-    
+
     The server has its own client attached to it so you can use the server to
     send messages to browsers. This client has direct access to the server
     without going over HTTP, and is thus more efficient. To send messages
     through the server just use the @#get_client@ method.
-    
+
     <pre class="prettyprint">bayeux.get_client.publish('/email/new', {
       'text'      => 'New email has arrived!',
       'inboxSize' => 34

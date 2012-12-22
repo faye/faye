@@ -14,7 +14,7 @@ job = TestSwarm::Job.create(
   :directory  => "/home/jcoglan/www/swarm.jcoglan.com/app/changeset/#{project.name}",
   :diff       => ["javascript", "spec/javascript"],
   :inject     => "spec/browser.html",
-  
+
   :build      => ["npm install", "rm -rf build", "jake"]
 )
 

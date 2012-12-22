@@ -7,7 +7,7 @@
   </head>
   <body>
     <script type="text/javascript">
-      
+
       if (typeof TestSwarm === 'undefined')
         TestSwarm = {
           submit: function(result) {
@@ -15,9 +15,9 @@
           },
           heartbeat: function() {}
         }
-      
+
       JS.cacheBust = true
-      
+
       JS.Packages(function() { with(this) {
         file('../build/browser/faye-browser-min.js').provides('Faye')
         autoload(/.*Spec/, {from: './javascript'})
@@ -30,7 +30,7 @@
             return function(actual) { testcase.assertEqual(expected, actual) }
           }
         })
-        
+
         JS.require( 'FayeSpec',
                     'GrammarSpec',
                     'ChannelSpec',
@@ -38,7 +38,7 @@
                     'TransportSpec',
                     JS.Test.method('autorun'))
       })
-      
+
     </script>
   </body>
 </html>

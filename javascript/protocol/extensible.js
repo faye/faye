@@ -4,7 +4,7 @@ Faye.Extensible = {
     this._extensions.push(extension);
     if (extension.added) extension.added(this);
   },
-  
+
   removeExtension: function(extension) {
     if (!this._extensions) return;
     var i = this._extensions.length;
@@ -14,19 +14,19 @@ Faye.Extensible = {
       if (extension.removed) extension.removed(this);
     }
   },
-  
+
   pipeThroughExtensions: function(stage, message, callback, context) {
     this.debug('Passing through ? extensions: ?', stage, message);
 
     if (!this._extensions) return callback.call(context, message);
     var extensions = this._extensions.slice();
-    
+
     var pipe = function(message) {
       if (!message) return callback.call(context, message);
-      
+
       var extension = extensions.shift();
       if (!extension) return callback.call(context, message);
-      
+
       if (extension[stage]) extension[stage](message, pipe);
       else pipe(message);
     };

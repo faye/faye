@@ -4,7 +4,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
     stub(Faye.Engine, "get").returns(engine)
     this.server = new Faye.Server()
   }})
-  
+
   describe("#process", function() { with(this) {
     before(function() { with(this) {
       this.handshake   = {channel: "/meta/handshake",   data: "handshake"}
@@ -13,17 +13,17 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       this.subscribe   = {channel: "/meta/subscribe",   data: "subscribe"}
       this.unsubscribe = {channel: "/meta/unsubscribe", data: "unsubscribe"}
       this.publish     = {channel: "/some/channel",     data: "publish"}
-      
+
       stub(engine, "interval", 0)
       stub(engine, "timeout", 60)
     }})
-    
+
     it("returns an empty response for no messages", function() { with(this) {
       var response = null
       server.process([], false, function(r) { response = r})
       assertEqual( [], response )
     }})
-    
+
     it("ignores invalid messages", function() { with(this) {
       var response = null
       server.process([{}, {channel: "invalid"}], false, function(r) { response = r})
@@ -37,19 +37,19 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         }
       ], response)
     }})
-    
+
     it("routes single messages to appropriate handlers", function() { with(this) {
       expect(server, "handshake").given(handshake, false).yielding([{}])
       server.process(handshake, false, function() {})
     }})
-    
+
     it("routes a list of messages to appropriate handlers", function() { with(this) {
       expect(server, "handshake").given(handshake, false).yielding([{}])
       expect(server, "connect").given(connect, false).yielding([{}])
       expect(server, "disconnect").given(disconnect, false).yielding([{}])
       expect(server, "subscribe").given(subscribe, false).yielding([{}])
       expect(server, "unsubscribe").given(unsubscribe, false).yielding([{}])
-      
+
       expect(engine, "publish").given(handshake).exactly(0)
       expect(engine, "publish").given(connect).exactly(0)
       expect(engine, "publish").given(disconnect).exactly(0)
@@ -57,15 +57,15 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       expect(engine, "publish").given(unsubscribe).exactly(0)
 
       expect(engine, "publish").given(publish)
-      
+
       server.process([handshake, connect, disconnect, subscribe, unsubscribe, publish], false, function() {})
     }})
-    
+
     describe("handshaking", function() { with(this) {
       before(function() { with(this) {
         expect(server, "handshake").given(handshake, false).yielding([{channel: "/meta/handshake", successful: true}])
       }})
-      
+
       it("returns the handshake response with advice", function() { with(this) {
         server.process(handshake, false, function(response) {
           assertEqual([
@@ -77,13 +77,13 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         })
       }})
     }})
-    
+
     describe("connecting for messages", function() { with(this) {
       before(function() { with(this) {
         this.messages = [{channel: "/a"}, {channel: "/b"}]
         expect(server, "connect").given(connect, false).yielding([messages])
       }})
-      
+
       it("returns the new messages", function() { with(this) {
         server.process(connect, false, function(response) {
           assertEqual( messages, response )
@@ -91,17 +91,17 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
       }})
     }})
   }})
-  
+
   describe("#flushConnection", function() { with(this) {
     before(function() { with(this) {
       this.message = {clientId: "fakeclientid"}
     }})
-    
+
     it("flushes the connection when given one message", function() { with(this) {
       expect(engine, "flush").given("fakeclientid")
       server.flushConnection(message)
     }})
-    
+
     it("flushes the connection when given a list of messages", function() { with(this) {
       expect(engine, "flush").given("fakeclientid")
       server.flushConnection([message])

@@ -9,7 +9,7 @@ module Faye
         block.call
       end
     end
-    
+
     def remove_timeout(name)
       @timeouts ||= {}
       timeout = @timeouts[name]

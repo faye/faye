@@ -1,11 +1,11 @@
 module Faye
   class Error
-    
+
     def self.method_missing(type, *args)
       code = const_get(type.to_s.upcase)
       new(code[0], args, code[1]).to_s
     end
-    
+
     def self.parse(message)
       message ||= ''
       return new(nil, [], message) unless Grammar::ERROR =~ message
@@ -19,17 +19,17 @@ module Faye
     end
 
     attr_reader :code, :params, :message
-    
+
     def initialize(code, params, message)
       @code     = code
       @params   = params
       @message  = message
     end
-    
+
     def to_s
       "#{ @code }:#{ @params * ',' }:#{ @message }"
     end
-    
+
     # http://code.google.com/p/cometd/wiki/BayeuxCodes
     VERSION_MISMATCH    = [300, 'Version mismatch']
     CONNTYPE_MISMATCH   = [301, 'Connection types not supported']
@@ -43,7 +43,7 @@ module Faye
     EXT_UNKNOWN         = [406, 'Unknown extension']
     PUBLISH_FAILED      = [407, 'Failed to publish']
     SERVER_ERROR        = [500, 'Internal server error']
-    
+
   end
 end
 

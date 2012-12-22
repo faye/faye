@@ -8,18 +8,18 @@ scheme = ARGV[2] == 'ssl' ? 'https' : 'http'
 EM.run {
   A = Faye::Client.new("#{scheme}://localhost:#{port}/#{path}")
   B = Faye::Client.new("#{scheme}://localhost:#{port}/#{path}")
-  
+
   A.connect do
     B.connect do
-      
+
       time = Time.now.to_f * 1000
       MAX  = 1000
-      
+
       stop = lambda do
         puts Time.now.to_f * 1000 - time
         EM.stop
       end
-      
+
       handle = lambda do |client, channel|
         lambda do |n|
           if n == MAX
@@ -29,10 +29,10 @@ EM.run {
           end
         end
       end
-      
+
       sub_a = A.subscribe('/chat/a', &handle.call(A, '/chat/b'))
       sub_b = B.subscribe('/chat/b', &handle.call(B, '/chat/a'))
-      
+
       sub_a.callback do
         sub_b.callback do
           puts 'START'

@@ -18,10 +18,10 @@ endpoint = "#{scheme}://localhost:#{port}/#{path}"
 EM.run {
   puts "Connecting to #{endpoint}"
   client = Faye::Client.new(endpoint)
-  
+
   subscription = client.subscribe '/chat/*' do |message|
     user = message['user']
-    
+
     publication = client.publish("/members/#{ user }", {
       "user"    => "ruby-logger",
       "message" => "Got your message, #{ user }!"
@@ -33,14 +33,14 @@ EM.run {
       puts "[PUBLISH FAILED] #{error.inspect}"
     end
   end
-  
+
   subscription.callback do
     puts "[SUBSCRIBE SUCCEEDED]"
   end
   subscription.errback do |error|
     puts "[SUBSCRIBE FAILED] #{error.inspect}"
   end
-  
+
   client.bind 'transport:down' do
     puts "[CONNECTION DOWN]"
   end

@@ -8,7 +8,7 @@
 // connected users.
 
 var faye = require('../../build/node/faye-node'),
-    
+
     port     = process.argv[2] || 8000,
     path     = process.argv[3] || 'bayeux',
     scheme   = process.argv[4] === 'ssl' ? 'https' : 'http',
@@ -19,7 +19,7 @@ var client = new faye.Client(endpoint);
 
 var subscription = client.subscribe('/chat/*', function(message) {
   var user = message.user;
-  
+
   var publication = client.publish('/members/' + user, {
     user:     'node-logger',
     message:  ' Got your message, ' + user + '!'

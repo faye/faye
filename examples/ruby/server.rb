@@ -30,7 +30,7 @@ when 'thin'
   EM.run {
     thin = Rack::Handler.get('thin')
     thin.run(App, :Port => port) do |s|
-      
+
       if secure
         s.ssl = true
         s.ssl_options = {

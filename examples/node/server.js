@@ -8,11 +8,11 @@ var fs    = require('fs'),
 
 var SHARED_DIR = path.dirname(__filename) + '/../shared',
     PUBLIC_DIR = SHARED_DIR + '/public',
-    
+
     bayeux     = new faye.NodeAdapter({mount: '/bayeux', timeout: 20}),
     port       = process.argv[2] || '8000',
     secure     = process.argv[3] === 'ssl',
-    
+
     sslOpts = {
       key:  fs.readFileSync(SHARED_DIR + '/server.key'),
       cert: fs.readFileSync(SHARED_DIR + '/server.crt')
@@ -20,7 +20,7 @@ var SHARED_DIR = path.dirname(__filename) + '/../shared',
 
 var handleRequest = function(request, response) {
   var path = (request.url === '/') ? '/index.html' : request.url;
-  
+
   fs.readFile(PUBLIC_DIR + path, function(err, content) {
     var status = err ? 404 : 200;
     response.writeHead(status, {'Content-Type': 'text/html'});

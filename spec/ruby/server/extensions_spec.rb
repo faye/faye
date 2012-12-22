@@ -7,14 +7,14 @@ describe "server extensions" do
     engine.stub(:timeout).and_return(60)
     engine
   end
-  
+
   let(:server)  { Faye::Server.new }
   let(:message) { {"channel" => "/foo", "data" => "hello"} }
-  
+
   before do
     Faye::Engine.stub(:get).and_return engine
   end
-  
+
   describe "with an incoming extension installed" do
     before do
       extension = Class.new do
@@ -25,12 +25,12 @@ describe "server extensions" do
       end
       server.add_extension(extension.new)
     end
-    
+
     it "passes incoming messages through the extension" do
       engine.should_receive(:publish).with({"channel" => "/foo", "data" => "hello", "ext" => {"auth" => "password"}})
       server.process(message, false) {}
     end
-    
+
     it "does not pass outgoing messages through the extension" do
       server.stub(:handshake).and_yield(message)
       engine.stub(:publish)
@@ -39,7 +39,7 @@ describe "server extensions" do
       response.should == [{"channel" => "/foo", "data" => "hello"}]
     end
   end
-  
+
   describe "with an outgoing extension installed" do
     before do
       extension = Class.new do
@@ -50,12 +50,12 @@ describe "server extensions" do
       end
       server.add_extension(extension.new)
     end
-    
+
     it "does not pass incoming messages through the extension" do
       engine.should_receive(:publish).with({"channel" => "/foo", "data" => "hello"})
       server.process(message, false) {}
     end
-    
+
     it "passes outgoing messages through the extension" do
       server.stub(:handshake).and_yield(message)
       engine.stub(:publish)
