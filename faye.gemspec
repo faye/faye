@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
   s.add_dependency "faye-websocket", ">= 0.4.0"
   s.add_dependency "rack", ">= 1.0.0"
   s.add_dependency "yajl-ruby", ">= 1.0.0"
+  s.add_dependency "methodphitamine", "1.0.0"
 
   s.add_development_dependency "compass", "~> 0.10.0"
   s.add_development_dependency "jake", ">= 1.1.1"
