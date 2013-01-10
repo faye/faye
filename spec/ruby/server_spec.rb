@@ -32,10 +32,21 @@ describe Faye::Server do
       server.process([{}, {"channel" => "invalid"}], false) { |r| response = r }
       response.should == []
     end
+
+    it "rejects unknown meta channels" do
+      response = nil
+      server.process([{"channel" => "/meta/p"}], false) { |r| response = r }
+      response.should == [
+        { "channel"     => "/meta/p",
+          "successful"  => false,
+          "error"       => "403:/meta/p:Forbidden channel"
+        }
+      ]
+    end
     
     it "routes single messages to appropriate handlers" do
       server.should_receive(:handshake).with(handshake, false)
-      server.process(handshake, false)
+      server.process(handshake, false) {}
     end
     
     it "routes a list of messages to appropriate handlers" do
