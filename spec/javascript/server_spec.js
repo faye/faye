@@ -37,6 +37,17 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         }
       ], response)
     }})
+
+    it("rejects unknown meta channels", function() { with(this) {
+      var response = null
+      server.process([{channel: "/meta/p"}], false, function(r) { response = r })
+      assertEqual([
+        { channel:    "/meta/p",
+          successful: false,
+          error:      "403:/meta/p:Forbidden channel"
+        }
+      ], response)
+    }})
     
     it("routes single messages to appropriate handlers", function() { with(this) {
       expect(server, "handshake").given(handshake, false).yielding([{}])
