@@ -1,3 +1,8 @@
+=== 0.8.7 / 2013-01-10
+
+* Patch security hole allowing execution of arbitrary object methods
+
+
 === 0.8.6 / 2012-10-07
 
 * Make sure messages pushed to the client over a socket pass through outgoing extensions
