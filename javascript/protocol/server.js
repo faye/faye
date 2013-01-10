@@ -1,4 +1,6 @@
 Faye.Server = Faye.Class({
+  META_METHODS: <%= Faye::Server::META_METHODS.inspect %>,
+
   initialize: function(options) {
     this._options  = options || {};
     var engineOpts = this._options.engine || {};
@@ -99,8 +101,16 @@ Faye.Server = Faye.Class({
   },
   
   _handleMeta: function(message, local, callback, scope) {
-    var method = Faye.Channel.parse(message.channel)[1];
+    var method = Faye.Channel.parse(message.channel)[1],
+        response;
     
+    if (Faye.indexOf(this.META_METHODS, method) < 0) {
+      response = this._makeResponse(message);
+      response.error = Faye.Error.channelForbidden(message.channel);
+      response.successful = false;
+      return callback.call(scope, [response]);
+    }
+
     this[method](message, local, function(responses) {
       responses = [].concat(responses);
       Faye.each(responses, this._advize, this);
