@@ -1,3 +1,11 @@
+=== 0.8.8 / 2013-01-10
+
+* Patch security hole allowing remote execution of arbitrary Server methods
+
+
+=== 0.8.7 -- removed due to error while publishing
+
+
 === 0.8.6 / 2012-10-07
 
 * Make sure messages pushed to the client over a socket pass through outgoing extensions

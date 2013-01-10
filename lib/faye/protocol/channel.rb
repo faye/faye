@@ -21,10 +21,10 @@ module Faye
     SUBSCRIBE   = '/meta/subscribe'
     UNSUBSCRIBE = '/meta/unsubscribe'
     DISCONNECT  = '/meta/disconnect'
-
-    META        = :meta
-    SERVICE     = :service
-
+    
+    META        = 'meta'
+    SERVICE     = 'service'
+    
     class << self
       def expand(name)
         segments = parse(name)
@@ -50,7 +50,7 @@ module Faye
 
       def parse(name)
         return nil unless valid?(name)
-        name.split('/')[1..-1].map { |s| s.to_sym }
+        name.split('/')[1..-1]
       end
 
       def unparse(segments)
