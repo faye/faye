@@ -1,6 +1,9 @@
-=== 0.8.7 / 2013-01-10
+=== 0.8.8 / 2013-01-10
 
-* Patch security hole allowing execution of arbitrary object methods
+* Patch security hole allowing remote execution of arbitrary Server methods
+
+
+=== 0.8.7 -- removed due to error while publishing
 
 
 === 0.8.6 / 2012-10-07
