@@ -16,7 +16,7 @@ require 'time'
 require 'uri'
 
 module Faye
-  VERSION = '0.7.1'
+  VERSION = '0.7.2'
   
   ROOT = File.expand_path(File.dirname(__FILE__))
   require File.join(ROOT, 'faye', 'thin_extensions')
