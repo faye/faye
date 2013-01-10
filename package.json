@@ -4,7 +4,7 @@
 , "author"        : "James Coglan <jcoglan@gmail.com> (http://jcoglan.com/)"
 , "keywords"      : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
 
-, "version"       : "0.6.7"
+, "version"       : "0.6.8"
 , "engines"       : {"node": ">=0.1.96"}
 , "main"          : "./faye-node"
 , "dependencies"  : {"redis": ""}
