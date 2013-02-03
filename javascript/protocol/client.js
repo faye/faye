@@ -26,8 +26,6 @@ Faye.Client = Faye.Class({
     this._disabled  = [];
     this.retry      = this._options.retry || this.DEFAULT_RETRY;
 
-    this._selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
-
     this._state     = this.UNCONNECTED;
     this._channels  = new Faye.Channel.Set();
     this._messageId = 0;
@@ -95,6 +93,7 @@ Faye.Client = Faye.Class({
     var self = this;
 
     this.info('Initiating handshake with ?', this.endpoint);
+    this._selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
 
     this._send({
       channel:      Faye.Channel.HANDSHAKE,
@@ -107,10 +106,7 @@ Faye.Client = Faye.Class({
         this._state     = this.CONNECTED;
         this._clientId  = response.clientId;
 
-        var connectionTypes = Faye.filter(response.supportedConnectionTypes, function(connType) {
-          return Faye.indexOf(this._disabled, connType) < 0;
-        }, this);
-        this._selectTransport(connectionTypes);
+        this._selectTransport(response.supportedConnectionTypes);
 
         this.info('Handshake successful: ?', this._clientId);
 
@@ -317,7 +313,7 @@ Faye.Client = Faye.Class({
   },
 
   _selectTransport: function(transportTypes) {
-    Faye.Transport.get(this, transportTypes, function(transport) {
+    Faye.Transport.get(this, transportTypes, this._disabled, function(transport) {
       this.debug('Selected ? transport for ?', transport.connectionType, transport.endpoint);
 
       if (transport === this._transport) return;

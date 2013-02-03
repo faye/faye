@@ -32,8 +32,6 @@ module Faye
       @disabled   = []
       @retry      = @options[:retry] || DEFAULT_RETRY
 
-      select_transport(MANDATORY_CONNECTION_TYPES)
-
       @state      = UNCONNECTED
       @channels   = Channel::Set.new
       @message_id = 0
@@ -90,6 +88,7 @@ module Faye
       @state = CONNECTING
 
       info('Initiating handshake with ?', @endpoint)
+      select_transport(MANDATORY_CONNECTION_TYPES)
 
       send({
         'channel'     => Channel::HANDSHAKE,
@@ -102,8 +101,7 @@ module Faye
           @state     = CONNECTED
           @client_id = response['clientId']
 
-          connection_types = response['supportedConnectionTypes'] - @disabled
-          select_transport(connection_types)
+          select_transport(response['supportedConnectionTypes'])
 
           info('Handshake successful: ?', @client_id)
 
@@ -308,7 +306,7 @@ module Faye
   private
 
     def select_transport(transport_types)
-      Transport.get(self, transport_types) do |transport|
+      Transport.get(self, transport_types, @disabled) do |transport|
         debug('Selected ? transport for ?', transport.connection_type, transport.endpoint)
 
         @transport = transport

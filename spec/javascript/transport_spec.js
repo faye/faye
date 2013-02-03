@@ -28,7 +28,7 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
 
     describe("when no transport is usable", function() { with(this) {
       it("raises an exception", function() { with(this) {
-        assertThrows(Error, function() { Faye.Transport.get(client, [longPolling, inProcess]) })
+        assertThrows(Error, function() { Faye.Transport.get(client, [longPolling, inProcess], []) })
       }})
     }})
 
@@ -38,17 +38,17 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
       }})
 
       it("returns a transport of the usable type", function() { with(this) {
-        Faye.Transport.get(client, [longPolling, inProcess], function(transport) {
+        Faye.Transport.get(client, [longPolling, inProcess], [], function(transport) {
           assertKindOf( HttpTransport, transport )
         })
       }})
 
       it("raises an exception if the usable type is not requested", function() { with(this) {
-        assertThrows(Error, function() { Faye.Transport.get(client, [inProcess]) })
+        assertThrows(Error, function() { Faye.Transport.get(client, [inProcess], []) })
       }})
 
       it("allows the usable type to be specifically selected", function() { with(this) {
-        Faye.Transport.get(client, [longPolling], function(transport) {
+        Faye.Transport.get(client, [longPolling], [], function(transport) {
           assertKindOf( HttpTransport, transport )
         })
       }})
@@ -61,16 +61,16 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
       }})
 
       it("returns the most preferred type", function() { with(this) {
-        Faye.Transport.get(client, [longPolling, inProcess], function(transport) {
+        Faye.Transport.get(client, [longPolling, inProcess], [], function(transport) {
           assertKindOf( LocalTransport, transport )
         })
       }})
 
       it("allows types to be specifically selected", function() { with(this) {
-        Faye.Transport.get(client, [inProcess], function(transport) {
+        Faye.Transport.get(client, [inProcess], [], function(transport) {
           assertKindOf( LocalTransport, transport )
         })
-        Faye.Transport.get(client, [longPolling], function(transport) {
+        Faye.Transport.get(client, [longPolling], [], function(transport) {
           assertKindOf( HttpTransport, transport )
         })
       }})

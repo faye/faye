@@ -67,15 +67,17 @@ Faye.Transport = Faye.extend(Faye.Class({
 }), {
   MAX_URL_LENGTH: 2048,
 
-  get: function(client, connectionTypes, callback, context) {
+  get: function(client, allowed, disabled, callback, context) {
     var endpoint = client.endpoint;
-    if (connectionTypes === undefined) connectionTypes = this.supportedConnectionTypes();
 
     Faye.asyncEach(this._transports, function(pair, resume) {
       var connType     = pair[0], klass = pair[1],
           connEndpoint = client.endpoints[connType] || endpoint;
 
-      if (Faye.indexOf(connectionTypes, connType) < 0) {
+      if (Faye.indexOf(disabled, connType) >= 0)
+        return resume();
+
+      if (Faye.indexOf(allowed, connType) < 0) {
         klass.isUsable(client, connEndpoint, function() {});
         return resume();
       }
@@ -96,10 +98,6 @@ Faye.Transport = Faye.extend(Faye.Class({
   },
 
   _transports: [],
-
-  supportedConnectionTypes: function() {
-    return Faye.map(this._transports, function(pair) { return pair[0] });
-  }
 });
 
 Faye.extend(Faye.Transport.prototype, Faye.Logging);

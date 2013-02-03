@@ -46,13 +46,6 @@ describe Faye::Client do
   end
 
   describe :initialize do
-    it "creates a transport the server must support" do
-      Faye::Transport.should_receive(:get).with(instance_of(Faye::Client),
-                                                ["long-polling", "callback-polling", "in-process"]).
-                                           and_return(transport)
-      Faye::Client.new("http://localhost/")
-    end
-
     it "puts the client in the UNCONNECTED state" do
       Faye::Transport.stub(:get)
       client = Faye::Client.new("http://localhost/")
@@ -62,6 +55,14 @@ describe Faye::Client do
 
   describe :handshake do
     before { create_client }
+
+    it "creates a transport the server must support" do
+      Faye::Transport.should_receive(:get).with(instance_of(Faye::Client),
+                                                ["long-polling", "callback-polling", "in-process"],
+                                                []).
+                                           and_return(transport)
+      @client.handshake
+    end
 
     it "sends a handshake message to the server" do
       transport.should_receive(:send).with({
@@ -127,7 +128,9 @@ describe Faye::Client do
       end
 
       it "selects a new transport based on what the server supports" do
-        Faye::Transport.should_receive(:get).with(instance_of(Faye::Client), ["long-polling", "websocket"]).
+        Faye::Transport.should_receive(:get).with(instance_of(Faye::Client),
+                                                  ["long-polling", "websocket"],
+                                                  []).
                                              and_return(transport)
         @client.handshake
       end
@@ -136,7 +139,9 @@ describe Faye::Client do
         before { @client.disable("websocket") }
 
         it "selects a new transport, excluding websocket" do
-          Faye::Transport.should_receive(:get).with(instance_of(Faye::Client), ["long-polling"]).
+          Faye::Transport.should_receive(:get).with(instance_of(Faye::Client),
+                                                    ["long-polling", "websocket"],
+                                                    ["websocket"]).
                                               and_return(transport)
           @client.handshake
         end
@@ -688,7 +693,10 @@ describe Faye::Client do
   end
 
   describe "network notifications" do
-    before { create_client }
+    before {
+      create_client
+      @client.handshake
+    }
 
     describe "in the default state" do
       it "broadcasts a down notification" do

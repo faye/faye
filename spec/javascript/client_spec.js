@@ -43,13 +43,6 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   }})
 
   describe("initialize", function() { with(this) {
-    it("creates a transport the server must support", function() { with(this) {
-      expect(Faye.Transport, "get").given(instanceOf(Faye.Client),
-                                          ["long-polling", "callback-polling", "in-process"])
-                                   .yielding([transport])
-      new Faye.Client("http://localhost/")
-    }})
-
     it("puts the client in the UNCONNECTED state", function() { with(this) {
       stub(Faye.Transport, "get")
       var client = new Faye.Client("http://localhost/")
@@ -60,7 +53,15 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   describe("handshake", function() { with(this) {
     before(function() { this.createClient() })
 
-    it("sends a handshake message to the server", function() { with(this) {
+   it("creates a transport the server must support", function() { with(this) {
+      expect(Faye.Transport, "get").given(instanceOf(Faye.Client),
+                                          ["long-polling", "callback-polling", "in-process"],
+                                          [])
+                                   .yielding([transport])
+      client.handshake()
+    }})
+
+   it("sends a handshake message to the server", function() { with(this) {
       expect(transport, "send").given({
         channel:  "/meta/handshake",
         version:  "1.0",
@@ -124,7 +125,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("selects a new transport based on what the server supports", function() { with(this) {
-        expect(Faye.Transport, "get").given(instanceOf(Faye.Client), ["long-polling", "websocket"])
+        expect(Faye.Transport, "get").given(instanceOf(Faye.Client), ["long-polling", "websocket"], [])
                                      .yielding([transport])
         client.handshake()
       }})
@@ -133,7 +134,9 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         before(function() { this.client.disable('websocket') })
 
         it("selects a new transport, excluding websocket", function() { with(this) {
-          expect(Faye.Transport, "get").given(instanceOf(Faye.Client), ["long-polling"])
+          expect(Faye.Transport, "get").given(instanceOf(Faye.Client),
+                                              ["long-polling", "websocket"],
+                                              ["websocket"])
                                        .yielding([transport])
           client.handshake()
         }})
@@ -678,7 +681,10 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   }})
 
   describe("network notifications", function() { with(this) {
-    before(function() { this.createClient() })
+    before(function() { with(this) {
+      createClient()
+      client.handshake()
+    }})
 
     describe("in the default state", function() { with(this) {
       it("broadcasts a down notification", function() { with(this) {

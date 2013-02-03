@@ -72,13 +72,17 @@ module Faye
     class << self
       attr_accessor :connection_type
 
-      def get(client, connection_types = nil, &callback)
+      def get(client, allowed, disabled, &callback)
         endpoint = client.endpoint
-        connection_types ||= supported_connection_types
 
         select = lambda do |(conn_type, klass), resume|
           conn_endpoint = client.endpoints[conn_type] || endpoint
-          unless connection_types.include?(conn_type)
+
+          if disabled.include?(conn_type)
+            next resume.call
+          end
+
+          unless allowed.include?(conn_type)
             klass.usable?(client, conn_endpoint) { |u| }
             next resume.call
           end
@@ -100,10 +104,6 @@ module Faye
       def register(type, klass)
         @transports << [type, klass]
         klass.connection_type = type
-      end
-
-      def supported_connection_types
-        @transports.map { |t| t.first }
       end
     end
 

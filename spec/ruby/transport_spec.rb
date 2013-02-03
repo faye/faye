@@ -17,7 +17,7 @@ describe Faye::Transport do
 
     def get_transport(connection_types)
       transport = nil
-      Faye::Transport.get(client, connection_types) { |t| transport = t }
+      Faye::Transport.get(client, connection_types, []) { |t| transport = t }
       transport
     end
 
