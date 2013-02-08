@@ -36,10 +36,10 @@ Faye.StaticServer = Faye.Class({
     var type = /\.js$/.test(pathname) ? 'TYPE_SCRIPT' : 'TYPE_JSON',
         ims  = request.headers['if-modified-since'];
 
-    headers = {
+    var headers = {
       'ETag':          cache.digest,
       'Last-Modified': cache.mtime.toGMTString()
-    }
+    };
 
     if (request.headers['if-none-match'] === cache.digest) {
       response.writeHead(304, headers);
