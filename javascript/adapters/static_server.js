@@ -15,14 +15,14 @@ Faye.StaticServer = Faye.Class({
   },
 
   call: function(request, response) {
-    var pathname = url.parse(request.url, true).pathname;
-    pathname = path.basename(pathname);
-    pathname = this._pathMap[pathname] || pathname;
+    var pathname = url.parse(request.url, true).pathname,
+        filename = path.basename(pathname);
 
-    this._index[pathname] = this._index[pathname] || {};
+    filename = this._pathMap[filename] || filename;
+    this._index[filename] = this._index[filename] || {};
 
-    var cache    = this._index[pathname],
-        fullpath = path.join(this._directory, pathname);
+    var cache    = this._index[filename],
+        fullpath = path.join(this._directory, filename);
 
     try {
       cache.content = cache.content || fs.readFileSync(fullpath);

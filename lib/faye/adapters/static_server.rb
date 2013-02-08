@@ -17,12 +17,11 @@ module Faye
     end
 
     def call(env)
-      pathname = env['PATH_INFO']
-      pathname = File.basename(pathname)
-      pathname = @path_map[pathname] || pathname
+      filename = File.basename(env['PATH_INFO'])
+      filename = @path_map[filename] || filename
 
-      cache = @index[pathname] ||= {}
-      fullpath = File.join(@directory, pathname)
+      cache = @index[filename] ||= {}
+      fullpath = File.join(@directory, filename)
 
       begin
         cache[:content] ||= File.read(fullpath)
