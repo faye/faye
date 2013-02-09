@@ -1,18 +1,6 @@
-var Faye = (typeof Faye === 'object') ? Faye : {};
-if (typeof window !== 'undefined') window.Faye = Faye;
+'use strict';
 
-Faye.extend = function(dest, source, overwrite) {
-  if (!source) return dest;
-  for (var key in source) {
-    if (!source.hasOwnProperty(key)) continue;
-    if (dest.hasOwnProperty(key) && overwrite === false) continue;
-    if (dest[key] !== source[key])
-      dest[key] = source[key];
-  }
-  return dest;
-};
-
-Faye.extend(Faye, {
+var Faye = {
   VERSION:          '<%= Faye::VERSION %>',
 
   BAYEUX_VERSION:   '<%= Faye::BAYEUX_VERSION %>',
@@ -22,7 +10,18 @@ Faye.extend(Faye, {
 
   MANDATORY_CONNECTION_TYPES: ['long-polling', 'callback-polling', 'in-process'],
 
-  ENV: (function() { return this })(),
+  ENV: (typeof global === 'undefined') ? window : global,
+
+  extend: function(dest, source, overwrite) {
+    if (!source) return dest;
+    for (var key in source) {
+      if (!source.hasOwnProperty(key)) continue;
+      if (dest.hasOwnProperty(key) && overwrite === false) continue;
+      if (dest[key] !== source[key])
+        dest[key] = source[key];
+    }
+    return dest;
+  },
 
   random: function(bitlength) {
     bitlength = bitlength || this.ID_LENGTH;
@@ -165,5 +164,5 @@ Faye.extend(Faye, {
     return pad(year) + '-' + pad(month) + '-' + pad(day) + ' ' +
            pad(hour) + ':' + pad(minute) + ':' + pad(second);
   }
-});
+};
 
