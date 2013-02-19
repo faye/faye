@@ -53,7 +53,7 @@ Faye.Server = Faye.Class({
         (function(index) {
           self.pipeThroughExtensions('outgoing', replies[index], function(message) {
             replies[index] = message;
-            extended  += 1;
+            extended += 1;
             if (extended === expected) gatherReplies(replies);
           });
         })(i);
