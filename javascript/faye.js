@@ -166,3 +166,6 @@ var Faye = {
   }
 };
 
+if (typeof window !== 'undefined')
+  window.Faye = Faye;
+
