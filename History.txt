@@ -54,7 +54,6 @@
 
 
 === 0.8.2 / 2012-04-12
-TestSwarm build: http://swarm.jcoglan.com/job/125/
 
 * Fix replacement of null with {} in copyObject()
 * Make EventSource transport trigger transport:up/down events
@@ -64,7 +63,6 @@ TestSwarm build: http://swarm.jcoglan.com/job/125/
 
 
 === 0.8.1 / 2012-03-15
-TestSwarm build: http://swarm.jcoglan.com/job/124/
 
 * Make Publisher#trigger safe for event listeners that modify the listener list
 * Make Server#subscribe return a response if the incoming message has an error
@@ -76,7 +74,6 @@ TestSwarm build: http://swarm.jcoglan.com/job/124/
 
 
 === 0.8.0 / 2012-02-26
-TestSwarm build: http://swarm.jcoglan.com/job/123/
 
 * Extract the Redis engine into a separate library, faye-redis
 * Stabilize and document the Engine API so others can write backends
@@ -99,7 +96,6 @@ TestSwarm build: http://swarm.jcoglan.com/job/123/
 
 
 === 0.7.0 / 2011-11-22
-TestSwarm build: http://swarm.jcoglan.com/job/107/
 
 * Provide an event API for monitoring engine events on the server side
 * Implement server-side WebSocket connections for improved latency
@@ -111,7 +107,6 @@ TestSwarm build: http://swarm.jcoglan.com/job/107/
 
 
 === 0.6.7 / 2011-10-20
-TestSwarm build: http://swarm.jcoglan.com/job/101/
 
 * Cache client script in memory and add ETag and Last-Modified headers
 * Fix bug in Node Redis engine where 'undefined' was used if no namespace given
@@ -131,7 +126,6 @@ TestSwarm build: http://swarm.jcoglan.com/job/101/
 
 
 === 0.6.5 / 2011-08-29
-TestSwarm build: http://swarm.jcoglan.com/job/99/
 
 * Fix UTF-8 encoding bugs in draft-75/76 and protocol-8 WebSocket parsers
 * Switch to streaming parser for WebSocket protocol-8
@@ -140,7 +134,6 @@ TestSwarm build: http://swarm.jcoglan.com/job/99/
 
 
 === 0.6.4 / 2011-08-18
-TestSwarm build: http://swarm.jcoglan.com/job/96/
 
 * Support WebSocket protocol used by Chrome 14 and Firefox 6
 * Fix handling of multibyte characters in WebSocket messages on Node
@@ -148,7 +141,6 @@ TestSwarm build: http://swarm.jcoglan.com/job/96/
 
 
 === 0.6.3 / 2011-07-10
-TestSwarm build: http://swarm.jcoglan.com/job/69/
 
 * Use sequential message IDs to reduce memory usage on the client side
 * Only send advice with handshake and connect responses
@@ -170,14 +162,12 @@ TestSwarm build: http://swarm.jcoglan.com/job/69/
 
 
 === 0.6.1 / 2011-06-06
-TestSwarm build: http://swarm.jcoglan.com/job/37/
 
 * Fix cross-origin-long-polling support in RackAdapter
 * Plug some potential memory leaks in Memory engine
 
 
 === 0.6.0 / 2011-05-21
-TestSwarm build: http://swarm.jcoglan.com/job/27/
 
 * Extract core logic into the Engine class to support swappable backends
 * Introduce a Redis-backed engine to support clustered web front-ends
