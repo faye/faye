@@ -66,11 +66,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
       self.setDeferredStatus('deferred');
       self._state = self.UNCONNECTED;
 
-      delete self._socket.onopen;
-      delete self._socket.onmessage;
-      delete self._socket.onclose;
-      delete self._socket.onerror;
-
+      self._socket.onopen = self._socket.onmessage = self._socket.onclose = self._socket.onerror = null;
       self._socket.close();
       delete self._socket;
 
