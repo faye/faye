@@ -97,7 +97,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     klass.prototype.connectionType = type;
   },
 
-  _transports: [],
+  _transports: []
 });
 
 Faye.extend(Faye.Transport.prototype, Faye.Logging);
