@@ -1,14 +1,15 @@
-=== 0.8.9 / 2013-02-19
+=== 0.8.9 / 2013-02-20
 
 * Specify ciphers for SSL on Node to mitigate the BEAST attack
+* Fix race condition when processing outgoing extensions in the Node server
 * Fix problem loading the client script when using {mount: '/'}
 * Clean up connection objects when a WebSocket is re-used with a new clientId
 * All JavaScript code now runs in strict mode
 * Select transport on handshake, instead of on client creation to allow time for disable() calls
 * Do not speculatively open WebSocket/EventSource connections if they are disabled
-* Fix a race condition when processing outgoing extensions in the Node server
-* Fix problem with caching of EventSource connections with stale clientIds
 * Gracefully handle WebSocket messages with no data on the client side
+* Close and reconnect WebSocket when onerror is fired, not just when onclose is fired
+* Fix problem with caching of EventSource connections with stale clientIds
 * Don't parse query strings when checking if a URL is same-origin or not
 
 
