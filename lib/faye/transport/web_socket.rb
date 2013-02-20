@@ -65,10 +65,13 @@ module Faye
         receive(messages)
       end
 
-      @socket.onclose = lambda do |*args|
+      @socket.onclose = @socket.onerror = lambda do |*args|
         was_connected = (@state == CONNECTED)
         set_deferred_status(:deferred)
         @state = UNCONNECTED
+
+        @socket.onopen = @socket.onmessage = @socket.onclose = @socket.onerror = nil
+        @socket.close
         @socket = nil
 
         next resend if was_connected

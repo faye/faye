@@ -61,10 +61,17 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
       self.receive(messages);
     };
 
-    this._socket.onclose = function() {
+    this._socket.onclose = this._socket.onerror = function() {
       var wasConnected = (self._state === self.CONNECTED);
       self.setDeferredStatus('deferred');
       self._state = self.UNCONNECTED;
+
+      delete self._socket.onopen;
+      delete self._socket.onmessage;
+      delete self._socket.onclose;
+      delete self._socket.onerror;
+
+      self._socket.close();
       delete self._socket;
 
       if (wasConnected) return self.resend();
