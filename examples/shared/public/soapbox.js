@@ -22,6 +22,14 @@ Soapbox = {
       self.launch();
       return false;
     });
+
+    this._bayeux.addExtension({
+      outgoing: function(message, callback) {
+        var type = message.connectionType;
+        if (type) $('#transport').html('(' + type + ')');
+        callback(message);
+      }
+    });
   },
 
   /**
