@@ -83,7 +83,7 @@ Faye.Engine.Proxy = Faye.Class({
 
   flush: function(clientId) {
     if (!clientId) return;
-    this.debug('Flushing connection queue for ?', clientId);
+    this.debug('Flushing connection for ?', clientId);
     var conn = this.connection(clientId, false);
     if (conn) conn.flush(true);
   },
