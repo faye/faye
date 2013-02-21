@@ -131,6 +131,9 @@ Faye.NodeAdapter = Faye.Class({
         requestMethod = request.method,
         self          = this;
 
+    request.addListener('error', function(error) { self._returnError(response, error) });
+    response.addListener('error', function(error) { self._returnError(null, error) });
+
     if (this._static.test(requestUrl.pathname))
       return this._static.call(request, response);
 
@@ -155,7 +158,7 @@ Faye.NodeAdapter = Faye.Class({
         self._callWithParams(request, response, params);
       });
 
-    this._returnError(response);
+    this._returnError(response, {message: 'Unrecognized request type'});
   },
 
   handleUpgrade: function(request, socket, head) {
@@ -203,10 +206,8 @@ Faye.NodeAdapter = Faye.Class({
   },
 
   _callWithParams: function(request, response, params) {
-    if (!params.message) {
-      this.error('Received request with no message: ?', this._formatRequest(request));
-      return this._returnError(response);
-    }
+    if (!params.message)
+      return this._returnError(response, {message: 'Received request with no message: ' + this._formatRequest(request)});
 
     try {
       this.debug('Received message via HTTP ' + request.method + ': ?', params.message);
@@ -230,15 +231,12 @@ Faye.NodeAdapter = Faye.Class({
         headers['Connection'] = 'close';
 
         this.debug('HTTP response: ?', body);
-        try {
-          response.writeHead(200, headers);
-          response.write(body);
-          response.end();
-        } catch (e) {}
+        response.writeHead(200, headers);
+        response.write(body);
+        response.end();
       }, this);
-    } catch (e) {
-      this.error(e.message + '\nBacktrace:\n' + e.stack);
-      this._returnError(response);
+    } catch (error) {
+      this._returnError(response, error);
     }
   },
 
@@ -262,19 +260,21 @@ Faye.NodeAdapter = Faye.Class({
       'Access-Control-Allow-Methods':     'POST, GET, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers':     'Accept, Content-Type, Pragma, X-Requested-With'
     };
-    try {
-      response.writeHead(200, headers);
-      response.write('');
-      response.end();
-    } catch (e) {}
+    response.writeHead(200, headers);
+    response.write('');
+    response.end();
   },
 
-  _returnError: function(response) {
-    try {
-      response.writeHead(400, this.TYPE_TEXT);
-      response.write('Bad request');
-      response.end();
-    } catch (e) {}
+  _returnError: function(response, error) {
+    var message = error.message;
+    if (error.stack) message += '\nBacktrace:\n' + error.stack;
+    this.error(message);
+
+    if (!response) return;
+
+    response.writeHead(400, this.TYPE_TEXT);
+    response.write('Bad request');
+    response.end();
   }
 });
 
