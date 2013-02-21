@@ -23,9 +23,11 @@ var handleRequest = function(request, response) {
 
   fs.readFile(PUBLIC_DIR + path, function(err, content) {
     var status = err ? 404 : 200;
-    response.writeHead(status, {'Content-Type': 'text/html'});
-    response.write(content || 'Not found');
-    response.end();
+    try {
+      response.writeHead(status, {'Content-Type': 'text/html'});
+      response.write(content || 'Not found');
+      response.end();
+    } catch (e) {}
   });
 };
 

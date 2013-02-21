@@ -29,8 +29,11 @@ Faye.StaticServer = Faye.Class({
       cache.digest  = cache.digest  || crypto.createHash('sha1').update(cache.content).digest('hex');
       cache.mtime   = cache.mtime   || fs.statSync(fullpath).mtime;
     } catch (e) {
-      response.writeHead(404, {});
-      return response.end();
+      try {
+        response.writeHead(404, {});
+        response.end();
+      } catch (e) {}
+      return;
     }
 
     var type = /\.js$/.test(pathname) ? 'TYPE_SCRIPT' : 'TYPE_JSON',
@@ -41,21 +44,23 @@ Faye.StaticServer = Faye.Class({
       'Last-Modified': cache.mtime.toGMTString()
     };
 
-    if (request.headers['if-none-match'] === cache.digest) {
-      response.writeHead(304, headers);
-      response.end();
-    }
-    else if (ims && cache.mtime <= new Date(ims)) {
-      response.writeHead(304, headers);
-      response.end();
-    }
-    else {
-      headers['Content-Length'] = cache.content.length;
-      Faye.extend(headers, Faye.NodeAdapter.prototype[type]);
-      response.writeHead(200, headers);
-      response.write(cache.content);
-      response.end();
-    }
+    try {
+      if (request.headers['if-none-match'] === cache.digest) {
+        response.writeHead(304, headers);
+        response.end();
+      }
+      else if (ims && cache.mtime <= new Date(ims)) {
+        response.writeHead(304, headers);
+        response.end();
+      }
+      else {
+        headers['Content-Length'] = cache.content.length;
+        Faye.extend(headers, Faye.NodeAdapter.prototype[type]);
+        response.writeHead(200, headers);
+        response.write(cache.content);
+        response.end();
+      }
+    } catch (e) {}
   }
 });
 

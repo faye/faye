@@ -230,9 +230,11 @@ Faye.NodeAdapter = Faye.Class({
         headers['Connection'] = 'close';
 
         this.debug('HTTP response: ?', body);
-        response.writeHead(200, headers);
-        response.write(body);
-        response.end();
+        try {
+          response.writeHead(200, headers);
+          response.write(body);
+          response.end();
+        } catch (e) {}
       }, this);
     } catch (e) {
       this.error(e.message + '\nBacktrace:\n' + e.stack);
@@ -260,15 +262,19 @@ Faye.NodeAdapter = Faye.Class({
       'Access-Control-Allow-Methods':     'POST, GET, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers':     'Accept, Content-Type, Pragma, X-Requested-With'
     };
-    response.writeHead(200, headers);
-    response.write('');
-    response.end();
+    try {
+      response.writeHead(200, headers);
+      response.write('');
+      response.end();
+    } catch (e) {}
   },
 
   _returnError: function(response) {
-    response.writeHead(400, this.TYPE_TEXT);
-    response.write('Bad request');
-    response.end();
+    try {
+      response.writeHead(400, this.TYPE_TEXT);
+      response.write('Bad request');
+      response.end();
+    } catch (e) {}
   }
 });
 
