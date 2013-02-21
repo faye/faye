@@ -1,6 +1,7 @@
 === 0.8.9 / 2013-02-20
 
 * Specify ciphers for SSL on Node to mitigate the BEAST attack
+* Mitigate increased risk of socket hang-up errors in Node v0.8.20
 * Fix race condition when processing outgoing extensions in the Node server
 * Fix problem loading the client script when using {mount: '/'}
 * Clean up connection objects when a WebSocket is re-used with a new clientId
