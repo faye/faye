@@ -41,7 +41,10 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
   },
 
   close: function() {
+    if (!this._socket) return;
+    this._socket.onerror = null;
     this._socket.close();
+    delete this._socket;
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {

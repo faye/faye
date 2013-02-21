@@ -1,9 +1,9 @@
 module Faye
 
   class Transport::WebSocket < Transport
-    UNCONNECTED       = 1
-    CONNECTING        = 2
-    CONNECTED         = 3
+    UNCONNECTED = 1
+    CONNECTING  = 2
+    CONNECTED   = 3
 
     include EventMachine::Deferrable
 
@@ -35,14 +35,15 @@ module Faye
     end
 
     def close
-      return if @closed
-      @closed = true
-      @socket.close if @socket
+      return unless @socket
+      @socket.onclose = @socket.onerror = nil
+      @socket.close
+      @socket = nil
+      set_deferred_status(:deferred)
+      @state = UNCONNECTED
     end
 
     def connect
-      return if @closed
-
       @state ||= UNCONNECTED
       return unless @state == UNCONNECTED
 
@@ -70,9 +71,7 @@ module Faye
         set_deferred_status(:deferred)
         @state = UNCONNECTED
 
-        @socket.onopen = @socket.onmessage = @socket.onclose = @socket.onerror = nil
-        @socket.close
-        @socket = nil
+        close
 
         next resend if was_connected
         next set_deferred_status(:failed) unless @ever_connected
