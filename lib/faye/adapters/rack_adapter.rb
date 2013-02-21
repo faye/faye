@@ -194,7 +194,7 @@ module Faye
       string = "curl -X #{request.request_method.upcase}"
       string << " '#{request.url}'"
       if request.post?
-        string << " -H 'Content-Type: #{request.env['CONTENT_TYPE']}'" 
+        string << " -H 'Content-Type: #{request.env['CONTENT_TYPE']}'"
         string << " -d '#{request.body.read}'"
       end
       string

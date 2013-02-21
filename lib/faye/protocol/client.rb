@@ -69,7 +69,7 @@ module Faye
     # MAY include:   * minimumVersion
     #                * ext
     #                * id
-    # 
+    #
     # Success Response                             Failed Response
     # MUST include:  * channel                     MUST include:  * channel
     #                * version                                    * successful

@@ -21,10 +21,10 @@ module Faye
     SUBSCRIBE   = '/meta/subscribe'
     UNSUBSCRIBE = '/meta/unsubscribe'
     DISCONNECT  = '/meta/disconnect'
-    
+
     META        = 'meta'
     SERVICE     = 'service'
-    
+
     class << self
       def expand(name)
         segments = parse(name)

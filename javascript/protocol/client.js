@@ -73,7 +73,7 @@ Faye.Client = Faye.Class({
   // MAY include:   * minimumVersion
   //                * ext
   //                * id
-  // 
+  //
   // Success Response                             Failed Response
   // MUST include:  * channel                     MUST include:  * channel
   //                * version                                    * successful

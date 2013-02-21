@@ -139,5 +139,5 @@ describe "server handshake" do
         end
       end
     end
-  end  
+  end
 end

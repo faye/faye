@@ -105,7 +105,7 @@ Faye.Server = Faye.Class({
     var method   = Faye.Channel.parse(message.channel)[1],
         clientId = message.clientId,
         response;
-    
+
     if (Faye.indexOf(this.META_METHODS, method) < 0) {
       response = this._makeResponse(message);
       response.error = Faye.Error.channelForbidden(message.channel);

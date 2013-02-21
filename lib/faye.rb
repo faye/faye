@@ -14,7 +14,7 @@ require 'yajl'
 
 module Faye
   VERSION = '0.8.8'
-  
+
   ROOT = File.expand_path(File.dirname(__FILE__))
 
   autoload :Publisher,    File.join(ROOT, 'faye', 'mixins', 'publisher')

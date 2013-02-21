@@ -7,7 +7,7 @@ module Faye
     include Extensible
 
     META_METHODS = %w[handshake connect disconnect subscribe unsubscribe]
-    
+
     attr_reader :engine
 
     def initialize(options = {})
@@ -213,7 +213,7 @@ module Faye
     # MAY contain   * ext
     #               * id
     def disconnect(message, local = false, &callback)
-      response   = make_response(message)      
+      response   = make_response(message)
       client_id  = message['clientId']
 
       @engine.client_exists(client_id) do |exists|

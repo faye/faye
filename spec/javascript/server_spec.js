@@ -48,7 +48,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
         }
       ], response)
     }})
-    
+
     it("routes single messages to appropriate handlers", function() { with(this) {
       expect(server, "handshake").given(handshake, false).yielding([{}])
       server.process(handshake, false, function() {})
