@@ -14,6 +14,7 @@ module Faye
       @options    = options || {}
       engine_opts = @options[:engine] || {}
       engine_opts[:timeout] = @options[:timeout]
+      engine_opts[:interval] = @options[:interval]
       @engine     = Faye::Engine.get(engine_opts)
 
       info 'Created new server: ?', @options
