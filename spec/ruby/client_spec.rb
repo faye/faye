@@ -60,7 +60,7 @@ describe Faye::Client do
       Faye::Transport.should_receive(:get).with(instance_of(Faye::Client),
                                                 ["long-polling", "callback-polling", "in-process"],
                                                 []).
-                                           and_return(transport)
+                                           and_yield(transport)
       @client.handshake
     end
 
