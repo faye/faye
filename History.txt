@@ -1,4 +1,4 @@
-=== 0.8.9 / 2013-02-20
+=== 0.8.9 / 2013-02-26
 
 * Specify ciphers for SSL on Node to mitigate the BEAST attack
 * Mitigate increased risk of socket hang-up errors in Node v0.8.20

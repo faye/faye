@@ -43,10 +43,11 @@
 
     var scheme = window.location.protocol,
         host   = location.hostname,
-        port   = location.port,
+        port   = 9292, // location.port,
         path   = '/bayeux';
 
     Bayeux = new Faye.Client(scheme + '//' + host + (port ? ':' + port : '') + path);
+    Bayeux.disable('cross-origin-long-polling');
     Soapbox.init(Bayeux);
   </script>
 
