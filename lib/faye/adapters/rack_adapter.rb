@@ -48,10 +48,10 @@ module Faye
       @client ||= Client.new(@server)
     end
 
-    def listen(port, ssl_options = nil)
+    def listen(port, ssl_options = nil, handler_options = {})
       Faye::WebSocket.load_adapter('thin')
       handler = Rack::Handler.get('thin')
-      handler.run(self, :Port => port) do |s|
+      handler.run(self, handler_options.merge(:Port => port)) do |s|
         if ssl_options
           s.ssl = true
           s.ssl_options = {
