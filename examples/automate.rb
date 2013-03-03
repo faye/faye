@@ -4,24 +4,8 @@
 require 'capybara/dsl'
 require 'terminus'
 Capybara.current_driver = :terminus
+Capybara.app_host = 'http://localhost:9292'
 extend Capybara::DSL
-
-#================================================================
-# Load the example application
-
-dir = ::File.expand_path(::File.dirname(__FILE__))
-$LOAD_PATH.unshift(dir + '/../lib')
-require 'faye'
-require dir + '/ruby/app'
-
-#================================================================
-# Build the application stack with Faye in front of our app
-
-application = Rack::Builder.new {
-  use Faye::RackAdapter, :mount => '/bayeux', :timeout => 20
-  run Sinatra::Application
-}
-Capybara.app = application.to_app
 
 #================================================================
 # Acquire some browsers and log into each with a username
