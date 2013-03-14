@@ -10,7 +10,7 @@ var Faye = {
 
   MANDATORY_CONNECTION_TYPES: ['long-polling', 'callback-polling', 'in-process'],
 
-  ENV: (typeof global === 'undefined') ? window : global,
+  ENV: (typeof window !== 'undefined') ? window : global,
 
   extend: function(dest, source, overwrite) {
     if (!source) return dest;
