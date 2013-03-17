@@ -90,6 +90,7 @@ Faye.Client = Faye.Class({
     if (this._state !== this.UNCONNECTED) return;
 
     this._state = this.CONNECTING;
+    this.trigger('state');
     var self = this;
 
     this.info('Initiating handshake with ?', this.endpoint);
@@ -105,6 +106,7 @@ Faye.Client = Faye.Class({
       if (response.successful) {
         this._state     = this.CONNECTED;
         this._clientId  = response.clientId;
+        this.trigger('state');
 
         this._selectTransport(response.supportedConnectionTypes);
 
@@ -117,6 +119,7 @@ Faye.Client = Faye.Class({
         this.info('Handshake unsuccessful');
         Faye.ENV.setTimeout(function() { self.handshake(callback, context) }, this._advice.interval);
         this._state = this.UNCONNECTED;
+        this.trigger('state');
       }
     }, this);
   },
@@ -167,6 +170,7 @@ Faye.Client = Faye.Class({
   disconnect: function() {
     if (this._state !== this.CONNECTED) return;
     this._state = this.DISCONNECTED;
+    this.trigger('state');
 
     this.info('Disconnecting ?', this._clientId);
 
