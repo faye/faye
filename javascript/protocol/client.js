@@ -364,6 +364,7 @@ Faye.Client = Faye.Class({
       this._state    = this.UNCONNECTED;
       this._clientId = null;
       this._cycleConnection();
+      this.trigger('state');
     }
   },
 
