@@ -363,8 +363,8 @@ Faye.Client = Faye.Class({
     if (this._advice.reconnect === this.HANDSHAKE && this._state !== this.DISCONNECTED) {
       this._state    = this.UNCONNECTED;
       this._clientId = null;
-      this._cycleConnection();
       this.trigger('state');
+      this._cycleConnection();
     }
   },
 
