@@ -69,6 +69,11 @@ module Faye
         @cookies.set_cookie(@endpoint, cookie)
       end
     end
+
+    def batching_limit_exceeded?(message)
+      return false if @batch_limit.nil?
+      Faye.to_json(message).bytesize >= @batch_limit
+    end
   end
 
   Transport.register 'long-polling', Transport::Http
