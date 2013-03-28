@@ -5,7 +5,7 @@ module Faye
     include Publisher
     include Timeouts
 
-    attr_accessor :cookies, :endpoint, :headers
+    attr_accessor :cookies, :endpoint, :headers, :batch_limit
 
     def initialize(client, endpoint)
       @client   = client
@@ -30,6 +30,13 @@ module Faye
       return request([message], timeout) unless batching?
 
       @outbox << message
+
+      if batching_limit_exceeded?(@outbox)
+        @outbox.pop
+        flush
+        @outbox << message
+      end
+
       @timeout = timeout
 
       if message['channel'] == Channel::HANDSHAKE
@@ -68,6 +75,12 @@ module Faye
     end
 
     @transports = []
+
+    private
+
+    def batching_limit_exceeded?(message)
+      false
+    end
 
     class << self
       attr_accessor :connection_type

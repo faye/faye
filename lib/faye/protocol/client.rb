@@ -53,6 +53,10 @@ module Faye
       @headers[name.to_s] = value.to_s
     end
 
+    def batch_limit=(limit)
+      @batch_limit = limit
+    end
+
     def state
       case @state
       when UNCONNECTED  then :UNCONNECTED
@@ -312,6 +316,7 @@ module Faye
         @transport = transport
         @transport.cookies = @cookies
         @transport.headers = @headers
+        @transport.batch_limit = @batch_limit unless @batch_limit.nil?
 
         transport.bind :down do
           if @transport_up.nil? or @transport_up
