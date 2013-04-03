@@ -375,9 +375,10 @@
     exposed to any script running in the browser and you must not let third
     parties discover how to create real-looking tokens.
 
-    So, when implementing your @/auth/token@ endpoint, an easy solution to this
-    might be to have the server determine the user ID from the session, then
-    sign the ID using a secret key stored on the server. For example:
+    So, when implementing your code to generate @USER_TOKEN@, an easy solution
+    might be might be to have the server determine the user ID from the
+    session, then sign the ID using a secret key stored on the server. For
+    example:
 
     <pre class="prettyprint">var crypto = require('crypto'),
         hmac   = crypto.createHmac('sha256', 'your secret key'),
@@ -399,9 +400,9 @@
     in the message. If it does, you know the user ID is genuine and proceed with
     your access control.
 
-    You could also have the @/auth/token@ endpoint accept the name of the
-    channel the client wants to subscribe to, and make it sign a combination of
-    the user ID and channel name if the user is allowed to subscribe:
+    You could also have the token generator accept the name of the channel the
+    client wants to subscribe to, and make it sign a combination of the user ID
+    and channel name if the user is allowed to subscribe:
 
     <pre class="prettyprint">var crypto  = require('crypto'),
         userId  = session.userId,
