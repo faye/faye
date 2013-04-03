@@ -7,6 +7,10 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
 
     xhr.open('POST', this.endpoint, true);
     if (xhr.setRequestHeader) xhr.setRequestHeader('Pragma', 'no-cache');
+    if (xhr.setRequestHeader) for (var key in this.headers) {
+      if (!this.headers.hasOwnProperty(key)) continue;
+      xhr.setRequestHeader(key, this.headers[key]);
+    }
 
     var cleanUp = function() {
       if (!xhr) return false;
