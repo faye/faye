@@ -6,13 +6,13 @@ Faye.Subscription = Faye.Class({
     this._context     = context;
     this._cancelled = false;
   },
-  
+
   cancel: function() {
     if (this._cancelled) return;
     this._client.unsubscribe(this._channels, this._callback, this._context);
     this._cancelled = true;
   },
-  
+
   unsubscribe: function() {
     this.cancel();
   }

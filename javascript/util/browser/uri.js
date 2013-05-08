@@ -7,65 +7,72 @@ Faye.URI = Faye.extend(Faye.Class({
     }
     return pairs.join('&');
   },
-  
-  isLocal: function() {
-    var host = Faye.URI.parse(Faye.ENV.location.href);
-    
+
+  isSameOrigin: function() {
+    var host = Faye.URI.parse(Faye.ENV.location.href, false);
+
     var external = (host.hostname !== this.hostname) ||
                    (host.port !== this.port) ||
                    (host.protocol !== this.protocol);
-    
+
     return !external;
   },
-  
+
   toURL: function() {
     var query = this.queryString();
-    return this.protocol + this.hostname + ':' + this.port +
-           this.pathname + (query ? '?' + query : '');
+    return this.protocol + '//' + this.hostname + (this.port ? ':' + this.port : '') +
+           this.pathname + (query ? '?' + query : '') + this.hash;
   }
 }), {
   parse: function(url, params) {
     if (typeof url !== 'string') return url;
-    
-    var location = new this();
-    
-    var consume = function(name, pattern) {
+    var uri = new this(), parts;
+
+    var consume = function(name, pattern, infer) {
       url = url.replace(pattern, function(match) {
-        if (match) location[name] = match;
+        uri[name] = match;
         return '';
       });
+      if (uri[name] === undefined)
+        uri[name] = infer ? Faye.ENV.location[name] : '';
     };
-    consume('protocol', /^https?\:\/+/);
-    consume('hostname', /^[^\/\:]+/);
-    consume('port',     /^:[0-9]+/);
-    
-    Faye.extend(location, {
-      protocol:   Faye.ENV.location.protocol + '//',
-      hostname:   Faye.ENV.location.hostname,
-      port:       Faye.ENV.location.port
-    }, false);
-    
-    if (!location.port) location.port = (location.protocol === 'https://') ? '443' : '80';
-    location.port = location.port.replace(/\D/g, '');
-    
-    var parts = url.split('?'),
-        path  = parts.shift(),
-        query = parts.join('?'),
-    
-        pairs = query ? query.split('&') : [],
-        n     = pairs.length,
-        data  = {};
-    
-    while (n--) {
-      parts = pairs[n].split('=');
-      data[decodeURIComponent(parts[0] || '')] = decodeURIComponent(parts[1] || '');
+
+    consume('protocol', /^https?\:/,    true);
+    consume('host',     /^\/\/[^\/]+/,  true);
+
+    if (!/^\//.test(url)) url = Faye.ENV.location.pathname.replace(/[^\/]*$/, '') + url;
+    consume('pathname', /^\/[^\?#]*/);
+    consume('search',   /^\?[^#]*/);
+    consume('hash',     /^#.*/);
+
+    if (/^\/\//.test(uri.host)) {
+      uri.host = uri.host.substr(2);
+      parts = uri.host.split(':');
+      uri.hostname = parts[0];
+      uri.port = parts[1] || '';
+    } else {
+      uri.hostname = Faye.ENV.location.hostname;
+      uri.port = Faye.ENV.location.port;
     }
-    if (typeof params === 'object') Faye.extend(data, params);
-    
-    location.pathname = path;
-    location.params = data;
-    
-    return location;
+
+    if (params === false) {
+      uri.params = {};
+    } else {
+      var query = uri.search.replace(/^\?/, ''),
+          pairs = query ? query.split('&') : [],
+          n     = pairs.length,
+          data  = {};
+
+      while (n--) {
+        parts = pairs[n].split('=');
+        data[decodeURIComponent(parts[0] || '')] = decodeURIComponent(parts[1] || '');
+      }
+      if (typeof params === 'object') Faye.extend(data, params);
+
+      uri.params = data;
+    }
+
+    return uri;
   }
 });
 

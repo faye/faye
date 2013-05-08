@@ -9,6 +9,7 @@ builds:
   min:
     shrink_vars:    true
     private:        true
+    source_map:     src
 
 packages:
 
@@ -29,7 +30,7 @@ packages:
     - protocol/client
     - transport/transport
 
-  faye-node:
+  node/faye-node:
     extends: core
     files:
       - util/set
@@ -37,12 +38,14 @@ packages:
       - engines/connection
       - engines/memory
       - protocol/server
+      - protocol/socket
       - transport/node_local
       - transport/web_socket
       - transport/node_http
       - adapters/node_adapter
+      - adapters/static_server
 
-  faye-browser:
+  browser/faye-browser:
     extends: core
     files:
       - util/browser/event

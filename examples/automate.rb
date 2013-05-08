@@ -48,11 +48,11 @@ end
 BROWSERS.each do |name, sender|
   BROWSERS.each do |at, target|
     next if at == name
-    
+
     Terminus.browser = sender
     fill_in 'message', :with => "@#{at} Hello, world!"
     click_button 'Send'
-    
+
     Terminus.browser = target
     unless page.has_content?("#{name}: @#{at} Hello, world!")
       Terminus.return_to_dock

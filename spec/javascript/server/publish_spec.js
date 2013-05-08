@@ -3,16 +3,16 @@ JS.ENV.Server.PublishSpec = JS.Test.describe("Server publish", function() { with
     this.engine = {}
     stub(Faye.Engine, "get").returns(engine)
     this.server = new Faye.Server()
-    
+
     this.message = {channel: "/some/channel",     data: "publish"}
   }})
-  
+
   describe("publishing a message", function() { with(this) {
     it("tells the engine to publish the message", function() { with(this) {
       expect(engine, "publish").given(message)
       server.process(message, false, function() {})
     }})
-    
+
     it("returns a successful response", function() { with(this) {
       stub(engine, "publish")
       server.process(message, false, function(response) {
@@ -23,17 +23,17 @@ JS.ENV.Server.PublishSpec = JS.Test.describe("Server publish", function() { with
         ], response)
       })
     }})
-    
+
     describe("with an invalid channel", function() { with(this) {
       before(function() { with(this) {
         message.channel = "channel"
       }})
-      
+
       it("does not tell the engine to publish the message", function() { with(this) {
         expect(engine, "publish").exactly(0)
         server.process(message, false, function() {})
       }})
-      
+
       it("returns an unsuccessful response", function() { with(this) {
         stub(engine, "publish")
         server.process(message, false, function(response) {
@@ -46,17 +46,17 @@ JS.ENV.Server.PublishSpec = JS.Test.describe("Server publish", function() { with
         })
       }})
     }})
-    
+
     describe("with an error", function() { with(this) {
       before(function() { with(this) {
         message.error = "invalid"
       }})
-      
+
       it("does not tell the engine to publish the message", function() { with(this) {
         expect(engine, "publish").exactly(0)
         server.process(message, false, function() {})
       }})
-      
+
       it("returns an unsuccessful response", function() { with(this) {
         stub(engine, "publish")
         server.process(message, false, function(response) {

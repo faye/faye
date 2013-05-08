@@ -1,0 +1,35 @@
+.content
+  = partial 'browser_navigation'
+
+  :textile
+    h4. Network errors
+
+    As explained in the "architecture documentation":/architecture.html, the
+    Faye client does not talk to the network directly but uses a 'transport'
+    object based on WebSocket, XMLHttpRequest, and other network APIs.
+
+    The client exposes an abstract interface for checking the status of
+    whichever connection type is in use, which is useful for giving the user
+    feedback about the connection, or making your application deal with being
+    offline. You can listen to the @transport:up@ and @transport:down@ events to
+    be notified that the client is online or offline.
+
+    <pre class="prettyprint">client.bind('transport:down', function() {
+      // the client is offline
+    });
+
+    client.bind('transport:up', function() {
+      // the client is online
+    });</pre>
+
+    Note that these events _do not_ reflect the status of the client's session,
+    or whether there is literally a network connection active. For example, you
+    are not told that the transport is down just because a long-polling request
+    just completed. The transport is only considered down if a request or
+    WebSocket connection explicitly fails, or times out, indicating the server
+    is unreachable.
+
+    Also remember that Faye deals with buffering and re-sending messages for you,
+    so you don't need to deal with that. These events are simply for providing
+    feedback on the health of the connection.
+

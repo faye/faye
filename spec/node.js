@@ -1,5 +1,5 @@
 require('jsclass')
-Faye = require('../build/faye-node')
+Faye = require('../build/node/faye-node')
 Faye.logger = function() {}
 
 JS.Packages(function() { with(this) {
@@ -29,12 +29,13 @@ JS.require('Faye', 'JS.Test', 'JS.Range', function() {
       return function(actual) { testcase.assertEqual(expected, actual) }
     }
   })
-  
+
   JS.ENV.Engine = {}
   JS.ENV.Server = {}
-  
+
   JS.require( 'FayeSpec',
               'GrammarSpec',
+              'PublisherSpec',
               'ChannelSpec',
               'EngineSpec',
               'Engine.MemorySpec',

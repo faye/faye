@@ -7,51 +7,51 @@
   <link rel="stylesheet" href="/style.css" type="text/css" media="screen">
   <script src="/mootools.js" type="text/javascript"></script>
   <script src="/jquery.js" type="text/javascript"></script>
-  <script src="/bayeux.js" type="text/javascript"></script>
+  <script src="/bayeux/client.js" type="text/javascript"></script>
   <script src="/soapbox.js" type="text/javascript"></script>
 </head>
 <body>
 <div class="container">
-  
+
   <h1><em>Soapbox</em> | a Twitter-style chat app</h1>
-  
+
   <form id="enterUsername">
     <label for="username">Pick a username</label>
     <input type="text" name="username" id="username">
     <input type="submit" value="Go">
   </form>
-  
+
   <div id="app">
     <form id="addFollowee">
       <label for="followee">Follow</label>
       <input type="text" name="followee" id="followee">
       <input type="submit" value="Follow">
     </form>
-    
+
     <form id="postMessage">
-      <label for="message">Post a message</label><br>
+      <label for="message">Post a message</label> <span id="transport"></span><br>
       <textarea name="message" id="message" rows="3" cols="40"></textarea>
       <input type="submit" value="Send">
     </form>
-    
+
     <ul id="stream">
     </ul>
   </div>
-  
+
   <script type="text/javascript">
     Faye.Logging.logLevel = 'debug';
-    Faye.logger = function(msg) { if (window.console) console.log(msg) };
-    
+
     var scheme = window.location.protocol,
         host   = location.hostname,
-        port   = location.port,
+        port   = 9292, // location.port,
         path   = '/bayeux';
-    
+
     Bayeux = new Faye.Client(scheme + '//' + host + (port ? ':' + port : '') + path);
+    Bayeux.disable('cross-origin-long-polling');
     Soapbox.init(Bayeux);
   </script>
 
-</div>  
+</div>
 </body>
 </html>
 

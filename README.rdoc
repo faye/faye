@@ -35,7 +35,7 @@ should get you up and running:
   npm install
   
   # Build Faye
-  jake
+  bundle exec jake
   
   # Run tests
   bundle exec rspec -c spec/
@@ -51,18 +51,9 @@ should get you up and running:
 
 == To-do
 
-Notification API:
-
-* Notify listeners of network drop-out (may be transport dependent)
 * Provide reflection API for internal stats on channels, subscriptions, message queues
 * (Maybe) build a monitoring GUI into the server
-
-Sugar:
-
 * Add sugar for authentication extensions for protected subscribe + publish
-
-Missing protocol features:
-
 * Provide support for user-defined <tt>/service/*</tt> channels
 * Let local server-side clients listen to <tt>/meta/*</tt> channels
 
@@ -71,7 +62,7 @@ Missing protocol features:
 
 (The MIT License)
 
-Copyright (c) 2009-2012 James Coglan and contributors
+Copyright (c) 2009-2013 James Coglan and contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the 'Software'), to deal in

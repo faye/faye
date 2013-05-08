@@ -300,7 +300,7 @@ description: The Browser Core. Contains Browser initialization, Window and Docum
 
 license: MIT-style license.
 
-requires: 
+requires:
 - /Native
 - /$util
 
@@ -2113,7 +2113,7 @@ description: Contains Element methods for dealing with events. This file also in
 
 license: MIT-style license.
 
-requires: 
+requires:
 - /Element
 - /Event
 
@@ -3263,7 +3263,7 @@ description: Wrapper for embedding SWF movies. Supports External Interface Commu
 
 license: MIT-style license.
 
-credits: 
+credits:
 - Flash detection & Internet Explorer + Flash Player 9 fix inspired by SWFObject.
 
 requires:
@@ -3663,7 +3663,7 @@ description: Formerly Fx.Style, effect to transition any CSS property for an ele
 
 license: MIT-style license.
 
-requires: 
+requires:
 - /Fx.CSS
 
 provides: [Fx.Tween, Element.fade, Element.highlight]

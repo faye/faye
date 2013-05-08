@@ -1,21 +1,21 @@
 .content
   = partial 'ruby_navigation'
-  
+
   :textile
     h4. Setting up
-    
+
     All Faye clients need a central messaging server to communicate with; the
     server records which clients are subscribed to which channels and handles
     routing of messages between clients. Setting up a server in Ruby is simple:
-    
+
     <pre class="prettyprint">require 'faye'
-    
+
     bayeux = Faye::RackAdapter.new(:mount => '/faye', :timeout => 25)
     bayeux.listen(9292)</pre>
-    
+
     @bayeux.listen@ will block if EventMachine is not already running. The
     @RackAdapter@ class supports these options during setup:
-    
+
     * *@:mount@* - the path on the host at which the Faye service is available.
       In this example, clients would connect to @http://localhost:9292/faye@ to
       talk to the server. The server will handle _any_ request whose path begins
@@ -32,30 +32,30 @@
     * *@:ping@* - (optional) how often, in seconds, to send keep-alive ping
       messages over WebSocket and EventSource connections. Use this if your Faye
       server will be accessed through a proxy that kills idle connections.
-    
+
     The @listen()@ method can take options that specify the key and certificate
     files to use, which if given make the server respond to SSL traffic.
-    
+
     <pre class="prettyprint">bayeux.listen(443,
       :key  => 'path/to/ssl.key',
       :cert => 'path/to/ssl.cert'
     )</pre>
-    
+
     Faye can also be setup as Rack middleware, for example in front of a Sinatra
     application:
-    
+
     <pre class="prettyprint"># config.ru
     require 'faye'
     require File.expand_path('../app', __FILE__)
-    
+
     use Faye::RackAdapter, :mount      => '/faye',
                            :timeout    => 25,
                            :extensions => [MyExtension.new]
-    
+
     run Sinatra::Application</pre>
-    
+
     h4. Running your Faye application
-    
+
     Being an event-driven application, Faye only works with event-driven servers.
     It currently supports the same set of servers as
     "faye-websocket":http://github.com/faye/faye-websocket-ruby, namely
@@ -67,11 +67,11 @@
     but it's worth restating here that you must tell @Faye::WebSocket@ which
     web server you're using before booting the application, so it can load
     adapters for it. For example to load the Thin adapter:
-    
+
     <pre class="prettyprint"># config.ru
     require 'faye'
     Faye::WebSocket.load_adapter('thin')
-    
+
     app = Faye::RackAdapter.new(:mount => '/faye', :timeout => 25)
-    
+
     run app</pre>

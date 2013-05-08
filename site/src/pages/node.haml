@@ -1,22 +1,22 @@
 .content
   = partial 'node_navigation'
-  
+
   :textile
     h4. Setting up
-    
+
     All Faye clients need a central messaging server to communicate with; the
     server records which clients are subscribed to which channels and handles
     routing of messages between clients. Setting up a server in Node.js is
     simple:
-    
+
     <pre class="prettyprint">var http = require('http'),
         faye = require('faye');
-    
+
     var bayeux = new faye.NodeAdapter({mount: '/faye', timeout: 45});
     bayeux.listen(8000);</pre>
-    
+
     The @NodeAdapter@ class supports these options during setup:
-    
+
     * *@mount@* - the path on the host at which the Faye service is available.
       In this example, clients would connect to @http://localhost:8000/faye@ to
       talk to the server. The server will handle _any_ request whose path begins
@@ -30,30 +30,30 @@
     * *@ping@* - (optional) how often, in seconds, to send keep-alive ping
       messages over WebSocket and EventSource connections. Use this if your Faye
       server will be accessed through a proxy that kills idle connections.
-    
+
     The @listen()@ method can take options that specify the key and certificate
     files to use, which if given make the server respond to SSL traffic.
-    
+
     <pre class="prettyprint">bayeux.listen(443, {
       key:  'path/to/ssl.key',
       cert: 'path/to/ssl.cert'
     });</pre>
-    
+
     Faye can also be attached to an existing HTTP server using the @attach()@
     method. It will handle all requests to paths matching the @mount@ path and
     delegate all other requests to your handlers.
-    
+
     <pre class="prettyprint">var http = require('http'),
         faye = require('faye');
-    
+
     var bayeux = new faye.NodeAdapter({mount: '/faye', timeout: 45});
-    
+
     // Handle non-Bayeux requests
     var server = http.createServer(function(request, response) {
       response.writeHead(200, {'Content-Type': 'text/plain'});
       response.write('Hello, non-Bayeux request');
       response.end();
     });
-    
+
     bayeux.attach(server);
     server.listen(8000);</pre>

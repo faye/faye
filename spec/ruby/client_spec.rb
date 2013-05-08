@@ -2,15 +2,15 @@ require "spec_helper"
 
 describe Faye::Client do
   let :transport do
-    transport = mock("transport", :cookies= => nil, :headers= => nil)
+    transport = mock("transport", :cookies= => nil, :endpoint => "http://www.example.com/faye", :headers= => nil)
     transport.stub(:connection_type).and_return "fake"
     transport.stub(:send)
     transport.extend(Faye::Publisher)
     transport
   end
-  
+
   before { EM.stub(:add_timer) }
-  
+
   def stub_response(response)
     transport.stub(:send) do |message, *args|
       response["id"] = message["id"]
@@ -22,7 +22,7 @@ describe Faye::Client do
     Faye::Transport.stub(:get).and_yield(transport)
     @client = Faye::Client.new("http://localhost/")
   end
-  
+
   def create_connected_client
     create_client
     stub_response "channel"    => "/meta/handshake",
@@ -30,29 +30,22 @@ describe Faye::Client do
                   "version"    => "1.0",
                   "supportedConnectionTypes" => ["websocket"],
                   "clientId"   => "fakeid"
-    
+
     @client.handshake
   end
-  
+
   def subscribe(client, channel, callback = nil)
     stub_response "channel"      => "/meta/subscribe",
                   "successful"   => true,
                   "clientId"     => "fakeid",
                   "subscription" => channel
-    
+
     @subs_called = 0
     callback ||= lambda { |m| @subs_called = 1 }
     @client.subscribe(channel, &callback)
   end
 
   describe :initialize do
-    it "creates a transport the server must support" do
-      Faye::Transport.should_receive(:get).with(instance_of(Faye::Client),
-                                                ["long-polling", "callback-polling", "in-process"]).
-                                           and_return(transport)
-      Faye::Client.new("http://localhost/")
-    end
-
     it "puts the client in the UNCONNECTED state" do
       Faye::Transport.stub(:get)
       client = Faye::Client.new("http://localhost/")
@@ -62,6 +55,14 @@ describe Faye::Client do
 
   describe :handshake do
     before { create_client }
+
+    it "creates a transport the server must support" do
+      Faye::Transport.should_receive(:get).with(instance_of(Faye::Client),
+                                                ["long-polling", "callback-polling", "in-process"],
+                                                []).
+                                           and_yield(transport)
+      @client.handshake
+    end
 
     it "sends a handshake message to the server" do
       transport.should_receive(:send).with({
@@ -89,7 +90,7 @@ describe Faye::Client do
         end
         @client.add_extension(extension.new)
       end
-      
+
       it "passes the handshake message through the extension" do
         transport.should_receive(:send).with({
           "channel" => "/meta/handshake",
@@ -120,23 +121,27 @@ describe Faye::Client do
         @client.handshake
         @client.state.should == :CONNECTED
       end
-      
+
       it "registers any pre-existing subscriptions" do
         @client.should_receive(:subscribe).with([], true)
         @client.handshake
       end
-      
+
       it "selects a new transport based on what the server supports" do
-        Faye::Transport.should_receive(:get).with(instance_of(Faye::Client), ["long-polling", "websocket"]).
+        Faye::Transport.should_receive(:get).with(instance_of(Faye::Client),
+                                                  ["long-polling", "websocket"],
+                                                  []).
                                              and_return(transport)
         @client.handshake
       end
-      
+
       describe "with websocket disabled" do
         before { @client.disable("websocket") }
-        
+
         it "selects a new transport, excluding websocket" do
-          Faye::Transport.should_receive(:get).with(instance_of(Faye::Client), ["long-polling"]).
+          Faye::Transport.should_receive(:get).with(instance_of(Faye::Client),
+                                                    ["long-polling", "websocket"],
+                                                    ["websocket"]).
                                               and_return(transport)
           @client.handshake
         end
@@ -162,23 +167,23 @@ describe Faye::Client do
         @client.state.should == :UNCONNECTED
       end
     end
-    
+
     describe "with existing subscriptions after a server restart" do
       before do
         create_connected_client
-        
+
         @message = nil
         subscribe @client, "/messages/foo", lambda { |m| @message = m }
-        
+
         @client.receive_message "advice" => {"reconnect" => "handshake"}
-        
+
         stub_response "channel"    => "/meta/handshake",
                       "successful" => true,
                       "version"    => "1.0",
                       "supportedConnectionTypes" => ["websocket"],
                       "clientId"   => "reconnectid"
       end
-      
+
       it "resends the subscriptions to the server" do
         transport.should_receive(:send).with(hash_including("channel" => "/meta/handshake"), 60)
         transport.should_receive(:send).with({
@@ -189,17 +194,17 @@ describe Faye::Client do
         }, 60)
         @client.handshake
       end
-      
+
       it "retains the listeners for the subscriptions" do
         @client.handshake
         @client.receive_message("channel" => "/messages/foo", "data" => "ok")
         @message.should == "ok"
       end
     end
-    
+
     describe "with a connected client" do
       before { create_connected_client }
-      
+
       it "does not send a handshake message to the server" do
         transport.should_not_receive(:send).with({
           "channel" => "/meta/handshake",
@@ -211,7 +216,7 @@ describe Faye::Client do
       end
     end
   end
-  
+
   describe :connect do
     describe "with an unconnected client" do
       before do
@@ -220,10 +225,10 @@ describe Faye::Client do
                       "version"    => "1.0",
                       "supportedConnectionTypes" => ["websocket"],
                       "clientId"   => "handshakeid"
-        
+
         create_client
       end
-      
+
       it "handshakes before connecting" do
         transport.should_receive(:send).with({
           "channel"        => "/meta/connect",
@@ -234,10 +239,10 @@ describe Faye::Client do
         @client.connect
       end
     end
-    
+
     describe "with a connected client" do
       before { create_connected_client }
-      
+
       it "sends a connect message to the server" do
         transport.should_receive(:send).with({
           "channel"        => "/meta/connect",
@@ -247,7 +252,7 @@ describe Faye::Client do
         }, 60)
         @client.connect
       end
-      
+
       it "only opens one connect request at a time" do
         transport.should_receive(:send).with({
           "channel"        => "/meta/connect",
@@ -257,16 +262,16 @@ describe Faye::Client do
         }, 60).
         exactly(1).
         and_return # override stub implementation
-        
+
         @client.connect
         @client.connect
       end
     end
   end
-  
+
   describe :disconnect do
     before { create_connected_client }
-    
+
     it "sends a disconnect message to the server" do
       transport.stub(:close)
       transport.should_receive(:send).with({
@@ -276,27 +281,27 @@ describe Faye::Client do
       }, 60)
       @client.disconnect
     end
-    
+
     it "puts the client in the DISCONNECTED state" do
       transport.stub(:close)
       @client.disconnect
       @client.state.should == :DISCONNECTED
     end
-    
+
     describe "on successful response" do
       before do
         stub_response "channel"      => "/meta/disconnect",
                       "successful"   => true,
                       "clientId"     => "fakeid"
       end
-      
+
       it "closes the transport" do
         transport.should_receive(:close)
         @client.disconnect
       end
     end
   end
-  
+
   describe :subscribe do
     before do
       create_connected_client
@@ -307,31 +312,40 @@ describe Faye::Client do
           "id"           => instance_of(String)
         }
     end
-    
+
     describe "with no prior subscriptions" do
       it "sends a subscribe message to the server" do
         transport.should_receive(:send).with(@subscribe_message, 60)
         @client.subscribe("/foo/*")
       end
-      
+
       # The Bayeux spec says the server should accept a list of subscriptions
       # in one message but the cometD server doesn't actually support this
-      it "sends multiple subscribe messages if given an array" do
-        transport.should_receive(:send).with({
-          "channel"      => "/meta/subscribe",
-          "clientId"     => "fakeid",
-          "subscription" => "/foo",
-          "id"           => instance_of(String)
-        }, 60)
-        transport.should_receive(:send).with({
-          "channel"      => "/meta/subscribe",
-          "clientId"     => "fakeid",
-          "subscription" => "/bar",
-          "id"           => instance_of(String)
-        }, 60)
-        @client.subscribe(["/foo", "/bar"])
+      describe "with an array of subscriptions" do
+        it "sends multiple subscribe messages" do
+          transport.should_receive(:send).with({
+            "channel"      => "/meta/subscribe",
+            "clientId"     => "fakeid",
+            "subscription" => "/foo",
+            "id"           => instance_of(String)
+          }, 60)
+          transport.should_receive(:send).with({
+            "channel"      => "/meta/subscribe",
+            "clientId"     => "fakeid",
+            "subscription" => "/bar",
+            "id"           => instance_of(String)
+          }, 60)
+          @client.subscribe(["/foo", "/bar"])
+        end
+
+        it "returns an array of subscriptions" do
+          transport.stub(:send)
+          subs = @client.subscribe(["/foo", "/bar"])
+          subs.size.should == 2
+          subs.should be_all { |s| Faye::Subscription === s }
+        end
       end
-      
+
       describe "on successful response" do
         before do
           stub_response "channel"      => "/meta/subscribe",
@@ -339,27 +353,27 @@ describe Faye::Client do
                         "clientId"     => "fakeid",
                         "subscription" => "/foo/*"
         end
-        
+
         it "sets up a listener for the subscribed channel" do
           @message = nil
           @client.subscribe("/foo/*") { |m| @message = m }
           @client.receive_message("channel" => "/foo/bar", "data" => "hi")
           @message.should == "hi"
         end
-        
+
         it "does not call the listener for non-matching channels" do
           @message = nil
           @client.subscribe("/foo/*") { |m| @message = m }
           @client.receive_message("channel" => "/bar", "data" => "hi")
           @message.should be_nil
         end
-        
+
         it "activates the subscription" do
           active = false
           @client.subscribe("/foo/*").callback { active = true }
           active.should be_true
         end
-        
+
         describe "with an incoming extension installed" do
           before do
             extension = Class.new do
@@ -372,13 +386,13 @@ describe Faye::Client do
             @message = nil
             @client.subscribe("/foo/*") { |m| @message = m }
           end
-          
+
           it "passes delivered messages through the extension" do
             @client.receive_message("channel" => "/foo/bar", "data" => {"hello" => "there"})
             @message.should == {"hello" => "there", "changed" => true}
           end
         end
-        
+
         describe "with an outgoing extension installed" do
           before do
             extension = Class.new do
@@ -391,13 +405,13 @@ describe Faye::Client do
             @message = nil
             @client.subscribe("/foo/*") { |m| @message = m }
           end
-          
+
           it "leaves messages unchanged" do
             @client.receive_message("channel" => "/foo/bar", "data" => {"hello" => "there"})
             @message.should == {"hello" => "there"}
           end
         end
-        
+
         describe "with an incoming extension that invalidates the response" do
           before do
             extension = Class.new do
@@ -408,14 +422,14 @@ describe Faye::Client do
             end
             @client.add_extension(extension.new)
           end
-          
+
           it "does not set up a listener for the subscribed channel" do
             @message = nil
             @client.subscribe("/foo/*") { |m| @message = m }
             @client.receive_message("channel" => "/foo/bar", "data" => "hi")
             @message.should be_nil
           end
-          
+
           it "does not activate the subscription" do
             active = false
             @client.subscribe("/foo/*").callback { active = true }
@@ -423,7 +437,7 @@ describe Faye::Client do
           end
         end
       end
-      
+
       describe "on unsuccessful response" do
         before do
           stub_response "channel"      => "/meta/subscribe",
@@ -432,14 +446,14 @@ describe Faye::Client do
                         "clientId"     => "fakeid",
                         "subscription" => "/meta/foo"
         end
-        
+
         it "does not set up a listener for the subscribed channel" do
           @message = nil
           @client.subscribe("/meta/foo") { |m| @message = m }
           @client.receive_message("channel" => "/meta/foo", "data" => "hi")
           @message.should be_nil
         end
-        
+
         it "does not activate the subscription" do
           active = false
           @client.subscribe("/meta/foo").callback { active = true }
@@ -455,23 +469,23 @@ describe Faye::Client do
         end
       end
     end
-    
+
     describe "with an existing subscription" do
       before do
         subscribe @client, "/foo/*"
       end
-      
+
       it "does not send another subscribe message to the server" do
         transport.should_not_receive(:send).with(@subscribe_message, 60)
         @client.subscribe("/foo/*")
       end
-      
+
       it "sets up another listener on the channel" do
         @client.subscribe("/foo/*") { @subs_called += 1 }
         @client.receive_message("channel" => "/foo/bar", "data" => "hi")
         @subs_called.should == 2
       end
-      
+
       it "activates the subscription" do
         active = false
         @client.subscribe("/foo/*").callback { active = true }
@@ -479,7 +493,7 @@ describe Faye::Client do
       end
     end
   end
-  
+
   describe :unsubscribe do
     before do
       create_connected_client
@@ -490,26 +504,26 @@ describe Faye::Client do
           "id"           => instance_of(String)
         }
     end
-    
+
     describe "with no subscriptions" do
       it "does not send an unsubscribe message to the server" do
         transport.should_not_receive(:send).with(@unsubscribe_message, 60)
         @client.unsubscribe("/foo/*")
       end
     end
-    
+
     describe "with a single subscription" do
       before do
         @message = nil
         @listener = lambda { |m| @message = m }
         subscribe @client, "/foo/*", @listener
       end
-      
+
       it "sends an unsubscribe message to the server" do
         transport.should_receive(:send).with(@unsubscribe_message, 60)
         @client.unsubscribe("/foo/*")
       end
-      
+
       it "removes the listener from the channel" do
         @client.receive_message("channel" => "/foo/bar", "data" => "first")
         @client.unsubscribe("/foo/*", &@listener)
@@ -517,7 +531,7 @@ describe Faye::Client do
         @message.should == "first"
       end
     end
-    
+
     describe "with multiple subscriptions to the same channel" do
       before do
         @messages = []
@@ -526,37 +540,37 @@ describe Faye::Client do
         subscribe @client, "/foo/*", @hey
         subscribe @client, "/foo/*", @bye
       end
-      
+
       it "removes one of the listeners from the channel" do
         @client.receive_message("channel" => "/foo/bar", "data" => {"text" => "you"})
         @client.unsubscribe("/foo/*", &@hey)
         @client.receive_message("channel" => "/foo/bar", "data" => {"text" => "you"})
         @messages.should == ["hey you", "bye you", "bye you"]
       end
-      
+
       it "does not send an unsubscribe message if one listener is removed" do
         transport.should_not_receive(:send).with(@unsubscribe_message, 60)
         @client.unsubscribe("/foo/*", &@bye)
       end
-      
+
       it "sends an unsubscribe message if each listener is removed" do
         transport.should_receive(:send).with(@unsubscribe_message, 60)
         @client.unsubscribe("/foo/*", &@bye)
         @client.unsubscribe("/foo/*", &@hey)
       end
-      
+
       it "sends an unsubscribe message if all listeners are removed" do
         transport.should_receive(:send).with(@unsubscribe_message, 60)
         @client.unsubscribe("/foo/*")
       end
     end
-    
+
     describe "with multiple subscriptions to different channels" do
       before do
         subscribe @client, "/foo"
         subscribe @client, "/bar"
       end
-      
+
       it "sends multiple unsubscribe messages if given an array" do
         transport.should_receive(:send).with({
           "channel"      => "/meta/unsubscribe",
@@ -574,10 +588,10 @@ describe Faye::Client do
       end
     end
   end
-  
+
   describe :publish do
     before { create_connected_client }
-    
+
     it "sends the message to the server with an ID" do
       transport.should_receive(:send).with({
         "channel"  => "/messages/foo",
@@ -587,12 +601,12 @@ describe Faye::Client do
       }, 60)
       @client.publish("/messages/foo", "hello" => "world")
     end
-    
+
     it "throws an error when publishing to an invalid channel" do
       transport.should_not_receive(:send).with(hash_including("channel" => "/messages/*"), 60)
       lambda { @client.publish("/messages/*", "hello" => "world") }.should raise_error
     end
-    
+
     describe "on publish failure" do
       before do
         stub_response "channel"      => "/messages/foo",
@@ -616,6 +630,22 @@ describe Faye::Client do
       end
     end
 
+    describe "on receipt of the published message" do
+      before do
+        stub_response "channel"      => "/messages/foo",
+                      "data"         => {"text" => "hi"},
+                      "clientId"     => "fakeid"
+      end
+
+      it "does not trigger the callbacks" do
+        published = false
+        publication = @client.publish("/messages/foo", "text" => "hi")
+        publication.callback { published = true }
+        publication.errback { published = true }
+        published.should be_false
+      end
+    end
+
     describe "with an outgoing extension installed" do
       before do
         extension = Class.new do
@@ -626,7 +656,7 @@ describe Faye::Client do
         end
         @client.add_extension(extension.new)
       end
-      
+
       it "passes messages through the extension" do
         transport.should_receive(:send).with({
           "channel"  => "/messages/foo",
@@ -638,7 +668,7 @@ describe Faye::Client do
         @client.publish("/messages/foo", "hello" => "world")
       end
     end
-    
+
     describe "with an incoming extension installed" do
       before do
         extension = Class.new do
@@ -649,7 +679,7 @@ describe Faye::Client do
         end
         @client.add_extension(extension.new)
       end
-      
+
       it "leaves the message unchanged" do
         transport.should_receive(:send).with({
           "channel"  => "/messages/foo",
@@ -661,44 +691,47 @@ describe Faye::Client do
       end
     end
   end
-  
+
   describe "network notifications" do
-    before { create_client }
-    
+    before {
+      create_client
+      @client.handshake
+    }
+
     describe "in the default state" do
       it "broadcasts a down notification" do
         @client.should_receive(:trigger).with("transport:down")
         transport.trigger(:down)
       end
-      
+
       it "broadcasts an up notification" do
         @client.should_receive(:trigger).with("transport:up")
         transport.trigger(:up)
       end
     end
-    
+
     describe "when the transport is up" do
       before { transport.trigger(:up) }
-      
+
       it "broadcasts a down notification" do
         @client.should_receive(:trigger).with("transport:down")
         transport.trigger(:down)
       end
-      
+
       it "does not broadcast an up notification" do
         @client.should_not_receive(:trigger)
         transport.trigger(:up)
       end
     end
-    
+
     describe "when the transport is down" do
       before { transport.trigger(:down) }
-      
+
       it "does not broadcast a down notification" do
         @client.should_not_receive(:trigger)
         transport.trigger(:down)
       end
-      
+
       it "broadcasts an up notification" do
         @client.should_receive(:trigger).with("transport:up")
         transport.trigger(:up)

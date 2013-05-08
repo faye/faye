@@ -5,19 +5,19 @@ Faye.Logging = {
     info:   1,
     debug:  0
   },
-  
+
   logLevel: 'error',
-  
+
   log: function(messageArgs, level) {
     if (!Faye.logger) return;
-    
+
     var levels = Faye.Logging.LOG_LEVELS;
     if (levels[Faye.Logging.logLevel] > levels[level]) return;
-    
+
     var messageArgs = Array.prototype.slice.apply(messageArgs),
         banner = ' [' + level.toUpperCase() + '] [Faye',
         klass  = this.className,
-        
+
         message = messageArgs.shift().replace(/\?/g, function() {
           try {
             return Faye.toJSON(messageArgs.shift());
@@ -25,7 +25,7 @@ Faye.Logging = {
             return '[Object]';
           }
         });
-    
+
     for (var key in Faye) {
       if (klass) continue;
       if (typeof Faye[key] !== 'function') continue;
@@ -33,7 +33,7 @@ Faye.Logging = {
     }
     if (klass) banner += '.' + klass;
     banner += '] ';
-    
+
     Faye.logger(Faye.timestamp() + banner + message);
   }
 };

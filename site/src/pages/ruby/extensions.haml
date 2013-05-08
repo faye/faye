@@ -1,9 +1,9 @@
 .content
   = partial 'ruby_navigation'
-  
+
   :textile
     h4. Extensions
-    
+
     Both the server and client support an extension mechanism that lets you
     intercept messages as they pass in and out. This lets you modify messages
     for any purpose you like, including messages on @/meta/*@ channels that are
@@ -11,91 +11,96 @@
     @incoming()@ or @outgoing()@ method (or both). These methods should accept a
     message and a callback function, and should call the function with the
     message once they have made any modifications.
-    
+
     Extensions use a callback instead of simply returning the modified message
     since this allows you to use asynchronous logic to make your modifications.
-    
+
     As an example, suppose we want to authenticate subscription messages by
     checking an authentication token against a list we're keeping in a file on
     disk. Clients subscribe to channels by sending a message to the
     @/meta/subscribe@ channel with the channel they want to subscribe in the
     @subscription@ field. Let's say our authentication file contains a JSON
     object that maps channels to required tokens:
-    
+
     <pre class="prettyprint">// tokens.json
-    
+
     {
       "/users/jcoglan/updates": "rt6utrb",
       "/artists/mclusky/news":  "99taaec"
     }</pre>
-    
+
     The server can validate subscription messages by checking that they have the
     right auth token attached. By convention, data added by extensions is stored
     in the message's @ext@ field.
-    
+
     <pre class="prettyprint">class ServerAuth
       def incoming(message, callback)
         # Let non-subscribe messages through
         unless message['channel'] == '/meta/subscribe'
           return callback.call(message)
         end
-        
+
         # Get subscribed channel and auth token
         subscription = message['subscription']
         msg_token    = message['ext'] && message['ext']['authToken']
-        
+
         # Find the right token for the channel
         registry = JSON.parse(File.read('./tokens.json'))
         token    = registry[subscription]
-        
+
         # Add an error if the tokens don't match
         if token != msg_token
           message['error'] = 'Invalid subscription auth token'
         end
-        
+
         # Call the server back now we're done
         callback.call(message)
       end
     end
-    
+
     bayeux.add_extension(ServerAuth.new)</pre>
-    
+
     If you add an @error@ property to a message, the server will not process the
     message further and will simply return it to the sender, effectively
     blocking the subscription attempt. You should always make sure your
     extension calls the @callback@, as failing to do so could block delivery of
     other messages in the same request.
-    
+
+    *When implementing authentication, remember that a message published to
+    channel @/foo/bar/qux@ will be routed to subscriptions to @/foo/bar/qux@,
+    @/foo/bar/*@, @/foo/bar/**@, @/foo/**@ and @/**@. Take appropriate measures
+    in your extensions to correctly authenticate subscriptions.*
+
     On the client side, you'll need to make sure the client sends the right auth
     token to satisfy the server. We do this by adding an _outgoing_ extension on
     the client side.
-    
+
     <pre class="prettyprint">class ClientAuth
       def outgoing(message, callback)
         # Again, leave non-subscribe messages alone
         unless message['channel'] == '/meta/subscribe'
           return callback.call(message)
         end
-        
+
         # Add ext field if it's not present
         message['ext'] ||= {}
-        
+
         # Set the auth token
         message['ext']['authToken'] = 'rt6utrb'
-        
+
         # Carry on and send the message to the server
         callback.call(message)
       end
     end
-    
+
     client.add_extension(ClientAuth.new)</pre>
-    
+
     If an extension has an @added()@ method, that will be called when the
     extension is added to its host. To remove an extension, call:
-    
+
     <pre class="prettyprint"># Calls extension.removed() if defined
     host_object.remove_extension(extension)</pre>
-    
+
     To write extensions you'll need to know what kinds of messages are used by
     the Bayeux protocol; see "the specification":http://svn.cometd.com/trunk/bayeux/bayeux.html
     for more details.

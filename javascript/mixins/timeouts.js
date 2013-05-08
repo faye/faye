@@ -8,7 +8,7 @@ Faye.Timeouts = {
       callback.call(context);
     }, 1000 * delay);
   },
-  
+
   removeTimeout: function(name) {
     this._timeouts = this._timeouts || {};
     var timeout = this._timeouts[name];
