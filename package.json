@@ -5,9 +5,9 @@
 , "keywords"        : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
 
 , "version"         : "0.8.9"
-, "engines"         : {"node": ">=0.1.96"}
+, "engines"         : {"node": ">=0.4.0"}
 , "main"            : "./node/faye-node"
-, "browserify"      : "./browser/faye-browser.js"
+, "browserify"      : "./browser/faye-browser"
 , "dependencies"    : {"cookiejar": "", "faye-websocket": ">=0.4.0"}
 , "devDependencies" : {"jsclass": ""}
 
