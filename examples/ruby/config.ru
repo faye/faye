@@ -10,6 +10,7 @@
 #     rackup -E production -s thin examples/ruby/config.ru -p 9292
 
 require 'rubygems'
+require 'bundler/setup'
 require File.expand_path('../app', __FILE__)
 Faye::WebSocket.load_adapter('thin')
 

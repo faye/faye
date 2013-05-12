@@ -1,5 +1,5 @@
 require 'sinatra'
-require File.expand_path('../../../lib/faye', __FILE__)
+require 'faye'
 
 ROOT_DIR = File.expand_path('../../shared', __FILE__)
 set :root, ROOT_DIR
@@ -21,6 +21,9 @@ App = Faye::RackAdapter.new(Sinatra::Application,
   :mount   => '/bayeux',
   :timeout => 25
 )
+
+def App.log(message)
+end
 
 App.bind(:subscribe) do |client_id, channel|
   puts "[  SUBSCRIBE] #{client_id} -> #{channel}"

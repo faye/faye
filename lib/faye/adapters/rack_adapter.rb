@@ -51,15 +51,15 @@ module Faye
     def listen(port, ssl_options = nil)
       Faye::WebSocket.load_adapter('thin')
       handler = Rack::Handler.get('thin')
-      handler.run(self, :Port => port) do |s|
+      handler.run(self, :Port => port) do |server|
         if ssl_options
-          s.ssl = true
-          s.ssl_options = {
+          server.ssl = true
+          server.ssl_options = {
             :private_key_file => ssl_options[:key],
             :cert_chain_file  => ssl_options[:cert]
           }
         end
-        @thin_server = s
+        @thin_server = server
       end
     end
 
@@ -101,24 +101,29 @@ module Faye
 
       debug "Received message via HTTP #{request.request_method}: ?", json_msg
 
+      request.env['rack.hijack'].call if request.env['rack.hijack']
+
       message  = Yajl::Parser.parse(json_msg)
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
       headers  = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
       origin   = request.env['HTTP_ORIGIN']
       callback = request.env['async.callback']
+      hijack   = request.env['rack.hijack_io']
 
       @server.flush_connection(message) if request.get?
 
       headers['Access-Control-Allow-Origin'] = origin if origin
       headers['Cache-Control'] = 'no-cache, no-store'
 
-      @server.process(message, false) do |replies|
-        response = Faye.to_json(replies)
-        response = "#{ jsonp }(#{ response });" if request.get?
-        headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
-        headers['Connection'] = 'close'
-        debug 'HTTP response: ?', response
-        callback.call [200, headers, [response]]
+      EventMachine.next_tick do
+        @server.process(message, false) do |replies|
+          response = Faye.to_json(replies)
+          response = "#{ jsonp }(#{ response });" if request.get?
+          headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
+          headers['Connection'] = 'close'
+          debug 'HTTP response: ?', response
+          send_response([200, headers, [response]], hijack, callback)
+        end
       end
 
       ASYNC_RESPONSE
@@ -187,6 +192,23 @@ module Faye
       else
         CGI.parse(request.body.read)['message'][0]
       end
+    end
+
+    def send_response(response, hijack, callback)
+      return callback.call(response) if callback
+
+      buffer = "HTTP/1.1 #{response[0]} OK\r\n"
+      response[1].each do |name, value|
+        buffer << "#{name}: #{value}\r\n"
+      end
+      buffer << "\r\n"
+      response[2].each do |chunk|
+        buffer << chunk
+      end
+
+      hijack.write(buffer)
+      hijack.flush
+      hijack.close_write
     end
 
     def format_request(request)

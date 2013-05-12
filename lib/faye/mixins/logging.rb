@@ -20,11 +20,17 @@ module Faye
 
     attr_writer :log_level
 
+    LOG_LEVELS.each do |level, value|
+      define_method(level) { |*args| write_log(args, level) }
+    end
+
+  private
+
     def log_level
       @log_level || Logging.log_level
     end
 
-    def log(message_args, level)
+    def write_log(message_args, level)
       return unless Faye.logger
       return if LOG_LEVELS[log_level] > LOG_LEVELS[level]
 
@@ -36,10 +42,6 @@ module Faye
       banner = " [#{ level.to_s.upcase }] [#{ self.class.name }] "
 
       Faye.logger.call(timestamp + banner + message)
-    end
-
-    LOG_LEVELS.each do |level, value|
-      define_method(level) { |*args| log(args, level) }
     end
 
   end

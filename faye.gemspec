@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'compass', '~> 0.10.0'
   s.add_development_dependency 'haml', '~> 3.1.0'
   s.add_development_dependency 'jake', '>= 1.1.1'
+  s.add_development_dependency 'puma', '>= 2.0.0'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'rack-proxy'

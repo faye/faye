@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'bundler/setup'
 
 port   = ARGV[0] || 9292
 secure = ARGV[1] == 'ssl'
@@ -18,6 +19,14 @@ when 'goliath'
     end
   end
 
+when 'puma'
+  events = Puma::Events.new($stdout, $stderr)
+  binder = Puma::Binder.new(events)
+  binder.parse(["tcp://0.0.0.0:#{port}"], App)
+  server = Puma::Server.new(App, events)
+  server.binder = binder
+  server.run.join
+
 when 'rainbows'
   rackup = Unicorn::Configurator::RACKUP
   rackup[:port] = port
@@ -29,14 +38,13 @@ when 'rainbows'
 when 'thin'
   EM.run {
     thin = Rack::Handler.get('thin')
-    thin.run(App, :Port => port) do |s|
-
+    thin.run(App, :Port => port) do |server|
       if secure
-        s.ssl = true
-        s.ssl_options = {
+        server.ssl_options = {
           :private_key_file => shared + '/server.key',
           :cert_chain_file  => shared + '/server.crt'
         }
+        server.ssl = true
       end
     end
   }
