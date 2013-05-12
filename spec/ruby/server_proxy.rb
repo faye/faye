@@ -15,6 +15,7 @@ class ServerProxy < Rack::Proxy
       @server = Puma::Server.new(self, events)
       @server.binder = binder
       @thread = @server.run
+    rescue => e
     end
 
     def stop

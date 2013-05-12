@@ -60,6 +60,8 @@ IntegrationSteps = EM::RSpec.async_steps do
 end
 
 describe "server integration" do
+  next if RUBY_PLATFORM =~ /java/
+
   include IntegrationSteps
   include EncodingHelper
 
