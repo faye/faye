@@ -101,7 +101,7 @@ module Faye
 
       debug "Received message via HTTP #{request.request_method}: ?", json_msg
 
-      message = Yajl::Parser.parse(json_msg)
+      message = MultiJson.load(json_msg)
       request.env['rack.hijack'].call if request.env['rack.hijack']
 
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
@@ -140,7 +140,7 @@ module Faye
         begin
           debug "Received message via WebSocket[#{ws.version}]: ?", event.data
 
-          message = Yajl::Parser.parse(event.data)
+          message = MultiJson.load(event.data)
           cid     = Faye.client_id_from_messages(message)
 
           @server.close_socket(client_id) if client_id and cid != client_id

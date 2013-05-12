@@ -6,11 +6,11 @@ require 'em-http/version'
 require 'eventmachine'
 require 'faye/websocket'
 require 'forwardable'
+require 'multi_json'
 require 'rack'
 require 'set'
 require 'time'
 require 'uri'
-require 'yajl'
 
 module Faye
   VERSION = '0.8.9'
@@ -80,7 +80,7 @@ module Faye
 
   def self.to_json(value)
     case value
-      when Hash, Array then Yajl::Encoder.encode(value)
+      when Hash, Array then MultiJson.dump(value)
       when String, NilClass then value.inspect
       else value.to_s
     end
