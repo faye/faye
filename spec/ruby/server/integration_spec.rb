@@ -2,9 +2,6 @@
 
 require "spec_helper"
 
-require "thin"
-Thin::Logging.silent = true
-
 IntegrationSteps = EM::RSpec.async_steps do
   class Tagger
     def outgoing(message, callback)
@@ -13,32 +10,26 @@ IntegrationSteps = EM::RSpec.async_steps do
     end
   end
 
-  def server(port, ssl, &callback)
-    shared = File.dirname(__FILE__) + '/../../../examples/shared'
+  def server(port, &callback)
+    @faye = Faye::RackAdapter.new(:mount => "/bayeux", :timeout => 25)
+    @faye.add_extension(Tagger.new)
 
-    options = ssl ?
-              { :key => shared + '/server.key', :cert => shared + '/server.crt' } :
-              nil
-
-    @adapter = Faye::RackAdapter.new(:mount => "/bayeux", :timeout => 25)
-    @adapter.add_extension(Tagger.new)
-    @adapter.listen(port, options)
+    @server = ServerProxy::App.new(@faye)
+    @server.listen(port)
 
     @port = port
-    @secure = ssl
     EM.next_tick(&callback)
   end
 
   def stop(&callback)
-    @adapter.stop
+    @server.stop
     EM.next_tick(&callback)
   end
 
   def client(name, channels, &callback)
-    scheme = @secure ? "https" : "http"
     @clients ||= {}
     @inboxes ||= {}
-    @clients[name] = Faye::Client.new("#{scheme}://0.0.0.0:#{@port}/bayeux")
+    @clients[name] = Faye::Client.new("http://0.0.0.0:#{@port}/bayeux")
     @inboxes[name] = {}
 
     n = channels.size
@@ -73,7 +64,7 @@ describe "server integration" do
   include EncodingHelper
 
   before do
-    server 8000, server_options[:ssl]
+    server 4180
     client :alice, []
     client :bob,   ["/foo"]
   end
@@ -123,11 +114,6 @@ describe "server integration" do
 
   describe "with HTTP server" do
     let(:server_options) { {:ssl => false} }
-    it_should_behave_like "network transports"
-  end
-
-  describe "with HTTPS server" do
-    let(:server_options) { {:ssl => true} }
     it_should_behave_like "network transports"
   end
 end

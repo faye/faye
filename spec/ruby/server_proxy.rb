@@ -2,9 +2,24 @@ class ServerProxy < Rack::Proxy
   HOST = 'localhost'
   PORT = '4180'
 
-  class Logger
+  class App
     def initialize(app)
       @app = app
+    end
+
+    def listen(port)
+      events = Puma::Events.new($stdout, $stderr)
+      binder = Puma::Binder.new(events)
+      binder.parse(["tcp://0.0.0.0:#{PORT}"], self)
+
+      @server = Puma::Server.new(self, events)
+      @server.binder = binder
+      @thread = @server.run
+    end
+
+    def stop
+      @server.stop
+      @thread.join
     end
 
     def call(env)
@@ -16,20 +31,12 @@ class ServerProxy < Rack::Proxy
   end
 
   def initialize(rack_app)
-    @app = Logger.new(rack_app)
-
-    events = Puma::Events.new($stdout, $stderr)
-    binder = Puma::Binder.new(events)
-    binder.parse(["tcp://0.0.0.0:#{PORT}"], @app)
-
-    @server = Puma::Server.new(@app, events)
-    @server.binder = binder
-    @thread = @server.run
+    @app = App.new(rack_app)
+    @app.listen(PORT)
   end
 
   def stop
-    @server.stop
-    @thread.join
+    @app.stop
   end
 
   def rewrite_env(env)
