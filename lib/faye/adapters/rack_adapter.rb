@@ -101,9 +101,9 @@ module Faye
 
       debug "Received message via HTTP #{request.request_method}: ?", json_msg
 
+      message = Yajl::Parser.parse(json_msg)
       request.env['rack.hijack'].call if request.env['rack.hijack']
 
-      message  = Yajl::Parser.parse(json_msg)
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
       headers  = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
       origin   = request.env['HTTP_ORIGIN']
