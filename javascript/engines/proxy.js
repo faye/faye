@@ -7,9 +7,9 @@ Faye.Engine = {
 };
 
 Faye.Engine.Proxy = Faye.Class({
-  MAX_DELAY:  <%= Faye::Engine::MAX_DELAY %>,
-  INTERVAL:   <%= Faye::Engine::INTERVAL %>,
-  TIMEOUT:    <%= Faye::Engine::TIMEOUT %>,
+  MAX_DELAY:  0,
+  INTERVAL:   0,
+  TIMEOUT:    60,
 
   className: 'Engine',
 

@@ -11,8 +11,9 @@ Gem::Specification.new do |s|
   s.require_paths     = %w[lib]
 
   # It is important that the JavaScript files listed here are not removed: they
-  # contain the browser client and the gem should fail to build without it. You
-  # should generate them by running `bundle exec jake` in the project root.
+  # contain the browser client and the gem should fail to build without them.
+  # You should generate them by running `npm run-script build` in the project
+  # root.
   s.files = %w[History.txt README.rdoc] +
             %w[lib/faye-browser.js lib/faye-browser-min.js lib/faye-browser-min.js.map] +
             Dir.glob('{spec,lib}/**/*')
@@ -26,7 +27,6 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'compass', '~> 0.10.0'
   s.add_development_dependency 'haml', '~> 3.1.0'
-  s.add_development_dependency 'jake', '>= 1.1.1'
   s.add_development_dependency 'puma', '>= 2.0.0'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec'

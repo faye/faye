@@ -1,18 +1,18 @@
 Faye.Client = Faye.Class({
-  UNCONNECTED:          <%= Faye::Client::UNCONNECTED %>,
-  CONNECTING:           <%= Faye::Client::CONNECTING %>,
-  CONNECTED:            <%= Faye::Client::CONNECTED %>,
-  DISCONNECTED:         <%= Faye::Client::DISCONNECTED %>,
+  UNCONNECTED:          1,
+  CONNECTING:           2,
+  CONNECTED:            3,
+  DISCONNECTED:         4,
 
-  HANDSHAKE:            '<%= Faye::Client::HANDSHAKE %>',
-  RETRY:                '<%= Faye::Client::RETRY %>',
-  NONE:                 '<%= Faye::Client::NONE %>',
+  HANDSHAKE:            'handshake',
+  RETRY:                'retry',
+  NONE:                 'none',
 
-  CONNECTION_TIMEOUT:   <%= Faye::Client::CONNECTION_TIMEOUT %>,
-  DEFAULT_RETRY:        <%= Faye::Client::DEFAULT_RETRY %>,
+  CONNECTION_TIMEOUT:   60,
+  DEFAULT_RETRY:        5,
 
-  DEFAULT_ENDPOINT:     '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
-  INTERVAL:             <%= Faye::Engine::INTERVAL %>,
+  DEFAULT_ENDPOINT:     '/bayeux',
+  INTERVAL:             0,
 
   initialize: function(endpoint, options) {
     this.info('New client created for ?', endpoint);

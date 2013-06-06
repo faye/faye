@@ -22,7 +22,7 @@ Faye.withDataFor = function(transport, callback, context) {
 };
 
 Faye.NodeAdapter = Faye.Class({
-  DEFAULT_ENDPOINT: '<%= Faye::RackAdapter::DEFAULT_ENDPOINT %>',
+  DEFAULT_ENDPOINT: '/bayeux',
   SCRIPT_PATH:      'faye-browser-min.js',
 
   // https://github.com/joyent/node/issues/2727

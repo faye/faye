@@ -1,5 +1,5 @@
 Faye.Server = Faye.Class({
-  META_METHODS: <%= Faye::Server::META_METHODS.inspect %>,
+  META_METHODS: ['handshake', 'connect', 'disconnect', 'subscribe', 'unsubscribe'],
 
   initialize: function(options) {
     this._options  = options || {};

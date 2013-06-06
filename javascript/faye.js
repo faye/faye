@@ -1,11 +1,11 @@
 'use strict';
 
 var Faye = {
-  VERSION:          '<%= Faye::VERSION %>',
+  VERSION:          '0.8.9',
 
-  BAYEUX_VERSION:   '<%= Faye::BAYEUX_VERSION %>',
-  ID_LENGTH:        <%= Faye::Engine::ID_LENGTH %>,
-  JSONP_CALLBACK:   '<%= Faye::JSONP_CALLBACK %>',
+  BAYEUX_VERSION:   '1.0',
+  ID_LENGTH:        160,
+  JSONP_CALLBACK:   'jsonpcallback',
   CONNECTION_TYPES: ['long-polling', 'cross-origin-long-polling', 'callback-polling', 'websocket', 'eventsource', 'in-process'],
 
   MANDATORY_CONNECTION_TYPES: ['long-polling', 'callback-polling', 'in-process'],

@@ -1,20 +1,7 @@
 Faye.Grammar = {
-<% %w[  LOWALPHA    UPALPHA     ALPHA     DIGIT
-        ALPHANUM    MARK        STRING    TOKEN
-        INTEGER
-
-        CHANNEL_SEGMENT         CHANNEL_SEGMENTS
-        CHANNEL_NAME
-
-        WILD_CARD               CHANNEL_PATTERN
-
-        VERSION_ELEMENT         VERSION
-
-        CLIENT_ID               ID
-
-        ERROR_MESSAGE           ERROR_ARGS
-        ERROR_CODE              ERROR ].each do |bnf| %>
-  <%= bnf %>:     /<%= Faye::Grammar.const_get(bnf).source %>/<%= bnf == 'ERROR' ? '' : ',' %>
-<% end %>
+  CHANNEL_NAME:     /^\/(((([a-z]|[A-Z])|[0-9])|(\-|\_|\!|\~|\(|\)|\$|\@)))+(\/(((([a-z]|[A-Z])|[0-9])|(\-|\_|\!|\~|\(|\)|\$|\@)))+)*$/,
+  CHANNEL_PATTERN:  /^(\/(((([a-z]|[A-Z])|[0-9])|(\-|\_|\!|\~|\(|\)|\$|\@)))+)*\/\*{1,2}$/,
+  ERROR:            /^([0-9][0-9][0-9]:(((([a-z]|[A-Z])|[0-9])|(\-|\_|\!|\~|\(|\)|\$|\@)| |\/|\*|\.))*(,(((([a-z]|[A-Z])|[0-9])|(\-|\_|\!|\~|\(|\)|\$|\@)| |\/|\*|\.))*)*:(((([a-z]|[A-Z])|[0-9])|(\-|\_|\!|\~|\(|\)|\$|\@)| |\/|\*|\.))*|[0-9][0-9][0-9]::(((([a-z]|[A-Z])|[0-9])|(\-|\_|\!|\~|\(|\)|\$|\@)| |\/|\*|\.))*)$/,
+  VERSION:          /^([0-9])+(\.(([a-z]|[A-Z])|[0-9])(((([a-z]|[A-Z])|[0-9])|\-|\_))*)*$/
 };
 

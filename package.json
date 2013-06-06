@@ -3,24 +3,88 @@
 , "homepage"        : "http://faye.jcoglan.com"
 , "author"          : "James Coglan <jcoglan@gmail.com> (http://jcoglan.com/)"
 , "keywords"        : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
+, "license"         : "MIT"
 
 , "version"         : "1.0.0"
 , "engines"         : {"node": ">=0.4.0"}
 , "main"            : "./node/faye-node"
 , "browserify"      : "./browser/faye-browser"
 , "dependencies"    : {"cookiejar": "", "faye-websocket": ">=0.6.0"}
-, "devDependencies" : {"jsclass": ""}
+, "devDependencies" : {"jsclass": "", "wake": ""}
+
+, "scripts"         : {"build": "./node_modules/.bin/wake"}
+
+, "repository"      : { "type"  : "git"
+                      , "url"   : "git://github.com/faye/faye.git"
+                      }
 
 , "bugs"            : "http://github.com/faye/faye/issues"
 
-, "licenses"        : [ { "type"  : "MIT"
-                        , "url"   : "http://www.opensource.org/licenses/mit-license.php"
-                        }
-                      ]
-
-, "repositories"    : [ { "type"  : "git"
-                        , "url"   : "git://github.com/faye/faye.git"
-                        }
-                      ]
-}
+, "wake": {
+    "javascript": {
+      "sourceDirectory":          "javascript",
+      "targetDirectory":          "build",
+      "layout":                   "together",
+      "builds": {
+        "src":                    {"minify": false, "suffix": false},
+        "min":                    {"minify": true, "sourceMap": "src"}
+      },
+      "targets": {
+        "core": {                 "builds": {"src": false, "min": false},
+                                  "files": [
+                                    "faye",
+                                    "util/class",
+                                    "util/namespace",
+                                    "error",
+                                    "mixins/deferrable",
+                                    "mixins/publisher",
+                                    "mixins/timeouts",
+                                    "mixins/logging",
+                                    "protocol/grammar",
+                                    "protocol/extensible",
+                                    "protocol/channel",
+                                    "protocol/publication",
+                                    "protocol/subscription",
+                                    "protocol/client",
+                                    "transport/transport"
+        ]},
+        "node/faye-node": {       "extend": "core",
+                                  "builds": {"min": false},
+                                  "files": [
+                                    "util/set",
+                                    "engines/proxy",
+                                    "engines/connection",
+                                    "engines/memory",
+                                    "protocol/server",
+                                    "protocol/socket",
+                                    "transport/node_local",
+                                    "transport/web_socket",
+                                    "transport/node_http",
+                                    "adapters/node_adapter",
+                                    "adapters/static_server"
+        ]},
+        "browser/faye-browser": { "extend": "core",
+                                  "files": [
+                                    "util/browser/event",
+                                    "util/browser/uri",
+                                    "util/browser/json",
+                                    "transport/web_socket",
+                                    "transport/event_source",
+                                    "transport/xhr",
+                                    "transport/cors",
+                                    "transport/jsonp"
+        ]}
+      }
+    },
+    "binary": {
+      "sourceDirectory":                ".",
+      "targetDirectory":                ".",
+      "targets": {
+        "lib/faye-browser.js":          "build/browser/faye-browser.js",
+        "lib/faye-browser-min.js":      "build/browser/faye-browser-min.js",
+        "lib/faye-browser-min.js.map":  "build/browser/faye-browser-min.js.map",
+        "build/package.json":           "package.json",
+        "build/History.txt":            "History.txt",
+        "build/README.txt":             "README.rdoc"
+} } } }
 

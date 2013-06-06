@@ -1,5 +1,5 @@
 Faye.Transport = Faye.extend(Faye.Class({
-  MAX_DELAY: <%= Faye::Engine::MAX_DELAY %>,
+  MAX_DELAY: 0,
   batching:  true,
 
   initialize: function(client, endpoint) {

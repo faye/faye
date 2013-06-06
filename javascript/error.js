@@ -24,24 +24,26 @@ Faye.Error.parse = function(message) {
   return new this(code, params, message);
 };
 
-<% %w[ VERSION_MISMATCH
-       CONNTYPE_MISMATCH
-       EXT_MISMATCH
-       BAD_REQUEST
-       CLIENT_UNKNOWN
-       PARAMETER_MISSING
-       CHANNEL_FORBIDDEN
-       CHANNEL_UNKNOWN
-       CHANNEL_INVALID
-       EXT_UNKNOWN
-       PUBLISH_FAILED
-       SERVER_ERROR ].each do |error_type|
-
-  code, message = Faye::Error.const_get(error_type)
-  js_method = error_type.downcase.gsub(/_(.)/) { $1.upcase }
+<%  // http://code.google.com/p/cometd/wiki/BayeuxCodes
+    errors = {
+      versionMismatch:  [300, 'Version mismatch'],
+      conntypeMismatch: [301, 'Connection types not supported'],
+      extMismatch:      [302, 'Extension mismatch'],
+      badRequest:       [400, 'Bad request'],
+      clientUnknown:    [401, 'Unknown client'],
+      parameterMissing: [402, 'Missing required parameter'],
+      channelForbidden: [403, 'Forbidden channel'],
+      channelUnknown:   [404, 'Unknown channel'],
+      channelInvalid:   [405, 'Invalid channel'],
+      extUnknown:       [406, 'Unknown extension'],
+      publishFailed:    [407, 'Failed to publish'],
+      serverError:      [500, 'Internal server error']
+    }
 %>
-Faye.Error.<%= js_method %> = function() {
-  return new this(<%= code %>, arguments, <%= message.inspect %>).toString();
+
+<% for (var name in errors) { %>
+Faye.Error.<%- name %> = function() {
+  return new this(<%- errors[name][0] %>, arguments, '<%- errors[name][1] %>').toString();
 };
-<% end %>
+<% } %>
 

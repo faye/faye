@@ -15,14 +15,14 @@ Faye.Channel = Faye.Class({
 Faye.extend(Faye.Channel.prototype, Faye.Publisher);
 
 Faye.extend(Faye.Channel, {
-  HANDSHAKE:    '<%= Faye::Channel::HANDSHAKE %>',
-  CONNECT:      '<%= Faye::Channel::CONNECT %>',
-  SUBSCRIBE:    '<%= Faye::Channel::SUBSCRIBE %>',
-  UNSUBSCRIBE:  '<%= Faye::Channel::UNSUBSCRIBE %>',
-  DISCONNECT:   '<%= Faye::Channel::DISCONNECT %>',
+  HANDSHAKE:    '/meta/handshake',
+  CONNECT:      '/meta/connect',
+  SUBSCRIBE:    '/meta/subscribe',
+  UNSUBSCRIBE:  '/meta/unsubscribe',
+  DISCONNECT:   '/meta/disconnect',
 
-  META:         '<%= Faye::Channel::META %>',
-  SERVICE:      '<%= Faye::Channel::SERVICE %>',
+  META:         'meta',
+  SERVICE:      'service',
 
   expand: function(name) {
     var segments = this.parse(name),
