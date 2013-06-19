@@ -20,12 +20,14 @@ module Faye
     # down. Better suggestions welcome.
     HTTP_X_NO_CONTENT_LENGTH = 'HTTP_X_NO_CONTENT_LENGTH'
 
+    attr_reader :endpoint_re
+
     def initialize(app = nil, options = nil)
       @app      = app if app.respond_to?(:call)
       @options  = [app, options].grep(Hash).first || {}
 
       @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
-      @endpoint_re = Regexp.new('^' + @endpoint.gsub(/\/$/, '') + '(/[^/]+)*(\\.[^\\.]+)?$')
+
       @server      = Server.new(@options)
 
       @static = StaticServer.new(ROOT, /\.(?:js|map)$/)
@@ -34,6 +36,11 @@ module Faye
 
       return unless extensions = @options[:extensions]
       [*extensions].each { |extension| add_extension(extension) }
+    end
+
+    def endpoint_re
+      endpoint = @endpoint == '/' ? @endpoint : @endpoint.gsub(/\/$/, '')
+      Regexp.new('^' + endpoint + '(/[^/]+)*(\\.[^\\.]+)?$')
     end
 
     def add_extension(extension)
@@ -73,7 +80,7 @@ module Faye
       Faye.ensure_reactor_running!
       request = Rack::Request.new(env)
 
-      unless request.path_info =~ @endpoint_re
+      unless request.path_info =~ endpoint_re
         env['faye.client'] = get_client
         return @app ? @app.call(env) :
                       [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
