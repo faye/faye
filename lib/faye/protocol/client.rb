@@ -21,6 +21,7 @@ module Faye
     attr_reader :client_id, :endpoint, :endpoints, :retry, :transports
 
     def initialize(endpoint = nil, options = {})
+      endpoint = endpoint.to_s # convert URI instance
       info('New client created for ?', endpoint)
 
       @options    = options
