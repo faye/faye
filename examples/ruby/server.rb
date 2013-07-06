@@ -8,7 +8,6 @@ shared = File.expand_path('../../shared', __FILE__)
 
 require File.expand_path('../app', __FILE__)
 Faye::WebSocket.load_adapter(engine)
-# Faye::Logging.log_level = :debug
 
 case engine
 

@@ -136,7 +136,6 @@ describe "Pub/sub engines" do
     let(:engine) { create_engine }
 
     before do
-      Faye.stub(:logger)
       Faye::Engine.ensure_reactor_running!
       create_client :alice
       create_client :bob
@@ -401,7 +400,6 @@ describe "Pub/sub engines" do
     alias :engine :left
 
     before do
-      Faye.stub(:logger)
       Faye::Engine.ensure_reactor_running!
       create_client :alice
       create_client :bob

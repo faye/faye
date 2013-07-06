@@ -4,8 +4,6 @@ var fs    = require('fs'),
     https = require('https'),
     faye  = require('../../build/node/faye-node');
 
-// faye.Logging.logLevel = 'debug';
-
 var SHARED_DIR = path.dirname(__filename) + '/../shared',
     PUBLIC_DIR = SHARED_DIR + '/public',
 

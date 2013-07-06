@@ -1,22 +1,18 @@
 Faye.Logging = {
   LOG_LEVELS: {
+    fatal:  4,
     error:  3,
     warn:   2,
     info:   1,
     debug:  0
   },
 
-  logLevel: 'error',
-
-  log: function(messageArgs, level) {
+  writeLog: function(messageArgs, level) {
     if (!Faye.logger) return;
 
-    var levels = Faye.Logging.LOG_LEVELS;
-    if (levels[Faye.Logging.logLevel] > levels[level]) return;
-
     var messageArgs = Array.prototype.slice.apply(messageArgs),
-        banner = ' [' + level.toUpperCase() + '] [Faye',
-        klass  = this.className,
+        banner      = '[Faye',
+        klass       = this.className,
 
         message = messageArgs.shift().replace(/\?/g, function() {
           try {
@@ -34,7 +30,7 @@ Faye.Logging = {
     if (klass) banner += '.' + klass;
     banner += '] ';
 
-    Faye.logger(Faye.timestamp() + banner + message);
+    Faye.logger[level](banner + message);
   }
 };
 
@@ -42,7 +38,7 @@ Faye.Logging = {
   for (var key in Faye.Logging.LOG_LEVELS)
     (function(level, value) {
       Faye.Logging[level] = function() {
-        this.log(arguments, level);
+        this.writeLog(arguments, level);
       };
     })(key, Faye.Logging.LOG_LEVELS[key]);
 })();

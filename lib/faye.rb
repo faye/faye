@@ -48,7 +48,6 @@ module Faye
   class << self
     attr_accessor :logger
   end
-  self.logger = method(:puts)
 
   def self.ensure_reactor_running!
     Engine.ensure_reactor_running!

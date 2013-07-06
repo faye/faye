@@ -137,27 +137,6 @@ var Faye = {
     return JSON.stringify(object, function(key, value) {
       return (this[key] instanceof Array) ? this[key] : value;
     });
-  },
-
-  logger: function(message) {
-    if (typeof console !== 'undefined') console.log(message);
-  },
-
-  timestamp: function() {
-    var date   = new Date(),
-        year   = date.getFullYear(),
-        month  = date.getMonth() + 1,
-        day    = date.getDate(),
-        hour   = date.getHours(),
-        minute = date.getMinutes(),
-        second = date.getSeconds();
-
-    var pad = function(n) {
-      return n < 10 ? '0' + n : String(n);
-    };
-
-    return pad(year) + '-' + pad(month) + '-' + pad(day) + ' ' +
-           pad(hour) + ':' + pad(minute) + ':' + pad(second);
   }
 };
 

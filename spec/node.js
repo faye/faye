@@ -1,6 +1,5 @@
 JS = require('jstest')
 Faye = require('../build/node/faye-node')
-Faye.logger = function() {}
 
 JS.packages(function() { with(this) {
   autoload(/.*Spec/, {from: 'spec/javascript'})
