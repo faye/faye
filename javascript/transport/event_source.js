@@ -5,7 +5,7 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
 
     this._xhr = new Faye.Transport.XHR(client, endpoint);
 
-    var socket = new EventSource(endpoint + '/' + client.getClientId()),
+    var socket = new EventSource(endpoint + '/' + client._clientId),
         self   = this;
 
     socket.onopen = function() {
@@ -48,7 +48,7 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {
-    var id = client.getClientId();
+    var id = client._clientId;
     if (!id) return callback.call(context, false);
 
     Faye.Transport.XHR.isUsable(client, endpoint, function(usable) {
@@ -59,7 +59,7 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
 
   create: function(client, endpoint) {
     var sockets  = client.transports.eventsource = client.transports.eventsource || {},
-        id       = client.getClientId(),
+        id       = client._clientId,
         endpoint = endpoint + '/' + (id || '');
 
     sockets[endpoint] = sockets[endpoint] || new this(client, endpoint);

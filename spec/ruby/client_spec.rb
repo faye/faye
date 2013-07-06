@@ -49,7 +49,7 @@ describe Faye::Client do
     it "puts the client in the UNCONNECTED state" do
       Faye::Transport.stub(:get)
       client = Faye::Client.new("http://localhost/")
-      client.state.should == :UNCONNECTED
+      client.instance_eval { @state }.should == Faye::Client::UNCONNECTED
     end
   end
 
@@ -77,7 +77,7 @@ describe Faye::Client do
     it "puts the client in the CONNECTING state" do
       transport.stub(:send)
       @client.handshake
-      @client.state.should == :CONNECTING
+      @client.instance_eval { @state }.should == Faye::Client::CONNECTING
     end
 
     describe "with an outgoing extension installed" do
@@ -114,12 +114,12 @@ describe Faye::Client do
 
       it "stores the clientId" do
         @client.handshake
-        @client.client_id.should == "fakeid"
+        @client.instance_eval { @client_id }.should == "fakeid"
       end
 
       it "puts the client in the CONNECTED state" do
         @client.handshake
-        @client.state.should == :CONNECTED
+        @client.instance_eval { @state }.should == Faye::Client::CONNECTED
       end
 
       it "registers any pre-existing subscriptions" do
@@ -164,7 +164,7 @@ describe Faye::Client do
       it "puts the client in the UNCONNECTED state" do
         EM.stub(:add_timer)
         @client.handshake
-        @client.state.should == :UNCONNECTED
+        @client.instance_eval { @state }.should == Faye::Client::UNCONNECTED
       end
     end
 
@@ -285,7 +285,7 @@ describe Faye::Client do
     it "puts the client in the DISCONNECTED state" do
       transport.stub(:close)
       @client.disconnect
-      @client.state.should == :DISCONNECTED
+      @client.instance_eval { @state }.should == Faye::Client::DISCONNECTED
     end
 
     describe "on successful response" do

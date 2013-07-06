@@ -18,7 +18,7 @@ module Faye
     CONNECTION_TIMEOUT  = 60.0
     DEFAULT_RETRY       = 5.0
 
-    attr_reader :client_id, :endpoint, :endpoints, :retry, :transports
+    attr_reader :endpoint, :endpoints, :retry, :transports
 
     def initialize(endpoint = nil, options = {})
       info('New client created for ?', endpoint)
@@ -51,15 +51,6 @@ module Faye
 
     def set_header(name, value)
       @headers[name.to_s] = value.to_s
-    end
-
-    def state
-      case @state
-      when UNCONNECTED  then :UNCONNECTED
-      when CONNECTING   then :CONNECTING
-      when CONNECTED    then :CONNECTED
-      when DISCONNECTED then :DISCONNECTED
-      end
     end
 
     # Request

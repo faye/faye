@@ -46,7 +46,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     it("puts the client in the UNCONNECTED state", function() { with(this) {
       stub(Faye.Transport, "get")
       var client = new Faye.Client("http://localhost/")
-      assertEqual( "UNCONNECTED", client.getState() )
+      assertEqual( client.UNCONNECTED, client._state )
     }})
   }})
 
@@ -74,7 +74,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     it("puts the client in the CONNECTING state", function() { with(this) {
       stub(transport, "send")
       client.handshake()
-      assertEqual( "CONNECTING", client.getState() )
+      assertEqual( client.CONNECTING, client._state )
     }})
 
     describe("with an outgoing extension installed", function() { with(this) {
@@ -111,12 +111,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
 
       it("stores the clientId", function() { with(this) {
         client.handshake()
-        assertEqual( "fakeid", client.getClientId() )
+        assertEqual( "fakeid", client._clientId )
       }})
 
       it("puts the client in the CONNECTED state", function() { with(this) {
         client.handshake()
-        assertEqual( "CONNECTED", client.getState() )
+        assertEqual( client.CONNECTED, client._state )
       }})
 
       it("registers any pre-existing subscriptions", function() { with(this) {
@@ -159,7 +159,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       it("puts the client in the UNCONNECTED state", function() { with(this) {
         stub("setTimeout")
         client.handshake()
-        assertEqual( "UNCONNECTED", client.getState() )
+        assertEqual( client.UNCONNECTED, client._state )
       }})
     }})
 
@@ -280,7 +280,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     it("puts the client in the DISCONNECTED state", function() { with(this) {
       stub(transport, "close")
       client.disconnect()
-      assertEqual( "DISCONNECTED", client.getState() )
+      assertEqual( client.DISCONNECTED, client._state )
     }})
 
     describe("on successful response", function() { with(this) {

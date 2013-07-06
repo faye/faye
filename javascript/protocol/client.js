@@ -54,19 +54,6 @@ Faye.Client = Faye.Class({
     this._headers[name] = value;
   },
 
-  getClientId: function() {
-    return this._clientId;
-  },
-
-  getState: function() {
-    switch (this._state) {
-      case this.UNCONNECTED:  return 'UNCONNECTED';
-      case this.CONNECTING:   return 'CONNECTING';
-      case this.CONNECTED:    return 'CONNECTED';
-      case this.DISCONNECTED: return 'DISCONNECTED';
-    }
-  },
-
   // Request
   // MUST include:  * channel
   //                * version

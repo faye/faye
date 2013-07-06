@@ -3,8 +3,7 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
     this.client = {
       endpoint:     "http://example.com/",
       endpoints:    {},
-      transports:   {},
-      getClientId:  function() {}
+      transports:   {}
     }
 
     if (Faye.Transport.NodeLocal) {

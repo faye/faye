@@ -25,7 +25,8 @@ module Faye
     end
 
     def send(message, timeout)
-      debug('Client ? sending message to ?: ?', @client.client_id, @endpoint, message)
+      client_id = @client.instance_eval { @client_id }
+      debug('Client ? sending message to ?: ?', client_id, @endpoint, message)
 
       return request([message], timeout) unless batching?
 
