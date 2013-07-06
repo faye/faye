@@ -35,18 +35,11 @@ should get you up and running:
   npm install
   
   # Build Faye
-  bundle exec jake
+  npm run-script build
   
   # Run tests
   bundle exec rspec -c spec/
   node spec/node.js
-  
-  # Install Ruby gem
-  gem build faye.gemspec
-  gem install faye-x.x.x.gem
-  
-  # Install NPM package
-  npm install build
 
 
 == To-do
