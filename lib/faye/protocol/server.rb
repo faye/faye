@@ -94,6 +94,7 @@ module Faye
         error = Faye::Error.channel_invalid(channel_name)
       end
 
+      message.delete('clientId')
       @engine.publish(message) unless error
 
       response = make_response(message)
