@@ -43,7 +43,7 @@
 
     var scheme = window.location.protocol,
         host   = location.hostname,
-        port   = 9292, // location.port,
+        port   = location.port,
         path   = '/bayeux';
 
     Bayeux = new Faye.Client(scheme + '//' + host + (port ? ':' + port : '') + path);
