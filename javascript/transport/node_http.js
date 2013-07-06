@@ -11,12 +11,12 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         params  = this._buildParams(uri, content, cookies, secure),
         request = client.request(params);
 
-    request.addListener('response', function(response) {
+    request.on('response', function(response) {
       self._handleResponse(response, retry);
       self._storeCookies(uri.hostname, response.headers['set-cookie']);
     });
 
-    request.addListener('error', function() {
+    request.on('error', function() {
       retry();
       self.trigger('down');
     });
@@ -47,8 +47,8 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         self    = this;
 
     response.setEncoding('utf8');
-    response.addListener('data', function(chunk) { body += chunk });
-    response.addListener('end', function() {
+    response.on('data', function(chunk) { body += chunk });
+    response.on('end', function() {
       try {
         message = JSON.parse(body);
       } catch (e) {}

@@ -15,8 +15,8 @@ Faye.CookieJar   = require('cookiejar').CookieJar;
 Faye.withDataFor = function(transport, callback, context) {
   var data = '';
   transport.setEncoding('utf8');
-  transport.addListener('data', function(chunk) { data += chunk });
-  transport.addListener('end', function() {
+  transport.on('data', function(chunk) { data += chunk });
+  transport.on('end', function() {
     callback.call(context, data);
   });
 };
@@ -96,7 +96,7 @@ Faye.NodeAdapter = Faye.Class({
   },
 
   stop: function(callback, context) {
-    this._httpServer.addListener('close', function() {
+    this._httpServer.on('close', function() {
       if (callback) callback.call(context);
     });
     this._httpServer.close();
@@ -113,7 +113,7 @@ Faye.NodeAdapter = Faye.Class({
 
     httpServer.removeAllListeners(event);
 
-    httpServer.addListener(event, function(request) {
+    httpServer.on(event, function(request) {
       if (self.check(request)) return self[method].apply(self, arguments);
 
       for (var i = 0, n = listeners.length; i < n; i++)
@@ -131,8 +131,8 @@ Faye.NodeAdapter = Faye.Class({
         requestMethod = request.method,
         self          = this;
 
-    request.addListener('error', function(error) { self._returnError(response, error) });
-    response.addListener('error', function(error) { self._returnError(null, error) });
+    request.on('error', function(error) { self._returnError(response, error) });
+    response.on('error', function(error) { self._returnError(null, error) });
 
     if (this._static.test(requestUrl.pathname))
       return this._static.call(request, response);
