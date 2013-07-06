@@ -47,6 +47,10 @@ Faye.NodeAdapter = Faye.Class({
       this.addExtension(extensions[i]);
   },
 
+  listen: function() {
+    throw new Error('The listen() method is deprecated - use the attach() method to bind Faye to an http.Server');
+  },
+
   addExtension: function(extension) {
     return this._server.addExtension(extension);
   },

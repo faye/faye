@@ -36,6 +36,10 @@ module Faye
       [*extensions].each { |extension| add_extension(extension) }
     end
 
+    def listen(*args)
+      raise 'The listen() method is deprecated - see https://github.com/faye/faye-websocket-ruby#running-your-socket-application for information on running your Faye server'
+    end
+
     def add_extension(extension)
       @server.add_extension(extension)
     end
