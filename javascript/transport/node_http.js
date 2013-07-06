@@ -25,7 +25,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
   },
 
   _buildParams: function(uri, content, cookies, secure) {
-    return {
+    var params = {
       method:   'POST',
       host:     uri.hostname,
       port:     uri.port || (secure ? 443 : 80),
@@ -37,6 +37,8 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         'Host':           uri.hostname
       }, this.headers)
     };
+    if (this.ca) params.ca = this.ca;
+    return params;
   },
 
   _handleResponse: function(response, retry) {

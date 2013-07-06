@@ -23,6 +23,7 @@ Faye.Client = Faye.Class({
     this.transports = {};
     this._cookies   = Faye.CookieJar && new Faye.CookieJar();
     this._headers   = {};
+    this._ca        = this._options.ca;
     this._disabled  = [];
     this.retry      = this._options.retry || this.DEFAULT_RETRY;
 
@@ -322,6 +323,7 @@ Faye.Client = Faye.Class({
       this._transport = transport;
       this._transport.cookies = this._cookies;
       this._transport.headers = this._headers;
+      this._transport.ca      = this._ca;
 
       transport.bind('down', function() {
         if (this._transportUp !== undefined && !this._transportUp) return;

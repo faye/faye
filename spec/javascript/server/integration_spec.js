@@ -1,3 +1,7 @@
+var fs   = require('fs'),
+    cert = fs.readFileSync(__dirname + '/../../../examples/shared/server.crt'),
+    key  = fs.readFileSync(__dirname + '/../../../examples/shared/server.key')
+
 JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
   server: function(port, ssl, callback) {
     var shared  = __dirname + '/../../../examples/shared',
@@ -29,7 +33,7 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
     var scheme = this._secure ? "https" : "http"
     this._clients = this._clients || {}
     this._inboxes = this._inboxes || {}
-    this._clients[name] = new Faye.Client(scheme + "://0.0.0.0:" + this._port  + "/bayeux")
+    this._clients[name] = new Faye.Client(scheme + "://localhost:" + this._port  + "/bayeux", {ca: cert})
     this._inboxes[name] = {}
 
     var n = channels.length
