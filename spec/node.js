@@ -19,7 +19,7 @@ FakeSocket.prototype.read = function() {
   })
   return output
 }
-FakeSocket.prototype.addListener = function() {}
+FakeSocket.prototype.on = function() {}
 
 JS.ENV.Engine = {}
 JS.ENV.Server = {}

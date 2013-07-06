@@ -4,7 +4,7 @@ module Faye
     include Logging
 
     extend Forwardable
-    def_delegators "@server.engine", :bind, :unbind
+    def_delegators '@server.engine', :bind, :unbind
 
     ASYNC_RESPONSE = [-1, {}, []].freeze
 
@@ -46,27 +46,6 @@ module Faye
 
     def get_client
       @client ||= Client.new(@server)
-    end
-
-    def listen(port, ssl_options = nil)
-      Faye::WebSocket.load_adapter('thin')
-      handler = Rack::Handler.get('thin')
-      handler.run(self, :Port => port) do |server|
-        if ssl_options
-          server.ssl = true
-          server.ssl_options = {
-            :private_key_file => ssl_options[:key],
-            :cert_chain_file  => ssl_options[:cert]
-          }
-        end
-        @thin_server = server
-      end
-    end
-
-    def stop
-      return unless @thin_server
-      @thin_server.stop
-      @thin_server = nil
     end
 
     def call(env)

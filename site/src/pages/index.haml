@@ -25,11 +25,14 @@
   :textile
     h3. %(number)1.% Start a server
 
-    <pre class="prettyprint">var Faye   = require('faye'),
-        server = new Faye.NodeAdapter({mount: '/'});
+    <pre class="prettyprint">var http = require('http'),
+        faye = require('faye');
 
-    server.listen(8000);
-    </pre>
+    var server = http.createServer(),
+        bayeux = new faye.NodeAdapter({mount: '/'});
+
+    bayeux.attach(server);
+    server.listen(8000);</pre>
 
     h3. %(number)2.% Create a client
 

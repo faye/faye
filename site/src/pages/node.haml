@@ -12,8 +12,11 @@
     <pre class="prettyprint">var http = require('http'),
         faye = require('faye');
 
-    var bayeux = new faye.NodeAdapter({mount: '/faye', timeout: 45});
-    bayeux.listen(8000);</pre>
+    var server = http.createServer(),
+        bayeux = new faye.NodeAdapter({mount: '/faye', timeout: 45});
+
+    bayeux.attach(server);
+    server.listen(8000);</pre>
 
     The @NodeAdapter@ class supports these options during setup:
 
@@ -31,15 +34,7 @@
       messages over WebSocket and EventSource connections. Use this if your Faye
       server will be accessed through a proxy that kills idle connections.
 
-    The @listen()@ method can take options that specify the key and certificate
-    files to use, which if given make the server respond to SSL traffic.
-
-    <pre class="prettyprint">bayeux.listen(443, {
-      key:  'path/to/ssl.key',
-      cert: 'path/to/ssl.cert'
-    });</pre>
-
-    Faye can also be attached to an existing HTTP server using the @attach()@
+    Faye should be attached to an existing HTTP server using the @attach()@
     method. It will handle all requests to paths matching the @mount@ path and
     delegate all other requests to your handlers.
 

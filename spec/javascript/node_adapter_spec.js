@@ -5,11 +5,14 @@ JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
   start_server: function(port, resume) {
     this._port = port
     this._app  = new Faye.NodeAdapter(this.options())
-    this._app.listen(port, {}, resume)
+    this._http = http.createServer()
+    this._app.attach(this._http)
+    this._http.listen(port, resume)
   },
 
   stop_server: function(resume) {
-    this._app.stop(resume)
+    this._http.on('close', resume)
+    this._http.close()
   },
 
   header: function(key, value, resume) {
@@ -19,16 +22,20 @@ JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
   },
 
   get: function(path, params, resume) {
-    var client  = http.createClient(this._port, "localhost"),
+    var self    = this,
         body    = querystring.stringify(params),
-        request = client.request("GET", path + (body ? "?" + body : "")),
-        self    = this
+        request = http.request({
+                    method: "GET",
+                    host:   "localhost",
+                    port:   this._port,
+                    path:   path + (body ? "?" + body : "")
+                  })
 
-    request.addListener("response", function(response) {
+    request.on("response", function(response) {
       self._response = response
       var data = ""
-      response.addListener("data", function(c) { data += c })
-      response.addListener("end", function() {
+      response.on("data", function(c) { data += c })
+      response.on("end", function() {
         self._responseBody = data
         resume()
       })
@@ -37,25 +44,27 @@ JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
   },
 
   post: function(path, body, resume) {
-    var client  = http.createClient(this._port, "localhost"),
-
-        body    = (typeof body === "string")
-                ? body
-                : querystring.stringify(body),
+    var self    = this,
+        body    = (typeof body === "string") ? body : querystring.stringify(body),
 
         headers = Faye.extend({
           "Host":           "localhost",
           "Content-Length": body.length
         }, this._headers || {}),
 
-        request = client.request("POST", path, headers),
-        self    = this
+        request = http.request({
+                    method:   "POST",
+                    host:     "localhost",
+                    port:     this._port,
+                    path:     path,
+                    headers:  headers
+                  })
 
-    request.addListener("response", function(response) {
+    request.on("response", function(response) {
       self._response = response
       var data = ""
-      response.addListener("data", function(c) { data += c })
-      response.addListener("end", function() {
+      response.on("data", function(c) { data += c })
+      response.on("end", function() {
         self._responseBody = data
         resume()
       })

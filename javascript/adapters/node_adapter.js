@@ -25,14 +25,9 @@ Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '/bayeux',
   SCRIPT_PATH:      'faye-browser-min.js',
 
-  // https://github.com/joyent/node/issues/2727
-  CIPHER_ORDER:     'ECDHE-RSA-AES256-SHA384:AES256-SHA256:RC4-SHA:RC4:HIGH:!MD5:!aNULL:!EDH:!AESGCM',
-  CIPHER_OPTIONS:   require('constants').SSL_OP_CIPHER_SERVER_PREFERENCE,
-
   TYPE_JSON:    {'Content-Type': 'application/json; charset=utf-8'},
   TYPE_SCRIPT:  {'Content-Type': 'text/javascript; charset=utf-8'},
   TYPE_TEXT:    {'Content-Type': 'text/plain; charset=utf-8'},
-
 
   initialize: function(options) {
     this._options    = options || {};
@@ -70,36 +65,6 @@ Faye.NodeAdapter = Faye.Class({
 
   getClient: function() {
     return this._client = this._client || new Faye.Client(this._server);
-  },
-
-  listen: function(port, sslOptions, callback, context) {
-    var ssl = sslOptions && sslOptions.cert
-            ? { key:            fs.readFileSync(sslOptions.key),
-                cert:           fs.readFileSync(sslOptions.cert),
-                ciphers:        this.CIPHER_ORDER,
-                secureOptions:  this.CIPHER_OPTIONS
-              }
-            : null;
-
-    if (ssl && sslOptions.ca)
-      ssl.ca = Faye.map(sslOptions.ca, function(ca) { return fs.readFileSync(ca) });
-
-    var httpServer = ssl
-                   ? https.createServer(ssl, function() {})
-                   : http.createServer(function() {});
-
-    this.attach(httpServer);
-    httpServer.listen(port, function() {
-      if (callback) callback.call(context);
-    });
-    this._httpServer = httpServer;
-  },
-
-  stop: function(callback, context) {
-    this._httpServer.on('close', function() {
-      if (callback) callback.call(context);
-    });
-    this._httpServer.close();
   },
 
   attach: function(httpServer) {

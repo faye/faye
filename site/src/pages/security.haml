@@ -51,10 +51,9 @@
 
     It should go without saying that if you want to keep the messages or any
     aspect of the HTTP transport layer secret from potential eavesdroppers, you
-    should access the Faye server over a secure connection. The @listen()@
-    method of Faye's server allows you to pass in a key and certificate to run
-    it over SSL, or you can use an SSL terminator like STunnel in front of your
-    Faye server.
+    should access the Faye server over a secure connection. You should use
+    Node's @https@ module to create a server, or run Thin in SSL mode, or you
+    can use an SSL terminator like STunnel in front of your Faye server.
 
     On the client side, you should make sure you use an @https:@ URL for the
     client to connect to.

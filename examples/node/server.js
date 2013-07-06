@@ -4,17 +4,14 @@ var fs    = require('fs'),
     https = require('https'),
     faye  = require('../../build/node/faye-node');
 
-var SHARED_DIR = path.dirname(__filename) + '/../shared',
+var SHARED_DIR = __dirname + '/../shared',
     PUBLIC_DIR = SHARED_DIR + '/public',
 
     bayeux     = new faye.NodeAdapter({mount: '/bayeux', timeout: 20}),
     port       = process.argv[2] || '8000',
     secure     = process.argv[3] === 'ssl',
-
-    sslOpts = {
-      key:  fs.readFileSync(SHARED_DIR + '/server.key'),
-      cert: fs.readFileSync(SHARED_DIR + '/server.crt')
-    };
+    key        = fs.readFileSync(SHARED_DIR + '/server.key'),
+    cert       = fs.readFileSync(SHARED_DIR + '/server.crt');
 
 var handleRequest = function(request, response) {
   var path = (request.url === '/') ? '/index.html' : request.url;
@@ -30,7 +27,7 @@ var handleRequest = function(request, response) {
 };
 
 var server = secure
-           ? https.createServer(sslOpts, handleRequest)
+           ? https.createServer({cert: cert, key: key}, handleRequest)
            : http.createServer(handleRequest);
 
 bayeux.attach(server);

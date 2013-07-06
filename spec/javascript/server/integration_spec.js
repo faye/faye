@@ -1,15 +1,11 @@
-var fs   = require('fs'),
-    cert = fs.readFileSync(__dirname + '/../../../examples/shared/server.crt'),
-    key  = fs.readFileSync(__dirname + '/../../../examples/shared/server.key')
+var fs    = require('fs'),
+    http  = require('http'),
+    https = require('https'),
+    cert  = fs.readFileSync(__dirname + '/../../../examples/shared/server.crt'),
+    key   = fs.readFileSync(__dirname + '/../../../examples/shared/server.key')
 
 JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
   server: function(port, ssl, callback) {
-    var shared  = __dirname + '/../../../examples/shared',
-
-        options = ssl
-                ? { key: shared + '/server.key', cert: shared + '/server.crt' }
-                : null
-
     this._adapter = new Faye.NodeAdapter({mount: "/bayeux", timeout: 2})
     this._adapter.addExtension({
       outgoing: function(message, callback) {
@@ -20,13 +16,22 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
 
     this._port = port
     this._secure = ssl
-    this._adapter.listen(port, options, callback)
+
+    this._http = ssl
+               ? https.createServer({cert: cert, key: key})
+               : http.createServer()
+
+    this._adapter.attach(this._http)
+    this._http.listen(port, callback)
   },
 
   stop: function(callback) {
     for (var id in this._clients) this._clients[id].disconnect()
     var self = this
-    setTimeout(function() { self._adapter.stop(callback) }, 100)
+    setTimeout(function() {
+      self._http.on('close', callback)
+      self._http.close()
+    }, 100)
   },
 
   client: function(name, channels, callback) {
