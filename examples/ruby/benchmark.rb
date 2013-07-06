@@ -1,5 +1,6 @@
 require 'rubygems'
-require File.expand_path('../../../lib/faye', __FILE__)
+require 'bundler/setup'
+require 'faye'
 
 port   = ARGV[0] || 9292
 path   = ARGV[1] || 'bayeux'

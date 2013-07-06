@@ -1,5 +1,6 @@
 require 'rubygems'
-require File.expand_path('../../../lib/faye', __FILE__)
+require 'bundler/setup'
+require 'faye'
 
 EM.run {
   ENDPOINT = 'http://localhost:9292/bayeux'
