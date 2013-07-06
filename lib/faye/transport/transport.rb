@@ -58,7 +58,8 @@ module Faye
     end
 
     def receive(responses)
-      debug('Client ? received from ?: ?', @client.client_id, @endpoint, responses)
+      client_id = @client.instance_eval { @client_id }
+      debug('Client ? received from ?: ?', client_id, @endpoint, responses)
       responses.each { |response| @client.receive_message(response) }
     end
 
