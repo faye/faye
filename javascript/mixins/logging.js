@@ -30,7 +30,10 @@ Faye.Logging = {
     if (klass) banner += '.' + klass;
     banner += '] ';
 
-    Faye.logger[level](banner + message);
+    if (typeof Faye.logger[level] === 'function')
+      Faye.logger[level](banner + message);
+    else if (typeof Faye.logger === 'function')
+      Faye.logger(banner + message);
   }
 };
 

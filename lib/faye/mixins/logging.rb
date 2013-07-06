@@ -24,7 +24,11 @@ module Faye
 
       banner = "[#{ self.class.name }] "
 
-      Faye.logger.__send__(level, banner + message)
+      if Faye.logger.respond_to?(level)
+        Faye.logger.__send__(level, banner + message)
+      elsif Faye.logger.respond_to?(:call)
+        Faye.logger.call(banner + message)
+      end
     end
 
   end
