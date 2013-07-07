@@ -9,10 +9,19 @@
 , "engines"         : {"node": ">=0.4.0"}
 , "main"            : "./node/faye-node"
 , "browserify"      : "./browser/faye-browser"
-, "dependencies"    : {"cookiejar": "", "faye-websocket": ">=0.6.1"}
-, "devDependencies" : {"jstest": "", "wake": ""}
 
-, "scripts"         : {"build": "./node_modules/.bin/wake"}
+, "dependencies"    : { "cookiejar": ""
+                      , "faye-websocket": ">=0.6.1"
+                      }
+, "devDependencies" : { "jstest": ""
+                      , "promises-aplus-tests": ""
+                      , "wake": ""
+                      }
+
+, "scripts"         : { "build"   : "./node_modules/.bin/wake"
+                      , "test"    : "node spec/node.js"
+                      , "promise" : "promises-aplus-tests javascript/util/promise.js"
+                      }
 
 , "repository"      : { "type"  : "git"
                       , "url"   : "git://github.com/faye/faye.git"
