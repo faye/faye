@@ -39,7 +39,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
 
     this.subsCalled = 0
     callback = callback || function() { subsCalled += 1 }
-    client.subscribe(channel, callback)
+    return client.subscribe(channel, callback)
   }})
 
   describe("initialize", function() { with(this) {
@@ -164,30 +164,32 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     }})
 
     describe("with existing subscriptions after a server restart", function() { with(this) {
-      before(function() { with(this) {
+      before(function(resume) { with(this) {
         createConnectedClient()
-
         this.message = null
-        subscribe(client, "/messages/foo", function(m) { message = m })
 
-        client.receiveMessage({advice: {reconnect: "handshake"}})
+        subscribe(client, "/messages/foo", function(m) { message = m }).then(function() {
+          client.receiveMessage({advice: {reconnect: "handshake"}})
 
-        stubResponse({channel:      "/meta/handshake",
-                      successful:   true,
-                      version:      "1.0",
-                      supportedConnectionTypes: ["websocket"],
-                      clientId:     "reconnectid",
-                      subscription: "/messages/foo" })  // tacked on to trigger subscribe() callback
+          stubResponse({channel:      "/meta/handshake",
+                        successful:   true,
+                        version:      "1.0",
+                        supportedConnectionTypes: ["websocket"],
+                        clientId:     "reconnectid",
+                        subscription: "/messages/foo" })  // tacked on to trigger subscribe() callback
+
+          resume()
+        })
       }})
 
-      it("resends the subscriptions to the server", function() { with(this) {
+      it("resends the subscriptions to the server", function(resume) { with(this) {
         expect(transport, "send").given({
           channel:      "/meta/subscribe",
           clientId:     "reconnectid",
           subscription: "/messages/foo",
           id:           instanceOf("string")
         }, 60)
-        client.handshake()
+        client.connect(resume)
       }})
 
       it("retains the listeners for the subscriptions", function() { with(this) {
@@ -309,15 +311,16 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     }})
 
     describe("with no prior subscriptions", function() { with(this) {
-      it("sends a subscribe message to the server", function() { with(this) {
+      it("sends a subscribe message to the server", function(resume) { with(this) {
         expect(transport, "send").given(subscribeMessage, 60)
         client.subscribe("/foo")
+        client.connect(resume)
       }})
 
       // The Bayeux spec says the server should accept a list of subscriptions
       // in one message but the cometD server doesn't actually support this
       describe("with an array of subscriptions", function() { with(this) {
-        it("sends multiple subscribe messages", function() { with(this) {
+        it("sends multiple subscribe messages", function(resume) { with(this) {
           expect(transport, "send").given({
             channel:      "/meta/subscribe",
             clientId:     "fakeid",
@@ -331,6 +334,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
             id:           instanceOf("string")
           }, 60)
           client.subscribe(["/foo", "/bar"])
+          client.connect(resume)
         }})
 
         it("returns an array of subscriptions", function() { with(this) {
@@ -349,11 +353,14 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
                         subscription: "/foo/*" })
         }})
 
-        it("sets up a listener for the subscribed channel", function() { with(this) {
+        it("sets up a listener for the subscribed channel", function(resume) { with(this) {
           var message
-          client.subscribe("/foo/*", function(m) { message = m })
-          client.receiveMessage({channel: "/foo/bar", data: "hi"})
-          assertEqual( "hi", message )
+          client.subscribe("/foo/*", function(m) { message = m }).then(function() {
+            resume(function() {
+              client.receiveMessage({channel: "/foo/bar", data: "hi"})
+              assertEqual( "hi", message )
+            })
+          })
         }})
 
         it("does not call the listener for non-matching channels", function() { with(this) {
@@ -363,14 +370,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           assertEqual( undefined, message )
         }})
 
-        it("activates the subscription", function() { with(this) {
-          var active = false
-          client.subscribe("/foo/*").callback(function() { active = true })
-          assert( active )
+        it("activates the subscription", function(resume) { with(this) {
+          client.subscribe("/foo/*").callback(resume)
         }})
 
         describe("with an incoming extension installed", function() { with(this) {
-          before(function() { with(this) {
+          before(function(resume) { with(this) {
             var extension = {
               incoming: function(message, callback) {
                 if (message.data) message.data.changed = true
@@ -379,7 +384,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
             }
             client.addExtension(extension)
             this.message = null
-            client.subscribe("/foo/*", function(m) { message = m })
+            client.subscribe("/foo/*", function(m) { message = m }).then(resume)
           }})
 
           it("passes delivered messages through the extension", function() { with(this) {
@@ -389,7 +394,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         }})
 
         describe("with an outgoing extension installed", function() { with(this) {
-          before(function() { with(this) {
+          before(function(resume) { with(this) {
             var extension = {
               outgoing: function(message, callback) {
                 if (message.data) message.data.changed = true
@@ -398,7 +403,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
             }
             client.addExtension(extension)
             this.message = null
-            client.subscribe("/foo/*", function(m) { message = m })
+            client.subscribe("/foo/*", function(m) { message = m }).then(resume)
           }})
 
           it("leaves messages unchanged", function() { with(this) {
@@ -449,16 +454,17 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           assertEqual( undefined, message )
         }})
 
-        it("does not activate the subscription", function() { with(this) {
-          var active = false
-          client.subscribe("/meta/foo").callback(function() { active = true })
-          assert( !active )
+        it("does not activate the subscription", function(resume) { with(this) {
+          client.subscribe("/meta/foo").errback(function() { resume() })
         }})
 
-        it("reports the error through an errback", function() { with(this) {
+        it("reports the error through an errback", function(resume) { with(this) {
           var error = null
-          client.subscribe("/meta/foo").errback(function(e) { error = e })
-          assertEqual( objectIncluding({code: 403, params: ["/meta/foo"], message: "Forbidden channel"}), error )
+          client.subscribe("/meta/foo").errback(function(error) {
+            resume(function() {
+              assertEqual( objectIncluding({code: 403, params: ["/meta/foo"], message: "Forbidden channel"}), error )
+            })
+          })
         }})
       }})
     }})
@@ -473,16 +479,17 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         client.subscribe("/foo/*")
       }})
 
-      it("sets up another listener on the channel", function() { with(this) {
-        client.subscribe("/foo/*", function() { subsCalled += 1 })
-        client.receiveMessage({channel: "/foo/bar", data: "hi"})
-        assertEqual( 2, subsCalled )
+      it("sets up another listener on the channel", function(resume) { with(this) {
+        client.subscribe("/foo/*", function() { subsCalled += 1 }).then(function() {
+          resume(function() {
+            client.receiveMessage({channel: "/foo/bar", data: "hi"})
+            assertEqual( 2, subsCalled )
+          })
+        })
       }})
 
-      it("activates the subscription", function() { with(this) {
-        var active = false
-        client.subscribe("/foo/*").callback(function() { active = true })
-        assert( active )
+      it("activates the subscription", function(resume) { with(this) {
+        client.subscribe("/foo/*").callback(resume)
       }})
     }})
   }})
@@ -506,15 +513,16 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     }})
 
     describe("with a single subscription", function() { with(this) {
-      before(function() { with(this) {
+      before(function(resume) { with(this) {
         this.message  = null
         this.listener = function(m) { message = m }
-        subscribe(client, "/foo/*", listener)
+        subscribe(client, "/foo/*", listener).then(resume)
       }})
 
-      it("sends an unsubscribe message to the server", function() { with(this) {
+      it("sends an unsubscribe message to the server", function(resume) { with(this) {
         expect(transport, "send").given(unsubscribeMessage, 60)
         client.unsubscribe("/foo/*")
+        client.connect(resume)
       }})
 
       it("removes the listener from the channel", function() { with(this) {
@@ -526,12 +534,14 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     }})
 
     describe("with multiple subscriptions to the same channel", function() { with(this) {
-      before(function() { with(this) {
+      before(function(resume) { with(this) {
         this.messages = []
         this.hey = function(m) { messages.push("hey " + m.text) }
         this.bye = function(m) { messages.push("bye " + m.text) }
-        subscribe(client, "/foo/*", hey)
-        subscribe(client, "/foo/*", bye)
+
+        subscribe(client, "/foo/*", hey).then(function() {
+          return subscribe(client, "/foo/*", bye)
+        }).then(resume)
       }})
 
       it("removes one of the listeners from the channel", function() { with(this) {
@@ -546,25 +556,28 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         client.unsubscribe("/foo/*", bye)
       }})
 
-      it("sends an unsubscribe message if each listener is removed", function() { with(this) {
+      it("sends an unsubscribe message if each listener is removed", function(resume) { with(this) {
         expect(transport, "send").given(unsubscribeMessage, 60)
         client.unsubscribe("/foo/*", bye)
         client.unsubscribe("/foo/*", hey)
+        client.connect(resume)
       }})
 
-      it("sends an unsubscribe message if all listeners are removed", function() { with(this) {
+      it("sends an unsubscribe message if all listeners are removed", function(resume) { with(this) {
         expect(transport, "send").given(unsubscribeMessage, 60)
         client.unsubscribe("/foo/*")
+        client.connect(resume)
       }})
     }})
 
     describe("with multiple subscriptions to different channels", function() { with(this) {
-      before(function() { with(this) {
-        subscribe(client, "/foo")
-        subscribe(client, "/bar")
+      before(function(resume) { with(this) {
+        subscribe(client, "/foo").then(function() {
+          return subscribe(client, "/bar")
+        }).then(resume)
       }})
 
-      it("sends multiple unsubscribe messages if given an array", function() { with(this) {
+      it("sends multiple unsubscribe messages if given an array", function(resume) { with(this) {
         expect(transport, "send").given({
           channel:      "/meta/unsubscribe",
           clientId:     "fakeid",
@@ -578,6 +591,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           id:           instanceOf("string")
         }, 60)
         client.unsubscribe(["/foo", "/bar"])
+        client.connect(resume)
       }})
     }})
   }})
@@ -585,7 +599,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   describe("publish", function() { with(this) {
     before(function() { this.createConnectedClient() })
 
-    it("sends the message to the server with an ID", function() { with(this) {
+    it("sends the message to the server with an ID", function(resume) { with(this) {
       expect(transport, "send").given({
         channel:  "/messages/foo",
         clientId: "fakeid",
@@ -593,6 +607,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         id:       instanceOf("string")
       }, 60)
       client.publish("/messages/foo", {hello: "world"})
+      client.connect(resume)
     }})
 
     describe("on publish failure", function() { with(this) {
@@ -609,12 +624,14 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         assert( !published )
       }})
 
-      it("reports the error through an errback", function() { with(this) {
-        var error = null
-        client.publish("/messages/foo", {text: "hi"}).errback(function(e) { error = e })
-        assertEqual( 407, error.code )
-        assertEqual( ["/messages/foo"], error.params )
-        assertEqual( "Failed to publish", error.message )
+      it("reports the error through an errback", function(resume) { with(this) {
+        client.publish("/messages/foo", {text: "hi"}).errback(function(error) {
+          resume(function() {
+            assertEqual( 407, error.code )
+            assertEqual( ["/messages/foo"], error.params )
+            assertEqual( "Failed to publish", error.message )
+          })
+        })
       }})
     }})
 
@@ -645,7 +662,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         client.addExtension(extension)
       }})
 
-      it("passes messages through the extension", function() { with(this) {
+      it("passes messages through the extension", function(resume) { with(this) {
         expect(transport, "send").given({
           channel:  "/messages/foo",
           clientId: "fakeid",
@@ -654,6 +671,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           ext:      {auth: "password"}
         }, 60)
         client.publish("/messages/foo", {hello: "world"})
+        client.connect(resume)
       }})
     }})
 
@@ -668,7 +686,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         client.addExtension(extension)
       }})
 
-      it("leaves the message unchanged", function() { with(this) {
+      it("leaves the message unchanged", function(resume) { with(this) {
         expect(transport, "send").given({
           channel:  "/messages/foo",
           clientId: "fakeid",
@@ -676,6 +694,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           id:       instanceOf("string")
         }, 60)
         client.publish("/messages/foo", {hello: "world"})
+        client.connect(resume)
       }})
     }})
   }})

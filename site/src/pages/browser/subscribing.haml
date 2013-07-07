@@ -37,16 +37,11 @@
 
     <pre class="prettyprint">subscription.cancel();</pre>
 
-    It also lets you add callbacks that will run as soon as the subcription has
-    been set up and acknowledged by the server:
+    The @Subscription@ object is a
+    "promise":http://promises-aplus.github.io/promises-spec/ that is fulfilled
+    when the subscription has been acknowledged by the server:
 
-    <pre class="prettyprint">subscription.callback(function() {
+    <pre class="prettyprint">subscription.then(function() {
       alert('Subscription is now active!');
     });</pre>
 
-    If there was an error creating the subscription, you can detect this using
-    an errback:
-
-    <pre class="prettyprint">subscription.errback(function(error) {
-      alert(error.message);
-    });</pre>

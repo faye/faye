@@ -17,22 +17,15 @@ var FORWARD = function(x) { return x },
     BREAK   = function(x) { throw x  };
 
 var Promise = function(task) {
-  Promise.reset(this);
+  this._state     = PENDING;
+  this._callbacks = [];
+  this._errbacks  = [];
 
   if (typeof task !== 'function') return;
   var self = this;
 
   task(function(value)  { fulfill(self, value) },
        function(reason) { reject(self, reason) });
-};
-
-Promise.reset = function(promise) {
-  delete promise._value;
-  delete promise._reason;
-
-  promise._state     = PENDING;
-  promise._callbacks = [];
-  promise._errbacks  = [];
 };
 
 Promise.prototype.then = function(callback, errback) {

@@ -16,19 +16,19 @@
     other objects. There are no required fields, and the object will be
     delivered verbatim to any subscriber functions listening to that channel.
 
-    Just like @subscribe()@, the @publish()@ method lets you add callbacks to
-    find out whether it was successful. Bear in mind that 'success' here just
-    means the server received and routed the message successfully, not that it
-    has been received by all other clients. An error means the server found a
-    problem processing the message. Network errors are not covered by this.
+    Just like @subscribe()@, the @publish()@ method returns a
+    "promise":http://promises-aplus.github.io/promises-spec/ that is fulfilled
+    when the server acknowledges the message. This just means the server
+    received and routed the message successfully, not that it has been received
+    by all other clients. The promise is rejected if the server explcitly
+    returns an error saying it could not publish the message to other clients;
+    network errors are therefore not covered by this API.
 
     <pre class="prettyprint">var publication = client.publish('/foo', {text: 'Hi there'});
 
-    publication.callback(function() {
+    publication.then(function() {
       alert('Message received by server!');
-    });
-
-    publication.errback(function(error) {
+    }, function(error) {
       alert('There was a problem: ' + error.message);
     });</pre>
 

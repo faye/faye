@@ -28,6 +28,20 @@
       client.publish('/foo', 'text' => 'Hello world')
     }</pre>
 
+    Note that the Ruby client uses @EventMachine::Deferrable@ instead of
+    "promises":http://promises-aplus.github.io/promises-spec/, for example you
+    detect success and failure of a publication like so:
+
+    <pre class="prettyprint">publication = client.publish('/foo', 'text' => 'Hello world')
+
+    publication.callback do
+      puts 'Message received by server!'
+    end
+
+    publication.errback do |error|
+      puts 'There was a problem: ' + error.message
+    end</pre>
+
     If you need to set custom headers to talk to your Bayeux server, use the
     @set_header@ method:
 

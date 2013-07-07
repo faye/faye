@@ -1,53 +1,45 @@
 Faye.Deferrable = {
-  callback: function(callback, context) {
-    if (!callback) return;
+  then: function(callback, errback) {
+    var self = this;
+    if (!this._promise)
+      this._promise = new Faye.Promise(function(fulfill, reject) {
+        self._fulfill = fulfill;
+        self._reject  = reject;
+      });
 
-    if (this._deferredStatus === 'succeeded')
-      return callback.apply(context, this._deferredArgs);
-
-    this._callbacks = this._callbacks || [];
-    this._callbacks.push([callback, context]);
+    if (arguments.length === 0)
+      return this._promise;
+    else
+      return this._promise.then(callback, errback);
   },
 
-  timeout: function(seconds, message) {
-    var _this = this;
-    var timer = Faye.ENV.setTimeout(function() {
-      _this.setDeferredStatus('failed', message);
-    }, seconds * 1000);
-    this._timer = timer;
+  callback: function(callback, context) {
+    return this.then(function(value) { callback.call(context, value) });
   },
 
   errback: function(callback, context) {
-    if (!callback) return;
-
-    if (this._deferredStatus === 'failed')
-      return callback.apply(context, this._deferredArgs);
-
-    this._errbacks = this._errbacks || [];
-    this._errbacks.push([callback, context]);
+    return this.then(null, function(reason) { callback.call(context, reason) });
   },
 
-  setDeferredStatus: function() {
-    if (this._timer)
-      Faye.ENV.clearTimeout(this._timer);
+  timeout: function(seconds, message) {
+    this.then();
+    var self = this;
+    this._timer = Faye.ENV.setTimeout(function() {
+      self._reject(message);
+    }, seconds * 1000);
+  },
 
-    var args   = Array.prototype.slice.call(arguments),
-        status = args.shift(),
-        callbacks;
+  setDeferredStatus: function(status, value) {
+    if (this._timer) Faye.ENV.clearTimeout(this._timer);
 
-    this._deferredStatus = status;
-    this._deferredArgs = args;
+    var promise = this.then();
 
     if (status === 'succeeded')
-      callbacks = this._callbacks;
+      this._fulfill(value);
     else if (status === 'failed')
-      callbacks = this._errbacks;
-
-    if (!callbacks) return;
-
-    var callback;
-    while (callback = callbacks.shift())
-      callback[0].apply(callback[1], this._deferredArgs);
+      this._reject(value);
+    else
+      delete this._promise;
   }
 };
 
