@@ -17,12 +17,12 @@
     delivered verbatim to any subscriber functions listening to that channel.
 
     Just like @subscribe()@, the @publish()@ method returns a
-    "promise":http://promises-aplus.github.io/promises-spec/ that is fulfilled
-    when the server acknowledges the message. This just means the server
-    received and routed the message successfully, not that it has been received
-    by all other clients. The promise is rejected if the server explcitly
-    returns an error saying it could not publish the message to other clients;
-    network errors are therefore not covered by this API.
+    "promise":http://promisesaplus.com/ that is fulfilled when the server
+    acknowledges the message. This just means the server received and routed the
+    message successfully, not that it has been received by all other clients.
+    The promise is rejected if the server explcitly returns an error saying it
+    could not publish the message to other clients; network errors are therefore
+    not covered by this API.
 
     <pre class="prettyprint">var publication = client.publish('/foo', {text: 'Hi there'});
 
