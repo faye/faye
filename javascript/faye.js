@@ -1,3 +1,5 @@
+(function(){
+
 'use strict';
 
 var Faye = {
@@ -145,3 +147,4 @@ if (typeof module !== 'undefined')
 else if (typeof window !== 'undefined')
   window.Faye = Faye;
 
+})(this);
