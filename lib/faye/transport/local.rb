@@ -2,7 +2,7 @@ module Faye
 
   class Transport::Local < Transport
     def self.usable?(client, endpoint, &callback)
-      callback.call(endpoint.is_a?(Server))
+      callback.call(Server === endpoint)
     end
 
     def batching?

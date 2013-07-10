@@ -13,7 +13,7 @@ module Faye
 
     def self.create(client, endpoint)
       sockets = client.transports[:websocket] ||= {}
-      sockets[endpoint] ||= new(client, endpoint)
+      sockets[endpoint.to_s] ||= new(client, endpoint)
     end
 
     def batching?
@@ -49,7 +49,9 @@ module Faye
 
       @state = CONNECTING
 
-      @socket = Faye::WebSocket::Client.new(@endpoint.gsub(/^http(s?):/, 'ws\1:'))
+      url = @endpoint.dup
+      url.scheme = url.scheme.gsub(/http/, 'ws')
+      @socket = Faye::WebSocket::Client.new(url.to_s)
 
       @socket.onopen = lambda do |*args|
         @state = CONNECTED

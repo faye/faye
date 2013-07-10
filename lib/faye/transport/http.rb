@@ -2,15 +2,15 @@ module Faye
 
   class Transport::Http < Transport
     def self.usable?(client, endpoint, &callback)
-      callback.call(endpoint.is_a?(String))
+      callback.call(URI === endpoint)
     end
 
     def request(message, timeout)
       retry_block = retry_block(message, timeout)
 
       content = Faye.to_json(message)
-      cookies = @cookies.get_cookies(@endpoint)
-      params  = build_params(URI.parse(@endpoint), content, cookies)
+      cookies = @cookies.get_cookies(@endpoint.to_s)
+      params  = build_params(@endpoint, content, cookies)
       request = create_request(params)
 
       request.callback do
@@ -45,9 +45,9 @@ module Faye
                   options = {                 # for em-http-request >= 1.0
                     :inactivity_timeout => 0  # connection inactivity (post-setup) timeout (0 = disable timeout)
                   }
-                  EventMachine::HttpRequest.new(@endpoint, options)
+                  EventMachine::HttpRequest.new(@endpoint.to_s, options)
                 else
-                  EventMachine::HttpRequest.new(@endpoint)
+                  EventMachine::HttpRequest.new(@endpoint.to_s)
                 end
 
       client.post(params)

@@ -24,13 +24,17 @@ module Faye
       info('New client created for ?', endpoint)
 
       @options    = options
-      @endpoint   = endpoint || RackAdapter::DEFAULT_ENDPOINT
+      @endpoint   = Faye.parse_url(endpoint || RackAdapter::DEFAULT_ENDPOINT)
       @endpoints  = @options[:endpoints] || {}
       @transports = {}
       @cookies    = CookieJar::Jar.new
       @headers    = {}
       @disabled   = []
       @retry      = @options[:retry] || DEFAULT_RETRY
+
+      @endpoints.each do |key, value|
+        @endpoints[key] = Faye.parse_url(value)
+      end
 
       @state      = UNCONNECTED
       @channels   = Channel::Set.new

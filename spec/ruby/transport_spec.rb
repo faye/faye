@@ -6,7 +6,7 @@ describe Faye::Transport do
   end
 
   let :client do
-    mock("client", :endpoint => "http://example.com/", :endpoints => {}, :transports => {})
+    mock("client", :endpoint => URI.parse("http://example.com/"), :endpoints => {}, :transports => {})
   end
 
   describe :get do
