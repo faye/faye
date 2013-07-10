@@ -1,13 +1,15 @@
 (function() {
 'use strict';
 
+var timeout = setTimeout;
+
 var defer;
 if (typeof setImmediate === 'function')
   defer = setImmediate;
 else if (typeof process === 'object' && process.nextTick)
   defer = process.nextTick;
 else
-  defer = function(fn) { setTimeout(fn, 0) };
+  defer = function(fn) { timeout(fn, 0) };
 
 var PENDING   = 0,
     FULFILLED = 1,
@@ -74,29 +76,24 @@ var invoke = function(fn, value, next) {
 
 var fulfill = Promise.fulfill = function(promise, value) {
   if (promise._state !== PENDING) return;
-  promise._state = FULFILLED;
-  transition(promise, value);
+
+  promise._state    = FULFILLED;
+  promise._value    = value;
+  promise._errbacks = [];
+
+  var callbacks = promise._callbacks, cb;
+  while (cb = callbacks.shift()) cb(value);
 };
 
 var reject = Promise.reject = function(promise, reason) {
   if (promise._state !== PENDING) return;
-  promise._state = REJECTED;
-  transition(promise, reason);
-};
 
-var transition = function(promise, value) {
-  var callbacks, ignored, cb;
-  if (promise._state === FULFILLED) {
-    promise._value = value;
-    callbacks      = promise._callbacks;
-    ignored        = promise._errbacks;
-  } else if (promise._state === REJECTED) {
-    promise._reason = value;
-    callbacks       = promise._errbacks;
-    ignored         = promise._callbacks;
-  }
-  while (cb = callbacks.shift()) cb(value);
-  ignored.length = 0;
+  promise._state     = REJECTED;
+  promise._reason    = reason;
+  promise._callbacks = [];
+
+  var errbacks = promise._errbacks, eb;
+  while (eb = errbacks.shift()) eb(reason);
 };
 
 Promise.pending = function() {
