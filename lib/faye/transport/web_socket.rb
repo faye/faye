@@ -5,6 +5,11 @@ module Faye
     CONNECTING  = 2
     CONNECTED   = 3
 
+    PROTOCOLS = {
+      'http'  => 'ws',
+      'https' => 'wss'
+    }
+
     include EventMachine::Deferrable
 
     def self.usable?(client, endpoint, &callback)
@@ -50,7 +55,7 @@ module Faye
       @state = CONNECTING
 
       url = @endpoint.dup
-      url.scheme = url.scheme.gsub(/http/, 'ws')
+      url.scheme = PROTOCOLS[url.scheme]
       @socket = Faye::WebSocket::Client.new(url.to_s)
 
       @socket.onopen = lambda do |*args|

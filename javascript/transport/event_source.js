@@ -5,7 +5,10 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
 
     this._xhr = new Faye.Transport.XHR(client, endpoint);
 
-    var socket = new EventSource(endpoint + '/' + client._clientId),
+    endpoint = Faye.copyObject(endpoint);
+    endpoint.pathname += '/' + client._clientId;
+
+    var socket = new EventSource(Faye.URI.stringify(endpoint)),
         self   = this;
 
     socket.onopen = function() {
@@ -59,11 +62,14 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
 
   create: function(client, endpoint) {
     var sockets  = client.transports.eventsource = client.transports.eventsource || {},
-        id       = client._clientId,
-        endpoint = endpoint + '/' + (id || '');
+        id       = client._clientId;
 
-    sockets[endpoint] = sockets[endpoint] || new this(client, endpoint);
-    return sockets[endpoint];
+    endpoint = Faye.copyObject(endpoint);
+    endpoint.pathname += '/' + (id || '');
+    var url = Faye.URI.stringify(endpoint);
+
+    sockets[url] = sockets[url] || new this(client, endpoint);
+    return sockets[url];
   }
 });
 

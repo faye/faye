@@ -41,6 +41,7 @@ JS.require( 'FayeSpec',
             'Server.IntegrationSpec',
             'NodeAdapterSpec',
             'ClientSpec',
+            'UriSpec',
             'TransportSpec',
             function() { JS.Test.autorun() })
 

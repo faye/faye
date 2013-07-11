@@ -1,7 +1,7 @@
 JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
   before(function() { with(this) {
     this.client = {
-      endpoint:     "http://example.com/",
+      endpoint:     Faye.URI.parse("http://example.com/"),
       endpoints:    {},
       transports:   {}
     }
@@ -84,7 +84,7 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
     describe("for batching transports", function() { with(this) {
       before(function() { with(this) {
         this.Transport = Faye.Class(Faye.Transport, {batching: true})
-        this.transport = new Transport(client)
+        this.transport = new Transport(client, client.endpoint)
       }})
 
       it("does not make an immediate request", function() { with(this) {
@@ -122,7 +122,7 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
     describe("for non-batching transports", function() { with(this) {
       before(function() { with(this) {
         this.Transport = Faye.Class(Faye.Transport, {batching: false})
-        this.transport = new Transport(client)
+        this.transport = new Transport(client, client.endpoint)
       }})
 
       it("makes a request immediately", function() { with(this) {

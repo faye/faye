@@ -1,21 +1,22 @@
 Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
   shouldFlush: function(messages) {
-    var params = {
-      message:  Faye.toJSON(messages),
-      jsonp:    '__jsonp' + Faye.Transport.JSONP._cbCount + '__'
-    };
-    var location = Faye.URI.parse(this.endpoint, params).toURL();
-    return location.length >= Faye.Transport.MAX_URL_LENGTH;
+    var endpoint = Faye.copyObject(this.endpoint);
+    endpoint.query.message = Faye.toJSON(messages);
+    endpoint.query.jsonp   = '__jsonp' + Faye.Transport.JSONP._cbCount + '__';
+    var url = Faye.URI.stringify(endpoint);
+    return url.length >= Faye.Transport.MAX_URL_LENGTH;
   },
 
   request: function(messages, timeout) {
-    var params       = {message: Faye.toJSON(messages)},
-        head         = document.getElementsByTagName('head')[0],
+    var head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = Faye.Transport.JSONP.getCallbackName(),
-        location     = Faye.URI.parse(this.endpoint, params),
+        endpoint     = Faye.copyObject(this.endpoint),
         retry        = this.retry(messages, timeout),
         self         = this;
+
+    endpoint.query.message = Faye.toJSON(messages);
+    endpoint.query.jsonp   = callbackName;
 
     Faye.ENV[callbackName] = function(data) {
       cleanUp();
@@ -38,9 +39,8 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
       return true;
     };
 
-    location.params.jsonp = callbackName;
     script.type = 'text/javascript';
-    script.src  = location.toURL();
+    script.src  = Faye.URI.stringify(endpoint);
     head.appendChild(script);
   }
 }), {

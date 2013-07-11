@@ -45,6 +45,7 @@
                                     "util/class",
                                     "util/namespace",
                                     "util/promise",
+                                    "util/uri",
                                     "error",
                                     "mixins/deferrable",
                                     "mixins/publisher",
@@ -76,7 +77,6 @@
         "browser/faye-browser": { "extend": "core",
                                   "files": [
                                     "util/browser/event",
-                                    "util/browser/uri",
                                     "transport/web_socket",
                                     "transport/event_source",
                                     "transport/xhr",

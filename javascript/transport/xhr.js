@@ -1,7 +1,7 @@
 Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
     var retry = this.retry(message, timeout),
-        path  = Faye.URI.parse(this.endpoint).pathname,
+        path  = this.endpoint.path,
         self  = this,
         xhr   = Faye.ENV.ActiveXObject
               ? new ActiveXObject("Microsoft.XMLHTTP")
@@ -61,7 +61,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {
-    callback.call(context, Faye.URI.parse(endpoint).isSameOrigin());
+    callback.call(context, Faye.URI.isSameOrigin(endpoint));
   }
 });
 

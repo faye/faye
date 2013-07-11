@@ -18,7 +18,7 @@ Faye.Client = Faye.Class({
     this.info('New client created for ?', endpoint);
 
     this._options   = options || {};
-    this.endpoint   = endpoint || this.DEFAULT_ENDPOINT;
+    this.endpoint   = Faye.URI.parse(endpoint || this.DEFAULT_ENDPOINT);
     this.endpoints  = this._options.endpoints || {};
     this.transports = {};
     this._cookies   = Faye.CookieJar && new Faye.CookieJar();
@@ -26,6 +26,9 @@ Faye.Client = Faye.Class({
     this._ca        = this._options.ca;
     this._disabled  = [];
     this.retry      = this._options.retry || this.DEFAULT_RETRY;
+
+    for (var key in this.endpoints)
+      this.endpoints[key] = Faye.URI.parse(this.endpoints[key]);
 
     this._state     = this.UNCONNECTED;
     this._channels  = new Faye.Channel.Set();
@@ -80,7 +83,7 @@ Faye.Client = Faye.Class({
     this._state = this.CONNECTING;
     var self = this;
 
-    this.info('Initiating handshake with ?', this.endpoint);
+    this.info('Initiating handshake with ?', Faye.URI.stringify(this.endpoint));
     this._selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
 
     this._send({
@@ -302,7 +305,7 @@ Faye.Client = Faye.Class({
 
   _selectTransport: function(transportTypes) {
     Faye.Transport.get(this, transportTypes, this._disabled, function(transport) {
-      this.debug('Selected ? transport for ?', transport.connectionType, transport.endpoint);
+      this.debug('Selected ? transport for ?', transport.connectionType, Faye.URI.stringify(transport.endpoint));
 
       if (transport === this._transport) return;
       if (this._transport) this._transport.close();

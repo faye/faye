@@ -1,6 +1,6 @@
 Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(message, timeout) {
-    var uri      = url.parse(this.endpoint),
+    var uri      = this.endpoint,
         secure   = (uri.protocol === 'https:'),
         client   = secure ? https : http,
         content  = new Buffer(JSON.stringify(message), 'utf8'),
@@ -29,12 +29,12 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
       method:   'POST',
       host:     uri.hostname,
       port:     uri.port || (secure ? 443 : 80),
-      path:     uri.pathname,
+      path:     uri.path,
       headers:  Faye.extend({
         'Content-Length': content.length,
         'Content-Type':   'application/json',
         'Cookie':         cookies.toValueString(),
-        'Host':           uri.hostname
+        'Host':           uri.host
       }, this.headers)
     };
     if (this.ca) params.ca = this.ca;
@@ -76,7 +76,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
 
 }), {
   isUsable: function(client, endpoint, callback, context) {
-    callback.call(context, typeof endpoint === 'string');
+    callback.call(context, Faye.URI.isURI(endpoint));
   }
 });
 

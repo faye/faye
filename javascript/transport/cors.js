@@ -5,7 +5,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
         retry    = this.retry(message, timeout),
         self     = this;
 
-    xhr.open('POST', this.endpoint, true);
+    xhr.open('POST', Faye.URI.stringify(this.endpoint), true);
     if (xhr.setRequestHeader) xhr.setRequestHeader('Pragma', 'no-cache');
 
     var cleanUp = function() {
@@ -47,12 +47,11 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {
-    if (Faye.URI.parse(endpoint).isSameOrigin())
+    if (Faye.URI.isSameOrigin(endpoint))
       return callback.call(context, false);
 
     if (Faye.ENV.XDomainRequest)
-      return callback.call(context, Faye.URI.parse(endpoint).protocol ===
-                                    Faye.URI.parse(Faye.ENV.location).protocol);
+      return callback.call(context, endpoint.protocol === Faye.ENV.location.protocol);
 
     if (Faye.ENV.XMLHttpRequest) {
       var xhr = new Faye.ENV.XMLHttpRequest();

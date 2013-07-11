@@ -12,7 +12,7 @@ Faye.Transport = Faye.extend(Faye.Class({
 
   send: function(message, timeout) {
     this.debug('Client ? sending message to ?: ?',
-               this._client._clientId, this.endpoint, message);
+               this._client._clientId, Faye.URI.stringify(this.endpoint), message);
 
     if (!this.batching) return this.request([message], timeout);
 
@@ -45,7 +45,7 @@ Faye.Transport = Faye.extend(Faye.Class({
 
   receive: function(responses) {
     this.debug('Client ? received from ?: ?',
-               this._client._clientId, this.endpoint, responses);
+               this._client._clientId, Faye.URI.stringify(this.endpoint), responses);
 
     for (var i = 0, n = responses.length; i < n; i++) {
       this._client.receiveMessage(responses[i]);
@@ -88,7 +88,7 @@ Faye.Transport = Faye.extend(Faye.Class({
         callback.call(context, transport);
       });
     }, function() {
-      throw new Error('Could not find a usable connection type for ' + endpoint);
+      throw new Error('Could not find a usable connection type for ' + Faye.URI.stringify(endpoint));
     });
   },
 

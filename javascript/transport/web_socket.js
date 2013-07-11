@@ -87,9 +87,15 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     this.request(messages);
   }
 }), {
+  PROTOCOLS: {
+    'http:':  'ws:',
+    'https:': 'wss:'
+  },
+
   getSocketUrl: function(endpoint) {
-    if (Faye.URI) endpoint = Faye.URI.parse(endpoint).toURL();
-    return endpoint.replace(/^http(s?):/ig, 'ws$1:');
+    endpoint = Faye.copyObject(endpoint);
+    endpoint.protocol = this.PROTOCOLS[endpoint.protocol];
+    return Faye.URI.stringify(endpoint);
   },
 
   getClass: function() {
@@ -104,8 +110,8 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
 
   create: function(client, endpoint) {
     var sockets = client.transports.websocket = client.transports.websocket || {};
-    sockets[endpoint] = sockets[endpoint] || new this(client, endpoint);
-    return sockets[endpoint];
+    sockets[endpoint.href] = sockets[endpoint.href] || new this(client, endpoint);
+    return sockets[endpoint.href];
   }
 });
 
