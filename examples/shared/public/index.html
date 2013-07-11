@@ -39,14 +39,10 @@
   </div>
 
   <script type="text/javascript">
-    var scheme = window.location.protocol,
-        host   = location.hostname,
-        port   = location.port,
-        path   = '/bayeux';
-
-    Bayeux = new Faye.Client(scheme + '//' + host + (port ? ':' + port : '') + path);
-    Bayeux.disable('cross-origin-long-polling');
-    Soapbox.init(Bayeux);
+    var bayeux = new Faye.Client('/bayeux');
+    bayeux.disable('cross-origin-long-polling');
+    Faye.logger = console;
+    Soapbox.init(bayeux);
   </script>
 
 </div>

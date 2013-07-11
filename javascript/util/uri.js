@@ -32,12 +32,15 @@ Faye.URI = {
     consume('search',   /^\?[^#]*/);
     consume('hash',     /^#.*/);
 
+    uri.protocol = uri.protocol || Faye.ENV.location.protocol;
+
     if (uri.host) {
       uri.host     = uri.host.substr(2);
       parts        = uri.host.split(':');
       uri.hostname = parts[0];
       uri.port     = parts[1] || '';
     } else {
+      uri.host     = Faye.ENV.location.host;
       uri.hostname = Faye.ENV.location.hostname;
       uri.port     = Faye.ENV.location.port;
     }
