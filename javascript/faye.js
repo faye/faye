@@ -1,5 +1,3 @@
-'use strict';
-
 var Faye = {
   VERSION:          '0.8.9',
 

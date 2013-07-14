@@ -41,6 +41,7 @@
       "targets": {
         "core": {                 "builds": {"src": false, "min": false},
                                   "files": [
+                                    "_head",
                                     "faye",
                                     "util/class",
                                     "util/namespace",
@@ -72,7 +73,8 @@
                                     "transport/web_socket",
                                     "transport/node_http",
                                     "adapters/node_adapter",
-                                    "adapters/static_server"
+                                    "adapters/static_server",
+                                    "_tail"
         ]},
         "browser/faye-browser": { "extend": "core",
                                   "files": [
@@ -81,7 +83,8 @@
                                     "transport/event_source",
                                     "transport/xhr",
                                     "transport/cors",
-                                    "transport/jsonp"
+                                    "transport/jsonp",
+                                    "_tail"
         ]}
       }
     },
