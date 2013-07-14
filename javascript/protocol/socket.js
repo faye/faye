@@ -12,7 +12,7 @@ Faye.Server.Socket = Faye.Class({
   },
 
   close: function() {
-    this._socket.close();
+    if (this._socket) this._socket.close();
     delete this._socket;
   }
 });

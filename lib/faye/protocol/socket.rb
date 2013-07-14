@@ -14,7 +14,7 @@ module Faye
       end
 
       def close
-        @socket.close
+        @socket.close if @socket
         @socket = nil
       end
     end
