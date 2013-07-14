@@ -32,7 +32,31 @@ Faye.NodeAdapter = Faye.Class({
   initialize: function(options) {
     this._options    = options || {};
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
-    this._endpointRe = new RegExp('^' + this._endpoint.replace(/\/$/, '') + '(/[^/]+)*(\\.[^\\.]+)?$');
+    var sanitizedEndpoint = '/' + this._endpoint.replace(/^\/+|\/+$/g, ''); // A slash, followed by the specified endpoint with leading and trailing slashes removed
+    this._endpointRe = new RegExp(
+      // Starts and ends with
+      '^' + 
+      
+      (
+        // The endpoint followed by anything at all (including nothing), if the endpoint is "/"
+        sanitizedEndpoint === '/' ? '/.*' :
+
+        // Otherwise, one of…
+        '(' +
+
+          // Exactly the endpoint
+          sanitizedEndpoint +
+
+          '|' + // OR
+
+          // The endpoint, followed by a slash, followed by at least one non-slash character
+          sanitizedEndpoint + '/[^/]+' +
+
+        ')'
+      ) +
+      
+      '$'
+    );
     this._server     = new Faye.Server(this._options);
 
     this._static = new Faye.StaticServer(path.dirname(__filename) + '/../browser', /\.(?:js|map)$/);
