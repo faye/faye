@@ -45,7 +45,9 @@
         msg_token    = message['ext'] && message['ext']['authToken']
 
         # Find the right token for the channel
-        registry = JSON.parse(File.read('./tokens.json'))
+        @file_content ||= File.read('./tokens.json')
+
+        registry = JSON.parse(@file_content)
         token    = registry[subscription]
 
         # Add an error if the tokens don't match

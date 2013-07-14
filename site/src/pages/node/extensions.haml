@@ -46,17 +46,17 @@
             msgToken     = message.ext && message.ext.authToken;
 
         // Find the right token for the channel
-        fs.readFile('./tokens.json', function(err, content) {
-          var registry = JSON.parse(content.toString()),
-              token    = registry[subscription];
+        this._fileContent = this._fileContent || fs.readFileSync('./tokens.json');
 
-          // Add an error if the tokens don't match
-          if (token !== msgToken)
-            message.error = 'Invalid subscription auth token';
+        var registry = JSON.parse(this._fileContent.toString()),
+            token    = registry[subscription];
 
-          // Call the server back now we're done
-          callback(message);
-        });
+        // Add an error if the tokens don't match
+        if (token !== msgToken)
+          message.error = 'Invalid subscription auth token';
+
+        // Call the server back now we're done
+        callback(message);
       }
     };
 
