@@ -35,7 +35,9 @@ module Faye
       return if messages.empty?
       @messages ||= {}
       messages.each { |message| @messages[message['id']] = message }
-      callback { |socket| socket.send(Faye.to_json(messages)) }
+      callback do |socket|
+        socket.send(Faye.to_json(messages)) if socket
+      end
       connect
     end
 

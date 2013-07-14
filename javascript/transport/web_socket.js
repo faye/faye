@@ -18,7 +18,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     for (var i = 0, n = messages.length; i < n; i++) {
       this._messages[messages[i].id] = messages[i];
     }
-    this.callback(function(socket) { socket.send(Faye.toJSON(messages)) });
+    this.callback(function(socket) {
+      if (socket) socket.send(Faye.toJSON(messages));
+    });
     this.connect();
   },
 
