@@ -3,10 +3,18 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     var xhrClass = Faye.ENV.XDomainRequest ? XDomainRequest : XMLHttpRequest,
         xhr      = new xhrClass(),
         retry    = this.retry(message, timeout),
-        self     = this;
+        headers  = this._client.headers,
+        self     = this,
+        key;
 
     xhr.open('POST', Faye.URI.stringify(this.endpoint), true);
-    if (xhr.setRequestHeader) xhr.setRequestHeader('Pragma', 'no-cache');
+    if (xhr.setRequestHeader) {
+      xhr.setRequestHeader('Pragma', 'no-cache');
+      for (key in headers) {
+        if (!headers.hasOwnProperty(key)) continue;
+        xhr.setRequestHeader(key, headers[key]);
+      }
+    }
 
     var cleanUp = function() {
       if (!xhr) return false;

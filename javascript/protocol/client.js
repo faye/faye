@@ -21,9 +21,9 @@ Faye.Client = Faye.Class({
     this.endpoint   = Faye.URI.parse(endpoint || this.DEFAULT_ENDPOINT);
     this.endpoints  = this._options.endpoints || {};
     this.transports = {};
-    this._cookies   = Faye.CookieJar && new Faye.CookieJar();
-    this._headers   = {};
-    this._ca        = this._options.ca;
+    this.cookies    = Faye.CookieJar && new Faye.CookieJar();
+    this.headers    = {};
+    this.ca         = this._options.ca;
     this._disabled  = [];
     this.retry      = this._options.retry || this.DEFAULT_RETRY;
 
@@ -54,7 +54,7 @@ Faye.Client = Faye.Class({
   },
 
   setHeader: function(name, value) {
-    this._headers[name] = value;
+    this.headers[name] = value;
   },
 
   // Request
@@ -311,9 +311,6 @@ Faye.Client = Faye.Class({
       if (this._transport) this._transport.close();
 
       this._transport = transport;
-      this._transport.cookies = this._cookies;
-      this._transport.headers = this._headers;
-      this._transport.ca      = this._ca;
 
       transport.bind('down', function() {
         if (this._transportUp !== undefined && !this._transportUp) return;

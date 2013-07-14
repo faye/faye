@@ -42,8 +42,10 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     var ws = Faye.Transport.WebSocket.getClass();
     if (!ws) return this.setDeferredStatus('failed');
 
-    var url = Faye.Transport.WebSocket.getSocketUrl(this.endpoint);
-    this._socket = this.ca ? new ws(url, [], {ca: this.ca}) : new ws(url);
+    var url     = Faye.Transport.WebSocket.getSocketUrl(this.endpoint),
+        options = {headers: this._client.headers, ca: this._client.ca};
+
+    this._socket = Faye.WebSocket ? new ws(url, [], options) : new ws(url);
 
     var self = this;
 

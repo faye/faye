@@ -18,7 +18,7 @@ module Faye
     CONNECTION_TIMEOUT  = 60.0
     DEFAULT_RETRY       = 5.0
 
-    attr_reader :endpoint, :endpoints, :retry, :transports
+    attr_reader :cookies, :endpoint, :endpoints, :headers, :retry, :transports
 
     def initialize(endpoint = nil, options = {})
       info('New client created for ?', endpoint)
@@ -305,8 +305,6 @@ module Faye
         debug('Selected ? transport for ?', transport.connection_type, transport.endpoint)
 
         @transport = transport
-        @transport.cookies = @cookies
-        @transport.headers = @headers
 
         transport.bind :down do
           if @transport_up.nil? or @transport_up

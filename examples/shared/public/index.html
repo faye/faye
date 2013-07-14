@@ -40,7 +40,6 @@
 
   <script type="text/javascript">
     var bayeux = new Faye.Client('/bayeux');
-    bayeux.disable('cross-origin-long-polling');
     Faye.logger = console;
     Soapbox.init(bayeux);
   </script>

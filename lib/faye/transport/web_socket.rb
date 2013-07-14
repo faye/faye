@@ -56,7 +56,7 @@ module Faye
 
       url = @endpoint.dup
       url.scheme = PROTOCOLS[url.scheme]
-      @socket = Faye::WebSocket::Client.new(url.to_s)
+      @socket = Faye::WebSocket::Client.new(url.to_s, [], :headers => @client.headers)
 
       @socket.onopen = lambda do |*args|
         @state = CONNECTED

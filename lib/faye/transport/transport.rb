@@ -5,7 +5,7 @@ module Faye
     include Publisher
     include Timeouts
 
-    attr_accessor :cookies, :endpoint, :headers
+    attr_reader :endpoint
 
     def initialize(client, endpoint)
       @client   = client

@@ -12,7 +12,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
     xhr.setRequestHeader('Pragma', 'no-cache');
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
-    var headers = this.headers;
+    var headers = this._client.headers;
     for (var key in headers) {
       if (!headers.hasOwnProperty(key)) continue;
       xhr.setRequestHeader(key, headers[key]);

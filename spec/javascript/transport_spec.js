@@ -3,6 +3,8 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
     this.client = {
       endpoint:     Faye.URI.parse("http://example.com/"),
       endpoints:    {},
+      cookies:      {},
+      headers:      {},
       transports:   {}
     }
 

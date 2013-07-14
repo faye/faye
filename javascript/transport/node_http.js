@@ -7,7 +7,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         retry    = this.retry(message, timeout),
         self     = this;
 
-    var cookies = this.cookies.getCookies({domain: uri.hostname, path: uri.pathname}),
+    var cookies = this._client.cookies.getCookies({domain: uri.hostname, path: uri.pathname}),
         params  = this._buildParams(uri, content, cookies, secure),
         request = client.request(params);
 
@@ -35,9 +35,9 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         'Content-Type':   'application/json',
         'Cookie':         cookies.toValueString(),
         'Host':           uri.host
-      }, this.headers)
+      }, this._client.headers)
     };
-    if (this.ca) params.ca = this.ca;
+    if (this._client.ca) params.ca = this._client.ca;
     return params;
   },
 
@@ -68,7 +68,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
     var cookie;
 
     for (var i = 0, n = cookies.length; i < n; i++) {
-      cookie = this.cookies.setCookie(cookies[i]);
+      cookie = this._client.cookies.setCookie(cookies[i]);
       cookie = cookie[0] || cookie;
       cookie.domain = cookie.domain || hostname;
     }
@@ -81,3 +81,4 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
 });
 
 Faye.Transport.register('long-polling', Faye.Transport.NodeHttp);
+
