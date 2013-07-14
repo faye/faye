@@ -5,7 +5,7 @@ describe Faye::RackAdapter do
   let(:adapter) { Faye::RackAdapter.new(options) }
   let(:app)     { ServerProxy.new(adapter) }
   let(:options) { {:mount => "/bayeux", :timeout => 30} }
-  let(:server)  { mock "server" }
+  let(:server)  { double "server" }
 
   after { app.stop }
 
@@ -19,7 +19,7 @@ describe Faye::RackAdapter do
 
   before do
     Faye::Server.should_receive(:new).with(options).and_return server
-    adapter.stub(:get_client).and_return mock("client")
+    adapter.stub(:get_client).and_return double("client")
   end
 
   describe "POST requests" do

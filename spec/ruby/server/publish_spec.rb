@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe "server publish" do
-  let(:engine)  { mock "engine" }
+  let(:engine)  { double "engine" }
   let(:server)  { Faye::Server.new }
   let(:message) {{ "channel" => "/some/channel", "data" => "publish" }}
 

@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe "server extensions" do
   let(:engine) do
-    engine = mock "engine"
+    engine = double "engine"
     engine.stub(:interval).and_return(0)
     engine.stub(:timeout).and_return(60)
     engine
