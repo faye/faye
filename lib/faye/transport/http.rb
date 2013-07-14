@@ -5,10 +5,14 @@ module Faye
       callback.call(URI === endpoint)
     end
 
-    def request(message, timeout)
-      retry_block = retry_block(message, timeout)
+    def encode(messages)
+      Faye.to_json(messages)
+    end
 
-      content = Faye.to_json(message)
+    def request(messages, timeout)
+      retry_block = retry_block(messages, timeout)
+
+      content = encode(messages)
       cookies = @client.cookies.get_cookies(@endpoint.to_s)
       params  = build_params(@endpoint, content, cookies)
       request = create_request(params)

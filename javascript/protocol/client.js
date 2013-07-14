@@ -10,6 +10,7 @@ Faye.Client = Faye.Class({
 
   CONNECTION_TIMEOUT:   60,
   DEFAULT_RETRY:        5,
+  MAX_REQUEST_SIZE:     2048,
 
   DEFAULT_ENDPOINT:     '/bayeux',
   INTERVAL:             0,
@@ -29,6 +30,8 @@ Faye.Client = Faye.Class({
 
     for (var key in this.endpoints)
       this.endpoints[key] = Faye.URI.parse(this.endpoints[key]);
+
+    this.maxRequestSize = this.MAX_REQUEST_SIZE;
 
     this._state     = this.UNCONNECTED;
     this._channels  = new Faye.Channel.Set();

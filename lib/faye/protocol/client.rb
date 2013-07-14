@@ -17,8 +17,9 @@ module Faye
 
     CONNECTION_TIMEOUT  = 60.0
     DEFAULT_RETRY       = 5.0
+    MAX_REQUEST_SIZE    = 2048
 
-    attr_reader :cookies, :endpoint, :endpoints, :headers, :retry, :transports
+    attr_reader :cookies, :endpoint, :endpoints, :headers, :max_request_size, :retry, :transports
 
     def initialize(endpoint = nil, options = {})
       info('New client created for ?', endpoint)
@@ -35,6 +36,8 @@ module Faye
       @endpoints.each do |key, value|
         @endpoints[key] = Faye.parse_url(value)
       end
+
+      @max_request_size = MAX_REQUEST_SIZE
 
       @state      = UNCONNECTED
       @channels   = Channel::Set.new

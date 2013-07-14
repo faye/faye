@@ -20,6 +20,10 @@ module Faye
     def close
     end
 
+    def encode(messages)
+      ''
+    end
+
     def connection_type
       self.class.connection_type
     end
@@ -41,6 +45,7 @@ module Faye
         @connection_message = message
       end
 
+      flush_large_batch
       add_timeout(:publish, Engine::MAX_DELAY) { flush }
     end
 
@@ -55,6 +60,14 @@ module Faye
 
       @connection_message = nil
       @outbox = []
+    end
+
+    def flush_large_batch
+      string = encode(@outbox)
+      return if string.size < @client.max_request_size
+      last = @outbox.pop
+      flush(@outbox)
+      @outbox.push(last) if last
     end
 
     def receive(responses)

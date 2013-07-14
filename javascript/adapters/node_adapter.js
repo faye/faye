@@ -150,7 +150,7 @@ Faye.NodeAdapter = Faye.Class({
       headers['Cache-Control'] = 'no-cache, no-store';
 
       this._server.process(message, false, function(replies) {
-        var body = JSON.stringify(replies);
+        var body = Faye.toJSON(replies);
         if (isGet) body = jsonp + '(' + body + ');';
         headers['Content-Length'] = new Buffer(body, 'utf8').length.toString();
         headers['Connection'] = 'close';
@@ -182,7 +182,7 @@ Faye.NodeAdapter = Faye.Class({
         clientId = cid;
 
         self._server.process(message, false, function(replies) {
-          if (ws) ws.send(JSON.stringify(replies));
+          if (ws) ws.send(Faye.toJSON(replies));
         });
       } catch (e) {
         self.error(e.message + '\nBacktrace:\n' + e.stack);

@@ -39,8 +39,12 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     this.errback(function() { callback.call(context, false) });
   },
 
-  request: function(message, timeout) {
-    this._xhr.request(message, timeout);
+  encode: function(messages) {
+    return this._xhr.encode(messages);
+  },
+
+  request: function(messages, timeout) {
+    this._xhr.request(messages, timeout);
   },
 
   close: function() {

@@ -1,10 +1,9 @@
 Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
-  shouldFlush: function(messages) {
-    var endpoint = Faye.copyObject(this.endpoint);
-    endpoint.query.message = Faye.toJSON(messages);
-    endpoint.query.jsonp   = '__jsonp' + Faye.Transport.JSONP._cbCount + '__';
-    var url = Faye.URI.stringify(endpoint);
-    return url.length >= Faye.Transport.MAX_URL_LENGTH;
+ encode: function(messages) {
+    var url = Faye.copyObject(this.endpoint);
+    url.query.message = Faye.toJSON(messages);
+    url.query.jsonp   = '__jsonp' + Faye.Transport.JSONP._cbCount + '__';
+    return Faye.URI.stringify(url);
   },
 
   request: function(messages, timeout) {

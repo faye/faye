@@ -6,7 +6,7 @@ Faye.Server.Socket = Faye.Class({
 
   send: function(message) {
     this._server.pipeThroughExtensions('outgoing', message, function(pipedMessage) {
-      this._socket.send(JSON.stringify([pipedMessage]));
+      this._socket.send(Faye.toJSON([pipedMessage]));
     }, this);
   },
 

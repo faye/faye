@@ -6,11 +6,12 @@ describe Faye::Transport do
   end
 
   let :client do
-    double("client", :endpoint   => URI.parse("http://example.com/"),
-                     :endpoints  => {},
-                     :cookies    => {},
-                     :headers    => {},
-                     :transports => {})
+    double("client", :endpoint         => URI.parse("http://example.com/"),
+                     :endpoints        => {},
+                     :max_request_size => 2048,
+                     :cookies          => {},
+                     :headers          => {},
+                     :transports       => {})
   end
 
   describe :get do

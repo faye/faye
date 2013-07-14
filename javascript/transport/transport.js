@@ -10,6 +10,10 @@ Faye.Transport = Faye.extend(Faye.Class({
 
   close: function() {},
 
+  encode: function(messages) {
+    return '';
+  },
+
   send: function(message, timeout) {
     this.debug('Client ? sending message to ?: ?',
                this._client._clientId, Faye.URI.stringify(this.endpoint), message);
@@ -25,9 +29,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (message.channel === Faye.Channel.CONNECT)
       this._connectMessage = message;
 
-    if (this.shouldFlush && this.shouldFlush(this._outbox))
-      return this.flush();
-
+    this.flushLargeBatch();
     this.addTimeout('publish', this.MAX_DELAY, this.flush, this);
   },
 
@@ -41,6 +43,14 @@ Faye.Transport = Faye.extend(Faye.Class({
 
     this._connectMessage = null;
     this._outbox = [];
+  },
+
+  flushLargeBatch: function() {
+    var string = this.encode(this._outbox);
+    if (string.length < this._client.maxRequestSize) return;
+    var last = this._outbox.pop();
+    this.flush();
+    if (last) this._outbox.push(last);
   },
 
   receive: function(responses) {
@@ -65,8 +75,6 @@ Faye.Transport = Faye.extend(Faye.Class({
   }
 
 }), {
-  MAX_URL_LENGTH: 2048,
-
   get: function(client, allowed, disabled, callback, context) {
     var endpoint = client.endpoint;
 

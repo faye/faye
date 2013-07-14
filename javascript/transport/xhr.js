@@ -1,6 +1,10 @@
 Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
-  request: function(message, timeout) {
-    var retry = this.retry(message, timeout),
+  encode: function(messages) {
+    return Faye.toJSON(messages);
+  },
+
+  request: function(messages, timeout) {
+    var retry = this.retry(messages, timeout),
         path  = this.endpoint.path,
         self  = this,
         xhr   = Faye.ENV.ActiveXObject
@@ -57,7 +61,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
       }
     };
 
-    xhr.send(Faye.toJSON(message));
+    xhr.send(this.encode(messages));
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {

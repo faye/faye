@@ -1,10 +1,14 @@
 Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
-  request: function(message, timeout) {
+  encode: function(messages) {
+    return Faye.toJSON(messages);
+  },
+
+  request: function(messages, timeout) {
     var uri      = this.endpoint,
         secure   = (uri.protocol === 'https:'),
         client   = secure ? https : http,
-        content  = new Buffer(JSON.stringify(message), 'utf8'),
-        retry    = this.retry(message, timeout),
+        content  = new Buffer(Faye.toJSON(messages), 'utf8'),
+        retry    = this.retry(messages, timeout),
         self     = this;
 
     var cookies = this._client.cookies.getCookies({domain: uri.hostname, path: uri.pathname}),
