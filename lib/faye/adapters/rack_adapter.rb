@@ -115,6 +115,39 @@ module Faye
       [400, TYPE_TEXT, ['Bad request']]
     end
 
+    def message_from_request(request)
+      message = request.params['message']
+      return message if message
+
+      # Some clients do not send a content-type, e.g.
+      # Internet Explorer when using cross-origin-long-polling
+      # Some use application/xml when using CORS
+      content_type = request.env['CONTENT_TYPE'] || ''
+
+      if content_type.split(';').first == 'application/json'
+        request.body.read
+      else
+        CGI.parse(request.body.read)['message'][0]
+      end
+    end
+
+    def send_response(response, hijack, callback)
+      return callback.call(response) if callback
+
+      buffer = "HTTP/1.1 #{response[0]} OK\r\n"
+      response[1].each do |name, value|
+        buffer << "#{name}: #{value}\r\n"
+      end
+      buffer << "\r\n"
+      response[2].each do |chunk|
+        buffer << chunk
+      end
+
+      hijack.write(buffer)
+      hijack.flush
+      hijack.close_write
+    end
+
     def handle_websocket(env)
       ws        = Faye::WebSocket.new(env, nil, :ping => @options[:ping])
       client_id = nil
@@ -161,37 +194,15 @@ module Faye
       es.rack_response
     end
 
-    def message_from_request(request)
-      message = request.params['message']
-      return message if message
-
-      # Some clients do not send a content-type, e.g.
-      # Internet Explorer when using cross-origin-long-polling
-      # Some use application/xml when using CORS
-      content_type = request.env['CONTENT_TYPE'] || ''
-
-      if content_type.split(';').first == 'application/json'
-        request.body.read
-      else
-        CGI.parse(request.body.read)['message'][0]
-      end
-    end
-
-    def send_response(response, hijack, callback)
-      return callback.call(response) if callback
-
-      buffer = "HTTP/1.1 #{response[0]} OK\r\n"
-      response[1].each do |name, value|
-        buffer << "#{name}: #{value}\r\n"
-      end
-      buffer << "\r\n"
-      response[2].each do |chunk|
-        buffer << chunk
-      end
-
-      hijack.write(buffer)
-      hijack.flush
-      hijack.close_write
+    def handle_options(request)
+      headers = {
+        'Access-Control-Allow-Origin'       => '*',
+        'Access-Control-Allow-Credentials'  => 'false',
+        'Access-Control-Max-Age'            => '86400',
+        'Access-Control-Allow-Methods'      => 'POST, GET, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers'      => 'Accept, Content-Type, Pragma, X-Requested-With'
+      }
+      [200, headers, ['']]
     end
 
     def format_request(request)
@@ -203,17 +214,6 @@ module Faye
         string << " -d '#{request.body.read}'"
       end
       string
-    end
-
-    def handle_options(request)
-      headers = {
-        'Access-Control-Allow-Origin'       => '*',
-        'Access-Control-Allow-Credentials'  => 'false',
-        'Access-Control-Max-Age'            => '86400',
-        'Access-Control-Allow-Methods'      => 'POST, GET, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers'      => 'Accept, Content-Type, Pragma, X-Requested-With'
-      }
-      [200, headers, ['']]
     end
 
   end
