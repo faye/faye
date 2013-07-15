@@ -53,8 +53,7 @@ Faye.StaticServer = Faye.Class({
       headers['Content-Length'] = cache.content.length;
       Faye.extend(headers, Faye.NodeAdapter.prototype[type]);
       response.writeHead(200, headers);
-      response.write(cache.content);
-      response.end();
+      response.end(cache.content);
     }
   }
 });

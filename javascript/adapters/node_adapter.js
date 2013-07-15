@@ -157,8 +157,7 @@ Faye.NodeAdapter = Faye.Class({
 
         this.debug('HTTP response: ?', body);
         response.writeHead(200, headers);
-        response.write(body);
-        response.end();
+        response.end(body);
       }, this);
     } catch (error) {
       this._returnError(response, error);
@@ -218,8 +217,7 @@ Faye.NodeAdapter = Faye.Class({
       'Access-Control-Allow-Headers':     'Accept, Content-Type, Pragma, X-Requested-With'
     };
     response.writeHead(200, headers);
-    response.write('');
-    response.end();
+    response.end('');
   },
 
   _formatRequest: function(request) {
@@ -242,8 +240,7 @@ Faye.NodeAdapter = Faye.Class({
     if (!response) return;
 
     response.writeHead(400, this.TYPE_TEXT);
-    response.write('Bad request');
-    response.end();
+    response.end('Bad request');
   }
 });
 
