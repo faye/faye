@@ -101,7 +101,7 @@ module Faye
       EventMachine.next_tick do
         @server.process(message, false) do |replies|
           response = Faye.to_json(replies)
-          response = "#{ jsonp }(#{ response });" if request.get?
+          response = "#{ jsonp }(#{ response.gsub(/\u2028/, '\u2028').gsub(/\u2029/, '\u2029') });" if request.get?
           headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
           headers['Connection'] = 'close'
           debug 'HTTP response: ?', response
