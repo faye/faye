@@ -18,7 +18,7 @@
                       , "wake": ""
                       }
 
-, "scripts"         : { "build"   : "./node_modules/.bin/wake"
+, "scripts"         : { "build"   : "wake"
                       , "test"    : "node spec/node.js"
                       , "promise" : "promises-aplus-tests javascript/util/promise.js"
                       }
@@ -33,10 +33,9 @@
     "javascript": {
       "sourceDirectory":          "javascript",
       "targetDirectory":          "build",
-      "layout":                   "together",
       "builds": {
-        "src":                    {"minify": false, "suffix": false},
-        "min":                    {"minify": true, "sourceMap": "src"}
+        "src":                    {"minify": false, "tag": false},
+        "min":                    {"minify": true, "sourceMap": "src", "tag": "suffix"}
       },
       "targets": {
         "core": {                 "builds": {"src": false, "min": false},
