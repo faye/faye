@@ -27,6 +27,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   close: function() {
     if (!this._socket) return;
     this._socket.onclose = this._socket.onerror = null;
+    this.removeTimeout('ping');
     this._socket.close();
     delete this._socket;
     this.setDeferredStatus('deferred');
@@ -54,6 +55,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     this._socket.onopen = function() {
       self._state = self.CONNECTED;
       self._everConnected = true;
+      self._ping();
       self.setDeferredStatus('succeeded', self._socket);
       self.trigger('up');
     };
@@ -89,6 +91,11 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     if (!this._messages) return;
     var messages = Faye.map(this._messages, function(id, msg) { return msg });
     this.request(messages);
+  },
+
+  _ping: function() {
+    this._socket.send('[]');
+    this.addTimeout('ping', this._client._advice.timeout/2000, this._ping, this);
   }
 }), {
   PROTOCOLS: {

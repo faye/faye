@@ -82,7 +82,6 @@ module Faye
       end
 
       def open_socket(client_id, socket)
-        return unless client_id
         conn = connection(client_id, true)
         conn.socket = socket
       end

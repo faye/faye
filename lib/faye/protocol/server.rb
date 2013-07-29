@@ -26,7 +26,7 @@ module Faye
     end
 
     def open_socket(client_id, socket)
-      return unless socket
+      return unless client_id and socket
       @engine.open_socket(client_id, Socket.new(self, socket))
     end
 

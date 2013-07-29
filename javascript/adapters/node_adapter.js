@@ -176,7 +176,7 @@ Faye.NodeAdapter = Faye.Class({
         var message = JSON.parse(event.data),
             cid     = Faye.clientIdFromMessages(message);
 
-        if (clientId && cid !== clientId) self._server.closeSocket(clientId);
+        if (clientId && cid && cid !== clientId) self._server.closeSocket(clientId);
         self._server.openSocket(cid, ws);
         clientId = cid;
 
