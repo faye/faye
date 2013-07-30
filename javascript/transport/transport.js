@@ -14,14 +14,13 @@ Faye.Transport = Faye.extend(Faye.Class({
     return '';
   },
 
-  send: function(message, timeout) {
+  send: function(message) {
     this.debug('Client ? sending message to ?: ?',
                this._client._clientId, Faye.URI.stringify(this.endpoint), message);
 
-    if (!this.batching) return this.request([message], timeout);
+    if (!this.batching) return this.request([message]);
 
     this._outbox.push(message);
-    this._timeout = timeout;
 
     if (message.channel === Faye.Channel.HANDSHAKE)
       return this.addTimeout('publish', 0.01, this.flush, this);
@@ -39,7 +38,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (this._outbox.length > 1 && this._connectMessage)
       this._connectMessage.advice = {timeout: 0};
 
-    this.request(this._outbox, this._timeout);
+    this.request(this._outbox);
 
     this._connectMessage = null;
     this._outbox = [];
@@ -54,24 +53,13 @@ Faye.Transport = Faye.extend(Faye.Class({
   },
 
   receive: function(responses) {
+    responses = [].concat(responses);
+
     this.debug('Client ? received from ?: ?',
                this._client._clientId, Faye.URI.stringify(this.endpoint), responses);
 
-    for (var i = 0, n = responses.length; i < n; i++) {
+    for (var i = 0, n = responses.length; i < n; i++)
       this._client.receiveMessage(responses[i]);
-    }
-  },
-
-  retry: function(message, timeout) {
-    var called = false,
-        retry  = this._client.retry * 1000,
-        self   = this;
-
-    return function() {
-      if (called) return;
-      called = true;
-      Faye.ENV.setTimeout(function() { self.request(message, timeout) }, retry);
-    };
   }
 
 }), {

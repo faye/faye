@@ -3,26 +3,24 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
     return Faye.toJSON(messages);
   },
 
-  request: function(messages, timeout) {
-    var uri      = this.endpoint,
-        secure   = (uri.protocol === 'https:'),
-        client   = secure ? https : http,
-        content  = new Buffer(Faye.toJSON(messages), 'utf8'),
-        retry    = this.retry(messages, timeout),
-        self     = this;
+  request: function(messages) {
+    var uri     = this.endpoint,
+        secure  = (uri.protocol === 'https:'),
+        client  = secure ? https : http,
+        content = new Buffer(Faye.toJSON(messages), 'utf8'),
+        self    = this;
 
     var cookies = this._client.cookies.getCookies({domain: uri.hostname, path: uri.pathname}),
         params  = this._buildParams(uri, content, cookies, secure),
         request = client.request(params);
 
     request.on('response', function(response) {
-      self._handleResponse(response, retry);
+      self._handleResponse(response, messages);
       self._storeCookies(uri.hostname, response.headers['set-cookie']);
     });
 
     request.on('error', function() {
-      retry();
-      self.trigger('down');
+      self._client.messageError(messages);
     });
     request.end(content);
   },
@@ -44,7 +42,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
     return params;
   },
 
-  _handleResponse: function(response, retry) {
+  _handleResponse: function(response, messages) {
     var message = null,
         body    = '',
         self    = this;
@@ -56,13 +54,10 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         message = JSON.parse(body);
       } catch (e) {}
 
-      if (message) {
+      if (message)
         self.receive(message);
-        self.trigger('up');
-      } else {
-        retry();
-        self.trigger('down');
-      }
+      else
+        self._client.messageError(messages);
     });
   },
 

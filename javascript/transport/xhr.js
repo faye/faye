@@ -3,13 +3,10 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
     return Faye.toJSON(messages);
   },
 
-  request: function(messages, timeout) {
-    var retry = this.retry(messages, timeout),
-        path  = this.endpoint.path,
-        self  = this,
-        xhr   = Faye.ENV.ActiveXObject
-              ? new ActiveXObject("Microsoft.XMLHTTP")
-              : new XMLHttpRequest();
+  request: function(messages) {
+    var path = this.endpoint.path,
+        xhr  = Faye.ENV.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
+        self = this;
 
     xhr.open('POST', path, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
@@ -25,40 +22,28 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
     var abort = function() { xhr.abort() };
     Faye.Event.on(Faye.ENV, 'beforeunload', abort);
 
-    var cleanUp = function() {
-      Faye.Event.detach(Faye.ENV, 'beforeunload', abort);
-      xhr.onreadystatechange = function() {};
-      xhr = null;
-    };
-
     xhr.onreadystatechange = function() {
-      if (xhr.readyState !== 4) return;
+      if (!xhr || xhr.readyState !== 4) return;
 
       var parsedMessage = null,
           status        = xhr.status,
-          successful    = ((status >= 200 && status < 300) ||
-                            status === 304 ||
-                            status === 1223);
+          text          = xhr.responseText,
+          successful    = (status >= 200 && status < 300) || status === 304 || status === 1223;
 
-      if (!successful) {
-        cleanUp();
-        retry();
-        return self.trigger('down');
-      }
+      Faye.Event.detach(Faye.ENV, 'beforeunload', abort);
+      xhr.onreadystatechange = function() {};
+      xhr = null;
+
+      if (!successful) return self._client.messageError(messages);
 
       try {
-        parsedMessage = JSON.parse(xhr.responseText);
+        parsedMessage = JSON.parse(text);
       } catch (e) {}
 
-      cleanUp();
-
-      if (parsedMessage) {
+      if (parsedMessage)
         self.receive(parsedMessage);
-        self.trigger('up');
-      } else {
-        retry();
-        self.trigger('down');
-      }
+      else
+        self._client.messageError(messages);
     };
 
     xhr.send(this.encode(messages));
@@ -70,3 +55,4 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
 });
 
 Faye.Transport.register('long-polling', Faye.Transport.XHR);
+

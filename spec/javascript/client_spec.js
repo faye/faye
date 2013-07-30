@@ -67,7 +67,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         version:  "1.0",
         supportedConnectionTypes: ["fake"],
         id:       instanceOf("string")
-      }, 60)
+      })
       client.handshake()
     }})
 
@@ -95,7 +95,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           supportedConnectionTypes: ["fake"],
           id:       instanceOf("string"),
           ext:      {auth: "password"}
-        }, 60)
+        })
         client.handshake()
       }})
     }})
@@ -188,7 +188,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           clientId:     "reconnectid",
           subscription: "/messages/foo",
           id:           instanceOf("string")
-        }, 60)
+        })
         client.connect(resume)
       }})
 
@@ -208,7 +208,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           version:  "1.0",
           supportedConnectionTypes: ["fake"],
           id:       instanceOf("string")
-        }, 60)
+        })
         .exactly(0)
 
         client.handshake()
@@ -234,7 +234,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           clientId:       "handshakeid",
           connectionType: "fake",
           id:             instanceOf("string")
-        }, 60)
+        })
         client.connect()
       }})
     }})
@@ -248,7 +248,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           clientId:       "fakeid",
           connectionType: "fake",
           id:             instanceOf("string")
-        }, 60)
+        })
         client.connect()
       }})
 
@@ -258,7 +258,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           clientId:       "fakeid",
           connectionType: "fake",
           id:             instanceOf("string")
-        }, 60)
+        })
         .exactly(1)
 
         client.connect()
@@ -275,7 +275,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         channel:  "/meta/disconnect",
         clientId: "fakeid",
         id:       instanceOf("string")
-      }, 60)
+      })
       client.disconnect()
     }})
 
@@ -312,7 +312,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
 
     describe("with no prior subscriptions", function() { with(this) {
       it("sends a subscribe message to the server", function(resume) { with(this) {
-        expect(transport, "send").given(subscribeMessage, 60)
+        expect(transport, "send").given(subscribeMessage)
         client.subscribe("/foo")
         client.connect(resume)
       }})
@@ -326,13 +326,13 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
             clientId:     "fakeid",
             subscription: "/foo",
             id:           instanceOf("string")
-          }, 60)
+          })
           expect(transport, "send").given({
             channel:      "/meta/subscribe",
             clientId:     "fakeid",
             subscription: "/bar",
             id:           instanceOf("string")
-          }, 60)
+          })
           client.subscribe(["/foo", "/bar"])
           client.connect(resume)
         }})
@@ -475,7 +475,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("does not send another subscribe message to the server", function() { with(this) {
-        expect(transport, "send").given(subscribeMessage, 60).exactly(0)
+        expect(transport, "send").given(subscribeMessage).exactly(0)
         client.subscribe("/foo/*")
       }})
 
@@ -507,7 +507,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
 
     describe("with no subscriptions", function() { with(this) {
       it("does not send an unsubscribe message to the server", function() { with(this) {
-        expect(transport, "send").given(unsubscribeMessage, 60).exactly(0)
+        expect(transport, "send").given(unsubscribeMessage).exactly(0)
         client.unsubscribe("/foo/*")
       }})
     }})
@@ -520,7 +520,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("sends an unsubscribe message to the server", function(resume) { with(this) {
-        expect(transport, "send").given(unsubscribeMessage, 60)
+        expect(transport, "send").given(unsubscribeMessage)
         client.unsubscribe("/foo/*")
         client.connect(resume)
       }})
@@ -552,19 +552,19 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("does not send an unsubscribe message if one listener is removed", function() { with(this) {
-        expect(transport, "send").given(unsubscribeMessage, 60).exactly(0)
+        expect(transport, "send").given(unsubscribeMessage).exactly(0)
         client.unsubscribe("/foo/*", bye)
       }})
 
       it("sends an unsubscribe message if each listener is removed", function(resume) { with(this) {
-        expect(transport, "send").given(unsubscribeMessage, 60)
+        expect(transport, "send").given(unsubscribeMessage)
         client.unsubscribe("/foo/*", bye)
         client.unsubscribe("/foo/*", hey)
         client.connect(resume)
       }})
 
       it("sends an unsubscribe message if all listeners are removed", function(resume) { with(this) {
-        expect(transport, "send").given(unsubscribeMessage, 60)
+        expect(transport, "send").given(unsubscribeMessage)
         client.unsubscribe("/foo/*")
         client.connect(resume)
       }})
@@ -583,13 +583,13 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           clientId:     "fakeid",
           subscription: "/foo",
           id:           instanceOf("string")
-        }, 60)
+        })
         expect(transport, "send").given({
           channel:      "/meta/unsubscribe",
           clientId:     "fakeid",
           subscription: "/bar",
           id:           instanceOf("string")
-        }, 60)
+        })
         client.unsubscribe(["/foo", "/bar"])
         client.connect(resume)
       }})
@@ -605,7 +605,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         clientId: "fakeid",
         data:     {hello: "world"},
         id:       instanceOf("string")
-      }, 60)
+      })
       client.publish("/messages/foo", {hello: "world"})
       client.connect(resume)
     }})
@@ -669,7 +669,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           data:     {hello: "world"},
           id:       instanceOf("string"),
           ext:      {auth: "password"}
-        }, 60)
+        })
         client.publish("/messages/foo", {hello: "world"})
         client.connect(resume)
       }})
@@ -692,7 +692,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           clientId: "fakeid",
           data:     {hello: "world"},
           id:       instanceOf("string")
-        }, 60)
+        })
         client.publish("/messages/foo", {hello: "world"})
         client.connect(resume)
       }})

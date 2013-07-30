@@ -6,36 +6,22 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
     return Faye.URI.stringify(url);
   },
 
-  request: function(messages, timeout) {
+  request: function(messages) {
     var head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = Faye.Transport.JSONP.getCallbackName(),
         endpoint     = Faye.copyObject(this.endpoint),
-        retry        = this.retry(messages, timeout),
         self         = this;
 
     endpoint.query.message = Faye.toJSON(messages);
     endpoint.query.jsonp   = callbackName;
 
     Faye.ENV[callbackName] = function(data) {
-      cleanUp();
-      self.receive(data);
-      self.trigger('up');
-    };
-
-    var timer = Faye.ENV.setTimeout(function() {
-      cleanUp();
-      retry();
-      self.trigger('down');
-    }, 1.5 * 1000 * timeout);
-
-    var cleanUp = function() {
       if (!Faye.ENV[callbackName]) return false;
       Faye.ENV[callbackName] = undefined;
       try { delete Faye.ENV[callbackName] } catch (e) {}
-      Faye.ENV.clearTimeout(timer);
       script.parentNode.removeChild(script);
-      return true;
+      self.receive(data);
     };
 
     script.type = 'text/javascript';
@@ -56,3 +42,4 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
 });
 
 Faye.Transport.register('callback-polling', Faye.Transport.JSONP);
+

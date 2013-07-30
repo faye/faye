@@ -3,15 +3,15 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     return 'message=' + encodeURIComponent(Faye.toJSON(messages));
   },
 
-  request: function(messages, timeout) {
+  request: function(messages) {
     var xhrClass = Faye.ENV.XDomainRequest ? XDomainRequest : XMLHttpRequest,
         xhr      = new xhrClass(),
-        retry    = this.retry(messages, timeout),
         headers  = this._client.headers,
         self     = this,
         key;
 
     xhr.open('POST', Faye.URI.stringify(this.endpoint), true);
+
     if (xhr.setRequestHeader) {
       xhr.setRequestHeader('Pragma', 'no-cache');
       for (key in headers) {
@@ -24,8 +24,6 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
       if (!xhr) return false;
       xhr.onload = xhr.onerror = xhr.ontimeout = xhr.onprogress = null;
       xhr = null;
-      Faye.ENV.clearTimeout(timer);
-      return true;
     };
 
     xhr.onload = function() {
@@ -36,23 +34,16 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
 
       cleanUp();
 
-      if (parsedMessage) {
+      if (parsedMessage)
         self.receive(parsedMessage);
-        self.trigger('up');
-      } else {
-        retry();
-        self.trigger('down');
-      }
+      else
+        self._client.messageError(messages);
     };
 
-    var onerror = function() {
+    xhr.onerror = xhr.ontimeout = function() {
       cleanUp();
-      retry();
-      self.trigger('down');
+      self._client.messageError(messages);
     };
-    var timer = Faye.ENV.setTimeout(onerror, 1.5 * 1000 * timeout);
-    xhr.onerror = onerror;
-    xhr.ontimeout = onerror;
 
     xhr.onprogress = function() {};
     xhr.send(this.encode(messages));

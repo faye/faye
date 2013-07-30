@@ -92,32 +92,32 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
 
       it("does not make an immediate request", function() { with(this) {
         expect(transport, "request").exactly(0)
-        transport.send({batch: "me"}, 60)
+        transport.send({batch: "me"})
       }})
 
       it("queues the message to be sent after a timeout", function() { with(this) {
-        expect(transport, "request").given([{batch: "me"}], 60)
-        transport.send({batch: "me"}, 60)
+        expect(transport, "request").given([{batch: "me"}])
+        transport.send({batch: "me"})
         clock.tick(10)
       }})
 
       it("allows multiple messages to be batched together", function() { with(this) {
-        expect(transport, "request").given([{id: 1}, {id: 2}], 60)
-        transport.send({id: 1}, 60)
-        transport.send({id: 2}, 60)
+        expect(transport, "request").given([{id: 1}, {id: 2}])
+        transport.send({id: 1})
+        transport.send({id: 2})
         clock.tick(10)
       }})
 
       it("adds advice to connect messages sent with others", function() { with(this) {
-        expect(transport, "request").given([{channel: "/meta/connect", advice: {timeout: 0}}, {}], 60)
-        transport.send({channel: "/meta/connect"}, 60)
-        transport.send({}, 60)
+        expect(transport, "request").given([{channel: "/meta/connect", advice: {timeout: 0}}, {}])
+        transport.send({channel: "/meta/connect"})
+        transport.send({})
         clock.tick(10)
       }})
 
       it("adds no advice to connect messages sent alone", function() { with(this) {
-        expect(transport, "request").given([{channel: "/meta/connect"}], 60)
-        transport.send({channel: "/meta/connect"}, 60)
+        expect(transport, "request").given([{channel: "/meta/connect"}])
+        transport.send({channel: "/meta/connect"})
         clock.tick(10)
       }})
     }})
@@ -129,8 +129,8 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
       }})
 
       it("makes a request immediately", function() { with(this) {
-        expect(transport, "request").given([{no: "batch"}], 60)
-        transport.send({no: "batch"}, 60)
+        expect(transport, "request").given([{no: "batch"}])
+        transport.send({no: "batch"})
       }})
     }})
   }})

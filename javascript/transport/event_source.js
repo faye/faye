@@ -14,12 +14,11 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     socket.onopen = function() {
       self._everConnected = true;
       self.setDeferredStatus('succeeded');
-      self.trigger('up');
     };
 
     socket.onerror = function() {
       if (self._everConnected) {
-        self.trigger('down');
+        self._client.messageError([]);
       } else {
         self.setDeferredStatus('failed');
         socket.close();
@@ -28,10 +27,16 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
 
     socket.onmessage = function(event) {
       self.receive(JSON.parse(event.data));
-      self.trigger('up');
     };
 
     this._socket = socket;
+  },
+
+  close: function() {
+    if (!this._socket) return;
+    this._socket.onopen = this._socket.onerror = this._socket.onmessage = null;
+    this._socket.close();
+    delete this._socket;
   },
 
   isUsable: function(callback, context) {
@@ -43,16 +48,10 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     return this._xhr.encode(messages);
   },
 
-  request: function(messages, timeout) {
-    this._xhr.request(messages, timeout);
-  },
-
-  close: function() {
-    if (!this._socket) return;
-    this._socket.onerror = null;
-    this._socket.close();
-    delete this._socket;
+  request: function(messages) {
+    this._xhr.request(messages);
   }
+
 }), {
   isUsable: function(client, endpoint, callback, context) {
     var id = client._clientId;
@@ -65,8 +64,8 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
   },
 
   create: function(client, endpoint) {
-    var sockets  = client.transports.eventsource = client.transports.eventsource || {},
-        id       = client._clientId;
+    var sockets = client.transports.eventsource = client.transports.eventsource || {},
+        id      = client._clientId;
 
     endpoint = Faye.copyObject(endpoint);
     endpoint.pathname += '/' + (id || '');

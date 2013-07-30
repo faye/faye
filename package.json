@@ -46,6 +46,7 @@
                                     "util/class",
                                     "util/namespace",
                                     "util/promise",
+                                    "util/set",
                                     "util/uri",
                                     "error",
                                     "mixins/deferrable",
@@ -63,7 +64,6 @@
         "node/faye-node": {       "extend": "core",
                                   "builds": {"min": false},
                                   "files": [
-                                    "util/set",
                                     "engines/proxy",
                                     "engines/connection",
                                     "engines/memory",
