@@ -708,40 +708,40 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     describe("in the default state", function() { with(this) {
       it("broadcasts a down notification", function() { with(this) {
         expect(client, "trigger").given("transport:down")
-        transport.trigger("down")
+        client.messageError([])
       }})
 
       it("broadcasts an up notification", function() { with(this) {
         expect(client, "trigger").given("transport:up")
-        transport.trigger("up")
+        client.receiveMessage({})
       }})
     }})
 
     describe("when the transport is up", function() { with(this) {
-      before(function() { this.transport.trigger("up") })
+      before(function() { this.client.receiveMessage({}) })
 
       it("broadcasts a down notification", function() { with(this) {
         expect(client, "trigger").given("transport:down")
-        transport.trigger("down")
+        client.messageError([])
       }})
 
       it("does not broadcast an up notification", function() { with(this) {
         expect(client, "trigger").exactly(0)
-        transport.trigger("up")
+        client.receiveMessage({})
       }})
     }})
 
     describe("when the transport is down", function() { with(this) {
-      before(function() { this.transport.trigger("down") })
+      before(function() { this.client.messageError([]) })
 
       it("does not broadcast a down notification", function() { with(this) {
         expect(client, "trigger").exactly(0)
-        transport.trigger("down")
+        client.messageError([])
       }})
 
       it("broadcasts an up notification", function() { with(this) {
         expect(client, "trigger").given("transport:up")
-        transport.trigger("up")
+        client.receiveMessage({})
       }})
     }})
   }})

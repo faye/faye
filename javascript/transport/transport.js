@@ -97,6 +97,5 @@ Faye.Transport = Faye.extend(Faye.Class({
 });
 
 Faye.extend(Faye.Transport.prototype, Faye.Logging);
-Faye.extend(Faye.Transport.prototype, Faye.Publisher);
 Faye.extend(Faye.Transport.prototype, Faye.Timeouts);
 

@@ -313,6 +313,10 @@ Faye.Client = Faye.Class({
 
       if (callback) callback[0].call(callback[1], message);
     }, this);
+
+    if (this._transportUp === true) return;
+    this._transportUp = true;
+    this.trigger('transport:up');
   },
 
   messageError: function(messages, immediate) {
@@ -333,6 +337,10 @@ Faye.Client = Faye.Class({
       else
         Faye.ENV.setTimeout(function() { self._transportSend(message) }, retry * 1000);
     }
+
+    if (this._transportUp === false) return;
+    this._transportUp = false;
+    this.trigger('transport:down');
   },
 
   _selectTransport: function(transportTypes) {
@@ -343,18 +351,6 @@ Faye.Client = Faye.Class({
       if (this._transport) this._transport.close();
 
       this._transport = transport;
-
-      transport.bind('down', function() {
-        if (this._transportUp !== undefined && !this._transportUp) return;
-        this._transportUp = false;
-        this.trigger('transport:down');
-      }, this);
-
-      transport.bind('up', function() {
-        if (this._transportUp !== undefined && this._transportUp) return;
-        this._transportUp = true;
-        this.trigger('transport:up');
-      }, this);
     }, this);
   },
 
