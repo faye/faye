@@ -1,7 +1,6 @@
 JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   before(function() { with(this) {
     this.transport = {connectionType: "fake", endpoint: {}, send: function() {}}
-    Faye.extend(transport, Faye.Publisher)
     stub(Faye.Transport, "get").yields([transport])
   }})
 
