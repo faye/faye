@@ -338,7 +338,7 @@ Faye.Client = Faye.Class({
         Faye.ENV.setTimeout(function() { self._transportSend(message) }, retry * 1000);
     }
 
-    if (this._transportUp === false) return;
+    if (immediate || this._transportUp === false) return;
     this._transportUp = false;
     this.trigger('transport:down');
   },
