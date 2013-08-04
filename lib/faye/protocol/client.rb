@@ -22,6 +22,7 @@ module Faye
     attr_reader :cookies, :endpoint, :endpoints, :headers, :max_request_size, :retry, :transports
 
     def initialize(endpoint = nil, options = {})
+      super()
       info('New client created for ?', endpoint)
 
       @options    = options

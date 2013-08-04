@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'faye-websocket', '>= 0.6.0'
   s.add_dependency 'multi_json', '>= 1.0.0'
   s.add_dependency 'rack', '>= 1.0.0'
+  s.add_dependency 'websocket-driver', '>= 0.2.3'
 
   s.add_development_dependency 'compass', '~> 0.10.0'
   s.add_development_dependency 'haml', '~> 3.1.0'

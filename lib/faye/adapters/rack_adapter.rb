@@ -4,7 +4,7 @@ module Faye
     include Logging
 
     extend Forwardable
-    def_delegators '@server.engine', :bind, :unbind
+    def_delegators '@server.engine', *Faye::Publisher.instance_methods
 
     ASYNC_RESPONSE = [-1, {}, []].freeze
 

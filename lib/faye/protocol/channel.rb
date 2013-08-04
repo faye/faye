@@ -5,6 +5,7 @@ module Faye
     attr_reader :name
 
     def initialize(name)
+      super()
       @name = name
     end
 
@@ -13,7 +14,7 @@ module Faye
     end
 
     def unused?
-      count_listeners(:message).zero?
+      listener_count(:message).zero?
     end
 
     HANDSHAKE   = '/meta/handshake'

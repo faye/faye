@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Faye::Publisher do
-  let(:publisher) { Object.new.extend(Faye::Publisher) }
+  let(:publisher) { Class.new { include Faye::Publisher }.new }
 
   describe "with subscribers that remove themselves" do
     before do

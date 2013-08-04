@@ -37,6 +37,8 @@ module Faye
       def_delegators :@engine, *METHODS
 
       def initialize(options)
+        super()
+
         @options     = options
         @connections = {}
         @interval    = @options[:interval] || INTERVAL

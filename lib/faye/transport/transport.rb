@@ -8,6 +8,7 @@ module Faye
     attr_reader :endpoint
 
     def initialize(client, endpoint)
+      super()
       @client   = client
       @endpoint = endpoint
       @outbox   = []

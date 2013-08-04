@@ -5,7 +5,10 @@ describe Faye::Client do
     transport = double("transport", :cookies= => nil, :endpoint => "http://www.example.com/faye", :headers= => nil)
     transport.stub(:connection_type).and_return "fake"
     transport.stub(:send)
+
     transport.extend(Faye::Publisher)
+    Faye::Publisher.instance_method(:initialize).bind(transport).call
+
     transport
   end
 
