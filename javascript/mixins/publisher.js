@@ -1,45 +1,31 @@
 Faye.Publisher = {
   countListeners: function(eventType) {
-    if (!this._subscribers || !this._subscribers[eventType]) return 0;
-    return this._subscribers[eventType].length;
+    return this.listeners(eventType).length;
   },
 
   bind: function(eventType, listener, context) {
-    this._subscribers = this._subscribers || {};
-    var list = this._subscribers[eventType] = this._subscribers[eventType] || [];
-    list.push([listener, context]);
+    var slice   = Array.prototype.slice,
+        handler = function() { listener.apply(context, slice.call(arguments)) };
+
+    this._listeners = this._listeners || [];
+    this._listeners.push([eventType, listener, context, handler]);
+    return this.on(eventType, handler);
   },
 
   unbind: function(eventType, listener, context) {
-    if (!this._subscribers || !this._subscribers[eventType]) return;
+    this._listeners = this._listeners || [];
+    var n = this._listeners.length, tuple;
 
-    if (!listener) {
-      delete this._subscribers[eventType];
-      return;
-    }
-    var list = this._subscribers[eventType],
-        i    = list.length;
-
-    while (i--) {
-      if (listener !== list[i][0]) continue;
-      if (context && list[i][1] !== context) continue;
-      list.splice(i,1);
-    }
-  },
-
-  trigger: function() {
-    var args = Array.prototype.slice.call(arguments),
-        eventType = args.shift();
-
-    if (!this._subscribers || !this._subscribers[eventType]) return;
-
-    var listeners = this._subscribers[eventType].slice(),
-        listener;
-
-    for (var i = 0, n = listeners.length; i < n; i++) {
-      listener = listeners[i];
-      listener[0].apply(listener[1], args);
+    while (n--) {
+      tuple = this._listeners[n];
+      if (tuple[0] !== eventType) continue;
+      if (listener && (tuple[1] !== listener || tuple[2] !== context)) continue;
+      this._listeners.splice(n, 1);
+      this.removeListener(eventType, tuple[3]);
     }
   }
 };
+
+Faye.extend(Faye.Publisher, Faye.EventEmitter.prototype);
+Faye.Publisher.trigger = Faye.Publisher.emit;
 

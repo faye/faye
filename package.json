@@ -44,6 +44,7 @@
                                     "_head",
                                     "faye",
                                     "util/class",
+                                    "util/event_emitter",
                                     "util/namespace",
                                     "util/promise",
                                     "util/set",
