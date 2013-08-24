@@ -32,7 +32,6 @@ describe Faye::RackAdapter do
         it "returns a matching cross-origin access control header" do
           server.stub(:process).and_yield []
           post "/bayeux", :message => '[]'
-          p last_response
           access_control_origin.should == "http://example.com"
         end
 
