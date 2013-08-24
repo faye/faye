@@ -31,68 +31,81 @@ module Faye
       connect
     end
 
-    def request(messages, timeout = nil)
-      return if messages.empty?
-      @messages ||= {}
-      messages.each { |message| @messages[message['id']] = message }
+    def request(messages)
       callback do |socket|
-        socket.send(Faye.to_json(messages)) if socket
+        next unless socket
+        messages.each { |message| @pending.add(message) }
+        socket.send(Faye.to_json(messages))
       end
       connect
-    end
-
-    def close
-      return unless @socket
-      @socket.onclose = @socket.onerror = nil
-      @socket.close
-      @socket = nil
-      set_deferred_status(:deferred)
-      @state = UNCONNECTED
     end
 
     def connect
       @state ||= UNCONNECTED
       return unless @state == UNCONNECTED
-
       @state = CONNECTING
 
       url = @endpoint.dup
       url.scheme = PROTOCOLS[url.scheme]
-      @socket = Faye::WebSocket::Client.new(url.to_s, [], :headers => @client.headers)
+      socket = Faye::WebSocket::Client.new(url.to_s, [], :headers => @client.headers)
 
-      @socket.onopen = lambda do |*args|
+      socket.onopen = lambda do |*args|
+        @socket = socket
+        @pending = Set.new
         @state = CONNECTED
         @ever_connected = true
-        set_deferred_status(:succeeded, @socket)
-        trigger(:up)
+        ping
+        set_deferred_status(:succeeded, socket)
       end
 
-      @socket.onmessage = lambda do |event|
+      closed = false
+      socket.onclose = socket.onerror = lambda do |*args|
+        return if closed
+        closed = true
+
+        was_connected = (@state == CONNECTED)
+        socket.onopen = socket.onclose = socket.onerror = socket.onmessage = nil
+
+        @socket = nil
+        @state = UNCONNECTED
+        remove_timeout(:ping)
+        set_deferred_status(:deferred)
+
+        if was_connected
+          @client.message_error(@pending.to_a, true) if @pending
+        elsif @ever_connected
+          @client.message_error(@pending.to_a) if @pending
+        else
+          set_deferred_status(:failed)
+        end
+        @pending = nil
+      end
+
+      socket.onmessage = lambda do |event|
         messages = MultiJson.load(event.data)
         next if messages.nil?
         messages = [messages].flatten
-        messages.each { |message| @messages.delete(message['id']) }
+        messages.each do |message|
+          if message.has_key?('successful')
+            @pending.delete_if { |m| m['id'] == message['id'] }
+          end
+        end
         receive(messages)
-      end
-
-      @socket.onclose = @socket.onerror = lambda do |*args|
-        was_connected = (@state == CONNECTED)
-        set_deferred_status(:deferred)
-        @state = UNCONNECTED
-
-        close
-
-        next resend if was_connected
-        next set_deferred_status(:failed) unless @ever_connected
-
-        EventMachine.add_timer(@client.retry) { connect }
-        trigger(:down)
       end
     end
 
-    def resend
-      return unless @messages
-      request(@messages.values)
+    def close
+      return unless @socket
+      @socket.close
+    end
+
+  private
+
+    def ping
+      return unless @socket
+      @socket.send('[]')
+      timeout = @client.instance_eval { @advice['timeout'] }
+      add_timeout(:ping, timeout/2000.0) { ping }
     end
   end
 

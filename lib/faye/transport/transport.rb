@@ -29,14 +29,13 @@ module Faye
       self.class.connection_type
     end
 
-    def send(message, timeout)
+    def send(message)
       client_id = @client.instance_eval { @client_id }
       debug('Client ? sending message to ?: ?', client_id, @endpoint, message)
 
-      return request([message], timeout) unless batching?
+      return request([message]) unless batching?
 
       @outbox << message
-      @timeout = timeout
 
       if message['channel'] == Channel::HANDSHAKE
         return add_timeout(:publish, 0.01) { flush }
@@ -57,7 +56,7 @@ module Faye
         @connection_message['advice'] = {'timeout' => 0}
       end
 
-      request(@outbox, @timeout)
+      request(@outbox)
 
       @connection_message = nil
       @outbox = []
@@ -72,15 +71,10 @@ module Faye
     end
 
     def receive(responses)
+      responses = [responses].flatten
       client_id = @client.instance_eval { @client_id }
       debug('Client ? received from ?: ?', client_id, @endpoint, responses)
       responses.each { |response| @client.receive_message(response) }
-    end
-
-    def retry_block(message, timeout)
-      lambda do
-        EventMachine.add_timer(@client.retry) { request(message, timeout) }
-      end
     end
 
     @transports = []

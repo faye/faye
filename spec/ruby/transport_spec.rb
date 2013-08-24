@@ -92,32 +92,32 @@ describe Faye::Transport do
 
       it "does not make an immediate request" do
         @transport.should_not_receive(:request)
-        @transport.send({"batch" => "me"}, 60)
+        @transport.send({"batch" => "me"})
       end
 
       it "queues the message to be sent after a timeout" do
-        @transport.should_receive(:request).with([{"batch" => "me"}], 60)
-        @transport.send({"batch" => "me"}, 60)
+        @transport.should_receive(:request).with([{"batch" => "me"}])
+        @transport.send({"batch" => "me"})
         clock.tick(0.01)
       end
 
       it "allows multiple messages to be batched together" do
-        @transport.should_receive(:request).with([{"id" => 1}, {"id" => 2}], 60)
-        @transport.send({"id" => 1}, 60)
-        @transport.send({"id" => 2}, 60)
+        @transport.should_receive(:request).with([{"id" => 1}, {"id" => 2}])
+        @transport.send({"id" => 1})
+        @transport.send({"id" => 2})
         clock.tick(0.01)
       end
 
       it "adds advice to connect messages sent with others" do
-        @transport.should_receive(:request).with([{"channel" => "/meta/connect", "advice" => {"timeout" => 0}}, {}], 60)
-        @transport.send({"channel" => "/meta/connect"}, 60)
-        @transport.send({}, 60)
+        @transport.should_receive(:request).with([{"channel" => "/meta/connect", "advice" => {"timeout" => 0}}, {}])
+        @transport.send({"channel" => "/meta/connect"})
+        @transport.send({})
         clock.tick(0.01)
       end
 
       it "adds no advice to connect messages sent alone" do
-        @transport.should_receive(:request).with([{"channel" => "/meta/connect"}], 60)
-        @transport.send({"channel" => "/meta/connect"}, 60)
+        @transport.should_receive(:request).with([{"channel" => "/meta/connect"}])
+        @transport.send({"channel" => "/meta/connect"})
         clock.tick(0.01)
       end
     end
@@ -133,8 +133,8 @@ describe Faye::Transport do
       end
 
       it "makes a request immediately" do
-        @transport.should_receive(:request).with([{"no" => "batch"}], 60)
-        @transport.send({"no" => "batch"}, 60)
+        @transport.should_receive(:request).with([{"no" => "batch"}])
+        @transport.send({"no" => "batch"})
       end
     end
   end

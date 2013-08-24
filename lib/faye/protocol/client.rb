@@ -44,6 +44,7 @@ module Faye
       @channels   = Channel::Set.new
       @message_id = 0
 
+      @message_timeouts   = {}
       @response_callbacks = {}
 
       @advice = {
@@ -90,9 +91,9 @@ module Faye
       select_transport(MANDATORY_CONNECTION_TYPES)
 
       send({
-        'channel'     => Channel::HANDSHAKE,
-        'version'     => BAYEUX_VERSION,
-        'supportedConnectionTypes' => [@transport.connection_type]
+        'channel'                   => Channel::HANDSHAKE,
+        'version'                   => BAYEUX_VERSION,
+        'supportedConnectionTypes'  => [@transport.connection_type]
 
       }) do |response|
 
@@ -274,6 +275,7 @@ module Faye
           'channel'   => channel,
           'data'      => data,
           'clientId'  => @client_id
+
         }) do |response|
           if response['successful']
             publication.set_deferred_status(:succeeded)
@@ -286,20 +288,46 @@ module Faye
     end
 
     def receive_message(message)
+      id = message['id']
+
+      if message.has_key?('successful')
+        timeout = @message_timeouts.delete(id)
+        EventMachine.cancel_timer(timeout) if timeout
+
+        callback = @response_callbacks.delete(id)
+      end
+
       pipe_through_extensions(:incoming, message) do |message|
         next unless message
 
         handle_advice(message['advice']) if message['advice']
         deliver_message(message)
 
-        next unless message.has_key?('successful')
-
-        callback = @response_callbacks[message['id']]
-        next unless callback
-
-        @response_callbacks.delete(message['id'])
-        callback.call(message)
+        callback.call(message) if callback
       end
+
+      return if @transport_up == true
+      @transport_up = true
+      trigger('transport:up')
+    end
+
+    def message_error(messages, immediate = false)
+      messages.each do |message|
+        id = message['id']
+
+        timeout = @message_timeouts.delete(id)
+        EventMachine.cancel_timer(timeout) if timeout
+
+        if immediate
+          transport_send(message)
+        else
+          EventMachine.add_timer(@retry) { transport_send(message) }
+        end
+      end
+
+      return if immediate or @transport_up == false
+      @transport_up = false
+      trigger('transport:down')
     end
 
   private
@@ -308,31 +336,36 @@ module Faye
       Transport.get(self, transport_types, @disabled) do |transport|
         debug('Selected ? transport for ?', transport.connection_type, transport.endpoint)
 
+        next if transport == @transport
+        @transport.close if @transport
+
         @transport = transport
-
-        transport.bind :down do
-          if @transport_up.nil? or @transport_up
-            @transport_up = false
-            trigger('transport:down')
-          end
-        end
-
-        transport.bind :up do
-          if @transport_up.nil? or not @transport_up
-            @transport_up = true
-            trigger('transport:up')
-          end
-        end
       end
     end
 
     def send(message, &callback)
+      return unless @transport
       message['id'] = generate_message_id
-      @response_callbacks[message['id']] = callback if callback
 
       pipe_through_extensions(:outgoing, message) do |message|
-        @transport.send(message, @advice['timeout'] / 1000.0) if message
+        next unless message
+        @response_callbacks[message['id']] = callback if callback
+        transport_send(message)
       end
+    end
+
+    def transport_send(message)
+      return unless @transport
+
+      timeout = [nil, 0].include?(@advice['timeout']) ?
+                1.2 * @retry :
+                1.2 * @advice['timeout'] / 1000.0
+
+      @message_timeouts[message['id']] = EventMachine.add_timer(timeout) do
+        message_error([message], false)
+      end
+
+      @transport.send(message)
     end
 
     def generate_message_id
@@ -357,14 +390,11 @@ module Faye
       @channels.distribute_message(message)
     end
 
-    def teardown_connection
-      return unless @connect_request
-      @connect_request = nil
-      info('Closed connection for ?', @client_id)
-    end
-
     def cycle_connection
-      teardown_connection
+      if @connect_request
+        @connect_request = nil
+        info('Closed connection for ?', @client_id)
+      end
       EventMachine.add_timer(@advice['interval'] / 1000.0) { connect }
     end
 

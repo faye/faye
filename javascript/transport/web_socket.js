@@ -12,10 +12,10 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   },
 
   request: function(messages) {
-    this.callback(function() {
-      if (!this._socket) return;
+    this.callback(function(socket) {
+      if (!socket) return;
       for (var i = 0, n = messages.length; i < n; i++) this._pending.add(messages[i]);
-      this._socket.send(Faye.toJSON(messages));
+      socket.send(Faye.toJSON(messages));
     }, this);
     this.connect();
   },
@@ -41,8 +41,10 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
       self.setDeferredStatus('succeeded', socket);
     };
 
+    var closed = false;
     socket.onclose = socket.onerror = function() {
-      if (!socket.onclose) return;
+      if (closed) return;
+      closed = true;
 
       var wasConnected = (self._state === self.CONNECTED);
       socket.onopen = socket.onclose = socket.onerror = socket.onmessage = null;

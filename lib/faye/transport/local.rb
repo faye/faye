@@ -9,7 +9,7 @@ module Faye
       false
     end
 
-    def request(messages, timeout)
+    def request(messages)
       messages = Faye.copy_object(messages)
       @endpoint.process(messages, true) do |responses|
         receive(Faye.copy_object(responses))

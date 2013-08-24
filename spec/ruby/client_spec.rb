@@ -73,7 +73,7 @@ describe Faye::Client do
         "version" => "1.0",
         "supportedConnectionTypes" => ["fake"],
         "id"      => instance_of(String)
-      }, 60)
+      })
       @client.handshake
     end
 
@@ -101,7 +101,7 @@ describe Faye::Client do
           "supportedConnectionTypes" => ["fake"],
           "id"      => instance_of(String),
           "ext"     => {"auth" => "password"}
-        }, 60)
+        })
         @client.handshake
       end
     end
@@ -188,13 +188,13 @@ describe Faye::Client do
       end
 
       it "resends the subscriptions to the server" do
-        transport.should_receive(:send).with(hash_including("channel" => "/meta/handshake"), 60)
+        transport.should_receive(:send).with(hash_including("channel" => "/meta/handshake"))
         transport.should_receive(:send).with({
           "channel"      => "/meta/subscribe",
           "clientId"     => "reconnectid",
           "subscription" => "/messages/foo",
           "id"           => instance_of(String)
-        }, 60)
+        })
         @client.handshake
       end
 
@@ -214,7 +214,7 @@ describe Faye::Client do
           "version" => "1.0",
           "supportedConnectionTypes" => ["fake"],
           "id"      => instance_of(String)
-        }, 60)
+        })
         @client.handshake
       end
     end
@@ -238,7 +238,7 @@ describe Faye::Client do
           "clientId"       => "handshakeid",
           "connectionType" => "fake",
           "id"             => instance_of(String)
-        }, 60)
+        })
         @client.connect
       end
     end
@@ -252,7 +252,7 @@ describe Faye::Client do
           "clientId"       => "fakeid",
           "connectionType" => "fake",
           "id"             => instance_of(String)
-        }, 60)
+        })
         @client.connect
       end
 
@@ -262,7 +262,7 @@ describe Faye::Client do
           "clientId"       => "fakeid",
           "connectionType" => "fake",
           "id"             => instance_of(String)
-        }, 60).
+        }).
         exactly(1).
         and_return # override stub implementation
 
@@ -281,7 +281,7 @@ describe Faye::Client do
         "channel"  => "/meta/disconnect",
         "clientId" => "fakeid",
         "id"       => instance_of(String)
-      }, 60)
+      })
       @client.disconnect
     end
 
@@ -318,7 +318,7 @@ describe Faye::Client do
 
     describe "with no prior subscriptions" do
       it "sends a subscribe message to the server" do
-        transport.should_receive(:send).with(@subscribe_message, 60)
+        transport.should_receive(:send).with(@subscribe_message)
         @client.subscribe("/foo/*")
       end
 
@@ -331,13 +331,13 @@ describe Faye::Client do
             "clientId"     => "fakeid",
             "subscription" => "/foo",
             "id"           => instance_of(String)
-          }, 60)
+          })
           transport.should_receive(:send).with({
             "channel"      => "/meta/subscribe",
             "clientId"     => "fakeid",
             "subscription" => "/bar",
             "id"           => instance_of(String)
-          }, 60)
+          })
           @client.subscribe(["/foo", "/bar"])
         end
 
@@ -479,7 +479,7 @@ describe Faye::Client do
       end
 
       it "does not send another subscribe message to the server" do
-        transport.should_not_receive(:send).with(@subscribe_message, 60)
+        transport.should_not_receive(:send).with(@subscribe_message)
         @client.subscribe("/foo/*")
       end
 
@@ -510,7 +510,7 @@ describe Faye::Client do
 
     describe "with no subscriptions" do
       it "does not send an unsubscribe message to the server" do
-        transport.should_not_receive(:send).with(@unsubscribe_message, 60)
+        transport.should_not_receive(:send).with(@unsubscribe_message)
         @client.unsubscribe("/foo/*")
       end
     end
@@ -523,7 +523,7 @@ describe Faye::Client do
       end
 
       it "sends an unsubscribe message to the server" do
-        transport.should_receive(:send).with(@unsubscribe_message, 60)
+        transport.should_receive(:send).with(@unsubscribe_message)
         @client.unsubscribe("/foo/*")
       end
 
@@ -552,18 +552,18 @@ describe Faye::Client do
       end
 
       it "does not send an unsubscribe message if one listener is removed" do
-        transport.should_not_receive(:send).with(@unsubscribe_message, 60)
+        transport.should_not_receive(:send).with(@unsubscribe_message)
         @client.unsubscribe("/foo/*", &@bye)
       end
 
       it "sends an unsubscribe message if each listener is removed" do
-        transport.should_receive(:send).with(@unsubscribe_message, 60)
+        transport.should_receive(:send).with(@unsubscribe_message)
         @client.unsubscribe("/foo/*", &@bye)
         @client.unsubscribe("/foo/*", &@hey)
       end
 
       it "sends an unsubscribe message if all listeners are removed" do
-        transport.should_receive(:send).with(@unsubscribe_message, 60)
+        transport.should_receive(:send).with(@unsubscribe_message)
         @client.unsubscribe("/foo/*")
       end
     end
@@ -580,13 +580,13 @@ describe Faye::Client do
           "clientId"     => "fakeid",
           "subscription" => "/foo",
           "id"           => instance_of(String)
-        }, 60)
+        })
         transport.should_receive(:send).with({
           "channel"      => "/meta/unsubscribe",
           "clientId"     => "fakeid",
           "subscription" => "/bar",
           "id"           => instance_of(String)
-        }, 60)
+        })
         @client.unsubscribe(["/foo", "/bar"])
       end
     end
@@ -601,12 +601,12 @@ describe Faye::Client do
         "clientId" => "fakeid",
         "data"     => {"hello" => "world"},
         "id"       => instance_of(String)
-      }, 60)
+      })
       @client.publish("/messages/foo", "hello" => "world")
     end
 
     it "throws an error when publishing to an invalid channel" do
-      transport.should_not_receive(:send).with(hash_including("channel" => "/messages/*"), 60)
+      transport.should_not_receive(:send).with(hash_including("channel" => "/messages/*"))
       lambda { @client.publish("/messages/*", "hello" => "world") }.should raise_error
     end
 
@@ -667,7 +667,7 @@ describe Faye::Client do
           "data"     => {"hello" => "world"},
           "id"       => instance_of(String),
           "ext"      => {"auth" => "password"}
-        }, 60)
+        })
         @client.publish("/messages/foo", "hello" => "world")
       end
     end
@@ -689,7 +689,7 @@ describe Faye::Client do
           "clientId" => "fakeid",
           "data"     => {"hello" => "world"},
           "id"       => instance_of(String)
-        }, 60)
+        })
         @client.publish("/messages/foo", "hello" => "world")
       end
     end
@@ -704,40 +704,40 @@ describe Faye::Client do
     describe "in the default state" do
       it "broadcasts a down notification" do
         @client.should_receive(:trigger).with("transport:down")
-        transport.trigger(:down)
+        @client.message_error([])
       end
 
       it "broadcasts an up notification" do
         @client.should_receive(:trigger).with("transport:up")
-        transport.trigger(:up)
+        @client.receive_message({})
       end
     end
 
     describe "when the transport is up" do
-      before { transport.trigger(:up) }
+      before { @client.receive_message({}) }
 
       it "broadcasts a down notification" do
         @client.should_receive(:trigger).with("transport:down")
-        transport.trigger(:down)
+        @client.message_error([])
       end
 
       it "does not broadcast an up notification" do
         @client.should_not_receive(:trigger)
-        transport.trigger(:up)
+        @client.receive_message({})
       end
     end
 
     describe "when the transport is down" do
-      before { transport.trigger(:down) }
+      before { @client.message_error([]) }
 
       it "does not broadcast a down notification" do
         @client.should_not_receive(:trigger)
-        transport.trigger(:down)
+        @client.message_error([])
       end
 
       it "broadcasts an up notification" do
         @client.should_receive(:trigger).with("transport:up")
-        transport.trigger(:up)
+        @client.receive_message({})
       end
     end
   end

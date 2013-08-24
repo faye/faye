@@ -9,21 +9,19 @@ module Faye
       Faye.to_json(messages)
     end
 
-    def request(messages, timeout)
-      retry_block = retry_block(messages, timeout)
-
+    def request(messages)
       content = encode(messages)
       cookies = @client.cookies.get_cookies(@endpoint.to_s)
       params  = build_params(@endpoint, content, cookies)
       request = create_request(params)
 
       request.callback do
-        handle_response(request.response, retry_block)
+        handle_response(request.response, messages)
         store_cookies([*request.response_header['SET_COOKIE']].compact)
       end
+
       request.errback do
-        retry_block.call
-        trigger(:down)
+        @client.message_error(messages)
       end
     end
 
@@ -57,14 +55,12 @@ module Faye
       client.post(params)
     end
 
-    def handle_response(response, retry_block)
+    def handle_response(response, messages)
       message = MultiJson.load(response) rescue nil
       if message
         receive(message)
-        trigger(:up)
       else
-        retry_block.call
-        trigger(:down)
+        @client.message_error(messages)
       end
     end
 
