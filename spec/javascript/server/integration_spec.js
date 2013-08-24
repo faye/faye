@@ -74,7 +74,7 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
 
   sharedExamplesFor("message bus", function() { with(this) {
     before(function() { with(this) {
-      server(8000, serverOptions.ssl)
+      server(4180, serverOptions.ssl)
       client("alice", [])
       client("bob", ["/foo"])
     }})
