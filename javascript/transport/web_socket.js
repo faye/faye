@@ -33,7 +33,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     var self = this;
 
     socket.onopen = function() {
-      self._storeCookies(socket.headers['set-cookie']);
+      if (socket.headers) self._storeCookies(socket.headers['set-cookie']);
       self._socket = socket;
       self._pending = new Faye.Set();
       self._state = self.CONNECTED;
