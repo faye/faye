@@ -10,13 +10,12 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         content = new Buffer(Faye.toJSON(messages), 'utf8'),
         self    = this;
 
-    var cookies = this._client.cookies.getCookies({domain: uri.hostname, path: uri.pathname}),
-        params  = this._buildParams(uri, content, cookies, secure),
+    var params  = this._buildParams(uri, content, secure),
         request = client.request(params);
 
     request.on('response', function(response) {
       self._handleResponse(response, messages);
-      self._storeCookies(uri.hostname, response.headers['set-cookie']);
+      self._storeCookies(response.headers['set-cookie']);
     });
 
     request.on('error', function() {
@@ -25,7 +24,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
     request.end(content);
   },
 
-  _buildParams: function(uri, content, cookies, secure) {
+  _buildParams: function(uri, content, secure) {
     var params = {
       method:   'POST',
       host:     uri.hostname,
@@ -34,7 +33,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
       headers:  Faye.extend({
         'Content-Length': content.length,
         'Content-Type':   'application/json',
-        'Cookie':         cookies.toValueString(),
+        'Cookie':         this._getCookies(),
         'Host':           uri.host
       }, this._client.headers)
     };
@@ -59,17 +58,6 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
       else
         self._client.messageError(messages);
     });
-  },
-
-  _storeCookies: function(hostname, cookies) {
-    if (!cookies) return;
-    var cookie;
-
-    for (var i = 0, n = cookies.length; i < n; i++) {
-      cookie = this._client.cookies.setCookie(cookies[i]);
-      cookie = cookie[0] || cookie;
-      cookie.domain = cookie.domain || hostname;
-    }
   }
 
 }), {

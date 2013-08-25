@@ -77,6 +77,20 @@ module Faye
       responses.each { |response| @client.receive_message(response) }
     end
 
+  private
+
+    def get_cookies
+      return @client.cookies
+      @client.cookies.get_cookies(@endpoint.to_s) * ';'
+    end
+
+    def store_cookies(set_cookie)
+      return @client.cookies
+      [*set_cookie].compact.each do |cookie|
+        @client.cookies.set_cookie(@endpoint.to_s, cookie)
+      end
+    end
+
     @transports = []
 
     class << self

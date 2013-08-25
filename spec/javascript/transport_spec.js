@@ -4,7 +4,6 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
       endpoint:       Faye.URI.parse("http://example.com/"),
       endpoints:      {},
       maxRequestSize: 2048,
-      cookies:        {},
       headers:        {},
       transports:     {}
     }

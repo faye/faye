@@ -33,6 +33,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     var self = this;
 
     socket.onopen = function() {
+      self._storeCookies(socket.headers['set-cookie']);
       self._socket = socket;
       self._pending = new Faye.Set();
       self._state = self.CONNECTED;
@@ -82,7 +83,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
 
   _createSocket: function() {
     var url     = Faye.Transport.WebSocket.getSocketUrl(this.endpoint),
-        options = {headers: this._client.headers, ca: this._client.ca};
+        options = {headers: Faye.copyObject(this._client.headers), ca: this._client.ca};
+
+    options.headers['Cookie'] = this._getCookies();
 
     if (Faye.WebSocket)        return new Faye.WebSocket.Client(url, [], options);
     if (Faye.ENV.MozWebSocket) return new MozWebSocket(url);

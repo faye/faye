@@ -11,13 +11,12 @@ module Faye
 
     def request(messages)
       content = encode(messages)
-      cookies = @client.cookies.get_cookies(@endpoint.to_s)
-      params  = build_params(@endpoint, content, cookies)
+      params  = build_params(@endpoint, content)
       request = create_request(params)
 
       request.callback do
         handle_response(request.response, messages)
-        store_cookies([*request.response_header['SET_COOKIE']].compact)
+        store_cookies(request.response_header['SET_COOKIE'])
       end
 
       request.errback do
@@ -27,12 +26,12 @@ module Faye
 
   private
 
-    def build_params(uri, content, cookies)
+    def build_params(uri, content)
       {
         :head => {
           'Content-Length'  => content.bytesize,
           'Content-Type'    => 'application/json',
-          'Cookie'          => cookies * '; ',
+          'Cookie'          => get_cookies,
           'Host'            => uri.host
         }.merge(@client.headers),
 
@@ -61,12 +60,6 @@ module Faye
         receive(message)
       else
         @client.message_error(messages)
-      end
-    end
-
-    def store_cookies(cookies)
-      cookies.each do |cookie|
-        @client.cookies.set_cookie(@endpoint, cookie)
       end
     end
   end

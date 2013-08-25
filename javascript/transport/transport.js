@@ -60,6 +60,29 @@ Faye.Transport = Faye.extend(Faye.Class({
 
     for (var i = 0, n = responses.length; i < n; i++)
       this._client.receiveMessage(responses[i]);
+  },
+
+  _getCookies: function() {
+    var cookies = this._client.cookies;
+    if (!cookies) return '';
+
+    return cookies.getCookies({
+      domain: this.endpoint.hostname,
+      path:   this.endpoint.path,
+      secure: this.endpoint.protocol === 'https:'
+    }).toValueString();
+  },
+
+  _storeCookies: function(setCookie) {
+    if (!setCookie || !this._client.cookies) return;
+    setCookie = [].concat(setCookie);
+    var cookie;
+
+    for (var i = 0, n = setCookie.length; i < n; i++) {
+      cookie = this._client.cookies.setCookie(setCookie[i]);
+      cookie = cookie[0] || cookie;
+      cookie.domain = cookie.domain || this.endpoint.hostname;
+    }
   }
 
 }), {

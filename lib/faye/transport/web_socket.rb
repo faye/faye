@@ -45,11 +45,15 @@ module Faye
       return unless @state == UNCONNECTED
       @state = CONNECTING
 
+      headers = @client.headers.dup
+      headers['Cookie'] = get_cookies
+
       url = @endpoint.dup
       url.scheme = PROTOCOLS[url.scheme]
-      socket = Faye::WebSocket::Client.new(url.to_s, [], :headers => @client.headers)
+      socket = Faye::WebSocket::Client.new(url.to_s, [], :headers => headers)
 
       socket.onopen = lambda do |*args|
+        store_cookies(socket.headers['Set-Cookie'])
         @socket = socket
         @pending = Set.new
         @state = CONNECTED
