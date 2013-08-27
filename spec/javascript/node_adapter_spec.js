@@ -141,7 +141,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
         }})
 
         it("forwards the message param onto the server", function() { with(this) {
-          expect(server, "process").given({channel: "/plain"}, false).yielding([[]])
+          expect(server, "process").given({channel: "/plain"}, objectIncluding({headers: instanceOf(Object)})).yielding([[]])
           post("/bayeux", "message=%7B%22channel%22%3A%22%2Fplain%22%7D")
         }})
 
@@ -185,7 +185,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
       }})
 
       it("forwards the POST body onto the server", function() { with(this) {
-        expect(server, "process").given({channel: "/foo"}, false).yielding([[]])
+        expect(server, "process").given({channel: "/foo"}, objectIncluding({headers: instanceOf(Object)})).yielding([[]])
         post("/bayeux", '{"channel":"/foo"}')
       }})
 
@@ -208,7 +208,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
 
     describe("with no content type", function() { with(this) {
       it("forwards the message param onto the server", function() { with(this) {
-        expect(server, "process").given({channel: "/foo"}, false).yielding([[]])
+        expect(server, "process").given({channel: "/foo"}, objectIncluding({headers: instanceOf(Object)})).yielding([[]])
         post("/bayeux", {message: '{"channel":"/foo"}'})
       }})
 
@@ -241,7 +241,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
       }})
 
       it("forwards the message param onto the server", function() { with(this) {
-        expect(server, "process").given({channel: "/foo"}, false).yielding([[]])
+        expect(server, "process").given({channel: "/foo"}, objectIncluding({headers: instanceOf(Object)})).yielding([[]])
         get("/bayeux", params)
       }})
 

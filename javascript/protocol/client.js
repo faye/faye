@@ -305,7 +305,7 @@ Faye.Client = Faye.Class({
       delete this._responseCallbacks[id];
     }
 
-    this.pipeThroughExtensions('incoming', message, function(message) {
+    this.pipeThroughExtensions('incoming', message, null, function(message) {
       if (!message) return;
 
       if (message.advice) this._handleAdvice(message.advice);
@@ -358,7 +358,7 @@ Faye.Client = Faye.Class({
     if (!this._transport) return;
     message.id = message.id || this._generateMessageId();
 
-    this.pipeThroughExtensions('outgoing', message, function(message) {
+    this.pipeThroughExtensions('outgoing', message, null, function(message) {
       if (!message) return;
       if (callback) this._responseCallbacks[message.id] = [callback, context];
       this._transportSend(message);

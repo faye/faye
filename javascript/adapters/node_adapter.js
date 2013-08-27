@@ -141,7 +141,7 @@ Faye.NodeAdapter = Faye.Class({
       if (origin) headers['Access-Control-Allow-Origin'] = origin;
       headers['Cache-Control'] = 'no-cache, no-store';
 
-      this._server.process(message, false, function(replies) {
+      this._server.process(message, request, function(replies) {
         var body = Faye.toJSON(replies);
         if (isGet) body = jsonp + '(' + body.replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029') + ');';
         headers['Content-Length'] = new Buffer(body, 'utf8').length.toString();
@@ -169,10 +169,10 @@ Faye.NodeAdapter = Faye.Class({
             cid     = Faye.clientIdFromMessages(message);
 
         if (clientId && cid && cid !== clientId) self._server.closeSocket(clientId);
-        self._server.openSocket(cid, ws);
+        self._server.openSocket(cid, ws, request);
         clientId = cid;
 
-        self._server.process(message, false, function(replies) {
+        self._server.process(message, request, function(replies) {
           if (ws) ws.send(Faye.toJSON(replies));
         });
       } catch (e) {

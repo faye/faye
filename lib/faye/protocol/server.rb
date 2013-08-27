@@ -25,16 +25,17 @@ module Faye
       @engine.flush(client_id) if client_id
     end
 
-    def open_socket(client_id, socket)
+    def open_socket(client_id, socket, env)
       return unless client_id and socket
-      @engine.open_socket(client_id, Socket.new(self, socket))
+      @engine.open_socket(client_id, Socket.new(self, socket, env))
     end
 
     def close_socket(client_id)
       @engine.flush(client_id)
     end
 
-    def process(messages, local = false, &callback)
+    def process(messages, env, &callback)
+      local    = env.nil?
       messages = [messages].flatten
       info 'Processing messages: ? (local: ?)', messages, local
 
@@ -55,7 +56,7 @@ module Faye
 
         replies.each_with_index do |reply, i|
           debug 'Processing reply: ?', reply
-          pipe_through_extensions(:outgoing, reply) do |message|
+          pipe_through_extensions(:outgoing, reply, env) do |message|
             replies[i] = message
             extended  += 1
             gather_replies.call(replies) if extended == expected
@@ -64,7 +65,7 @@ module Faye
       end
 
       messages.each do |message|
-        pipe_through_extensions(:incoming, message) do |piped_message|
+        pipe_through_extensions(:incoming, message, env) do |piped_message|
           handle(piped_message, local, &handle_reply)
         end
       end

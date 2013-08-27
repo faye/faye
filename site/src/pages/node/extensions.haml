@@ -102,6 +102,26 @@
     <pre class="prettyprint">// Calls extension.removed() if defined
     hostObject.removeExtension(extension);</pre>
 
+    On the server side, you can gain access to details of the request in which
+    the message was delivered, by writing extensions with 3 arguments:
+
+    <pre class="prettyprint">server.addExtension({
+      incoming: function(message, request, callback) {
+        if (request && request.headers.origin !== 'http://example.com') {
+          message.error = '403::Forbidden origin';
+        }
+        callback(message);
+      }
+    });</pre>
+
+    If an extension method has 3 arguments, the second argument will be a Node
+    request object, if the message was delivered by HTTP or WebSocket. For
+    messages sent by a local server-side client, @request@ will be @null@.
+
+    You should not use the @request@ object to send a response yourself; you
+    should only use its properties to make a decision about how to handle the
+    message, for example by checking the @Origin@ or @Cookie@ headers.
+
     To write extensions you'll need to know what kinds of messages are used by
     the Bayeux protocol; see "the specification":http://svn.cometd.com/trunk/bayeux/bayeux.html
     for more details.

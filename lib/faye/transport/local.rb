@@ -11,7 +11,7 @@ module Faye
 
     def request(messages)
       messages = Faye.copy_object(messages)
-      @endpoint.process(messages, true) do |responses|
+      @endpoint.process(messages, nil) do |responses|
         receive(Faye.copy_object(responses))
       end
     end

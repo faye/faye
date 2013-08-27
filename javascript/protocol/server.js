@@ -16,16 +16,18 @@ Faye.Server = Faye.Class({
     this._engine.flush(clientId);
   },
 
-  openSocket: function(clientId, socket) {
+  openSocket: function(clientId, socket, request) {
     if (!clientId || !socket) return;
-    this._engine.openSocket(clientId, new Faye.Server.Socket(this, socket));
+    this._engine.openSocket(clientId, new Faye.Server.Socket(this, socket, request));
   },
 
   closeSocket: function(clientId) {
     this._engine.flush(clientId);
   },
 
-  process: function(messages, local, callback, context) {
+  process: function(messages, request, callback, context) {
+    var local = (request === null);
+
     messages = [].concat(messages);
     this.info('Processing messages: ? (local: ?)', messages, local);
 
@@ -52,7 +54,7 @@ Faye.Server = Faye.Class({
       for (var i = 0, n = replies.length; i < n; i++) {
         this.debug('Processing reply: ?', replies[i]);
         (function(index) {
-          self.pipeThroughExtensions('outgoing', replies[index], function(message) {
+          self.pipeThroughExtensions('outgoing', replies[index], request, function(message) {
             replies[index] = message;
             extended += 1;
             if (extended === expected) gatherReplies(replies);
@@ -62,7 +64,7 @@ Faye.Server = Faye.Class({
     };
 
     for (var i = 0, n = messages.length; i < n; i++) {
-      this.pipeThroughExtensions('incoming', messages[i], function(pipedMessage) {
+      this.pipeThroughExtensions('incoming', messages[i], request, function(pipedMessage) {
         this._handle(pipedMessage, local, handleReply, this);
       }, this);
     }

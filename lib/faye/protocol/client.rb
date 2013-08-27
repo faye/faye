@@ -297,7 +297,7 @@ module Faye
         callback = @response_callbacks.delete(id)
       end
 
-      pipe_through_extensions(:incoming, message) do |message|
+      pipe_through_extensions(:incoming, message, nil) do |message|
         next unless message
 
         handle_advice(message['advice']) if message['advice']
@@ -347,7 +347,7 @@ module Faye
       return unless @transport
       message['id'] = generate_message_id
 
-      pipe_through_extensions(:outgoing, message) do |message|
+      pipe_through_extensions(:outgoing, message, nil) do |message|
         next unless message
         @response_callbacks[message['id']] = callback if callback
         transport_send(message)

@@ -36,7 +36,7 @@ describe Faye::RackAdapter do
         end
 
         it "forwards the message param onto the server" do
-          server.should_receive(:process).with({"channel" => "/plain"}, false).and_yield []
+          server.should_receive(:process).with({"channel" => "/plain"}, instance_of(Hash)).and_yield []
           post "/bayeux", "message=%7B%22channel%22%3A%22%2Fplain%22%7D"
         end
 
@@ -87,7 +87,7 @@ describe Faye::RackAdapter do
       end
 
       it "forwards the POST body onto the server" do
-        server.should_receive(:process).with({"channel" => "/foo"}, false).and_yield []
+        server.should_receive(:process).with({"channel" => "/foo"}, instance_of(Hash)).and_yield []
         post "/bayeux", '{"channel":"/foo"}'
       end
 
@@ -117,7 +117,7 @@ describe Faye::RackAdapter do
 
     describe "with no content type" do
       it "forwards the message param onto the server" do
-        server.should_receive(:process).with({"channel" => "/foo"}, false).and_yield []
+        server.should_receive(:process).with({"channel" => "/foo"}, instance_of(Hash)).and_yield []
         post "/bayeux", :message => '{"channel":"/foo"}'
       end
 
@@ -155,7 +155,7 @@ describe Faye::RackAdapter do
       end
 
       it "forwards the message param onto the server" do
-        server.should_receive(:process).with({"channel" => "/foo"}, false).and_yield []
+        server.should_receive(:process).with({"channel" => "/foo"}, instance_of(Hash)).and_yield []
         get "/bayeux", params
       end
 

@@ -17,7 +17,7 @@ module Faye
       end
     end
 
-    def pipe_through_extensions(stage, message, &callback)
+    def pipe_through_extensions(stage, message, env, &callback)
       debug 'Passing through ? extensions: ?', stage, message
 
       return callback.call(message) unless @extensions
@@ -29,10 +29,13 @@ module Faye
         extension = extensions.shift
         next callback.call(message) unless extension
 
-        if extension.respond_to?(stage)
-          extension.__send__(stage, message, pipe)
+        next pipe.call(message) unless extension.respond_to?(stage)
+
+        arity = extension.method(stage).arity
+        if arity >= 3
+          extension.__send__(stage, message, env, pipe)
         else
-          pipe.call(message)
+          extension.__send__(stage, message, pipe)
         end
       end
       pipe.call(message)

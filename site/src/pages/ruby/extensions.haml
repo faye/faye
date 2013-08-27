@@ -103,6 +103,26 @@
     <pre class="prettyprint"># Calls extension.removed() if defined
     host_object.remove_extension(extension)</pre>
 
+    On the server side, you can gain access to details of the request in which
+    the message was delivered, by writing extensions with 3 arguments:
+
+    <pre class="prettyprint">class ServerExt
+      def incoming(message, env, callback)
+        if env && env['HTTP_ORIGIN'] != 'http://example.com'
+          message['error'] = '403::Forbidden origin'
+        end
+        callback.call(message)
+      end
+    end</pre>
+
+    If an extension method has 3 arguments, the second argument will be a Rack
+    environment object, if the message was delivered by HTTP or WebSocket. For
+    messages sent by a local server-side client, @env@ will be @nil@.
+
+    You should not use the @env@ object to send a response yourself; you should
+    only use its properties to make a decision about how to handle the message,
+    for example by checking the @Origin@ or @Cookie@ headers.
+
     To write extensions you'll need to know what kinds of messages are used by
     the Bayeux protocol; see "the specification":http://svn.cometd.com/trunk/bayeux/bayeux.html
     for more details.

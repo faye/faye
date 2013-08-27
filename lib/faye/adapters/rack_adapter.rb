@@ -99,7 +99,7 @@ module Faye
       headers['Cache-Control'] = 'no-cache, no-store'
 
       EventMachine.next_tick do
-        @server.process(message, false) do |replies|
+        @server.process(message, request.env) do |replies|
           response = Faye.to_json(replies)
           response = "#{ jsonp }(#{ response.gsub(/\u2028/, '\u2028').gsub(/\u2029/, '\u2029') });" if request.get?
           headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
@@ -160,10 +160,10 @@ module Faye
           cid     = Faye.client_id_from_messages(message)
 
           @server.close_socket(client_id) if client_id and cid and cid != client_id
-          @server.open_socket(cid, ws)
+          @server.open_socket(cid, ws, env)
           client_id = cid
 
-          @server.process(message, false) do |replies|
+          @server.process(message, env) do |replies|
             ws.send(Faye.to_json(replies)) if ws
           end
         rescue => e
