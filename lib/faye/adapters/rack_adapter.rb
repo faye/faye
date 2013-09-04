@@ -21,8 +21,9 @@ module Faye
     HTTP_X_NO_CONTENT_LENGTH = 'HTTP_X_NO_CONTENT_LENGTH'
 
     def initialize(app = nil, options = nil)
-      @app      = app if app.respond_to?(:call)
-      @options  = [app, options].grep(Hash).first || {}
+      @app     = app if app.respond_to?(:call)
+      @options = [app, options].grep(Hash).first || {}
+      @origins = @options[:origins] && [*@options[:origins]]
 
       @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
       @endpoint_re = Regexp.new('^' + @endpoint.gsub(/\/$/, '') + '(/[^/]*)*(\\.[^\\.]+)?$')
@@ -62,14 +63,19 @@ module Faye
                       [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
       end
 
-      # http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
-      if env['REQUEST_METHOD'] == 'OPTIONS' or env['HTTP_ACCESS_CONTROL_REQUEST_METHOD'] == 'POST'
-        return handle_options(request)
+      return @static.call(env) if @static =~ request.path_info
+
+      if @origins and not @origins.any? { |o| o === env['HTTP_ORIGIN'] }
+        return [403, TYPE_TEXT, ['Forbidden: request origin is not authorized']]
       end
 
-      return @static.call(env)        if @static =~ request.path_info
-      return handle_websocket(env)    if Faye::WebSocket.websocket?(env)
-      return handle_eventsource(env)  if Faye::EventSource.eventsource?(env)
+      # http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
+      if env['REQUEST_METHOD'] == 'OPTIONS' or env['HTTP_ACCESS_CONTROL_REQUEST_METHOD'] == 'POST'
+        return handle_options
+      end
+
+      return handle_websocket(env)   if Faye::WebSocket.websocket?(env)
+      return handle_eventsource(env) if Faye::EventSource.eventsource?(env)
 
       handle_request(request)
     end
@@ -194,15 +200,15 @@ module Faye
       es.rack_response
     end
 
-    def handle_options(request)
+    def handle_options
       headers = {
-        'Access-Control-Allow-Origin'       => '*',
-        'Access-Control-Allow-Credentials'  => 'false',
-        'Access-Control-Max-Age'            => '86400',
-        'Access-Control-Allow-Methods'      => 'POST, GET, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers'      => 'Accept, Content-Type, Pragma, X-Requested-With'
+        'Access-Control-Allow-Credentials' => 'false',
+        'Access-Control-Allow-Headers'     => 'Accept, Content-Type, Pragma, X-Requested-With',
+        'Access-Control-Allow-Methods'     => 'POST, GET, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Origin'      => '*',
+        'Access-Control-Max-Age'           => '86400'
       }
-      [200, headers, ['']]
+      [200, headers, []]
     end
 
     def format_request(request)

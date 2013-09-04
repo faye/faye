@@ -31,6 +31,7 @@ Faye.NodeAdapter = Faye.Class({
 
   initialize: function(options) {
     this._options    = options || {};
+    this._origins    = this._options.origins && [].concat(this._options.origins);
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
     this._endpointRe = new RegExp('^' + this._endpoint.replace(/\/$/, '') + '(/[^/]*)*(\\.[^\\.]+)?$');
     this._server     = new Faye.Server(this._options);
@@ -90,6 +91,7 @@ Faye.NodeAdapter = Faye.Class({
   handle: function(request, response) {
     var requestUrl    = url.parse(request.url, true),
         requestMethod = request.method,
+        origin        = request.headers.origin,
         self          = this;
 
     request.on('error', function(error) { self._returnError(response, error) });
@@ -98,9 +100,14 @@ Faye.NodeAdapter = Faye.Class({
     if (this._static.test(requestUrl.pathname))
       return this._static.call(request, response);
 
+    if (this._origins && this._origins.filter(function(o) { return o.test ? o.test(origin) : o === origin }).length === 0) {
+      response.writeHead(403, this.TYPE_TEXT);
+      response.end('Forbidden: request origin is not authorized');
+    }
+
     // http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
     if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST')
-      return this._handleOptions(request, response);
+      return this._handleOptions(response);
 
     if (Faye.EventSource.isEventSource(request))
       return this.handleEventSource(request, response);
@@ -200,13 +207,13 @@ Faye.NodeAdapter = Faye.Class({
     };
   },
 
-  _handleOptions: function(request, response) {
+  _handleOptions: function(response) {
     var headers = {
-      'Access-Control-Allow-Origin':      '*',
       'Access-Control-Allow-Credentials': 'false',
-      'Access-Control-Max-Age':           '86400',
+      'Access-Control-Allow-Headers':     'Accept, Content-Type, Pragma, X-Requested-With',
       'Access-Control-Allow-Methods':     'POST, GET, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers':     'Accept, Content-Type, Pragma, X-Requested-With'
+      'Access-Control-Allow-Origin':      '*',
+      'Access-Control-Max-Age':           '86400'
     };
     response.writeHead(200, headers);
     response.end('');
