@@ -6,15 +6,15 @@ Gem::Specification.new do |s|
   s.email             = 'jcoglan@gmail.com'
   s.homepage          = 'http://faye.jcoglan.com'
 
-  s.extra_rdoc_files  = %w[README.rdoc]
-  s.rdoc_options      = %w[--main README.rdoc]
+  s.extra_rdoc_files  = %w[README.md]
+  s.rdoc_options      = %w[--main README.md --markup markdown]
   s.require_paths     = %w[lib]
 
   # It is important that the JavaScript files listed here are not removed: they
   # contain the browser client and the gem should fail to build without them.
   # You should generate them by running `npm run-script build` in the project
   # root.
-  s.files = %w[History.txt README.rdoc] +
+  s.files = %w[CHANGELOG.md README.md] +
             %w[lib/faye-browser.js lib/faye-browser-min.js lib/faye-browser-min.js.map] +
             Dir.glob('{spec,lib}/**/*')
   
