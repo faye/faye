@@ -31,12 +31,11 @@
 
 , "wake": {
     "javascript": {
-      "sourceDirectory":          "javascript",
-      "targetDirectory":          "build",
-      "layout":                   "together",
+      "sourceDirectory": "javascript",
+      "targetDirectory": "build",
       "builds": {
-        "src":                    {"minify": false, "suffix": false},
-        "min":                    {"minify": true, "sourceMap": "src"}
+        "src": {"digest": false, "minify": false},
+        "min": {"digest": false, "minify": true, "sourceMap": "src", "tag": "suffix"}
       },
       "targets": {
         "core": {                 "builds": {"src": false, "min": false},
@@ -90,14 +89,17 @@
       }
     },
     "binary": {
-      "sourceDirectory":                ".",
-      "targetDirectory":                ".",
+      "sourceDirectory": ".",
+      "targetDirectory": ".",
+      "builds": {
+        "min": {"digest": false}
+      },
       "targets": {
         "lib/faye-browser.js":          "build/browser/faye-browser.js",
         "lib/faye-browser-min.js":      "build/browser/faye-browser-min.js",
         "lib/faye-browser-min.js.map":  "build/browser/faye-browser-min.js.map",
         "build/package.json":           "package.json",
-        "build/History.txt":            "History.txt",
-        "build/README.txt":             "README.rdoc"
+        "build/CHANGELOG.md":           "CHANGELOG.md",
+        "build/README.md":              "README.md"
 } } } }
 

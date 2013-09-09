@@ -100,7 +100,7 @@ Faye.NodeAdapter = Faye.Class({
     if (this._static.test(requestUrl.pathname))
       return this._static.call(request, response);
 
-    if (this._origins && this._origins.filter(function(o) { return o.test ? o.test(origin) : o === origin }).length === 0) {
+    if (this._origins && Faye.filter(this._origins, function(o) { return o.test ? o.test(origin) : o === origin }).length === 0) {
       response.writeHead(403, this.TYPE_TEXT);
       response.end('Forbidden: request origin is not authorized');
     }

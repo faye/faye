@@ -95,6 +95,7 @@ var Faye = {
   },
 
   filter: function(array, callback, context) {
+    if (array.filter) return array.filter(callback, context);
     var result = [];
     for (var i = 0, n = array.length; i < n; i++) {
       if (callback.call(context || null, array[i], i))
