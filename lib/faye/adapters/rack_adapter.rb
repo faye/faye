@@ -74,8 +74,8 @@ module Faye
         return handle_options
       end
 
-      return handle_websocket(env)   if Faye::WebSocket.websocket?(env)
-      return handle_eventsource(env) if Faye::EventSource.eventsource?(env)
+      return handle_websocket(request)   if Faye::WebSocket.websocket?(env)
+      return handle_eventsource(request) if Faye::EventSource.eventsource?(env)
 
       handle_request(request)
     end
@@ -105,7 +105,7 @@ module Faye
       headers['Cache-Control'] = 'no-cache, no-store'
 
       EventMachine.next_tick do
-        @server.process(message, request.env) do |replies|
+        @server.process(message, request) do |replies|
           response = Faye.to_json(replies)
           response = "#{ jsonp }(#{ response.gsub(/\u2028/, '\u2028').gsub(/\u2029/, '\u2029') });" if request.get?
           headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
@@ -154,8 +154,8 @@ module Faye
       hijack.close_write
     end
 
-    def handle_websocket(env)
-      ws        = Faye::WebSocket.new(env, nil, :ping => @options[:ping])
+    def handle_websocket(request)
+      ws        = Faye::WebSocket.new(request.env, nil, :ping => @options[:ping])
       client_id = nil
 
       ws.onmessage = lambda do |event|
@@ -166,10 +166,10 @@ module Faye
           cid     = Faye.client_id_from_messages(message)
 
           @server.close_socket(client_id) if client_id and cid and cid != client_id
-          @server.open_socket(cid, ws, env)
+          @server.open_socket(cid, ws, request)
           client_id = cid
 
-          @server.process(message, env) do |replies|
+          @server.process(message, request) do |replies|
             ws.send(Faye.to_json(replies)) if ws
           end
         rescue => e
@@ -185,12 +185,12 @@ module Faye
       ws.rack_response
     end
 
-    def handle_eventsource(env)
-      es        = Faye::EventSource.new(env, :ping => @options[:ping])
+    def handle_eventsource(request)
+      es        = Faye::EventSource.new(request.env, :ping => @options[:ping])
       client_id = es.url.split('/').pop
 
       debug 'Opened EventSource connection for ?', client_id
-      @server.open_socket(client_id, es)
+      @server.open_socket(client_id, es, request)
 
       es.onclose = lambda do |event|
         @server.close_socket(client_id)

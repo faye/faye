@@ -107,21 +107,21 @@
     the message was delivered, by writing extensions with 3 arguments:
 
     <pre class="prettyprint">class ServerExt
-      def incoming(message, env, callback)
-        if env && env['HTTP_ORIGIN'] != 'http://example.com'
+      def incoming(message, request, callback)
+        if request && request.env['HTTP_ORIGIN'] != 'http://example.com'
           message['error'] = '403::Forbidden origin'
         end
         callback.call(message)
       end
     end</pre>
 
-    If an extension method has 3 arguments, the second argument will be a Rack
-    environment object, if the message was delivered by HTTP or WebSocket. For
-    messages sent by a local server-side client, @env@ will be @nil@.
+    If an extension method has 3 arguments, the second argument will be a
+    @Rack::Request@ object, if the message was delivered by HTTP or WebSocket.
+    For messages sent by a local server-side client, @request@ will be @nil@.
 
-    You should not use the @env@ object to send a response yourself; you should
-    only use its properties to make a decision about how to handle the message,
-    for example by checking the @Origin@ or @Cookie@ headers.
+    You should not use the @request@ object to send a response yourself; you
+    should only use its properties to make a decision about how to handle the
+    message, for example by checking the @Origin@ or @Cookie@ headers.
 
     To write extensions you'll need to know what kinds of messages are used by
     the Bayeux protocol; see "the specification":http://svn.cometd.com/trunk/bayeux/bayeux.html

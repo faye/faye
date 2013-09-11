@@ -9,8 +9,8 @@ IntegrationSteps = EM::RSpec.async_steps do
       callback.call(message)
     end
 
-    def outgoing(message, env, callback)
-      message["data"]["url"] = env["PATH_INFO"] if message["data"]
+    def outgoing(message, request, callback)
+      message["data"]["url"] = request.path_info if message["data"]
       callback.call(message)
     end
   end
