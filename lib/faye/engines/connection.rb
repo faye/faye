@@ -2,7 +2,7 @@ module Faye
   module Engine
 
     class Connection
-      include EventMachine::Deferrable
+      include Deferrable
       include Timeouts
 
       attr_accessor :socket
@@ -24,7 +24,7 @@ module Faye
         options = options || {}
         timeout = options['timeout'] ? options['timeout'] / 1000.0 : @engine.timeout
 
-        set_deferred_status(:deferred)
+        set_deferred_status(:unknown)
         callback(&block)
 
         begin_delivery_timeout

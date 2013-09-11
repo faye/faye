@@ -18,6 +18,7 @@ module Faye
   ROOT = File.expand_path(File.dirname(__FILE__))
 
   autoload :Publisher,    File.join(ROOT, 'faye', 'mixins', 'publisher')
+  autoload :Deferrable,   File.join(ROOT, 'faye', 'mixins', 'deferrable')
   autoload :Timeouts,     File.join(ROOT, 'faye', 'mixins', 'timeouts')
   autoload :Logging,      File.join(ROOT, 'faye', 'mixins', 'logging')
 

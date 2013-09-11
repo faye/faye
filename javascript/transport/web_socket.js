@@ -53,7 +53,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
       delete self._socket;
       self._state = self.UNCONNECTED;
       self.removeTimeout('ping');
-      self.setDeferredStatus('deferred');
+      self.setDeferredStatus('unknown');
 
       if (wasConnected) {
         if (self._pending) self._client.messageError(self._pending.toArray(), true);

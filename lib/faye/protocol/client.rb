@@ -1,7 +1,7 @@
 module Faye
   class Client
 
-    include EventMachine::Deferrable
+    include Deferrable
     include Publisher
     include Logging
     include Extensible
@@ -136,7 +136,7 @@ module Faye
 
       info('Calling deferred actions for ?', @client_id)
       set_deferred_status(:succeeded)
-      set_deferred_status(:deferred)
+      set_deferred_status(:unknown)
 
       return unless @connect_request.nil?
       @connect_request = true

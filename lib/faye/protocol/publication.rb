@@ -1,5 +1,5 @@
 module Faye
   class Publication
-    include EventMachine::Deferrable
+    include Deferrable
   end
 end

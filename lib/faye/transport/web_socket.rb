@@ -10,7 +10,7 @@ module Faye
       'https' => 'wss'
     }
 
-    include EventMachine::Deferrable
+    include Deferrable
 
     def self.usable?(client, endpoint, &callback)
       create(client, endpoint).usable?(&callback)
@@ -73,7 +73,7 @@ module Faye
         @socket = nil
         @state = UNCONNECTED
         remove_timeout(:ping)
-        set_deferred_status(:deferred)
+        set_deferred_status(:unknown)
 
         if was_connected
           @client.message_error(@pending.to_a, true) if @pending
