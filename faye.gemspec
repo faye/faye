@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   # root.
   s.files = %w[CHANGELOG.md README.md] +
             %w[lib/faye-browser.js lib/faye-browser-min.js lib/faye-browser-min.js.map] +
-            Dir.glob('{spec,lib}/**/*')
+            Dir.glob('lib/**/*.rb')
   
   s.add_dependency 'cookiejar', '>= 0.3.0'
   s.add_dependency 'em-http-request', '>= 0.3.0'
