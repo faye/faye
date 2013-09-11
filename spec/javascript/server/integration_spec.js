@@ -7,9 +7,15 @@ var fs    = require('fs'),
 JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
   server: function(port, ssl, callback) {
     this._adapter = new Faye.NodeAdapter({mount: "/bayeux", timeout: 2})
+
     this._adapter.addExtension({
-      outgoing: function(message, callback) {
+      incoming: function(message, callback) {
         if (message.data) message.data.tagged = true
+        callback(message)
+      },
+
+      outgoing: function(message, request, callback) {
+        if (message.data) message.data.url = request.url;
         callback(message)
       }
     })
@@ -83,7 +89,7 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
 
     it("delivers a message between clients", function() { with(this) {
       publish("alice", "/foo", {hello: "world", extra: null})
-      check_inbox("bob", "/foo", [{hello: "world", extra: null, tagged: true}])
+      check_inbox("bob", "/foo", [{hello: "world", extra: null, tagged: true, url: "/bayeux"}])
     }})
 
     it("does not deliver messages for unsubscribed channels", function() { with(this) {
@@ -94,12 +100,12 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
     it("delivers multiple messages", function() { with(this) {
       publish("alice", "/foo", {hello: "world"})
       publish("alice", "/foo", {hello: "world"})
-      check_inbox("bob", "/foo", [{hello: "world", tagged: true}, {hello: "world", tagged: true}])
+      check_inbox("bob", "/foo", [{hello: "world", tagged: true, url: "/bayeux"}, {hello: "world", tagged: true, url: "/bayeux"}])
     }})
 
     it("delivers multibyte strings", function() { with(this) {
       publish("alice", "/foo", {hello: "Apple = "})
-      check_inbox("bob", "/foo", [{hello: "Apple = ", tagged: true}])
+      check_inbox("bob", "/foo", [{hello: "Apple = ", tagged: true, url: "/bayeux"}])
     }})
   }})
 

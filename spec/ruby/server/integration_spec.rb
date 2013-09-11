@@ -4,8 +4,13 @@ require "spec_helper"
 
 IntegrationSteps = EM::RSpec.async_steps do
   class Tagger
-    def outgoing(message, callback)
+    def incoming(message, callback)
       message["data"]["tagged"] = true if message["data"]
+      callback.call(message)
+    end
+
+    def outgoing(message, env, callback)
+      message["data"]["url"] = env["PATH_INFO"] if message["data"]
       callback.call(message)
     end
   end
@@ -76,7 +81,7 @@ describe "server integration" do
   shared_examples_for "message bus" do
     it "delivers a message between clients" do
       publish :alice, "/foo", {"hello" => "world", "extra" => nil}
-      check_inbox :bob, "/foo", [{"hello" => "world", "extra" => nil, "tagged" => true}]
+      check_inbox :bob, "/foo", [{"hello" => "world", "extra" => nil, "tagged" => true, "url" => "/bayeux"}]
     end
 
     it "does not deliver messages for unsubscribed channels" do
@@ -87,12 +92,12 @@ describe "server integration" do
     it "delivers multiple messages" do
       publish :alice, "/foo", {"hello" => "world"}
       publish :alice, "/foo", {"hello" => "world"}
-      check_inbox :bob, "/foo", [{"hello" => "world", "tagged" => true}, {"hello" => "world", "tagged" => true}]
+      check_inbox :bob, "/foo", [{"hello" => "world", "tagged" => true, "url" => "/bayeux"}, {"hello" => "world", "tagged" => true, "url" => "/bayeux"}]
     end
 
     it "delivers multibyte strings" do
-      publish :alice, "/foo", {"hello" => encode("Apple = "), "tagged" => true}
-      check_inbox :bob, "/foo", [{"hello" => encode("Apple = "), "tagged" => true}]
+      publish :alice, "/foo", {"hello" => encode("Apple = "), "tagged" => true, "url" => "/bayeux"}
+      check_inbox :bob, "/foo", [{"hello" => encode("Apple = "), "tagged" => true, "url" => "/bayeux"}]
     end
   end
 
