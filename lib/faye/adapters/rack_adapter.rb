@@ -107,7 +107,7 @@ module Faye
       EventMachine.next_tick do
         @server.process(message, request) do |replies|
           response = Faye.to_json(replies)
-          response = "#{ jsonp }(#{ response.gsub(/\u2028/, '\u2028').gsub(/\u2029/, '\u2029') });" if request.get?
+          response = "#{ jsonp }(#{ jsonp_escape(response) });" if request.get?
           headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
           headers['Connection'] = 'close'
           debug 'HTTP response: ?', response
@@ -135,6 +135,10 @@ module Faye
       else
         CGI.parse(request.body.read)['message'][0]
       end
+    end
+
+    def jsonp_escape(json)
+      json.gsub(/\u2028/, '\u2028').gsub(/\u2029/, '\u2029')
     end
 
     def send_response(response, hijack, callback)

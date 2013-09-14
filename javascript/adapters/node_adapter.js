@@ -150,7 +150,7 @@ Faye.NodeAdapter = Faye.Class({
 
       this._server.process(message, request, function(replies) {
         var body = Faye.toJSON(replies);
-        if (isGet) body = jsonp + '(' + body.replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029') + ');';
+        if (isGet) body = jsonp + '(' + this._jsonpEscape(body) + ');';
         headers['Content-Length'] = new Buffer(body, 'utf8').length.toString();
         headers['Connection'] = 'close';
 
@@ -161,6 +161,10 @@ Faye.NodeAdapter = Faye.Class({
     } catch (error) {
       this._returnError(response, error);
     }
+  },
+
+  _jsonpEscape: function(json) {
+    return json.replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
   },
 
   handleUpgrade: function(request, socket, head) {
