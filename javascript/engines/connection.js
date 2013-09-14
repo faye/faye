@@ -24,15 +24,13 @@ Faye.Engine.Connection = Faye.Class({
   },
 
   flush: function(force) {
-    this._releaseConnection(force);
-    this.setDeferredStatus('succeeded', this._inbox);
-    this._inbox = [];
-  },
-
-  _releaseConnection: function(force) {
     if (force || !this.socket) this._engine.closeConnection(this._id);
+
     this.removeTimeout('connection');
     this.removeTimeout('delivery');
+
+    this.setDeferredStatus('succeeded', this._inbox);
+    this._inbox = [];
   },
 
   _beginDeliveryTimeout: function() {

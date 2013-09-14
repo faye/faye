@@ -32,18 +32,16 @@ module Faye
       end
 
       def flush!(force = false)
-        release_connection!(force)
+        @engine.close_connection(@id) if force or socket.nil?
+
+        remove_timeout(:connection)
+        remove_timeout(:delivery)
+
         set_deferred_status(:succeeded, @inbox.entries)
         @inbox = []
       end
 
     private
-
-      def release_connection!(force = false)
-        @engine.close_connection(@id) if force or socket.nil?
-        remove_timeout(:connection)
-        remove_timeout(:delivery)
-      end
 
       def begin_delivery_timeout
         return if @inbox.empty?
