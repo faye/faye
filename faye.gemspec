@@ -5,6 +5,7 @@ Gem::Specification.new do |s|
   s.author            = 'James Coglan'
   s.email             = 'jcoglan@gmail.com'
   s.homepage          = 'http://faye.jcoglan.com'
+  s.license           = 'MIT'
 
   s.extra_rdoc_files  = %w[README.md]
   s.rdoc_options      = %w[--main README.md --markup markdown]
@@ -26,7 +27,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'rack', '>= 1.0.0'
   s.add_dependency 'websocket-driver', '>= 0.3.0'
 
-  s.add_development_dependency 'compass', '~> 0.10.0'
+  s.add_development_dependency 'compass', '~> 0.11.0'
   s.add_development_dependency 'haml', '~> 3.1.0'
   s.add_development_dependency 'puma', '>= 2.0.0'
   s.add_development_dependency 'rake'
