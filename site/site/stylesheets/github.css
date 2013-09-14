@@ -1,0 +1,12 @@
+.atn { color:#008080 } 
+.atv { color:#008080 } 
+.com { color:#999988 } 
+.dec { color:#000000; font-weight:bold } 
+.kwd { color:#000000; font-weight:bold } 
+.lit { color:#009999 } 
+.pln { color:#000000 } 
+.pun { color:#666666 } 
+.str { color:#dd1144 } 
+.tag { color:#000080 } 
+.typ { color:#445588 } 
+

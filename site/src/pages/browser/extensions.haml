@@ -8,14 +8,14 @@
     they pass between the client and the server. To add an extension to a client,
     just call:
 
-    <pre class="prettyprint">client.addExtension(extension);</pre>
+    <pre>client.addExtension(extension);</pre>
 
     @extension@ should be an object with an @incoming()@ or @outgoing()@ method
     (or both). These methods accept a message and a callback function, and
     should call the callback with the message after any necessary modifications
     have been made. For example, a simple logging extension would look like:
 
-    <pre class="prettyprint">Logger = {
+    <pre>Logger = {
       incoming: function(message, callback) {
         console.log('incoming', message);
         callback(message);

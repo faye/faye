@@ -10,13 +10,13 @@
 
     To create a client, just supply the host you want to connect to:
 
-    <pre class="prettyprint">client = Faye::Client.new('http://localhost:9292/faye')</pre>
+    <pre>client = Faye::Client.new('http://localhost:9292/faye')</pre>
 
     You can then use @client.subscribe()@ and @client.publish()@ to send
     messages to other clients; the API is similar to the "browser client":/browser.html
     only you need to run the client inside EventMachine:
 
-    <pre class="prettyprint">require 'eventmachine'
+    <pre>require 'eventmachine'
 
     EM.run {
       client = Faye::Client.new('http://localhost:9292/faye')
@@ -32,7 +32,7 @@
     "promises":http://promisesaplus.com/, for example you detect success and
     failure of a publication like so:
 
-    <pre class="prettyprint">publication = client.publish('/foo', 'text' => 'Hello world')
+    <pre>publication = client.publish('/foo', 'text' => 'Hello world')
 
     publication.callback do
       puts 'Message received by server!'
@@ -45,14 +45,14 @@
     If you need to set custom headers to talk to your Bayeux server, use the
     @set_header@ method:
 
-    <pre class="prettyprint">client.set_header('Authorization', 'OAuth abcd-1234')</pre>
+    <pre>client.set_header('Authorization', 'OAuth abcd-1234')</pre>
 
     The server has its own client attached to it so you can use the server to
     send messages to browsers. This client has direct access to the server
     without going over HTTP, and is thus more efficient. To send messages
     through the server just use the @#get_client@ method.
 
-    <pre class="prettyprint">bayeux.get_client.publish('/email/new', {
+    <pre>bayeux.get_client.publish('/email/new', {
       'text'      => 'New email has arrived!',
       'inboxSize' => 34
     })</pre>

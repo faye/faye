@@ -9,7 +9,7 @@
     routing of messages between clients. Setting up a server in Node.js is
     simple:
 
-    <pre class="prettyprint">var http = require('http'),
+    <pre>var http = require('http'),
         faye = require('faye');
 
     var server = http.createServer(),
@@ -38,7 +38,7 @@
     method. It will handle all requests to paths matching the @mount@ path and
     delegate all other requests to your handlers.
 
-    <pre class="prettyprint">var http = require('http'),
+    <pre>var http = require('http'),
         faye = require('faye');
 
     var bayeux = new faye.NodeAdapter({mount: '/faye', timeout: 45});
@@ -46,8 +46,7 @@
     // Handle non-Bayeux requests
     var server = http.createServer(function(request, response) {
       response.writeHead(200, {'Content-Type': 'text/plain'});
-      response.write('Hello, non-Bayeux request');
-      response.end();
+      response.end('Hello, non-Bayeux request');
     });
 
     bayeux.attach(server);

@@ -22,7 +22,7 @@
     @subscription@ field. Let's say our authentication file contains a JSON
     object that maps channels to required tokens:
 
-    <pre class="prettyprint">// tokens.json
+    <pre>// tokens.json
 
     {
       "/users/jcoglan/updates": "rt6utrb",
@@ -33,7 +33,7 @@
     right auth token attached. By convention, data added by extensions is stored
     in the message's @ext@ field.
 
-    <pre class="prettyprint">var fs = require('fs');
+    <pre>var fs = require('fs');
 
     var serverAuth = {
       incoming: function(message, callback) {
@@ -77,7 +77,7 @@
     token to satisfy the server. We do this by adding an _outgoing_ extension on
     the client side.
 
-    <pre class="prettyprint">var clientAuth = {
+    <pre>var clientAuth = {
       outgoing: function(message, callback) {
         // Again, leave non-subscribe messages alone
         if (message.channel !== '/meta/subscribe')
@@ -99,13 +99,13 @@
     If an extension has an @added()@ method, that will be called when the
     extension is added to its host. To remove an extension, call:
 
-    <pre class="prettyprint">// Calls extension.removed() if defined
+    <pre>// Calls extension.removed() if defined
     hostObject.removeExtension(extension);</pre>
 
     On the server side, you can gain access to details of the request in which
     the message was delivered, by writing extensions with 3 arguments:
 
-    <pre class="prettyprint">server.addExtension({
+    <pre>server.addExtension({
       incoming: function(message, request, callback) {
         if (request && request.headers.origin !== 'http://example.com') {
           message.error = '403::Forbidden origin';

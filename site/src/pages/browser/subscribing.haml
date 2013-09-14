@@ -22,7 +22,7 @@
 
     Clients should subscribe to channels using the @#subscribe()@ method:
 
-    <pre class="prettyprint">var subscription = client.subscribe('/foo', function(message) {
+    <pre>var subscription = client.subscribe('/foo', function(message) {
       // handle message
     });</pre>
 
@@ -35,12 +35,12 @@
     The @subscribe()@ method returns a @Subscription@ object, which you can
     cancel if you want to remove that listener from the channel.
 
-    <pre class="prettyprint">subscription.cancel();</pre>
+    <pre>subscription.cancel();</pre>
 
     The @Subscription@ object is a "promise":http://promisesaplus.com/ that is
     fulfilled when the subscription has been acknowledged by the server:
 
-    <pre class="prettyprint">subscription.then(function() {
+    <pre>subscription.then(function() {
       alert('Subscription is now active!');
     });</pre>
 

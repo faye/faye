@@ -76,7 +76,7 @@
     processing it. The channel the client is attempting to subscribe to will be
     in the @message.subscription@ field.
 
-    <pre class="prettyprint">var subscriptions = [
+    <pre>var subscriptions = [
       '/foo/bar/qux',
       '/foo/bar/*',
       '/foo/bar/**',
@@ -134,7 +134,7 @@
     data you should delete this from the message during the @authorized()@
     function so it is not leaked to third parties.
 
-    <pre class="prettyprint">var channel = '/foo/bar/qux';
+    <pre>var channel = '/foo/bar/qux';
 
     var authorized = function(message) {
       // returns true or false
@@ -190,7 +190,7 @@
     present, add an error to the message. Finally, delete the password from the
     message to prevent leaking it to clients.
 
-    <pre class="prettyprint">var secret = 'some long and unguessable application-specific string';
+    <pre>var secret = 'some long and unguessable application-specific string';
 
     server.addExtension({
       incoming: function(message, callback) {
@@ -211,7 +211,7 @@
     Then you can add a client-side extension to your server-side client to add
     the password:
 
-    <pre class="prettyprint">var secret = 'some long and unguessable application-specific string';
+    <pre>var secret = 'some long and unguessable application-specific string';
 
     client.addExtension({
       outgoing: function(message, callback) {
@@ -337,7 +337,7 @@
     hidden CSRF token field in a rendered form. The Faye client embeds the token
     and the current user ID in the request before sending it.
 
-    <pre class="prettyprint">// Rendered by the server:
+    <pre>// Rendered by the server:
     var USER_ID    = 18787,
         USER_TOKEN = 'ifd63cylqwsyaq9c2ptzywjujgtfpxs';
 
@@ -379,7 +379,7 @@
     session, then sign the ID using a secret key stored on the server. For
     example:
 
-    <pre class="prettyprint">var crypto = require('crypto'),
+    <pre>var crypto = require('crypto'),
         hmac   = crypto.createHmac('sha256', 'your secret key'),
         token  = hmac.update('the user ID').digest('hex');
 
@@ -403,7 +403,7 @@
     client wants to subscribe to, and make it sign a combination of the user ID
     and channel name if the user is allowed to subscribe:
 
-    <pre class="prettyprint">var crypto  = require('crypto'),
+    <pre>var crypto  = require('crypto'),
         userId  = session.userId,
         channel = params.channel,
         hmac, token;

@@ -11,12 +11,14 @@
 
       h3. Who uses it?
 
+      "!/images/aha.png!":http://www.aha.io/
       "!/images/buster.png!":http://busterjs.org/
       "!/images/chaxpert.png!":https://community.chaxpert.net/
       "!/images/cloudblocks.png!":http://www.cloud66.com/
       "!/images/groupme.png!":http://groupme.com/
       "!/images/ineda.png!":http://www.i-neda.com/
       "!/images/myspace.png!":http://new.myspace.com/
+      "!/images/nokia_mix_party.png!":http://mixparty.nokia.com/
       "!/images/pathient.png!":http://www.pathient.com/
       "!/images/podio.png!":https://podio.com/
       "!/images/shopify.png!":http://www.shopify.com/
@@ -25,7 +27,7 @@
   :textile
     h3. %(number)1.% Start a server
 
-    <pre class="prettyprint">var http = require('http'),
+    <pre>var http = require('http'),
         faye = require('faye');
 
     var server = http.createServer(),
@@ -36,7 +38,7 @@
 
     h3. %(number)2.% Create a client
 
-    <pre class="prettyprint">var client = new Faye.Client('http://localhost:8000/');
+    <pre>var client = new Faye.Client('http://localhost:8000/');
 
     client.subscribe('/messages', function(message) {
       alert('Got a message: ' + message.text);
@@ -45,7 +47,7 @@
 
     h3. %(number)3.% Send messages
 
-    <pre class="prettyprint">client.publish('/messages', {
+    <pre>client.publish('/messages', {
       text: 'Hello world'
     });
     </pre>

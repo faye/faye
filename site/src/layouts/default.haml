@@ -1,11 +1,12 @@
-!!!
+!!! 5
 %html
   %head
     %meta{:'http-equiv' => "Content-type", :content => "text/html; charset=utf-8"}
     %title Faye: Simple pub/sub messaging for the web
     = stylesheets
-    = javascripts 'prettify'
+    %link{'rel' => 'stylesheet', 'type' => 'text/css', 'href' => 'http://fonts.googleapis.com/css?family=Inconsolata:400,700|Open+Sans:300italic,400italic,700italic,400,300,700'}
   %body{:onload => 'prettyPrint()'}
+
     .header
       .container
         %h1
@@ -36,31 +37,27 @@
           %ul
             %li
               =link "Packages for Node.js, Ruby and browsers", "/download.html"
+
     .main
       .container
         = yield
         .clear
+
     .footer
       .container
         :textile
           &copy; 2009&ndash;2013 "James Coglan":http://jcoglan.com.
           Released under the MIT license.
-    %script{:type => 'text/javascript'}
-      :plain
-        isLocal = !!( /localhost|192\.168/i.test(window.location.hostname) );
 
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-873493-8']);
-        if (!isLocal) _gaq.push(['_trackPageview']);
-
+    = javascripts 'prettify', 'analytics'
+    :plain
+      <script type="text/javascript">
         (function() {
-          var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-          ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-          var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-        })();
-
-        trackDownload = function(version) {
-          if (!isLocal) _gaq.push(['_trackPageview', '/download/' + version + '/']);
-          return true;
-        };
+          var pre = document.getElementsByTagName('pre'), n = pre.length
+          while (n--) {
+            if (!pre[n].className) pre[n].className = 'prettyprint'
+          }
+          prettyPrint()
+        })()
+      </script>
 

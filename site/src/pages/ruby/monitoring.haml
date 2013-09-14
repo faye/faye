@@ -12,7 +12,7 @@
 
     You attach an event listener to your server like so:
 
-    <pre class="prettyprint">bayeux = Faye::RackAdapter.new(:mount => '/faye', :timeout => 25)
+    <pre>bayeux = Faye::RackAdapter.new(:mount => '/faye', :timeout => 25)
 
     bayeux.bind(:handshake) do |client_id|
       # event listener logic

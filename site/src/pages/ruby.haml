@@ -9,7 +9,7 @@
     routing of messages between clients. Faye is just like any other Rack app,
     and you start it by making a @rackup@ file:
 
-    <pre class="prettyprint"># config.ru
+    <pre># config.ru
     
     require 'faye'
     bayeux = Faye::RackAdapter.new(:mount => '/faye', :timeout => 25)
@@ -37,7 +37,7 @@
     Faye can also be setup as Rack middleware, for example in front of a Sinatra
     application:
 
-    <pre class="prettyprint"># config.ru
+    <pre># config.ru
 
     require 'faye'
     require File.expand_path('../app', __FILE__)
@@ -60,7 +60,7 @@
     application, so it can load adapters for it. For example to load the Thin
     adapter:
 
-    <pre class="prettyprint"># config.ru
+    <pre># config.ru
 
     require 'faye'
     Faye::WebSocket.load_adapter('thin')

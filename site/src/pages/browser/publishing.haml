@@ -9,7 +9,7 @@
     receive the message. You can send a message using the @#publish()@ method,
     passing in the channel name and a message object.
 
-    <pre class="prettyprint">client.publish('/foo', {text: 'Hi there'});</pre>
+    <pre>client.publish('/foo', {text: 'Hi there'});</pre>
 
     The message object can be any arbitrary JavaScript object that can be
     serialized to JSON, so it can contain strings, numbers, booleans, arrays and
@@ -24,7 +24,7 @@
     could not publish the message to other clients; network errors are therefore
     not covered by this API.
 
-    <pre class="prettyprint">var publication = client.publish('/foo', {text: 'Hi there'});
+    <pre>var publication = client.publish('/foo', {text: 'Hi there'});
 
     publication.then(function() {
       alert('Message received by server!');

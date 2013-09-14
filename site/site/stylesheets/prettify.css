@@ -1,6 +1,0 @@
-/* Defaults */
-.str{color:#080}.kwd{color:#008}.com{color:#800}.typ{color:#606}.lit{color:#066}.pun{color:#660}.pln{color:#000}.tag{color:#008}.atn{color:#606}.atv{color:#080}.dec{color:#606}@media print{.str{color:#060}.kwd{color:#006;font-weight:bold}.com{color:#600;font-style:italic}.typ{color:#404;font-weight:bold}.lit{color:#044}.pun{color:#440}.pln{color:#000}.tag{color:#006;font-weight:bold}.atn{color:#404}.atv{color:#060}}
-
-/* Overrides */
-.str{color:#d14}.kwd{color:#000;font-weight:bold}.com{color:#998;font-style:italic}.typ{color:#458}.lit{color:#099}.pun{color:#666}.pln{color:#000}.tag{color:#000080}.atn{color:#008080}.atv{color:#008080}.dec{color:#000;font-weight:bold}
-

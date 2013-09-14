@@ -24,7 +24,7 @@
     Faye that works the way they want. Engines are passed in when a server is
     instantiated, for example the Redis engine is set up like so:
 
-    <pre class="prettyprint">server = Faye::RackAdapter.new(
+    <pre>server = Faye::RackAdapter.new(
       :mount   => '/faye',
       :timeout => 25,
       :engine  => {

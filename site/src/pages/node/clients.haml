@@ -10,7 +10,7 @@
 
     To create a client, just supply the host you want to connect to:
 
-    <pre class="prettyprint">var client = new faye.Client('http://localhost:8000/faye');</pre>
+    <pre>var client = new faye.Client('http://localhost:8000/faye');</pre>
 
     You can then use @client.subscribe()@ and @client.publish()@ to send
     messages to other clients; see the "browser client":/browser.html
@@ -21,7 +21,7 @@
     without going over HTTP, and is thus more efficient. To send messages
     through the server just use the @#getClient()@ method.
 
-    <pre class="prettyprint">bayeux.getClient().publish('/email/new', {
+    <pre>bayeux.getClient().publish('/email/new', {
       text:       'New email has arrived!',
       inboxSize:  34
     });</pre>
