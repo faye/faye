@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Faye do
   describe :random do
-    it "returns a 128-bit random number in base 36" do
+    it "returns a 160-bit random number in base 36" do
       Faye.random.should =~ /^[a-z0-9]+$/
     end
 

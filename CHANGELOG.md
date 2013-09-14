@@ -12,13 +12,15 @@
 * Support custom headers in the `cross-origin-long-polling` and server-side `websocket` transports
 
 * Add an `origins` option to the server to whitelist authorized origins
-* Allow extensions to access request properties by using 3-ary methods
 * Support the `rack.hijack` streaming API
 * Migrate to MultiJson for JSON handling on Ruby, allowing use of JRuby
-* Objects supporting the `bind()` method now implement the full `EventEmitter` API
 * Escape U+2028 and U+2029 in JSON-P output
 * Fix a bug stopping requests being routed when the mount point is `/`
 * Fix various bugs that cause errors to be thrown if we try to send a message over a closed socket
+
+* Use cryptographically secure random number generators to create client IDs
+* Allow extensions to access request properties by using 3-ary methods
+* Objects supporting the `bind()` method now implement the full `EventEmitter` API
 * Remove the `listen()` method from `Adapter` in favour of using server-specific APIs
 * Stop the server from forwarding the `clientId` property of published messages
 

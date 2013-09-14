@@ -6,7 +6,9 @@ var crypto = require('crypto'),
     path   = require('path'),
     tls    = require('tls'),
     url    = require('url'),
-    querystring = require('querystring');
+    querystring = require('querystring'),
+
+    csprng = require('csprng');
 
 Faye.WebSocket   = require('faye-websocket');
 Faye.EventSource = Faye.WebSocket.EventSource;

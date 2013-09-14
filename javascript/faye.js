@@ -23,20 +23,7 @@ var Faye = {
 
   random: function(bitlength) {
     bitlength = bitlength || this.ID_LENGTH;
-    if (bitlength > 32) {
-      var parts  = Math.ceil(bitlength / 32),
-          string = '';
-      while (parts--) string += this.random(32);
-      var chars = string.split(''), result = '';
-      while (chars.length > 0) result += chars.pop();
-      return result;
-    }
-    var limit   = Math.pow(2, bitlength) - 1,
-        maxSize = limit.toString(36).length,
-        string  = Math.floor(Math.random() * limit).toString(36);
-
-    while (string.length < maxSize) string = '0' + string;
-    return string;
+    return csprng(bitlength, 36);
   },
 
   clientIdFromMessages: function(messages) {
