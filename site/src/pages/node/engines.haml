@@ -40,16 +40,16 @@
       }
     });</pre>
 
-    The @engine@ field has a @type@ setting that maps to the engine class,
-    and further options that are used to configure that particular engine. Faye
-    then uses the following API to interact with the engine; this is what you
-    must implement if you are writing your own engine.
+    The @engine@ field has a @type@ setting that maps to the engine class, and
+    further options that are used to configure that particular engine. Faye then
+    uses the following API to interact with the engine; this is what you must
+    implement if you are writing your own engine.
 
     h4. @Engine.create(proxy, options)@
 
-    The object passed in the @type@ field (for example @fayeRedis@ in the
-    above example) must respond to @create(proxy, options)@ and return an object
-    that implements the rest of the API described below. @options@ is an object
+    The object passed in the @type@ field (for example @fayeRedis@ in the above
+    example) must respond to @create(proxy, options)@ and return an object that
+    implements the rest of the API described below. @options@ is an object
     containing the @engine@ settings supplied by the user, for example in the
     above example it would be @{host: 'localhost', port: 6379}@.
 
@@ -82,8 +82,8 @@
 
     The @proxy@ also emits two events to let you know when a particular client
     connects and disconnects from the server. These correspond with the return
-    value of @proxy.hasConnection(clientId)@ changing between @true@ and @false@.
-    You can listen to these events using the @bind()@ method.
+    value of @proxy.hasConnection(clientId)@ changing between @true@ and
+    @false@.  You can listen to these events using the @bind()@ method.
 
     * *@proxy.bind('connection:open', function(clientId) {})@* - Fires when the
       client with ID @clientId@ connects to the server, either by opening a
@@ -108,15 +108,16 @@
     implement the messaging semantics.
 
     There are automated tests in the Faye project that you can use to make sure
-    your engine conforms to the spec. See the "faye-redis":http://github.com/faye/faye-redis-node
-    project for an example of using these tests.
+    your engine conforms to the spec. See the
+    "faye-redis":http://github.com/faye/faye-redis-node project for an example
+    of using these tests.
 
     h4. @engine.createClient(function(clientId) {})@
 
     Should generate and return a new unique Faye client ID. You can use
-    @proxy.generateId()@ to generate valid IDs, but the engine must make sure
-    a _unique_ value is assigned. After choosing an ID and allocating any
-    required storage for it, the ID should be yielded to the callback.
+    @proxy.generateId()@ to generate valid IDs, but the engine must make sure a
+    _unique_ value is assigned. After choosing an ID and allocating any required
+    storage for it, the ID should be yielded to the callback.
 
     The engine should call @proxy.trigger('handshake', clientId)@ once a valid
     client ID has been selected.
@@ -127,9 +128,10 @@
     @clientId@ as disconnected. No further messages will be sent by the client
     after this happens.
 
-    The engine should call @proxy.trigger('disconnect', clientId)@ after
-    deleting the client's data. If a callback is given it should be called after
-    the client has been deleted.
+    The engine should call @proxy.trigger('disconnect', clientId)@ in the
+    current process, and should call @proxy.trigger('close', clientId)@ in _all_
+    the Faye server processes, after deleting the client's data. If a callback
+    is given it should be called after the client has been deleted.
 
     h4. @engine.clientExists(clientId, function(exists) {})@
 
@@ -157,9 +159,9 @@
     h4. @engine.unsubscribe(clientId, channel, function(successful) {})@
 
     Should delete a subscription for the given @clientId@ to the given
-    @channel@, both of which are strings. If a callback is given, it must be called
-    with @true@ or @false@ to indicate whether the subscription was destroyed
-    successfully.
+    @channel@, both of which are strings. If a callback is given, it must be
+    called with @true@ or @false@ to indicate whether the subscription was
+    destroyed successfully.
 
     The engine should call @proxy.trigger('unsubscribe', clientId, channel)@ iff
     the subscription was destroyed _and_ the client was actually subscribed to
@@ -173,9 +175,9 @@
     sender, then @channels@ will be @['/msg/foo', '/msg/*', '/msg/**', '/**']@.
 
     Each message should be delivered to each subscribed client _exactly once_,
-    even if the client is subscribed to several channels in the @channels@ array.
-    If the client is currently connected (see @proxy.hasConnection()@) the
-    engine should use @proxy.deliver()@ to send the message to the client.
+    even if the client is subscribed to several channels in the @channels@
+    array.  If the client is currently connected (see @proxy.hasConnection()@)
+    the engine should use @proxy.deliver()@ to send the message to the client.
     Otherwise the message should be queued until the next time the client
     connects.
 
@@ -205,7 +207,8 @@
 
     * Destroy all subscriptions for the client, calling
       @proxy.trigger('unsubscribe', clientId, channel)@ for each subscription
-    * Delete the client, calling @proxy.trigger('disconnect', clientId)@
+    * Delete the client, calling @proxy.trigger('disconnect', clientId)@ in the
+      current process and @proxy.trigger('close', clientId)@ in all processes
     * Delete any other state associated with the client's session
 
     The strategy for cleaning up inactive clients is up to the engine, but the

@@ -34,10 +34,10 @@
       }
     )</pre>
 
-    The @:engine@ field has a @:type@ setting that maps to the engine class,
-    and further options that are used to configure that particular engine. Faye
-    then uses the following API to interact with the engine; this is what you
-    must implement if you are writing your own engine.
+    The @:engine@ field has a @:type@ setting that maps to the engine class, and
+    further options that are used to configure that particular engine. Faye then
+    uses the following API to interact with the engine; this is what you must
+    implement if you are writing your own engine.
 
     h4. @Engine.create(proxy, options)@
 
@@ -102,15 +102,16 @@
     implement the messaging semantics.
 
     There are automated tests in the Faye project that you can use to make sure
-    your engine conforms to the spec. See the "faye-redis":http://github.com/faye/faye-redis-ruby
-    project for an example of using these tests.
+    your engine conforms to the spec. See the
+    "faye-redis":http://github.com/faye/faye-redis-ruby project for an example
+    of using these tests.
 
     h4. @engine.create_client { |client_id| ... }@
 
     Should generate and return a new unique Faye client ID. You can use
-    @proxy.generate_id@ to generate valid IDs, but the engine must make sure
-    a _unique_ value is assigned. After choosing an ID and allocating any
-    required storage for it, the ID should be yielded to the block.
+    @proxy.generate_id@ to generate valid IDs, but the engine must make sure a
+    _unique_ value is assigned. After choosing an ID and allocating any required
+    storage for it, the ID should be yielded to the block.
 
     The engine should call @proxy.trigger(:handshake, client_id)@ once a valid
     client ID has been selected.
@@ -121,14 +122,15 @@
     @client_id@ as disconnected. No further messages will be sent by the client
     after this happens.
 
-    The engine should call @proxy.trigger(:disconnect, client_id)@ after
-    deleting the client's data. If a block is given it should be called after
-    the client has been deleted.
+    The engine should call @proxy.trigger(:disconnect, client_id)@ in the
+    current process, and should call @proxy.trigger(:close, client_id)@ in _all_
+    the Faye server processes, after deleting the client's data. If a block is
+    given it should be called after the client has been deleted.
 
     h4. @engine.client_exists(client_id) { |exists| ... }@
 
-    Should call the given block with @true@ if the given @client_id@ exists,
-    and @false@ otherwise. This is used by the server when validating incoming
+    Should call the given block with @true@ if the given @client_id@ exists, and
+    @false@ otherwise. This is used by the server when validating incoming
     messages.
 
     h4. @engine.ping(client_id)@
@@ -139,9 +141,9 @@
 
     h4. @engine.subscribe(client_id, channel) { |successful| ... }@
 
-    Should store a subscription for the given @client_id@ to the given @channel@,
-    both of which are strings. If a block is given, it must be called with
-    @true@ or @false@ to indicate whether the subscription was registered
+    Should store a subscription for the given @client_id@ to the given
+    @channel@, both of which are strings. If a block is given, it must be called
+    with @true@ or @false@ to indicate whether the subscription was registered
     successfully.
 
     The engine should call @proxy.trigger(:subscribe, client_id, channel)@ iff
@@ -167,9 +169,9 @@
     sender, then @channels@ will be @['/msg/foo', '/msg/*', '/msg/**', '/**']@.
 
     Each message should be delivered to each subscribed client _exactly once_,
-    even if the client is subscribed to several channels in the @channels@ array.
-    If the client is currently connected (see @proxy.has_connection?@) the
-    engine should use @proxy.deliver@ to send the message to the client.
+    even if the client is subscribed to several channels in the @channels@
+    array.  If the client is currently connected (see @proxy.has_connection?@)
+    the engine should use @proxy.deliver@ to send the message to the client.
     Otherwise the message should be queued until the next time the client
     connects.
 
@@ -199,7 +201,8 @@
 
     * Destroy all subscriptions for the client, calling
       @proxy.trigger(:unsubscribe, client_id, channel)@ for each subscription
-    * Delete the client, calling @proxy.trigger(:disconnect, client_id)@
+    * Delete the client, calling @proxy.trigger(:disconnect, client_id)@ in the
+      current process and @proxy.trigger(:close, client_id)@ in all processes
     * Delete any other state associated with the client's session
 
     The strategy for cleaning up inactive clients is up to the engine, but the
