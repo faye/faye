@@ -25,7 +25,7 @@ Faye.Deferrable = {
     this.then();
     var self = this;
     this._timer = Faye.ENV.setTimeout(function() {
-      self._reject(message);
+      self.setDeferredStatus('failed', message);
     }, seconds * 1000);
   },
 
