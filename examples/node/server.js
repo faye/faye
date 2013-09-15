@@ -2,6 +2,7 @@ var fs    = require('fs'),
     path  = require('path'),
     http  = require('http'),
     https = require('https'),
+    mime  = require('mime'),
     faye  = require('../../build/node/faye-node');
 
 var SHARED_DIR = __dirname + '/..',
@@ -19,7 +20,7 @@ var handleRequest = function(request, response) {
   fs.readFile(PUBLIC_DIR + path, function(err, content) {
     var status = err ? 404 : 200;
     try {
-      response.writeHead(status, {});
+      response.writeHead(status, {'Content-Type': mime.lookup(path)});
       response.end(content || 'Not found');
     } catch (e) {}
   });

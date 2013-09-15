@@ -33,7 +33,7 @@ Faye.Set = Faye.Class({
 
   remove: function(item) {
     var key = (item.id !== undefined) ? item.id : item;
-    var removed = this._index.hasOwnProperty(key);
+    var removed = this._index[key];
     delete this._index[key];
     return removed;
   },

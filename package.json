@@ -15,6 +15,7 @@
                       , "faye-websocket": ">=0.7.0"
                       }
 , "devDependencies" : { "jstest": ""
+                      , "mime": ""
                       , "promises-aplus-tests": ""
                       , "wake": ""
                       }
@@ -57,6 +58,7 @@
                                     "protocol/grammar",
                                     "protocol/extensible",
                                     "protocol/channel",
+                                    "protocol/envelope",
                                     "protocol/publication",
                                     "protocol/subscription",
                                     "protocol/client",

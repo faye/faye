@@ -1,3 +1,10 @@
+var EnvelopeMatcher = function(message) {
+  this.message = message
+}
+EnvelopeMatcher.prototype.equals = function(other) {
+  return (other instanceof Faye.Envelope) && JS.Enumerable.areEqual(this.message, other.message)
+}
+
 JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
   before(function() { with(this) {
     this.client = {
@@ -83,6 +90,14 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
     before(function() { this.clock.stub() })
     after(function() { this.clock.reset() })
 
+    define("envelope", function(message) {
+      return new EnvelopeMatcher(message)
+    })
+
+    define("send", function(message) {
+      this.transport.send(new Faye.Envelope(message))
+    })
+
     describe("for batching transports", function() { with(this) {
       before(function() { with(this) {
         this.Transport = Faye.Class(Faye.Transport, {batching: true})
@@ -91,32 +106,32 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
 
       it("does not make an immediate request", function() { with(this) {
         expect(transport, "request").exactly(0)
-        transport.send({batch: "me"})
+        send({batch: "me"})
       }})
 
       it("queues the message to be sent after a timeout", function() { with(this) {
-        expect(transport, "request").given([{batch: "me"}])
-        transport.send({batch: "me"})
+        expect(transport, "request").given([envelope({batch: "me"})])
+        send({batch: "me"})
         clock.tick(10)
       }})
 
       it("allows multiple messages to be batched together", function() { with(this) {
-        expect(transport, "request").given([{id: 1}, {id: 2}])
-        transport.send({id: 1})
-        transport.send({id: 2})
+        expect(transport, "request").given([envelope({id: 1}), envelope({id: 2})])
+        send({id: 1})
+        send({id: 2})
         clock.tick(10)
       }})
 
       it("adds advice to connect messages sent with others", function() { with(this) {
-        expect(transport, "request").given([{channel: "/meta/connect", advice: {timeout: 0}}, {}])
-        transport.send({channel: "/meta/connect"})
-        transport.send({})
+        expect(transport, "request").given([envelope({channel: "/meta/connect", advice: {timeout: 0}}), envelope({})])
+        send({channel: "/meta/connect"})
+        send({})
         clock.tick(10)
       }})
 
       it("adds no advice to connect messages sent alone", function() { with(this) {
-        expect(transport, "request").given([{channel: "/meta/connect"}])
-        transport.send({channel: "/meta/connect"})
+        expect(transport, "request").given([envelope({channel: "/meta/connect"})])
+        send({channel: "/meta/connect"})
         clock.tick(10)
       }})
     }})
@@ -128,8 +143,8 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
       }})
 
       it("makes a request immediately", function() { with(this) {
-        expect(transport, "request").given([{no: "batch"}])
-        transport.send({no: "batch"})
+        expect(transport, "request").given([envelope({no: "batch"})])
+        send({no: "batch"})
       }})
     }})
   }})

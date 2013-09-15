@@ -37,7 +37,6 @@ Faye.Client = Faye.Class({
     this._channels  = new Faye.Channel.Set();
     this._messageId = 0;
 
-    this._messageTimeouts   = {};
     this._responseCallbacks = {};
 
     this._advice = {
@@ -297,10 +296,6 @@ Faye.Client = Faye.Class({
     var id = message.id, timeout, callback;
 
     if (message.successful !== undefined) {
-      timeout = this._messageTimeouts[id];
-      if (timeout) Faye.ENV.clearTimeout(timeout);
-      delete this._messageTimeouts[id];
-
       callback = this._responseCallbacks[id];
       delete this._responseCallbacks[id];
     }
@@ -327,10 +322,6 @@ Faye.Client = Faye.Class({
     for (var i = 0, n = messages.length; i < n; i++) {
       message = messages[i];
       id      = message.id;
-
-      timeout = this._messageTimeouts[id];
-      if (timeout) Faye.ENV.clearTimeout(timeout);
-      delete this._messageTimeouts[id];
 
       if (immediate)
         this._transportSend(message);
@@ -368,14 +359,14 @@ Faye.Client = Faye.Class({
   _transportSend: function(message) {
     if (!this._transport) return;
 
-    var timeout = 1.2 * (this._advice.timeout || this._retry * 1000),
-        self    = this;
+    var timeout  = 1.2 * (this._advice.timeout || this._retry * 1000),
+        envelope = new Faye.Envelope(message, timeout);
 
-    this._messageTimeouts[message.id] = Faye.ENV.setTimeout(function() {
-      self.messageError([message], false);
-    }, timeout);
+    envelope.errback(function(immediate) {
+      this.messageError([message], immediate);
+    }, this);
 
-    this._transport.send(message);
+    this._transport.send(envelope);
   },
 
   _generateMessageId: function() {

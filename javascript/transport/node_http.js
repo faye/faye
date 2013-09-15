@@ -1,25 +1,26 @@
 Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
-  encode: function(messages) {
+  encode: function(envelopes) {
+    var messages = Faye.map(envelopes, function(e) { return e.message });
     return Faye.toJSON(messages);
   },
 
-  request: function(messages) {
+  request: function(envelopes) {
     var uri     = this.endpoint,
         secure  = (uri.protocol === 'https:'),
         client  = secure ? https : http,
-        content = new Buffer(Faye.toJSON(messages), 'utf8'),
+        content = new Buffer(this.encode(envelopes), 'utf8'),
         self    = this;
 
     var params  = this._buildParams(uri, content, secure),
         request = client.request(params);
 
     request.on('response', function(response) {
-      self._handleResponse(response, messages);
+      self._handleResponse(response, envelopes);
       self._storeCookies(response.headers['set-cookie']);
     });
 
     request.on('error', function() {
-      self._client.messageError(messages);
+      self.handleError(envelopes);
     });
     request.end(content);
   },
@@ -41,7 +42,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
     return params;
   },
 
-  _handleResponse: function(response, messages) {
+  _handleResponse: function(response, envelopes) {
     var message = null,
         body    = '',
         self    = this;
@@ -54,9 +55,9 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
       } catch (e) {}
 
       if (message)
-        self.receive(message);
+        self.receive(envelopes, message);
       else
-        self._client.messageError(messages);
+        self.handleError(envelopes);
     });
   }
 

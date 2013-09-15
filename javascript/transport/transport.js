@@ -10,17 +10,19 @@ Faye.Transport = Faye.extend(Faye.Class({
 
   close: function() {},
 
-  encode: function(messages) {
+  encode: function(envelopes) {
     return '';
   },
 
-  send: function(message) {
+  send: function(envelope) {
+    var message = envelope.message;
+
     this.debug('Client ? sending message to ?: ?',
                this._client._clientId, Faye.URI.stringify(this.endpoint), message);
 
-    if (!this.batching) return this.request([message]);
+    if (!this.batching) return this.request([envelope]);
 
-    this._outbox.push(message);
+    this._outbox.push(envelope);
 
     if (message.channel === Faye.Channel.HANDSHAKE)
       return this.addTimeout('publish', 0.01, this.flush, this);
@@ -52,7 +54,10 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (last) this._outbox.push(last);
   },
 
-  receive: function(responses) {
+  receive: function(envelopes, responses) {
+    var n = envelopes.length;
+    while (n--) envelopes[n].setDeferredStatus('succeeded');
+
     responses = [].concat(responses);
 
     this.debug('Client ? received from ?: ?',
@@ -60,6 +65,11 @@ Faye.Transport = Faye.extend(Faye.Class({
 
     for (var i = 0, n = responses.length; i < n; i++)
       this._client.receiveMessage(responses[i]);
+  },
+
+  handleError: function(envelopes, immediate) {
+    var n = envelopes.length;
+    while (n--) envelopes[n].setDeferredStatus('failed', immediate);
   },
 
   _getCookies: function() {

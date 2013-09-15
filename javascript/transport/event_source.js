@@ -26,7 +26,7 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     };
 
     socket.onmessage = function(event) {
-      self.receive(JSON.parse(event.data));
+      self.receive([], JSON.parse(event.data));
     };
 
     this._socket = socket;
@@ -44,12 +44,12 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     this.errback(function() { callback.call(context, false) });
   },
 
-  encode: function(messages) {
-    return this._xhr.encode(messages);
+  encode: function(envelopes) {
+    return this._xhr.encode(envelopes);
   },
 
-  request: function(messages) {
-    this._xhr.request(messages);
+  request: function(envelopes) {
+    this._xhr.request(envelopes);
   }
 
 }), {

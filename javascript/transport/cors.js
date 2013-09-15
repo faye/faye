@@ -1,9 +1,10 @@
 Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
-  encode: function(messages) {
+  encode: function(envelopes) {
+    var messages = Faye.map(envelopes, function(e) { return e.message });
     return 'message=' + encodeURIComponent(Faye.toJSON(messages));
   },
 
-  request: function(messages) {
+  request: function(envelopes) {
     var xhrClass = Faye.ENV.XDomainRequest ? XDomainRequest : XMLHttpRequest,
         xhr      = new xhrClass(),
         headers  = this._client.headers,
@@ -35,18 +36,18 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
       cleanUp();
 
       if (parsedMessage)
-        self.receive(parsedMessage);
+        self.receive(envelopes, parsedMessage);
       else
-        self._client.messageError(messages);
+        self.handleError(envelopes);
     };
 
     xhr.onerror = xhr.ontimeout = function() {
       cleanUp();
-      self._client.messageError(messages);
+      self.handleError(envelopes);
     };
 
     xhr.onprogress = function() {};
-    xhr.send(this.encode(messages));
+    xhr.send(this.encode(envelopes));
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {

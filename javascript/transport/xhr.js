@@ -1,9 +1,10 @@
 Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
-  encode: function(messages) {
+  encode: function(envelopes) {
+    var messages = Faye.map(envelopes, function(e) { return e.message });
     return Faye.toJSON(messages);
   },
 
-  request: function(messages) {
+  request: function(envelopes) {
     var path = this.endpoint.path,
         xhr  = Faye.ENV.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
         self = this;
@@ -34,19 +35,19 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
       xhr.onreadystatechange = function() {};
       xhr = null;
 
-      if (!successful) return self._client.messageError(messages);
+      if (!successful) return self.handleError(envelopes);
 
       try {
         parsedMessage = JSON.parse(text);
       } catch (e) {}
 
       if (parsedMessage)
-        self.receive(parsedMessage);
+        self.receive(envelopes, parsedMessage);
       else
-        self._client.messageError(messages);
+        self.handleError(envelopes);
     };
 
-    xhr.send(this.encode(messages));
+    xhr.send(this.encode(envelopes));
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {

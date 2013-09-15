@@ -1,13 +1,15 @@
 Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
- encode: function(messages) {
+ encode: function(envelopes) {
+    var messages = Faye.map(envelopes, function(e) { return e.message });
     var url = Faye.copyObject(this.endpoint);
     url.query.message = Faye.toJSON(messages);
     url.query.jsonp   = '__jsonp' + Faye.Transport.JSONP._cbCount + '__';
     return Faye.URI.stringify(url);
   },
 
-  request: function(messages) {
-    var head         = document.getElementsByTagName('head')[0],
+  request: function(envelopes) {
+    var messages     = Faye.map(envelopes, function(e) { return e.message }),
+        head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = Faye.Transport.JSONP.getCallbackName(),
         endpoint     = Faye.copyObject(this.endpoint),
@@ -21,7 +23,7 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
       Faye.ENV[callbackName] = undefined;
       try { delete Faye.ENV[callbackName] } catch (e) {}
       script.parentNode.removeChild(script);
-      self.receive(data);
+      self.receive(envelopes, data);
     };
 
     script.type = 'text/javascript';
