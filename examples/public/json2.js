@@ -355,7 +355,7 @@ if (typeof JSON !== 'object') {
 
 // If the JSON object does not yet have a stringify method, give it one.
 
-    if (!JSON.stringify || JSON.stringify.length < 3) {
+    if (true) {
         JSON.stringify = function (value, replacer, space) {
 
 // The stringify method takes a value and an optional replacer, and an optional
