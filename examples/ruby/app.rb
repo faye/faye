@@ -22,15 +22,6 @@ App = Faye::RackAdapter.new(Sinatra::Application,
   :timeout => 25
 )
 
-class Ext
-  def incoming(m, e, c)
-    p e
-    c[m]
-  end
-end
-
-App.add_extension(Ext.new)
-
 def App.log(message)
 end
 
