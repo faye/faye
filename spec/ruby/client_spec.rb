@@ -14,9 +14,13 @@ describe Faye::Client do
 
   before { EM.stub(:add_timer) }
 
+  def envelope(message)
+    EnvelopeMatcher.new(message)
+  end
+
   def stub_response(response)
-    transport.stub(:send) do |message, *args|
-      response["id"] = message["id"]
+    transport.stub(:send) do |envelope, *args|
+      response["id"] = envelope.message["id"]
       @client.receive_message(response)
     end
   end
@@ -68,12 +72,12 @@ describe Faye::Client do
     end
 
     it "sends a handshake message to the server" do
-      transport.should_receive(:send).with({
+      transport.should_receive(:send).with(envelope(
         "channel" => "/meta/handshake",
         "version" => "1.0",
         "supportedConnectionTypes" => ["fake"],
         "id"      => instance_of(String)
-      })
+      ))
       @client.handshake
     end
 
@@ -95,13 +99,13 @@ describe Faye::Client do
       end
 
       it "passes the handshake message through the extension" do
-        transport.should_receive(:send).with({
+        transport.should_receive(:send).with(envelope(
           "channel" => "/meta/handshake",
           "version" => "1.0",
           "supportedConnectionTypes" => ["fake"],
           "id"      => instance_of(String),
           "ext"     => {"auth" => "password"}
-        })
+        ))
         @client.handshake
       end
     end
@@ -188,13 +192,13 @@ describe Faye::Client do
       end
 
       it "resends the subscriptions to the server" do
-        transport.should_receive(:send).with(hash_including("channel" => "/meta/handshake"))
-        transport.should_receive(:send).with({
+        transport.should_receive(:send).with(envelope(hash_including("channel" => "/meta/handshake")))
+        transport.should_receive(:send).with(envelope(
           "channel"      => "/meta/subscribe",
           "clientId"     => "reconnectid",
           "subscription" => "/messages/foo",
           "id"           => instance_of(String)
-        })
+        ))
         @client.handshake
       end
 
@@ -209,12 +213,12 @@ describe Faye::Client do
       before { create_connected_client }
 
       it "does not send a handshake message to the server" do
-        transport.should_not_receive(:send).with({
+        transport.should_not_receive(:send).with(envelope(
           "channel" => "/meta/handshake",
           "version" => "1.0",
           "supportedConnectionTypes" => ["fake"],
           "id"      => instance_of(String)
-        })
+        ))
         @client.handshake
       end
     end
@@ -233,12 +237,12 @@ describe Faye::Client do
       end
 
       it "handshakes before connecting" do
-        transport.should_receive(:send).with({
+        transport.should_receive(:send).with(envelope(
           "channel"        => "/meta/connect",
           "clientId"       => "handshakeid",
           "connectionType" => "fake",
           "id"             => instance_of(String)
-        })
+        ))
         @client.connect
       end
     end
@@ -247,22 +251,22 @@ describe Faye::Client do
       before { create_connected_client }
 
       it "sends a connect message to the server" do
-        transport.should_receive(:send).with({
+        transport.should_receive(:send).with(envelope(
           "channel"        => "/meta/connect",
           "clientId"       => "fakeid",
           "connectionType" => "fake",
           "id"             => instance_of(String)
-        })
+        ))
         @client.connect
       end
 
       it "only opens one connect request at a time" do
-        transport.should_receive(:send).with({
+        transport.should_receive(:send).with(envelope(
           "channel"        => "/meta/connect",
           "clientId"       => "fakeid",
           "connectionType" => "fake",
           "id"             => instance_of(String)
-        }).
+        )).
         exactly(1).
         and_return # override stub implementation
 
@@ -277,11 +281,11 @@ describe Faye::Client do
 
     it "sends a disconnect message to the server" do
       transport.stub(:close)
-      transport.should_receive(:send).with({
+      transport.should_receive(:send).with(envelope(
         "channel"  => "/meta/disconnect",
         "clientId" => "fakeid",
         "id"       => instance_of(String)
-      })
+      ))
       @client.disconnect
     end
 
@@ -318,7 +322,7 @@ describe Faye::Client do
 
     describe "with no prior subscriptions" do
       it "sends a subscribe message to the server" do
-        transport.should_receive(:send).with(@subscribe_message)
+        transport.should_receive(:send).with(envelope(@subscribe_message))
         @client.subscribe("/foo/*")
       end
 
@@ -326,18 +330,18 @@ describe Faye::Client do
       # in one message but the cometD server doesn't actually support this
       describe "with an array of subscriptions" do
         it "sends multiple subscribe messages" do
-          transport.should_receive(:send).with({
+          transport.should_receive(:send).with(envelope(
             "channel"      => "/meta/subscribe",
             "clientId"     => "fakeid",
             "subscription" => "/foo",
             "id"           => instance_of(String)
-          })
-          transport.should_receive(:send).with({
+          ))
+          transport.should_receive(:send).with(envelope(
             "channel"      => "/meta/subscribe",
             "clientId"     => "fakeid",
             "subscription" => "/bar",
             "id"           => instance_of(String)
-          })
+          ))
           @client.subscribe(["/foo", "/bar"])
         end
 
@@ -479,7 +483,7 @@ describe Faye::Client do
       end
 
       it "does not send another subscribe message to the server" do
-        transport.should_not_receive(:send).with(@subscribe_message)
+        transport.should_not_receive(:send).with(envelope(@subscribe_message))
         @client.subscribe("/foo/*")
       end
 
@@ -510,7 +514,7 @@ describe Faye::Client do
 
     describe "with no subscriptions" do
       it "does not send an unsubscribe message to the server" do
-        transport.should_not_receive(:send).with(@unsubscribe_message)
+        transport.should_not_receive(:send).with(envelope(@unsubscribe_message))
         @client.unsubscribe("/foo/*")
       end
     end
@@ -523,7 +527,7 @@ describe Faye::Client do
       end
 
       it "sends an unsubscribe message to the server" do
-        transport.should_receive(:send).with(@unsubscribe_message)
+        transport.should_receive(:send).with(envelope(@unsubscribe_message))
         @client.unsubscribe("/foo/*")
       end
 
@@ -552,18 +556,18 @@ describe Faye::Client do
       end
 
       it "does not send an unsubscribe message if one listener is removed" do
-        transport.should_not_receive(:send).with(@unsubscribe_message)
+        transport.should_not_receive(:send).with(envelope(@unsubscribe_message))
         @client.unsubscribe("/foo/*", &@bye)
       end
 
       it "sends an unsubscribe message if each listener is removed" do
-        transport.should_receive(:send).with(@unsubscribe_message)
+        transport.should_receive(:send).with(envelope(@unsubscribe_message))
         @client.unsubscribe("/foo/*", &@bye)
         @client.unsubscribe("/foo/*", &@hey)
       end
 
       it "sends an unsubscribe message if all listeners are removed" do
-        transport.should_receive(:send).with(@unsubscribe_message)
+        transport.should_receive(:send).with(envelope(@unsubscribe_message))
         @client.unsubscribe("/foo/*")
       end
     end
@@ -575,18 +579,18 @@ describe Faye::Client do
       end
 
       it "sends multiple unsubscribe messages if given an array" do
-        transport.should_receive(:send).with({
+        transport.should_receive(:send).with(envelope(
           "channel"      => "/meta/unsubscribe",
           "clientId"     => "fakeid",
           "subscription" => "/foo",
           "id"           => instance_of(String)
-        })
-        transport.should_receive(:send).with({
+        ))
+        transport.should_receive(:send).with(envelope(
           "channel"      => "/meta/unsubscribe",
           "clientId"     => "fakeid",
           "subscription" => "/bar",
           "id"           => instance_of(String)
-        })
+        ))
         @client.unsubscribe(["/foo", "/bar"])
       end
     end
@@ -596,17 +600,17 @@ describe Faye::Client do
     before { create_connected_client }
 
     it "sends the message to the server with an ID" do
-      transport.should_receive(:send).with({
+      transport.should_receive(:send).with(envelope(
         "channel"  => "/messages/foo",
         "clientId" => "fakeid",
         "data"     => {"hello" => "world"},
         "id"       => instance_of(String)
-      })
+      ))
       @client.publish("/messages/foo", "hello" => "world")
     end
 
     it "throws an error when publishing to an invalid channel" do
-      transport.should_not_receive(:send).with(hash_including("channel" => "/messages/*"))
+      transport.should_not_receive(:send).with(envelope(hash_including("channel" => "/messages/*")))
       lambda { @client.publish("/messages/*", "hello" => "world") }.should raise_error
     end
 
@@ -661,13 +665,13 @@ describe Faye::Client do
       end
 
       it "passes messages through the extension" do
-        transport.should_receive(:send).with({
+        transport.should_receive(:send).with(envelope(
           "channel"  => "/messages/foo",
           "clientId" => "fakeid",
           "data"     => {"hello" => "world"},
           "id"       => instance_of(String),
           "ext"      => {"auth" => "password"}
-        })
+        ))
         @client.publish("/messages/foo", "hello" => "world")
       end
     end
@@ -684,12 +688,12 @@ describe Faye::Client do
       end
 
       it "leaves the message unchanged" do
-        transport.should_receive(:send).with({
+        transport.should_receive(:send).with(envelope(
           "channel"  => "/messages/foo",
           "clientId" => "fakeid",
           "data"     => {"hello" => "world"},
           "id"       => instance_of(String)
-        })
+        ))
         @client.publish("/messages/foo", "hello" => "world")
       end
     end

@@ -44,7 +44,6 @@ module Faye
       @channels   = Channel::Set.new
       @message_id = 0
 
-      @message_timeouts   = {}
       @response_callbacks = {}
 
       @advice = {
@@ -291,9 +290,6 @@ module Faye
       id = message['id']
 
       if message.has_key?('successful')
-        timeout = @message_timeouts.delete(id)
-        EventMachine.cancel_timer(timeout) if timeout
-
         callback = @response_callbacks.delete(id)
       end
 
@@ -314,9 +310,6 @@ module Faye
     def message_error(messages, immediate = false)
       messages.each do |message|
         id = message['id']
-
-        timeout = @message_timeouts.delete(id)
-        EventMachine.cancel_timer(timeout) if timeout
 
         if immediate
           transport_send(message)
@@ -361,11 +354,13 @@ module Faye
                 1.2 * @retry :
                 1.2 * @advice['timeout'] / 1000.0
 
-      @message_timeouts[message['id']] = EventMachine.add_timer(timeout) do
-        message_error([message], false)
+      envelope = Envelope.new(message, timeout)
+
+      envelope.errback do |immediate|
+        message_error([message], immediate)
       end
 
-      @transport.send(message)
+      @transport.send(envelope)
     end
 
     def generate_message_id

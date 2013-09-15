@@ -21,7 +21,7 @@ module Faye
     def close
     end
 
-    def encode(messages)
+    def encode(envelopes)
       ''
     end
 
@@ -29,13 +29,14 @@ module Faye
       self.class.connection_type
     end
 
-    def send(message)
+    def send(envelope)
+      message = envelope.message
       client_id = @client.instance_eval { @client_id }
       debug('Client ? sending message to ?: ?', client_id, @endpoint, message)
 
-      return request([message]) unless batching?
+      return request([envelope]) unless batching?
 
-      @outbox << message
+      @outbox << envelope
 
       if message['channel'] == Channel::HANDSHAKE
         return add_timeout(:publish, 0.01) { flush }
@@ -70,11 +71,16 @@ module Faye
       @outbox.push(last) if last
     end
 
-    def receive(responses)
+    def receive(envelopes, responses)
+      envelopes.each { |e| e.set_deferred_status(:succeeded) }
       responses = [responses].flatten
       client_id = @client.instance_eval { @client_id }
       debug('Client ? received from ?: ?', client_id, @endpoint, responses)
       responses.each { |response| @client.receive_message(response) }
+    end
+
+    def handle_error(envelopes, immediate = false)
+      envelopes.each { |e| e.set_deferred_status(:failed, immediate) }
     end
 
   private

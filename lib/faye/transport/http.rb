@@ -5,22 +5,22 @@ module Faye
       callback.call(URI === endpoint)
     end
 
-    def encode(messages)
-      Faye.to_json(messages)
+    def encode(envelopes)
+      Faye.to_json(envelopes.map { |e| e.message })
     end
 
-    def request(messages)
-      content = encode(messages)
+    def request(envelopes)
+      content = encode(envelopes)
       params  = build_params(@endpoint, content)
       request = create_request(params)
 
       request.callback do
-        handle_response(request.response, messages)
+        handle_response(request.response, envelopes)
         store_cookies(request.response_header['SET_COOKIE'])
       end
 
       request.errback do
-        @client.message_error(messages)
+        handle_error(envelopes)
       end
     end
 
@@ -54,12 +54,12 @@ module Faye
       client.post(params)
     end
 
-    def handle_response(response, messages)
+    def handle_response(response, envelopes)
       message = MultiJson.load(response) rescue nil
       if message
-        receive(message)
+        receive(envelopes, message)
       else
-        @client.message_error(messages)
+        handle_error(messages)
       end
     end
   end

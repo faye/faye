@@ -80,6 +80,14 @@ describe Faye::Transport do
       client.stub(:client_id).and_return("abc123")
     end
 
+    def send(message)
+      @transport.send(Faye::Envelope.new(message))
+    end
+
+    def envelope(message)
+      EnvelopeMatcher.new(message)
+    end
+
     describe "for batching transports" do
       before do
         transport_klass = Class.new(Faye::Transport) do
@@ -92,32 +100,32 @@ describe Faye::Transport do
 
       it "does not make an immediate request" do
         @transport.should_not_receive(:request)
-        @transport.send({"batch" => "me"})
+        send({"batch" => "me"})
       end
 
       it "queues the message to be sent after a timeout" do
-        @transport.should_receive(:request).with([{"batch" => "me"}])
-        @transport.send({"batch" => "me"})
+        @transport.should_receive(:request).with([envelope("batch" => "me")])
+        send({"batch" => "me"})
         clock.tick(0.01)
       end
 
       it "allows multiple messages to be batched together" do
-        @transport.should_receive(:request).with([{"id" => 1}, {"id" => 2}])
-        @transport.send({"id" => 1})
-        @transport.send({"id" => 2})
+        @transport.should_receive(:request).with([envelope("id" => 1), envelope("id" => 2)])
+        send({"id" => 1})
+        send({"id" => 2})
         clock.tick(0.01)
       end
 
       it "adds advice to connect messages sent with others" do
-        @transport.should_receive(:request).with([{"channel" => "/meta/connect", "advice" => {"timeout" => 0}}, {}])
-        @transport.send({"channel" => "/meta/connect"})
-        @transport.send({})
+        @transport.should_receive(:request).with([envelope("channel" => "/meta/connect", "advice" => {"timeout" => 0}), envelope({})])
+        send({"channel" => "/meta/connect"})
+        send({})
         clock.tick(0.01)
       end
 
       it "adds no advice to connect messages sent alone" do
-        @transport.should_receive(:request).with([{"channel" => "/meta/connect"}])
-        @transport.send({"channel" => "/meta/connect"})
+        @transport.should_receive(:request).with([envelope("channel" => "/meta/connect")])
+        send({"channel" => "/meta/connect"})
         clock.tick(0.01)
       end
     end
@@ -133,8 +141,8 @@ describe Faye::Transport do
       end
 
       it "makes a request immediately" do
-        @transport.should_receive(:request).with([{"no" => "batch"}])
-        @transport.send({"no" => "batch"})
+        @transport.should_receive(:request).with([envelope("no" => "batch")])
+        send({"no" => "batch"})
       end
     end
   end

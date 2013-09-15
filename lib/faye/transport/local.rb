@@ -9,10 +9,10 @@ module Faye
       false
     end
 
-    def request(messages)
-      messages = Faye.copy_object(messages)
+    def request(envelopes)
+      messages = Faye.copy_object(envelopes.map { |e| e.message })
       @endpoint.process(messages, nil) do |responses|
-        receive(Faye.copy_object(responses))
+        receive(envelopes, Faye.copy_object(responses))
       end
     end
   end

@@ -31,10 +31,11 @@ module Faye
       connect
     end
 
-    def request(messages)
+    def request(envelopes)
       callback do |socket|
         next unless socket
-        messages.each { |message| @pending.add(message) }
+        envelopes.each { |envelope| @pending.add(envelope) }
+        messages = envelopes.map { |e| e.message }
         socket.send(Faye.to_json(messages))
       end
       connect
@@ -76,9 +77,9 @@ module Faye
         set_deferred_status(:unknown)
 
         if was_connected
-          @client.message_error(@pending.to_a, true) if @pending
+          handle_error(@pending.to_a, true) if @pending
         elsif @ever_connected
-          @client.message_error(@pending.to_a) if @pending
+          handle_error(@pending.to_a) if @pending
         else
           set_deferred_status(:failed)
         end
@@ -86,15 +87,19 @@ module Faye
       end
 
       socket.onmessage = lambda do |event|
-        messages = MultiJson.load(event.data)
+        messages  = MultiJson.load(event.data)
+        envelopes = []
+
         next if messages.nil?
         messages = [messages].flatten
+
         messages.each do |message|
-          if message.has_key?('successful')
-            @pending.delete_if { |m| m['id'] == message['id'] }
-          end
+          next unless message.has_key?('successful')
+          next unless envelope = @pending.find { |e| e.id == message['id'] }
+          @pending.delete(envelope)
+          envelopes << envelope
         end
-        receive(messages)
+        receive(envelopes, messages)
       end
     end
 
