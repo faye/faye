@@ -37,6 +37,7 @@ module Faye
         @messages.delete(client_id)
         @server.debug 'Destroyed client ?', client_id
         @server.trigger(:disconnect, client_id)
+        @server.trigger(:close, client_id)
         callback.call if callback
       end
 

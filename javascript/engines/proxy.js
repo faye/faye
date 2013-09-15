@@ -22,7 +22,7 @@ Faye.Engine.Proxy = Faye.Class({
     var engineClass = this._options.type || Faye.Engine.Memory;
     this._engine    = engineClass.create(this, this._options);
 
-    this.bind('disconnect', function(clientId) {
+    this.bind('close', function(clientId) {
       var self = this;
       setTimeout(function() { self.closeConnection(clientId) }, 10);
     }, this);

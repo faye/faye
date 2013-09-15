@@ -47,7 +47,7 @@ module Faye
         engine_class = @options[:type] || Memory
         @engine      = engine_class.create(self, @options)
 
-        bind :disconnect do |client_id|
+        bind :close do |client_id|
           EventMachine.next_tick { close_connection(client_id) }
         end
 

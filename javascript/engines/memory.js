@@ -32,6 +32,7 @@ Faye.Engine.Memory.prototype = {
     delete this._messages[clientId];
     this._server.debug('Destroyed client ?', clientId);
     this._server.trigger('disconnect', clientId);
+    this._server.trigger('close', clientId);
     if (callback) callback.call(context);
   },
 
