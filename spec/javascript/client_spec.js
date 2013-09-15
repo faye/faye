@@ -227,7 +227,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         createClient()
       }})
 
-      it("handshakes before connecting", function() { with(this) {
+      it("handshakes before connecting", function(resume) { with(this) {
         expect(transport, "send").given({
           channel:        "/meta/connect",
           clientId:       "handshakeid",
@@ -235,6 +235,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           id:             instanceOf("string")
         })
         client.connect()
+        Faye.Promise.defer(resume)
       }})
     }})
 

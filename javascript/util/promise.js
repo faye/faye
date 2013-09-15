@@ -45,7 +45,7 @@ var registerCallback = function(promise, callback, next) {
   if (promise._state === PENDING) {
     promise._callbacks.push(handler);
   } else if (promise._state === FULFILLED) {
-    handler(promise._value);
+    defer(function() { handler(promise._value) });
   }
 };
 
@@ -55,23 +55,21 @@ var registerErrback = function(promise, errback, next) {
   if (promise._state === PENDING) {
     promise._errbacks.push(handler);
   } else if (promise._state === REJECTED) {
-    handler(promise._reason);
+    defer(function() { handler(promise._reason) });
   }
 };
 
 var invoke = function(fn, value, next) {
-  defer(function() {
-    try {
-      var outcome = fn(value);
-      if (outcome && typeof outcome.then === 'function') {
-        outcome.then(next.fulfill, next.reject);
-      } else {
-        next.fulfill(outcome);
-      }
-    } catch (error) {
-      next.reject(error);
+  try {
+    var outcome = fn(value);
+    if (outcome && typeof outcome.then === 'function') {
+      outcome.then(next.fulfill, next.reject);
+    } else {
+      next.fulfill(outcome);
     }
-  });
+  } catch (error) {
+    next.reject(error);
+  }
 };
 
 var fulfill = Promise.fulfill = function(promise, value) {
@@ -95,6 +93,8 @@ var reject = Promise.reject = function(promise, reason) {
   var errbacks = promise._errbacks, eb;
   while (eb = errbacks.shift()) eb(reason);
 };
+
+Promise.defer = defer;
 
 Promise.pending = function() {
   var tuple = {};

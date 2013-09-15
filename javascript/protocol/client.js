@@ -106,7 +106,7 @@ Faye.Client = Faye.Class({
         this.info('Handshake successful: ?', this._clientId);
 
         this.subscribe(this._channels.getKeys(), true);
-        if (callback) callback.call(context);
+        if (callback) Faye.Promise.defer(function() { callback.call(context) });
 
       } else {
         this.info('Handshake unsuccessful');
