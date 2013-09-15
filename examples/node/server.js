@@ -4,7 +4,7 @@ var fs    = require('fs'),
     https = require('https'),
     faye  = require('../../build/node/faye-node');
 
-var SHARED_DIR = __dirname + '/../shared',
+var SHARED_DIR = __dirname + '/..',
     PUBLIC_DIR = SHARED_DIR + '/public',
 
     bayeux     = new faye.NodeAdapter({mount: '/bayeux', timeout: 20}),
@@ -19,9 +19,8 @@ var handleRequest = function(request, response) {
   fs.readFile(PUBLIC_DIR + path, function(err, content) {
     var status = err ? 404 : 200;
     try {
-      response.writeHead(status, {'Content-Type': 'text/html'});
-      response.write(content || 'Not found');
-      response.end();
+      response.writeHead(status, {});
+      response.end(content || 'Not found');
     } catch (e) {}
   });
 };

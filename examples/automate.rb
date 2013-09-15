@@ -1,4 +1,3 @@
-#================================================================
 # Load and configure Capybara
 
 require 'capybara/dsl'
@@ -7,7 +6,6 @@ Capybara.current_driver = :terminus
 Capybara.app_host = 'http://localhost:9292'
 extend Capybara::DSL
 
-#================================================================
 # Acquire some browsers and log into each with a username
 
 NAMES = %w[alice bob carol dan erica frank gemma harold ingrid james]
@@ -24,10 +22,9 @@ Terminus.browsers.each_with_index do |browser, i|
   click_button 'Go'
 end
 
-#================================================================
-# Send a message from each browser to every other browser,
-# and check that it arrived. If it doesn't arrive, send all
-# the browsers back to the dock and raise an exception
+# Send a message from each browser to every other browser, and check that it
+# arrived. If it doesn't arrive, send all the browsers back to the dock and
+# raise an exception
 
 BROWSERS.each do |name, sender|
   BROWSERS.each do |at, target|
@@ -45,7 +42,6 @@ BROWSERS.each do |name, sender|
   end
 end
 
-#================================================================
 # Re-dock all the browsers when we're finished
 
 Terminus.return_to_dock

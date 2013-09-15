@@ -2,6 +2,8 @@ JS.ENV.FayeSpec = JS.Test.describe("Faye", function() { with(this) {
   include(JS.Test.Helpers)
 
   describe("random", function() { with(this) {
+    if (typeof document !== "undefined") return
+
     it("returns a 160-bit random number in base 36", function() { with(this) {
       assertMatch( /^[a-z0-9]+$/, Faye.random() )
     }})

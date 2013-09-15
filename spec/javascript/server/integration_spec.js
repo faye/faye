@@ -1,8 +1,8 @@
 var fs    = require('fs'),
     http  = require('http'),
     https = require('https'),
-    cert  = fs.readFileSync(__dirname + '/../../../examples/shared/server.crt'),
-    key   = fs.readFileSync(__dirname + '/../../../examples/shared/server.key')
+    cert  = fs.readFileSync(__dirname + '/../../../examples/server.crt'),
+    key   = fs.readFileSync(__dirname + '/../../../examples/server.key')
 
 JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
   server: function(port, ssl, callback) {

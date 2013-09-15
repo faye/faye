@@ -112,4 +112,3 @@ Soapbox = {
                                      message.message + '</li>');
   }
 };
-

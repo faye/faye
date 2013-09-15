@@ -4,7 +4,7 @@ require 'bundler/setup'
 port   = ARGV[0] || 9292
 secure = ARGV[1] == 'ssl'
 engine = ARGV[2] || 'thin'
-shared = File.expand_path('../../shared', __FILE__)
+shared = File.expand_path('../..', __FILE__)
 
 require File.expand_path('../app', __FILE__)
 Faye::WebSocket.load_adapter(engine)

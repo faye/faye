@@ -1,17 +1,7 @@
-// This script should be run with PhantomJS
-// http://www.phantomjs.org/
+phantom.injectJs('node_modules/jstest/jstest.js')
 
-var page = new WebPage()
+var options  = {format: 'dot'},
+    reporter = new JS.Test.Reporters.Headless(options)
 
-page.onConsoleMessage = function(message) {
-  try {
-    var result = JSON.parse(message)
-    if ('total' in result && 'fail' in result) {
-      console.log(message)
-      var status = (!result.fail && !result.error) ? 0 : 1
-      phantom.exit(status)
-    }
-  } catch (e) {}
-}
+reporter.open('spec/browser.html')
 
-page.open('spec/browser.html')

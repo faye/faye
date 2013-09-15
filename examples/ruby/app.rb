@@ -1,7 +1,7 @@
 require 'sinatra'
 require 'faye'
 
-ROOT_DIR = File.expand_path('../../shared', __FILE__)
+ROOT_DIR = File.expand_path('../..', __FILE__)
 set :root, ROOT_DIR
 set :logging, false
 
