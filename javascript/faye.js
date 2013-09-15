@@ -120,7 +120,9 @@ var Faye = {
 
   // http://assanka.net/content/tech/2009/09/02/json2-js-vs-prototype/
   toJSON: function(object) {
-    return JSON.stringify(object, function(key, value) {
+    if (!this.stringify) return JSON.stringify(object);
+
+    return this.stringify(object, function(key, value) {
       return (this[key] instanceof Array) ? this[key] : value;
     });
   }

@@ -355,8 +355,7 @@ if (typeof JSON !== 'object') {
 
 // If the JSON object does not yet have a stringify method, give it one.
 
-    if (true) {
-        JSON.stringify = function (value, replacer, space) {
+    Faye.stringify = function (value, replacer, space) {
 
 // The stringify method takes a value and an optional replacer, and an optional
 // space parameter, and returns a JSON text. The replacer can be a function
@@ -364,41 +363,43 @@ if (typeof JSON !== 'object') {
 // A default replacer method can be provided. Use of the space parameter can
 // produce text that is more easily readable.
 
-            var i;
-            gap = '';
-            indent = '';
+        var i;
+        gap = '';
+        indent = '';
 
 // If the space parameter is a number, make an indent string containing that
 // many spaces.
 
-            if (typeof space === 'number') {
-                for (i = 0; i < space; i += 1) {
-                    indent += ' ';
-                }
+        if (typeof space === 'number') {
+            for (i = 0; i < space; i += 1) {
+                indent += ' ';
+            }
 
 // If the space parameter is a string, it will be used as the indent string.
 
-            } else if (typeof space === 'string') {
-                indent = space;
-            }
+        } else if (typeof space === 'string') {
+            indent = space;
+        }
 
 // If there is a replacer, it must be a function or an array.
 // Otherwise, throw an error.
 
-            rep = replacer;
-            if (replacer && typeof replacer !== 'function' &&
-                    (typeof replacer !== 'object' ||
-                    typeof replacer.length !== 'number')) {
-                throw new Error('JSON.stringify');
-            }
+        rep = replacer;
+        if (replacer && typeof replacer !== 'function' &&
+                (typeof replacer !== 'object' ||
+                typeof replacer.length !== 'number')) {
+            throw new Error('JSON.stringify');
+        }
 
 // Make a fake root object containing our value under the key of ''.
 // Return the result of stringifying the value.
 
-            return str('', {'': value});
-        };
-    }
+        return str('', {'': value});
+    };
 
+    if (typeof JSON.stringify !== 'function') {
+        JSON.stringify = Faye.stringify;
+    }
 
 // If the JSON object does not yet have a parse method, give it one.
 

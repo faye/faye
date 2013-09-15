@@ -25,7 +25,6 @@
   * Objects supporting the `bind()` method now implement the full `EventEmitter` API
   * Stop the server from forwarding the `clientId` property of published messages
 * Miscellaneous:
-  * Remove json2 from the client bundle; users should include it themselves if necessary
   * Support Browserify by returning the client module
   * `Faye.logger` can now be a logger object rather than a function
 
