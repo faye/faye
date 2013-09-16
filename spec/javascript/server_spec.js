@@ -105,7 +105,7 @@ JS.ENV.ServerSpec = JS.Test.describe("Server", function() { with(this) {
 
   describe("#flushConnection", function() { with(this) {
     before(function() { with(this) {
-      this.message = {clientId: "fakeclientid"}
+      this.message = {channel: "/meta/connect", clientId: "fakeclientid"}
     }})
 
     it("flushes the connection when given one message", function() { with(this) {
