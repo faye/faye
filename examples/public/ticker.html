@@ -25,7 +25,7 @@
         }
       });
 
-      client.subscribe('/tick', function(message) {
+      client.subscribe('/chat/tick', function(message) {
         ticker.innerHTML = message.n;
       });
     </script>

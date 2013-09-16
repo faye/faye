@@ -27,8 +27,10 @@ var Faye = {
   },
 
   clientIdFromMessages: function(messages) {
-    var first = [].concat(messages)[0];
-    return first && first.clientId;
+    var connect = this.filter([].concat(messages), function(message) {
+      return message.channel === '/meta/connect';
+    });
+    return connect[0] && connect[0].clientId;
   },
 
   copyObject: function(object) {

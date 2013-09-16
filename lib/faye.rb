@@ -61,7 +61,7 @@ module Faye
   end
 
   def self.client_id_from_messages(messages)
-    first = [messages].flatten.first
+    first = [messages].flatten.find { |m| m['channel'] == '/meta/connect' }
     first && first['clientId']
   end
 
