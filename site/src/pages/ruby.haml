@@ -28,9 +28,6 @@
       the response. This is given in seconds and must be smaller than the
       timeout on your frontend webserver. Faye uses Thin as its webserver, whose
       default timeout is 30 seconds.
-    * *@:origins@* - (optional) an array of origins, e.g @'http://example.com'@,
-      that are authorized to make connections to the server. If this option is
-      not set, all origins are allowed to connect.
     * *@:extensions@* - (optional) a list of extensions to add to the server,
       useful when using @RackAdapter@ as middleware.
     * *@:engine@* - (optional) the type and parameters for the engine you want

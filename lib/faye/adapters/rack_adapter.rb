@@ -23,7 +23,6 @@ module Faye
     def initialize(app = nil, options = nil)
       @app     = app if app.respond_to?(:call)
       @options = [app, options].grep(Hash).first || {}
-      @origins = @options[:origins] && [*@options[:origins]]
 
       @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
       @endpoint_re = Regexp.new('^' + @endpoint.gsub(/\/$/, '') + '(/[^/]*)*(\\.[^\\.]+)?$')
@@ -64,10 +63,6 @@ module Faye
       end
 
       return @static.call(env) if @static =~ request.path_info
-
-      if @origins and not @origins.any? { |o| o === env['HTTP_ORIGIN'] }
-        return [403, TYPE_TEXT, ['Forbidden: request origin is not authorized']]
-      end
 
       # http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
       if env['REQUEST_METHOD'] == 'OPTIONS' or env['HTTP_ACCESS_CONTROL_REQUEST_METHOD'] == 'POST'

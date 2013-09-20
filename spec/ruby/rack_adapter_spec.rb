@@ -4,8 +4,7 @@ describe Faye::RackAdapter do
   include Rack::Test::Methods
   let(:adapter) { Faye::RackAdapter.new(options) }
   let(:app)     { ServerProxy.new(adapter) }
-  let(:options) { {:mount => "/bayeux", :origins => origins, :timeout => 30} }
-  let(:origins) { nil }
+  let(:options) { {:mount => "/bayeux", :timeout => 30} }
   let(:server)  { double "server" }
 
   after { app.stop }
@@ -26,62 +25,42 @@ describe Faye::RackAdapter do
   describe "POST requests" do
     describe "with cross-origin access control" do
       shared_examples_for "cross-origin request" do
-        let(:origins) { ["http://example.com"] }
-
-        describe "with an allowed origin" do
-          before do
-            header "Origin", "http://example.com"
-          end
-
-          it "returns a matching cross-origin access control header" do
-            server.stub(:process).and_yield []
-            post "/bayeux", :message => '[]'
-            access_control_origin.should == "http://example.com"
-          end
-
-          it "forwards the message param onto the server" do
-            server.should_receive(:process).with({"channel" => "/plain"}, instance_of(Rack::Request)).and_yield []
-            post "/bayeux", "message=%7B%22channel%22%3A%22%2Fplain%22%7D"
-          end
-
-          it "returns the server's response as JSON" do
-            server.stub(:process).and_yield ["channel" => "/meta/handshake"]
-            post "/bayeux", "message=%5B%5D"
-            status.should == 200
-            content_type.should == "application/json; charset=utf-8"
-            content_length.should == "31"
-            json.should == ["channel" => "/meta/handshake"]
-          end
-
-          it "returns a 400 response if malformed JSON is given" do
-            server.should_not_receive(:process)
-            post "/bayeux", "message=%7B%5B"
-            status.should == 400
-            content_type.should == "text/plain; charset=utf-8"
-          end
-
-          it "returns a 404 if the path is not matched" do
-            server.should_not_receive(:process)
-            post "/blaf", 'message=%5B%5D'
-            status.should == 404
-            content_type.should == "text/plain; charset=utf-8"
-          end
+        before do
+          header "Origin", "http://example.com"
         end
 
-        describe "with a blocked origin" do
-          before do
-            header "Origin", "http://hacker.com"
-          end
+        it "returns a matching cross-origin access control header" do
+          server.stub(:process).and_yield []
+          post "/bayeux", :message => '[]'
+          access_control_origin.should == "http://example.com"
+        end
 
-          it "does not forward the message param onto the server" do
-            server.should_not_receive(:process)
-            post "/bayeux", "message=%7B%22channel%22%3A%22%2Fplain%22%7D"
-          end
+        it "forwards the message param onto the server" do
+          server.should_receive(:process).with({"channel" => "/plain"}, instance_of(Rack::Request)).and_yield []
+          post "/bayeux", "message=%7B%22channel%22%3A%22%2Fplain%22%7D"
+        end
 
-          it "returns a 403 response" do
-            post "/bayeux", "message=%7B%22channel%22%3A%22%2Fplain%22%7D"
-            status.should == 403
-          end
+        it "returns the server's response as JSON" do
+          server.stub(:process).and_yield ["channel" => "/meta/handshake"]
+          post "/bayeux", "message=%5B%5D"
+          status.should == 200
+          content_type.should == "application/json; charset=utf-8"
+          content_length.should == "31"
+          json.should == ["channel" => "/meta/handshake"]
+        end
+
+        it "returns a 400 response if malformed JSON is given" do
+          server.should_not_receive(:process)
+          post "/bayeux", "message=%7B%5B"
+          status.should == 400
+          content_type.should == "text/plain; charset=utf-8"
+        end
+
+        it "returns a 404 if the path is not matched" do
+          server.should_not_receive(:process)
+          post "/blaf", 'message=%5B%5D'
+          status.should == 404
+          content_type.should == "text/plain; charset=utf-8"
         end
       end
 

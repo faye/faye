@@ -33,7 +33,6 @@ Faye.NodeAdapter = Faye.Class({
 
   initialize: function(options) {
     this._options    = options || {};
-    this._origins    = this._options.origins && [].concat(this._options.origins);
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
     this._endpointRe = new RegExp('^' + this._endpoint.replace(/\/$/, '') + '(/[^/]*)*(\\.[^\\.]+)?$');
     this._server     = new Faye.Server(this._options);
@@ -101,11 +100,6 @@ Faye.NodeAdapter = Faye.Class({
 
     if (this._static.test(requestUrl.pathname))
       return this._static.call(request, response);
-
-    if (this._origins && Faye.filter(this._origins, function(o) { return o.test ? o.test(origin) : o === origin }).length === 0) {
-      response.writeHead(403, this.TYPE_TEXT);
-      response.end('Forbidden: request origin is not authorized');
-    }
 
     // http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
     if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST')
