@@ -93,7 +93,7 @@
 
     If you're using Sinatra or any other Rack-based framework, you can use
     standard Rack middlewares to add session support and CSRF protection to your
-    stack. You'll need the @rack@ and @rack-protection@ gems for this.
+    stack.
 
     Start by making a Faye extension that blocks incoming messages that lack a
     token matching the CSRF token stored in the session.
@@ -117,7 +117,6 @@
 
     <pre>require 'faye'
     require 'rack'
-    require 'rack/protection'
     require './path/to/sinatra_app'
 
     use Rack::Session::Cookie,
