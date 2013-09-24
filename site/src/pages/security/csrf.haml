@@ -1,0 +1,150 @@
+.content
+  = partial 'security_navigation'
+
+  :textile
+    h4. CSRF protection
+
+    Faye lets you write server-side extensions that have access to the request
+    data for the request that delivered the incoming message. This allows you to
+    use the @Cookie@ header to authorize messages based on the user's session,
+    but *you must implement CSRF protection*.
+
+    CSRF stands for 'cross-site request forgery', and it works like this. When a
+    web browser makes a request, it searches for any cookies it has stored that
+    are scoped to that URL. Cookie scope is determined by various factors,
+    including the domain and path of the URL, and whether it uses @https@. It
+    doesn't matter which page initiates the request, or what kind of request it
+    is; the browser attaches all in-scope cookies to _every_ request and sends
+    them in the request's @Cookie@ header.
+
+    Since Faye allows cross-origin connections, any site the user has open can
+    send requests to your Faye server, and they will have the user's session
+    cookies attached. This means you can't use @Cookie@ on its own to
+    authenticate a message since you don't know where the message came from. You
+    must prove the message actually came from _your_ site.
+
+    You can't use the @Origin@ header for this, since the browser doesn't send
+    an @Origin@ header for most transports that Faye uses. So, you need
+    implement explicit CSRF protection.
+
+    Most web frameworks do this as follows:
+
+    * Generate a large random token and store it in the user's session
+    * Add this token to all forms using an @<input type="hidden">@
+    * Reject all @POST@ requests that don't have a form parameter matching the
+      session's token
+
+    The idea is that other sites can't scrape the token out of your site's pages
+    since sites can't access each other's DOM. Since each session gets a
+    different token, an attacker site would need to steal the user's cookies for
+    your site, or access your site's DOM, both of which the browser prevents.
+
+    The best way to implement CSRF protection is to piggy-back on the protection
+    provided by your web framework. The following examples cover some common use
+    cases.
+
+    h4. Example: Rails
+
+    Rails includes CSRF protection that uses a session variable called
+    @_csrf_token@. You can check incoming messages and compare their attached
+    token against the value stored in the session. If the tokens do not match,
+    you add an error to make the server reject them. You delete @csrfToken@ from
+    the message so that it's not forwarded to subscribers.
+
+    <pre>class CsrfProtection
+      def incoming(message, request, callback)
+        session_token = request.session['_csrf_token']
+        message_token = message['ext'] && message['ext'].delete('csrfToken')
+
+        unless session_token == message_token
+          message['error'] = '403::Access denied'
+        end
+        callback.call(message)
+      end
+    end</pre>
+
+    This extension needs to access the Rails session, and to allow this you must
+    put Faye at a specific place in the Rails middleware stack. In your
+    application config, add @Faye::RackAdapter@ after your app's session store
+    middleware, adding @CsrfProtection@ as an extension.
+
+    <pre>config.middleware.insert_after ActionDispatch::Session::CookieStore,
+                                   Faye::RackAdapter,
+                                   :extensions => [CsrfProtection.new],
+                                   :mount      => '/faye',
+                                   :timeout    => 25</pre>
+
+    Finally you need to make the client attach the CSRF token to all messages it
+    sends. Rails includes the token in all pages using a @meta@ tag called
+    @csrf-token@, and you can use jQuery to grab its content and attach it to
+    outgoing messages.
+
+    <pre>var client = new Faye.Client('/faye');
+
+    client.addExtension({
+      outgoing: function(message, callback) {
+        message.ext = message.ext || {};
+        message.ext.csrfToken = $('meta[name=csrf-token]').attr('content');
+        callback(message);
+      }
+    });</pre>
+
+    h4. Example: Sinatra and other Rack apps
+
+    If you're using Sinatra or any other Rack-based framework, you can use
+    standard Rack middlewares to add session support and CSRF protection to your
+    stack. You'll need the @rack@ and @rack-protection@ gems for this.
+
+    Start by making a Faye extension that blocks incoming messages that lack a
+    token matching the CSRF token stored in the session.
+
+    <pre>class CsrfProtection
+      def incoming(message, request, callback)
+        session_token = request.session['csrf']
+        message_token = message['ext'] && message['ext'].delete('csrfToken')
+
+        unless session_token == message_token
+          message['error'] = '403::Access denied'
+        end
+        callback.call(message)
+      end
+    end</pre>
+
+    To enable session support, you need a Rack session middleware _before_ Faye
+    in your @config.ru@ middleware stack.
+
+    Here's a sample @config.ru@ for this design:
+
+    <pre>require 'faye'
+    require 'rack'
+    require 'rack/protection'
+    require './path/to/sinatra_app'
+
+    use Rack::Session::Cookie,
+        :secret => '55912e33cad379c8ff64c8a97fe2f096ef013111'
+
+    use Faye::RackAdapter,
+        :extensions => [CsrfProtection.new],
+        :mount      => '/faye',
+        :timeout    => 25
+
+    run Sinatra::Application</pre>
+
+    You'll need to generate and render the CSRF token in your templates for the
+    client to pick up:
+
+    <pre><% token = request.session['csrf'] ||= SecureRandom.hex(20) %>
+    <meta name="csrf-token" content="<%= token %>"></pre>
+
+    And finally, configure the client to attach this token to outgoing messages.
+
+    <pre>var client = new Faye.Client('/faye');
+
+    client.addExtension({
+      outgoing: function(message, callback) {
+        message.ext = message.ext || {};
+        message.ext.csrfToken = $('meta[name=csrf-token]').attr('content');
+        callback(message);
+      }
+    });</pre>
+

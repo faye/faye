@@ -103,6 +103,8 @@
     <pre># Calls extension.removed() if defined
     host_object.remove_extension(extension)</pre>
 
+    h4. Accessing request data
+
     On the server side, you can gain access to details of the request in which
     the message was delivered, by writing extensions with 3 arguments:
 
@@ -122,6 +124,9 @@
     You should not use the @request@ object to send a response yourself; you
     should only use its properties to make a decision about how to handle the
     message, for example by checking the @Origin@ or @Cookie@ headers.
+
+    *If you use @Cookie@ for authorization, you must "implement CSRF
+    protection":/security/csrf.html since Faye allows cross-origin connections.*
 
     To write extensions you'll need to know what kinds of messages are used by
     the Bayeux protocol; see "the specification":http://svn.cometd.com/trunk/bayeux/bayeux.html
