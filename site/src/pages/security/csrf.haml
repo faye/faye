@@ -198,8 +198,8 @@
       });
     };</pre>
 
-    Now you can the CSRF protection extension. Remember to delete @csrfToken@
-    from the message so it's not forwarded to any subscribers.
+    Now you can add the CSRF protection extension. Remember to delete
+    @csrfToken@ from the message so it's not forwarded to any subscribers.
 
     <pre>bayeux.addExtension({
       incoming: function(message, request, callback) {
