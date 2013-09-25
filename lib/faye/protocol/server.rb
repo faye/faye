@@ -19,12 +19,6 @@ module Faye
       info 'Created new server: ?', @options
     end
 
-    def flush_connection(messages)
-      client_id = Faye.client_id_from_messages(messages)
-      info 'Flushing connection for ?', client_id
-      @engine.flush(client_id) if client_id
-    end
-
     def open_socket(client_id, socket, env)
       return unless client_id and socket
       @engine.open_socket(client_id, Socket.new(self, socket, env))

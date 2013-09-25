@@ -236,10 +236,6 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
     }})
 
     describe("with valid params", function() { with(this) {
-      before(function() { with(this) {
-        expect(server, "flushConnection").given({channel: "/foo"})
-      }})
-
       it("forwards the message param onto the server", function() { with(this) {
         expect(server, "process").given({channel: "/foo"}, objectIncluding({headers: instanceOf(Object)})).yielding([[]])
         get("/bayeux", params)
@@ -264,7 +260,6 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
     describe("missing jsonp", function() { with(this) {
       before(function() { with(this) {
         delete params.jsonp
-        expect(server, "flushConnection")
       }})
 
       it("returns the server's response using the default callback", function() { with(this) {

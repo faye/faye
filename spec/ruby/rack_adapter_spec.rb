@@ -150,10 +150,6 @@ describe Faye::RackAdapter do
     let(:params) {{:message => '{"channel":"/foo"}', :jsonp => "callback"}}
 
     describe "with valid params" do
-      before do
-        server.should_receive(:flush_connection).with("channel" => "/foo")
-      end
-
       it "forwards the message param onto the server" do
         server.should_receive(:process).with({"channel" => "/foo"}, instance_of(Rack::Request)).and_yield []
         get "/bayeux", params
@@ -187,7 +183,6 @@ describe Faye::RackAdapter do
     describe "missing jsonp" do
       before do
         params.delete(:jsonp)
-        server.should_receive(:flush_connection)
       end
 
       it "returns the server's response using the default callback" do

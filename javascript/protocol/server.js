@@ -10,12 +10,6 @@ Faye.Server = Faye.Class({
     this.info('Created new server: ?', this._options);
   },
 
-  flushConnection: function(messages) {
-    var clientId = Faye.clientIdFromMessages(messages);
-    this.info('Flushing connection for ?', clientId);
-    this._engine.flush(clientId);
-  },
-
   openSocket: function(clientId, socket, request) {
     if (!clientId || !socket) return;
     this._engine.openSocket(clientId, new Faye.Server.Socket(this, socket, request));

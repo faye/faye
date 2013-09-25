@@ -40,7 +40,7 @@
 
       <script type="text/javascript">
         var bayeux = new Faye.Client('/bayeux');
-        Faye.logger = console;
+        Faye.logger = window.console;
         Soapbox.init(bayeux);
       </script>
     </div>

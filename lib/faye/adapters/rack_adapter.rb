@@ -94,8 +94,6 @@ module Faye
       callback = request.env['async.callback']
       hijack   = request.env['rack.hijack_io']
 
-      @server.flush_connection(message) if request.get?
-
       headers['Access-Control-Allow-Origin'] = origin if origin
       headers['Cache-Control'] = 'no-cache, no-store'
 

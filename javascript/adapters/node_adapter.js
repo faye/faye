@@ -141,8 +141,6 @@ Faye.NodeAdapter = Faye.Class({
           headers = Faye.extend({}, type),
           origin  = request.headers.origin;
 
-      if (isGet) this._server.flushConnection(message);
-
       if (origin) headers['Access-Control-Allow-Origin'] = origin;
       headers['Cache-Control'] = 'no-cache, no-store';
 

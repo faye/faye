@@ -104,18 +104,4 @@ describe Faye::Server do
       end
     end
   end
-
-  describe :flush_connection do
-    let(:message) {{"channel" => "/meta/connect", "clientId" => "fakeclientid"}}
-
-    it "flushes the connection when given one message" do
-      engine.should_receive(:flush).with("fakeclientid")
-      server.flush_connection(message)
-    end
-
-    it "flushes the connection when given a list of messages" do
-      engine.should_receive(:flush).with("fakeclientid")
-      server.flush_connection([message])
-    end
-  end
 end
