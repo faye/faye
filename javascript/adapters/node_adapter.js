@@ -95,6 +95,8 @@ Faye.NodeAdapter = Faye.Class({
         origin        = request.headers.origin,
         self          = this;
 
+    request.originalUrl = request.url;
+
     request.on('error', function(error) { self._returnError(response, error) });
     response.on('error', function(error) { self._returnError(null, error) });
 
@@ -167,6 +169,8 @@ Faye.NodeAdapter = Faye.Class({
     var ws       = new Faye.WebSocket(request, socket, head, null, {ping: this._options.ping}),
         clientId = null,
         self     = this;
+
+    request.originalUrl = request.url;
 
     ws.onmessage = function(event) {
       try {
