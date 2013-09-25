@@ -1,0 +1,50 @@
+.content
+  = partial 'security_navigation'
+
+  :textile
+    h4. Can I use cookies?
+
+    As of version 1.0, Faye allows server-side extensions to access the request
+    data for the current message. We have introduced this capability in order to
+    support integration with various other HTTP-based authorization mechanisms,
+    but still recommend that this task is done within the messaging protocol
+    using signed or encrypted data.
+    
+    However some users will want to use HTTP-based methods, in particular the
+    @Cookie@ header that carries the user's session. There are several caveats
+    you must be aware of to use cookies safely.
+
+    First, the browser will send cookies regardless of which site the request
+    came from, so to make sure you're only granting access to your own pages,
+    you must "implement CSRF protection":/security/csrf.html. If you don't do
+    this, any site the user has open will get privileged access to your Faye
+    server by impersonating the user.
+
+    Second, some transports like WebSocket and EventSource use a very long-lived
+    request and only send one @Cookie@ header on first connection. This means
+    the information you're using to authorize messages may have been sent a long
+    time ago and may therefore be stale. If the session has changed or been
+    invalidated since the initial connection, relying on stale data can cause
+    security holes.
+    
+    Instead of cookies that contain the session data, we recommend keeping a
+    session ID in the cookies and storing the data on the server, either in
+    memory or on disk or in a database. This way, you will look up the session
+    afresh on every message instead of using stale data.
+
+    h4. Can I use Origin, Referer, etc.?
+
+    Although the @Origin@ header was introduced to combat CSRF, these headers
+    can be easily guessed and spoofed by server-side clients, browser
+    extensions and malicious JavaScript applications. They are not
+    cryptographically secure proof that you can trust where the request claims
+    to have come from.
+
+    This still allows third parties to inject messages into your application,
+    and is especially bad if you have clients that receive JavaScript and
+    @eval()@ it.
+
+    The @Origin@ header is also not sent by most browser transports that Faye
+    uses, so filtering based on it will actually block most legit traffic,
+    including the initial handshake request.
+

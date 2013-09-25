@@ -1,0 +1,56 @@
+.content
+  = partial 'security_navigation'
+
+  :textile
+    h4. Restricting subscription access
+
+    Most web applications have a concept of access control: some content is only
+    accessible to certain people, and you must be logged in to prove your
+    identity. In Faye, you might want subscriptions to certain channels to
+    require authentication, if you are publishing private data on such channels.
+    This is easily done with a server-side extension that filters incoming
+    @/meta/subscribe@ messages.
+
+    An important point here is that subscriptions can contain wildcards, and you
+    must protect these. A message published to @/foo/bar/qux@ will be routed to
+    any client subscribed to @/foo/bar/qux@, @/foo/bar/*@, @/foo/bar/**@,
+    @/foo/**@ or @/**@.
+
+    Adding an @error@ field to any incoming message will stop the server from
+    processing it. The channel the client is attempting to subscribe to will be
+    in the @message.subscription@ field.
+
+    <pre>var subscriptions = [
+      '/foo/bar/qux',
+      '/foo/bar/*',
+      '/foo/bar/**',
+      '/foo/**',
+      '/**'
+    ];
+
+    var authorized = function(message) {
+      // returns true or false
+    };
+
+    server.addExtension({
+      incoming: function(message, callback) {
+        if (message.channel === '/meta/subscribe') {
+          if (subscriptions.indexOf(message.subscription) >= 0) {
+            if (!authorized(message))
+              message.error = '403::Authentication required';
+          }
+        }
+        callback(message);
+      }
+    });</pre>
+
+    How the @authorized()@ function is implemented depends on your clients'
+    capabilities and is covered in more detail under
+    "Authentication":/security/authentication.html. Note that because extensions
+    are asynchronous (you hand the message back to the server using a callback),
+    your authentication logic can contain async operations, which is useful if
+    you need to do some I/O.
+
+    A simple extension like this, with properly implemented authentication, will
+    prevent unauthorized access to published data on the selected channel.
+

@@ -1,0 +1,44 @@
+.content
+  = partial 'security_navigation'
+
+  :textile
+    h4. Other techniques
+
+    The above is a fairly comprehensive picture of restricting access to your
+    Faye server. The important thing to remember is that when exchanging
+    messages, you just need a way to prove that the data is genuine. This relies
+    heavily on cryptograhpic techniques and you should always use standard
+    functions for this rather than inventing your own.
+
+    However, sometimes, it's just a case of using data that is very hard to
+    guess. For example, say you want to send messages to one particular user and
+    nobody else. Instead of naming a channel after a username and requiring an
+    access token to subcribe to it, you could just make the channel name
+    _contain_ the access token. For example, the client could call an endpoint
+    on your server to get a channel name for the logged-in user, then subscribe
+    to that channel in Faye. When publishing, you would just regenerate the
+    channel name from the username you want to publish to.
+
+    These channel names may be a cryptograhpically signed copy of the user's
+    name or ID, or they could simply be very large random numbers (larger than
+    160 bits is advisable) that you store in a database next to each user ID. As
+    long as they cannot be guessed by a third party, you're alright. Just
+    remember that 'cannot be guessed' is surprisingly hard to implement
+    correctly, and you should consult someone with a grounding in crypto if
+    you're not sure what you're doing is safe.
+
+    h4. Summary
+
+    This guide, while not exhaustive should give you enough grounding on the
+    topic to safely implement a real-time application using Faye.  If you have
+    further questions you should "ask on the mailing
+    list":http://groups.google.com/group/faye-user - many people there have run
+    into the same problems as you and will likely have already thought of a
+    solution.  If you have a genuinely unusual case then you will most likely
+    benefit from their sage advice.
+
+    Thank you for taking the time to familiarise yourself with this advice and
+    for using Faye.  Your feedback on this document is eagerly solicited; issues
+    and pull requests can be submitted on the "Faye
+    project":https://github.com/faye/faye on GitHub.
+

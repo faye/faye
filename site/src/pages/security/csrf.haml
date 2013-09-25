@@ -5,9 +5,9 @@
     h4. CSRF protection
 
     Faye lets you write server-side extensions that have access to the request
-    data for the request that delivered the incoming message. This allows you to
-    use the @Cookie@ header to authorize messages based on the user's session,
-    but *you must implement CSRF protection*.
+    data for the current incoming message. This allows you to use the @Cookie@
+    header to authorize messages based on the user's session, but *you must
+    implement CSRF protection*.
 
     CSRF stands for 'cross-site request forgery', and it works like this. When a
     web browser makes a request, it searches for any cookies it has stored that
@@ -57,7 +57,7 @@
         message_token = message['ext'] && message['ext'].delete('csrfToken')
 
         unless session_token == message_token
-          message['error'] = '403::Access denied'
+          message['error'] = '401::Access denied'
         end
         callback.call(message)
       end
@@ -104,7 +104,7 @@
         message_token = message['ext'] && message['ext'].delete('csrfToken')
 
         unless session_token == message_token
-          message['error'] = '403::Access denied'
+          message['error'] = '401::Access denied'
         end
         callback.call(message)
       end
@@ -210,7 +210,7 @@
           if (message.ext) delete message.ext.csrfToken;
 
           if (sessionToken !== messageToken)
-            message.error = '403::Access denied';
+            message.error = '401::Access denied';
 
           callback(message);
         });

@@ -1,0 +1,54 @@
+.content
+  = partial 'security_navigation'
+
+  :textile
+    h4. Push-only servers
+
+    Sometimes you only want to use Faye to push events from your server-side
+    application to your clients, and you don't want clients to be able to
+    publish at all. This can easily be done by requiring a password for
+    publishing. On any non-@/meta/@ message, check for the password. If it's not
+    present, add an error to the message. Finally, delete the password from the
+    message to prevent leaking it to clients.
+
+    <pre>var secret = 'some long and unguessable application-specific string';
+
+    server.addExtension({
+      incoming: function(message, callback) {
+        if (!message.channel.match(/^\/meta\//)) {
+          var password = message.ext && message.ext.password;
+          if (password !== secret)
+            message.error = '403::Password required';
+        }
+        callback(message);
+      },
+
+      outgoing: function(message, callback) {
+        if (message.ext) delete message.ext.password;
+        callback(message);
+      }
+    });</pre>
+
+    Then you can add a client-side extension to your server-side client to add
+    the password:
+
+    <pre>var secret = 'some long and unguessable application-specific string';
+
+    client.addExtension({
+      outgoing: function(message, callback) {
+        message.ext = message.ext || {};
+        message.ext.password = secret;
+        callback(message);
+      }
+    });</pre>
+
+    If you're using a plain HTTP client to publish messages, include the
+    password in the JSON body:
+
+    <pre>$ curl -X POST www.example.com/faye \
+        -H 'Content-Type: application/json' \
+        -d '{"channel": "/foo", "data": "hi", "ext": {"password": "..."}}'</pre>
+
+    Remember to keep the password secret, and do not let it leak out of your
+    servers into the outside world.
+

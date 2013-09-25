@@ -1,0 +1,165 @@
+.content
+  = partial 'security_navigation'
+
+  :textile
+    h4. Authentication
+
+    Outside the trivial case of just allowing the server to publish, we need a
+    way to authenticate the client connections and decide what each one is
+    allowed to do. Before we get into that, it is worth reviewing the mechanics
+    of the transport mechanisms Faye uses:
+
+    * *WebSocket* - bidirectional message-passing socket between the client and
+      server. Initiated using an HTTP @GET@ request with an @Upgrade: websocket@
+      header. Can be opened to any origin.
+    * *EventSource* - unidirectional socket that delivers from the server to the
+      client. Initiated by the client using a @GET@ request with the
+      @Accept: text/event-stream@ header. Obeys the same-origin policy.
+    * *XMLHttpRequest (including CORS)* - request/response HTTP client, with
+      some restrictions. Cannot set various headers, e.g. @Cookie@, @Host@,
+      @Origin@, @Referer@. Can only read the response if the server grants
+      permission through the @Access-Control-Allow-Origin@ header. May use a
+      pre-flight @OPTIONS@ request to determine whether the request can be sent
+      at all.
+    * *JSON-P* - cross-domain @GET@ requests based on injecting a @script@ tag
+      and the server enclosing some JSON data in a JavaScript function call. No
+      origin restrictions, @GET@ only, no access to headers.
+
+    All of these transports have in common that the browser will attach any
+    cookies for the target domain to the outgoing request, _regardless_ of where
+    the request originates. This means another site can send any of these
+    requests to your server and the browser will attach your cookies. This is
+    where "CSRF":/security/csrf.html attacks come from.
+
+    Faye may use any of these at any given time, based on what the server, the
+    user's browser, and the intervening network support. If operating a
+    cross-origin connection, it will pick a transport that allows this. The Faye
+    server makes no restrictions based on the @Origin@ of a request, and allows
+    all requests through @Access-Control-Allow-Origin@.
+
+    h4. How should I authenticate clients?
+
+    The core question you're trying to answer when authenticating a client's
+    subscription or publication message is, how does the server know that the
+    client is acting on behalf of an authorized user? That is, how can the
+    client prove it should be given access to do what it wants?
+
+    For server-side clients, that run on private hardware rather than running on
+    the web or as part of a native app installed on the user's hardware, this is
+    simple: require a password. You can easily pick a password and require it to
+    be present in messages to perform certain actions. See "Push-only
+    servers":/security/push.html for an example of this pattern, and remember to
+    delete the password from messages as they leave the server lest they leak to
+    third parties.
+
+    For clients running on a web page, acting on behalf of a user, you need to
+    provably associate the client with the user's session. We can take an
+    approach similar to how one prevents CSRF in traditional web apps.
+
+    To prevent CSRF, we generate an unguessable token from the user's session,
+    embed it in any forms we render, then require that all @POST@ requests
+    contain a valid token for the session. This works because JavaScript on
+    other domains cannot read pages served by your app, or the user's cookies
+    for your domain, so cannot get the token they need to make @POST@ requests.
+    Thus, the presence of such a token proves the request came from one of your
+    pages.
+
+    Note that this defense relies on third-party JavaScript not being able to
+    get a token. Any resources tied to the user's session _must not_ be
+    accessible cross-domain, that is to say a resource that depends on the
+    request's @Cookie@ should never include @Access-Control-Allow-Origin@ in the
+    response.
+
+    So, taking inspiration from this approach, we can imagine having our web
+    application render some JS data into the page that contains the user's ID
+    and a token generated from the session, just like how we would embed a
+    hidden CSRF token field in a rendered form. The Faye client embeds the token
+    and the current user ID in the request before sending it.
+
+    <pre>// Rendered by the server:
+    var USER_ID    = 18787,
+        USER_TOKEN = 'ifd63cylqwsyaq9c2ptzywjujgtfpxs';
+
+    client.addExtension({
+      outgoing: function(message, callback) {
+        if (message.channel !== '/meta/subscribe')
+          return callback(message);
+
+        message.ext = message.ext || {};
+        message.ext.userId = USER_ID;
+        message.ext.token = USER_TOKEN;
+        callback(message);
+      }
+    });</pre>
+
+    The server would then have an extension that checked incoming
+    @/meta/subscribe@ messages for @ext.userId@ and @ext.token@ and validated
+    these values. If the token/ID pair is not valid, or if the given user is not
+    allowed to subscribe to the given channel, the server refuses the
+    subscription request.
+
+    h4. How should I generate tokens?
+
+    There are many potential ways of doing this, depending on what data you
+    decide to send along with the subscription message and the security
+    requirements of your system. If you have questions or are not well-versed in
+    basic cryptography, "please ask the mailing list":http://groups.google.com/group/faye-users -
+    there are plenty of people there who've dealt with these problems.
+
+    The important thing is that the incoming message contains a user ID, that
+    you're going to use to decide if the request should be allowed. You need to
+    know that the message _really_ came from that user. You must also make sure
+    that the token does not reveal how it was generated, since it will be
+    exposed to any script running in the browser and you must not let third
+    parties discover how to create real-looking tokens.
+
+    So, when implementing your code to generate @USER_TOKEN@, an easy solution
+    might be might be to have the server determine the user ID from the
+    session, then sign the ID using a secret key stored on the server. For
+    example:
+
+    <pre>var crypto = require('crypto'),
+        hmac   = crypto.createHmac('sha256', 'your secret key'),
+        token  = hmac.update('the user ID').digest('hex');
+
+    // -> 'cb20f4a58ea060d186fb4fad7949dfad0eea8bcf6ae2f4f9594e9c8f1dc9b509'</pre>
+
+    Bear in mind that "you should use a Message Authentication Code (MAC) like
+    HMAC for this":http://blog.jcoglan.com/2012/06/09/why-you-should-never-use-hash-functions-for-message-authentication/,
+    rather than a bare hashing function.
+
+    The server must only return a token based on the current logged-in user; the
+    client should not be able to specify a different user ID in its request.
+    Otherwise, a client can easily gain authenticated access to other users' 
+    data.
+
+    When the client sends its subscription request, you regenerate the token
+    using the given user ID and your secret key, and check it matches the token
+    in the message. If it does, you know the user ID is genuine and proceed with
+    your access control.
+
+    You could also have the token generator accept the name of the channel the
+    client wants to subscribe to, and make it sign a combination of the user ID
+    and channel name if the user is allowed to subscribe:
+
+    <pre>var crypto  = require('crypto'),
+        userId  = session.userId,
+        channel = params.channel,
+        hmac, token;
+
+    if (canSubscribe(userId, channel)) {
+      hmac  = crypto.createHmac('sha256', 'your secret key'),
+      token = hmac.update(userId + ':' + channel).digest('hex');
+    } else {
+      token = null;
+    }</pre>
+
+    The token then acts as proof that your application has granted access to the
+    channel, and all the Faye server has to do is check the token matches the
+    user ID and channel in the message.
+
+    Remember that if you are using this technique to protect _publication_, you
+    must delete any credentials using an outgoing extension on the server side
+    to avoid forwarding the credentials to subscribed clients.
+
+

@@ -1,0 +1,48 @@
+.content
+  = partial 'security_navigation'
+
+  :textile
+    h4. Restricting publication access
+
+    Applications typically only allow authenticated users to modify things: you
+    must prove you 'own' a resource or that someone has given you permission
+    before you go and change someone's database. In Faye, publishing is the
+    write operation: publishing a message to the server causes it to be sent to
+    all subscribed clients, which will act based on the data in the message. By
+    publishing a message, you are sending instructions to other clients, and the
+    clients must be able to trust that the data they receive is genuine.
+
+    If you do not protect publication, your site probably has a "Cross-Site
+    Request Forgery":/security/csrf.html (CSRF) vulnerability, and possibly a
+    "Cross-Site Scripting":/security/javascript.html (XSS) one too.
+
+    Protecting publication on the server side is simpler than protecting
+    subscription, because publication messages (those with channels other than
+    @/meta/*@) cannot be addressed to wildcards. So, to protect a channel's
+    publications, you _only_ need to check that literal channel name.
+
+    The channel the message is being published to will be in the
+    @message.channel@ field. An important fact to remember here is that messages
+    are forwarded verbatim to other clients, so if they contain authentication
+    data you should delete this from the message during the @authorized()@
+    function so it is not leaked to third parties.
+
+    <pre>var channel = '/foo/bar/qux';
+
+    var authorized = function(message) {
+      // returns true or false
+    };
+
+    server.addExtension({
+      incoming: function(message, callback) {
+        if (message.channel === channel) {
+          if (!authorized(message))
+      	    message.error = '403::Authentication required';
+        }
+        callback(message);
+      }
+    });</pre>
+
+    See "Authentication":/security/authentication.html for a discussing of the
+    @authorized()@ function.
+

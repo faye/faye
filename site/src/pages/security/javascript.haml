@@ -1,0 +1,32 @@
+.content
+  = partial 'security_navigation'
+
+  :textile
+    h4. Publishing JavaScript
+
+    Most realtime applications work by pushing data to the client for it to act
+    on. Assuming the data can be trusted by the client, this is a good setup:
+    the client's behaviour is somewhat constrained. It can only do what its code
+    allows it to do, with the caveat that some crafted inputs may lead to
+    unexpected behaviour.
+
+    However some realtime applications directly script the client by pushing
+    JavaScript code that the client runs with @eval()@. This is extremely
+    dangerous unless you make sure that nobody but your own private servers can
+    publish to your Faye server. I recommend that realtime apps operate by
+    exchanging data, not sending code. If anyone but your own server-side
+    applications can push JavaScript unchecked, your site has a serious XSS
+    problem that can allow an attacker to easily steal the user's session and
+    other private data.
+
+    To illustrate how easy this is, I have in the past hijacked the browsers of
+    all the attendees at a conference that were running a demo app hosted by the
+    speaker. The speaker put the app's publishing key on the screen and the
+    application ran any JavaScript pushed to it, so was trivial to exploit. Of
+    course, normally this key would have been kept private, but if you don't
+    have any such key your app automatically has an XSS hole.
+
+    A JavaScript-pushing server can be made safe by ensuring your clients only
+    run code sent by your application, and this can be done by turning Faye into
+    a "push-only server":/security/push.html.
+
