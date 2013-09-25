@@ -71,7 +71,7 @@
     <pre>config.middleware.insert_after ActionDispatch::Session::CookieStore,
                                    Faye::RackAdapter,
                                    :extensions => [CsrfProtection.new],
-                                   :mount      => '/faye',
+                                   :mount      => '/bayeux',
                                    :timeout    => 25</pre>
 
     Finally you need to make the client attach the CSRF token to all messages it
@@ -79,7 +79,7 @@
     @csrf-token@, and you can use jQuery to grab its content and attach it to
     outgoing messages.
 
-    <pre>var client = new Faye.Client('/faye');
+    <pre>var client = new Faye.Client('/bayeux');
 
     client.addExtension({
       outgoing: function(message, callback) {
@@ -124,7 +124,7 @@
 
     use Faye::RackAdapter,
         :extensions => [CsrfProtection.new],
-        :mount      => '/faye',
+        :mount      => '/bayeux',
         :timeout    => 25
 
     run Sinatra::Application</pre>
@@ -137,7 +137,94 @@
 
     And finally, configure the client to attach this token to outgoing messages.
 
-    <pre>var client = new Faye.Client('/faye');
+    <pre>var client = new Faye.Client('/bayeux');
+
+    client.addExtension({
+      outgoing: function(message, callback) {
+        message.ext = message.ext || {};
+        message.ext.csrfToken = $('meta[name=csrf-token]').attr('content');
+        callback(message);
+      }
+    });</pre>
+
+    h4. Example: Express
+
+    Express uses Connect middlewares to provide session support and CSRF
+    protection.  With a little work, you can use these middlewares with Faye to
+    include CSRF protection in your extensions.
+
+    Start by adding the @cookieParser@, @cookieSession@ and @csrf@ middlewares
+    to your stack. Here's a quick example with an app with one request handler.
+    We keep a reference to the @cookieParser@ and @cookieSession@ middlewares
+    since we'll need to use them to process Faye requests.
+
+    <pre>var express = require('express'),
+        ejs     = require('ejs'),
+        app     = express(),
+        parser  = express.cookieParser(),
+        session = express.cookieSession({secret: '55912e33cad379c8ff64c8a97fe2f096ef013111'});
+
+    app.use(parser);
+    app.use(session);
+    app.use(express.csrf());
+
+    app.engine('html', ejs.renderFile);
+
+    app.get('/', function(request, response) {
+      response.render('index.html', {request: request});
+    });
+
+    var server = app.listen(8000);</pre>
+
+    Next, attach the Faye server to your app.
+
+    <pre>var faye = require('faye');
+
+    var bayeux = new faye.NodeAdapter({mount: '/bayeux', timeout: 45});
+    bayeux.attach(server);</pre>
+
+    Now you can add an extension that checks whether the incoming message has a
+    CSRF token that matches the one in the session. Since this requires session
+    access but Faye is outside the Connect middleware stack, you need to use the
+    middleware you created earlier to pre-process the request before your
+    extension handles it. You can do this with a helper function:
+
+    <pre>var EventEmitter = require('events').EventEmitter;
+    
+    var buildSession = function(request, callback) {
+      var response = new EventEmitter();
+      parser(request, response, function() {
+        session(request, response, callback);
+      });
+    };</pre>
+
+    Now you can the CSRF protection extension. Remember to delete @csrfToken@
+    from the message so it's not forwarded to any subscribers.
+
+    <pre>bayeux.addExtension({
+      incoming: function(message, request, callback) {
+        buildSession(request, function() {
+          var sessionToken = request.session._csrfSecret,
+              messageToken = message.ext && message.ext.csrfToken;
+
+          if (message.ext) delete message.ext.csrfToken;
+
+          if (sessionToken !== messageToken)
+            message.error = '403::Access denied';
+
+          callback(message);
+        });
+      }
+    });</pre>
+
+    Finally, you need to render the CSRF token in your templates:
+
+    <pre><meta name="csrf-token" content="<%= request.session._csrfSecret %>"></pre>
+
+    And use jQuery to pick that token up and attach it to outgoing messages from
+    the client:
+
+    <pre>var client = new Faye.Client('/bayeux');
 
     client.addExtension({
       outgoing: function(message, callback) {
