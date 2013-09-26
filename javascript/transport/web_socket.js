@@ -56,14 +56,16 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
       self.removeTimeout('ping');
       self.setDeferredStatus('unknown');
 
+      var pending = self._pending ? self._pending.toArray() : [];
+      delete self._pending;
+
       if (wasConnected) {
-        if (self._pending) self.handleError(self._pending.toArray(), true);
+        self.handleError(pending, true);
       } else if (self._everConnected) {
-        if (self._pending) self.handleError(self._pending.toArray());
+        self.handleError(pending);
       } else {
         self.setDeferredStatus('failed');
       }
-      delete self._pending;
     };
 
     socket.onmessage = function(event) {

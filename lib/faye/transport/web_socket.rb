@@ -76,14 +76,16 @@ module Faye
         remove_timeout(:ping)
         set_deferred_status(:unknown)
 
+        pending  = @pending ? @pending.to_a : []
+        @pending = nil
+
         if was_connected
-          handle_error(@pending.to_a, true) if @pending
+          handle_error(pending, true)
         elsif @ever_connected
-          handle_error(@pending.to_a) if @pending
+          handle_error(pending)
         else
           set_deferred_status(:failed)
         end
-        @pending = nil
       end
 
       socket.onmessage = lambda do |event|
