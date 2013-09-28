@@ -63,7 +63,7 @@
       It does not guarantee that the ID is unique; this is the responsibility of
       the engine.
     * *@proxy.trigger(event_type, *args)@* - Triggers events that the user can
-      listen to using @bind()@. The engine is required to emit these events at
+      listen to using @on()@. The engine is required to emit these events at
       certain times as detailed below, e.g.
       @proxy.trigger(:disconnect, client_id)@.
     * *@proxy.timeout@* - Returns the server's connection timeout in seconds.
@@ -77,12 +77,12 @@
     The @proxy@ also emits two events to let you know when a particular client
     connects and disconnects from the server. These correspond with the return
     value of @proxy.has_connection?(client_id)@ changing between @true@ and
-    @false@. You can listen to these events using the @bind()@ method.
+    @false@. You can listen to these events using the @on()@ method.
 
-    * *@proxy.bind('connection:open') { |client_id| }@* - Fires when the
+    * *@proxy.on('connection:open') { |client_id| }@* - Fires when the
       client with ID @client_id@ connects to the server, either by opening a
       socket or sending a @/meta/connect@ request.
-    * *@proxy.bind('connection:close') { |client_id| }@* - Fires when the
+    * *@proxy.on('connection:close') { |client_id| }@* - Fires when the
       client with ID @client_id@ disconnects from the server, either by closing
       a socket or by the server sending a @/meta/connect@ response. Note this
       does not mean the client's session has ended, it just means it does not

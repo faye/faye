@@ -14,7 +14,7 @@
 
     <pre>bayeux = Faye::RackAdapter.new(:mount => '/faye', :timeout => 25)
 
-    bayeux.bind(:handshake) do |client_id|
+    bayeux.on(:handshake) do |client_id|
       # event listener logic
     end</pre>
 

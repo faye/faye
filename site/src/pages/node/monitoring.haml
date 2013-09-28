@@ -14,7 +14,7 @@
 
     <pre>var bayeux = new Faye.NodeAdapter({mount: '/faye', timeout: 45})
 
-    bayeux.bind('handshake', function(clientId) {
+    bayeux.on('handshake', function(clientId) {
       // event listener logic
     })</pre>
 
