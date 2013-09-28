@@ -1,4 +1,4 @@
-### 1.0.0 / TODO
+### 1.0.0 / 2013-10-01
 
 * Client changes:
   * Allow clients to be instantiated with URI objects rather than strings
