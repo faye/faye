@@ -32,7 +32,7 @@ EngineSteps = EM::RSpec.async_steps do
         @inboxes[name] << message
       end
     end
-    EM.add_timer(0.01, &resume)
+    EM.add_timer(0.1, &resume)
   end
 
   def destroy_client(name, &resume)
@@ -72,13 +72,13 @@ EngineSteps = EM::RSpec.async_steps do
       message = {"id" => Faye::Engine.random}.merge(message)
       engine.publish(message)
     end
-    EM.add_timer(0.01, &resume)
+    EM.add_timer(0.1, &resume)
   end
 
   def publish_by(name, message, &resume)
     message = {"clientId" => @clients[name], "id" => Faye::Engine.random}.merge(message)
     engine.publish(message)
-    EM.add_timer(0.01, &resume)
+    EM.add_timer(0.1, &resume)
   end
 
   def ping(name, &resume)
