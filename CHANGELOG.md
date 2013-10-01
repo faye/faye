@@ -12,7 +12,6 @@
   * Support cookies across all transports when using the client on Node.js or Ruby
   * Support custom headers in the `cross-origin-long-polling` and server-side `websocket` transports
 * Adapter changes:
-  * Add an `origins` option to the server to whitelist authorized origins
   * Support the `rack.hijack` streaming API
   * Migrate to MultiJson for JSON handling on Ruby, allowing use of JRuby
   * Escape U+2028 and U+2029 in JSON-P output
