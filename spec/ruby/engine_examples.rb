@@ -5,6 +5,7 @@ root = File.expand_path('../../..', __FILE__)
 require root + '/vendor/em-rspec/lib/em-rspec'
 require root + '/spec/ruby/encoding_helper'
 
+require root + '/lib/faye/mixins/deferrable'
 require root + '/lib/faye/mixins/logging'
 require root + '/lib/faye/mixins/publisher'
 require root + '/lib/faye/mixins/timeouts'
