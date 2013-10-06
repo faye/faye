@@ -59,7 +59,7 @@ module Faye
       if message
         receive(envelopes, message)
       else
-        handle_error(messages)
+        handle_error(envelopes)
       end
     end
   end
