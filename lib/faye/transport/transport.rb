@@ -67,7 +67,7 @@ module Faye
       string = encode(@outbox)
       return if string.size < @client.max_request_size
       last = @outbox.pop
-      flush(@outbox)
+      flush
       @outbox.push(last) if last
     end
 
