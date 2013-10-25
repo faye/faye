@@ -8,7 +8,7 @@ describe Faye::Transport do
   let :client do
     double("client", :endpoint         => URI.parse("http://example.com/"),
                      :endpoints        => {},
-                     :max_request_size => 2048,
+                     :max_request_size => 256,
                      :cookies          => nil,
                      :headers          => {},
                      :transports       => {})
@@ -127,6 +127,26 @@ describe Faye::Transport do
         @transport.should_receive(:request).with([envelope("channel" => "/meta/connect")])
         send({"channel" => "/meta/connect"})
         clock.tick(0.01)
+      end
+
+      it "flushes a large batch succesfully" do
+        lambda {
+          transport = Faye::Transport.new(client,"")
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.send(Faye::Envelope.new({'channel' => Faye::Channel::HANDSHAKE}))
+          transport.flush_large_batch
+        }.should_not raise_exception
       end
     end
 
