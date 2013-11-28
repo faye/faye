@@ -63,7 +63,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   describe("handshake", function() { with(this) {
     before(function() { this.createClient() })
 
-   it("creates a transport the server must support", function() { with(this) {
+    it("creates a transport the server must support", function() { with(this) {
       expect(Faye.Transport, "get").given(instanceOf(Faye.Client),
                                           ["long-polling", "callback-polling", "in-process"],
                                           [])
@@ -71,7 +71,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       client.handshake()
     }})
 
-   it("sends a handshake message to the server", function() { with(this) {
+    it("sends a handshake message to the server", function() { with(this) {
       expect(transport, "send").given(envelope({
         channel:  "/meta/handshake",
         version:  "1.0",

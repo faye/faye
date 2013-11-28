@@ -121,7 +121,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
 
   before(function() { with(this) {
     this.server = {}
-    expect(Faye, "Server").given(options()).returning(server)
+    expect("new", Faye, "Server").given(options()).returning(server)
     start_server(8282)
   }})
 
