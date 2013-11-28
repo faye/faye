@@ -2,7 +2,8 @@
 
 root = File.expand_path('../../..', __FILE__)
 
-require root + '/vendor/em-rspec/lib/em-rspec'
+require 'rspec/em'
+
 require root + '/spec/ruby/encoding_helper'
 
 require root + '/lib/faye/mixins/deferrable'
@@ -14,7 +15,7 @@ require root + '/lib/faye/protocol/channel'
 require root + '/lib/faye/protocol/grammar'
 require root + '/lib/faye/engines/proxy'
 
-EngineSteps = EM::RSpec.async_steps do
+EngineSteps = RSpec::EM.async_steps do
   def create_client(name, &resume)
     @inboxes ||= {}
     @clients ||= {}

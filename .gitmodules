@@ -1,3 +1,0 @@
-[submodule "vendor/em-rspec"]
-	path = vendor/em-rspec
-	url = git://github.com/jcoglan/em-rspec.git

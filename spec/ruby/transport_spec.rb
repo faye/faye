@@ -72,7 +72,7 @@ describe Faye::Transport do
   end
 
   describe :send do
-    include EM::RSpec::FakeClock
+    include RSpec::EM::FakeClock
     before { clock.stub }
     after { clock.reset }
 

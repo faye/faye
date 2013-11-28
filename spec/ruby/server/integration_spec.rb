@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-IntegrationSteps = EM::RSpec.async_steps do
+IntegrationSteps = RSpec::EM.async_steps do
   class Tagger
     def incoming(message, callback)
       message["data"]["tagged"] = true if message["data"]
