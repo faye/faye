@@ -22,7 +22,10 @@ module Faye
     end
 
     def encode(envelopes)
-      ''
+      Faye.to_json(envelopes.map { |e| e.message })
+    end
+
+    def request(envelopes)
     end
 
     def connection_type
