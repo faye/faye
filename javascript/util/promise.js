@@ -15,8 +15,8 @@ var PENDING   = 0,
     FULFILLED = 1,
     REJECTED  = 2;
 
-var FORWARD = function(x) { return x },
-    BREAK   = function(x) { throw x  };
+var RETURN = function(x) { return x },
+    THROW  = function(x) { throw x  };
 
 var Promise = function(task) {
   this._state     = PENDING;
@@ -31,48 +31,67 @@ var Promise = function(task) {
 };
 
 Promise.prototype.then = function(callback, errback) {
-  var self = this;
-  return new Promise(function(fulfill, reject) {
-    var next = {fulfill: fulfill, reject: reject};
+  var next = {}, self = this;
+
+  next.promise = new Promise(function(fulfill, reject) {
+    next.fulfill = fulfill;
+    next.reject  = reject;
+
     registerCallback(self, callback, next);
     registerErrback(self, errback, next);
   });
+  return next.promise;
 };
 
 var registerCallback = function(promise, callback, next) {
-  if (typeof callback !== 'function') callback = FORWARD;
+  if (typeof callback !== 'function') callback = RETURN;
   var handler = function(value) { invoke(callback, value, next) };
   if (promise._state === PENDING) {
     promise._callbacks.push(handler);
   } else if (promise._state === FULFILLED) {
-    defer(function() { handler(promise._value) });
+    handler(promise._value);
   }
 };
 
 var registerErrback = function(promise, errback, next) {
-  if (typeof errback !== 'function') errback = BREAK;
+  if (typeof errback !== 'function') errback = THROW;
   var handler = function(reason) { invoke(errback, reason, next) };
   if (promise._state === PENDING) {
     promise._errbacks.push(handler);
   } else if (promise._state === REJECTED) {
-    defer(function() { handler(promise._reason) });
+    handler(promise._reason);
   }
 };
 
 var invoke = function(fn, value, next) {
+  defer(function() { _invoke(fn, value, next) });
+};
+
+var _invoke = function(fn, value, next) {
+  var outcome, type, then, called;
+
   try {
-    var outcome = fn(value);
-    if (outcome && typeof outcome.then === 'function') {
-      outcome.then(next.fulfill, next.reject);
-    } else {
-      next.fulfill(outcome);
-    }
+    outcome = fn(value);
+    type    = typeof outcome;
+    then    = outcome !== null && (type === 'function' || type === 'object') && outcome.then;
+    called  = false;
+
+    if (outcome === next.promise) return next.reject(new TypeError());
+
+    if (typeof then !== 'function') return next.fulfill(outcome);
+
+    then.call(outcome, function(v) {
+      if (called !== (called = true)) _invoke(RETURN, v, next);
+    }, function(r) {
+      if (called !== (called = true)) next.reject(r);
+    });
+
   } catch (error) {
-    next.reject(error);
+    if (called !== (called = true)) next.reject(error);
   }
 };
 
-var fulfill = Promise.fulfill = function(promise, value) {
+var fulfill = Promise.fulfill = Promise.resolve = function(promise, value) {
   if (promise._state !== PENDING) return;
 
   promise._state    = FULFILLED;
@@ -96,17 +115,17 @@ var reject = Promise.reject = function(promise, reason) {
 
 Promise.defer = defer;
 
-Promise.pending = function() {
+Promise.deferred = Promise.pending = function() {
   var tuple = {};
 
   tuple.promise = new Promise(function(fulfill, reject) {
-    tuple.fulfill = fulfill;
+    tuple.fulfill = tuple.resolve = fulfill;
     tuple.reject  = reject;
   });
   return tuple;
 };
 
-Promise.fulfilled = function(value) {
+Promise.fulfilled = Promise.resolved = function(value) {
   return new Promise(function(fulfill, reject) { fulfill(value) });
 };
 
