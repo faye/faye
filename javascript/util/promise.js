@@ -81,13 +81,19 @@ var _invoke = function(fn, value, next) {
     if (typeof then !== 'function') return next.fulfill(outcome);
 
     then.call(outcome, function(v) {
-      if (called !== (called = true)) _invoke(RETURN, v, next);
+      if (called) return;
+      called = true;
+      _invoke(RETURN, v, next);
     }, function(r) {
-      if (called !== (called = true)) next.reject(r);
+      if (called) return;
+      called = true;
+      next.reject(r);
     });
 
   } catch (error) {
-    if (called !== (called = true)) next.reject(error);
+    if (called) return;
+    called = true;
+    next.reject(error);
   }
 };
 
