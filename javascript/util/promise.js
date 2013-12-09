@@ -68,13 +68,12 @@ var invoke = function(fn, value, next) {
 };
 
 var _invoke = function(fn, value, next) {
-  var outcome, type, then, called;
+  var called = false, outcome, type, then;
 
   try {
     outcome = fn(value);
     type    = typeof outcome;
     then    = outcome !== null && (type === 'function' || type === 'object') && outcome.then;
-    called  = false;
 
     if (outcome === next.promise) return next.reject(new TypeError());
 
