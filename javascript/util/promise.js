@@ -75,7 +75,8 @@ var _invoke = function(fn, value, next) {
     type    = typeof outcome;
     then    = outcome !== null && (type === 'function' || type === 'object') && outcome.then;
 
-    if (outcome === next.promise) return next.reject(new TypeError());
+    if (outcome === next.promise)
+      return next.reject(new TypeError('Recursive promise chain detected'));
 
     if (typeof then !== 'function') return next.fulfill(outcome);
 
