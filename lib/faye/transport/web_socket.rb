@@ -32,9 +32,11 @@ module Faye
     end
 
     def request(envelopes)
+      @pending ||= Set.new
+      envelopes.each { |envelope| @pending.add(envelope) }
+
       callback do |socket|
         next unless socket
-        envelopes.each { |envelope| @pending.add(envelope) }
         messages = envelopes.map { |e| e.message }
         socket.send(Faye.to_json(messages))
       end
@@ -56,7 +58,6 @@ module Faye
       socket.onopen = lambda do |*args|
         store_cookies(socket.headers['Set-Cookie'])
         @socket = socket
-        @pending = Set.new
         @state = CONNECTED
         @ever_connected = true
         ping

@@ -12,9 +12,11 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   },
 
   request: function(envelopes) {
+    this._pending = this._pending || new Faye.Set();
+    for (var i = 0, n = envelopes.length; i < n; i++) this._pending.add(envelopes[i]);
+
     this.callback(function(socket) {
       if (!socket) return;
-      for (var i = 0, n = envelopes.length; i < n; i++) this._pending.add(envelopes[i]);
       var messages = Faye.map(envelopes, function(e) { return e.message });
       socket.send(Faye.toJSON(messages));
     }, this);
@@ -36,7 +38,6 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     socket.onopen = function() {
       if (socket.headers) self._storeCookies(socket.headers['set-cookie']);
       self._socket = socket;
-      self._pending = new Faye.Set();
       self._state = self.CONNECTED;
       self._everConnected = true;
       self._ping();
