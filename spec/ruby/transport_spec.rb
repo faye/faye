@@ -9,7 +9,7 @@ describe Faye::Transport do
     double("client", :endpoint         => URI.parse("http://example.com/"),
                      :endpoints        => {},
                      :max_request_size => 2048,
-                     :cookies          => nil,
+                     :cookies          => CookieJar::Jar.new,
                      :headers          => {},
                      :transports       => {})
   end
