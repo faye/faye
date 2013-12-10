@@ -24,7 +24,7 @@ Faye.Engine.Proxy = Faye.Class({
 
     this.bind('close', function(clientId) {
       var self = this;
-      Faye.Promise.defer(function() { self.closeConnection(clientId) });
+      Faye.Promise.defer(function() { self.flush(clientId) });
     }, this);
 
     this.debug('Created new engine: ?', this._options);
