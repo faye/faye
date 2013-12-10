@@ -61,6 +61,10 @@ Faye.NodeAdapter = Faye.Class({
     return this._server.removeExtension(extension);
   },
 
+  close: function() {
+    return this._server.close();
+  },
+
   getClient: function() {
     return this._client = this._client || new Faye.Client(this._server);
   },

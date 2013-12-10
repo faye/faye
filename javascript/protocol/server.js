@@ -10,6 +10,10 @@ Faye.Server = Faye.Class({
     this.info('Created new server: ?', this._options);
   },
 
+  close: function() {
+    return this._engine.close();
+  },
+
   openSocket: function(clientId, socket, request) {
     if (!clientId || !socket) return;
     this._engine.openSocket(clientId, new Faye.Server.Socket(this, socket, request));

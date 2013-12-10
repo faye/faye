@@ -1,10 +1,7 @@
 Faye.Engine.Memory = function(server, options) {
   this._server    = server;
   this._options   = options || {};
-  this._namespace = new Faye.Namespace();
-  this._clients   = {};
-  this._channels  = {};
-  this._messages  = {};
+  this.reset();
 };
 
 Faye.Engine.Memory.create = function(server, options) {
@@ -12,6 +9,18 @@ Faye.Engine.Memory.create = function(server, options) {
 };
 
 Faye.Engine.Memory.prototype = {
+  disconnect: function() {
+    this.reset();
+    this.removeAllTimeouts();
+  },
+
+  reset: function() {
+    this._namespace = new Faye.Namespace();
+    this._clients   = {};
+    this._channels  = {};
+    this._messages  = {};
+  },
+
   createClient: function(callback, context) {
     var clientId = this._namespace.generate();
     this._server.debug('Created new client ?', clientId);

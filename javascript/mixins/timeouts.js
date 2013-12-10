@@ -15,6 +15,11 @@ Faye.Timeouts = {
     if (!timeout) return;
     clearTimeout(timeout);
     delete this._timeouts[name];
+  },
+
+  removeAllTimeouts: function() {
+    this._timeouts = this._timeouts || {};
+    for (var name in this._timeouts) this.removeTimeout(name);
   }
 };
 
