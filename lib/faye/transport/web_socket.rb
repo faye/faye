@@ -66,7 +66,7 @@ module Faye
 
       closed = false
       socket.onclose = socket.onerror = lambda do |*args|
-        return if closed
+        next if closed
         closed = true
 
         was_connected = (@state == CONNECTED)
