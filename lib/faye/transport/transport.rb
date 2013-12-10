@@ -86,7 +86,7 @@ module Faye
   private
 
     def get_cookies
-      return @client.cookies.get_cookies(@endpoint.to_s) * ';'
+      return @client.cookies.get_cookies(@endpoint.to_s).join(';')
     end
 
     def store_cookies(set_cookie)
