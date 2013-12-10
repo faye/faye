@@ -9,11 +9,11 @@ module Faye
       :debug  => 0
     }
 
-  private
-
     LOG_LEVELS.each do |level, value|
       define_method(level) { |*args| write_log(args, level) }
     end
+
+  private
 
     def write_log(message_args, level)
       return unless Faye.logger
