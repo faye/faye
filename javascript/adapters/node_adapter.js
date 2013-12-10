@@ -1,4 +1,5 @@
-var crypto = require('crypto'),
+var concat = require('concat-stream'),
+    crypto = require('crypto'),
     fs     = require('fs'),
     http   = require('http'),
     https  = require('https'),
@@ -13,15 +14,6 @@ var crypto = require('crypto'),
 Faye.WebSocket   = require('faye-websocket');
 Faye.EventSource = Faye.WebSocket.EventSource;
 Faye.CookieJar   = require('cookiejar').CookieJar;
-
-Faye.withDataFor = function(transport, callback, context) {
-  var data = '';
-  transport.setEncoding('utf8');
-  transport.on('data', function(chunk) { data += chunk });
-  transport.on('end', function() {
-    callback.call(context, data);
-  });
-};
 
 Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '/bayeux',
@@ -118,7 +110,9 @@ Faye.NodeAdapter = Faye.Class({
       return this._callWithParams(request, response, requestUrl.query);
 
     if (requestMethod === 'POST')
-      return Faye.withDataFor(request, function(data) {
+      return request.pipe(concat(function(data) {
+        data = data.toString('utf8');
+
         var type   = (request.headers['content-type'] || '').split(';')[0],
             params = (type === 'application/json')
                    ? {message: data}
@@ -126,7 +120,7 @@ Faye.NodeAdapter = Faye.Class({
 
         request.body = data;
         self._callWithParams(request, response, params);
-      });
+      }));
 
     this._returnError(response, {message: 'Unrecognized request type'});
   },
