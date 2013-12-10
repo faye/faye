@@ -19,6 +19,10 @@ module Faye
       info 'Created new server: ?', @options
     end
 
+    def close
+      @engine.close
+    end
+
     def open_socket(client_id, socket, env)
       return unless client_id and socket
       @engine.open_socket(client_id, Socket.new(self, socket, env))

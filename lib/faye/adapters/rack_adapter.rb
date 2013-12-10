@@ -48,6 +48,10 @@ module Faye
       @server.remove_extension(extension)
     end
 
+    def close
+      @server.close
+    end
+
     def get_client
       @client ||= Client.new(@server)
     end

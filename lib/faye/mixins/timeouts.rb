@@ -17,6 +17,11 @@ module Faye
       EventMachine.cancel_timer(timeout)
       @timeouts.delete(name)
     end
+
+    def remove_all_timeouts
+      @timeouts ||= {}
+      @timeouts.keys.each { |name| remove_timeout(name) }
+    end
   end
 end
 

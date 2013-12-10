@@ -11,6 +11,15 @@ module Faye
       def initialize(server, options)
         @server    = server
         @options   = options
+        reset
+      end
+
+      def disconnect
+        reset
+        remove_all_timeouts
+      end
+
+      def reset
         @namespace = Namespace.new
         @clients   = {}
         @channels  = {}

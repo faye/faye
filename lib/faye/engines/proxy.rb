@@ -48,7 +48,7 @@ module Faye
         @engine      = engine_class.create(self, @options)
 
         bind :close do |client_id|
-          EventMachine.next_tick { close_connection(client_id) }
+          EventMachine.next_tick { flush(client_id) }
         end
 
         debug 'Created new engine: ?', @options
@@ -105,6 +105,11 @@ module Faye
         debug 'Flushing connection for ?', client_id
         conn = connection(client_id, false)
         conn.flush!(true) if conn
+      end
+
+      def close
+        @connections.keys.each { |client_id| flush(client_id) }
+        @engine.disconnect
       end
 
       def disconnect
