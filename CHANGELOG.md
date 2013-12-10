@@ -1,3 +1,12 @@
+### 1.0.1 / 2013-12-10
+
+* Add `Adapter#close()` method for gracefully shutting down the server
+* Fix error recover bug in WebSocket that made transport cycle through `up`/`down` state
+* Update Promise implementation to pass `promises-aplus-tests 2.0`
+* Correct some incorrect variable names in the Ruby transports
+* Make logging methods public to fix a problem on Ruby 2.1
+
+
 ### 1.0.0 / 2013-10-01
 
 * Client changes:

@@ -190,6 +190,12 @@
     there are any queued messages for it, use
     @proxy.deliver(client_id, messages)@ to send them to the client.
 
+    h4. @engine.disconnect@
+
+    This is called when the server is shut down. The engine should close any
+    connections is has to external processes like databases and cancel any
+    timeouts it has pending.
+
     h4. Disconnecting inactive clients
 
     When a client makes a connection, the engine will receive a call to
