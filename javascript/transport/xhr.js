@@ -21,7 +21,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
     }
 
     var abort = function() { xhr.abort() };
-    Faye.Event.on(Faye.ENV, 'beforeunload', abort);
+    if (Faye.ENV.onbeforeunload !== undefined) Faye.Event.on(Faye.ENV, 'beforeunload', abort);
 
     xhr.onreadystatechange = function() {
       if (!xhr || xhr.readyState !== 4) return;
@@ -31,7 +31,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
           text          = xhr.responseText,
           successful    = (status >= 200 && status < 300) || status === 304 || status === 1223;
 
-      Faye.Event.detach(Faye.ENV, 'beforeunload', abort);
+      if (Faye.ENV.onbeforeunload !== undefined) Faye.Event.detach(Faye.ENV, 'beforeunload', abort);
       xhr.onreadystatechange = function() {};
       xhr = null;
 
