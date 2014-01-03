@@ -10,7 +10,7 @@
 , "main"            : "./node/faye-node"
 , "browserify"      : "./browser/faye-browser"
 
-, "dependencies"    : { "concat-stream": ""
+, "dependencies"    : { "concat-stream": "1.2.x"
                       , "cookiejar": ""
                       , "csprng": ""
                       , "faye-websocket": ">=0.7.0"
