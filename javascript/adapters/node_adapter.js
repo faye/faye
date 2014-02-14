@@ -13,7 +13,7 @@ var concat = require('concat-stream'),
 
 Faye.WebSocket   = require('faye-websocket');
 Faye.EventSource = Faye.WebSocket.EventSource;
-Faye.CookieJar   = require('cookiejar').CookieJar;
+Faye.Cookies     = require('tough-cookie');
 
 Faye.NodeAdapter = Faye.Class({
   DEFAULT_ENDPOINT: '/bayeux',

@@ -11,9 +11,9 @@
 , "browserify"      : "./browser/faye-browser"
 
 , "dependencies"    : { "concat-stream": ""
-                      , "cookiejar": ""
                       , "csprng": ""
                       , "faye-websocket": ">=0.7.0"
+                      , "tough-cookie": ""
                       }
 , "devDependencies" : { "jstest": "~1.0.0"
                       , "mime": "~1.2.0"
