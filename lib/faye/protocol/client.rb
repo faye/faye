@@ -240,7 +240,7 @@ module Faye
       end
 
       dead = @channels.unsubscribe(channel, block)
-      return unless dead
+      return if dead
 
       connect {
         info('Client ? attempting to unsubscribe from ?', @client_id, channel)
