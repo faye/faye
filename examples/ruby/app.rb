@@ -25,15 +25,15 @@ App = Faye::RackAdapter.new(Sinatra::Application,
 def App.log(message)
 end
 
-App.bind(:subscribe) do |client_id, channel|
+App.on(:subscribe) do |client_id, channel|
   puts "[  SUBSCRIBE] #{client_id} -> #{channel}"
 end
 
-App.bind(:unsubscribe) do |client_id, channel|
+App.on(:unsubscribe) do |client_id, channel|
   puts "[UNSUBSCRIBE] #{client_id} -> #{channel}"
 end
 
-App.bind(:disconnect) do |client_id|
+App.on(:disconnect) do |client_id|
   puts "[ DISCONNECT] #{client_id}"
 end
 
