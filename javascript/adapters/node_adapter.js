@@ -1,5 +1,4 @@
-var concat = require('concat-stream'),
-    crypto = require('crypto'),
+var crypto = require('crypto'),
     fs     = require('fs'),
     http   = require('http'),
     https  = require('https'),
@@ -110,17 +109,15 @@ Faye.NodeAdapter = Faye.Class({
       return this._callWithParams(request, response, requestUrl.query);
 
     if (requestMethod === 'POST')
-      return request.pipe(concat(function(data) {
-        data = data.toString('utf8');
-
+      return this._concatStream(request, function(data) {
         var type   = (request.headers['content-type'] || '').split(';')[0],
             params = (type === 'application/json')
                    ? {message: data}
                    : querystring.parse(data);
 
         request.body = data;
-        self._callWithParams(request, response, params);
-      }));
+        this._callWithParams(request, response, params);
+      }, this);
 
     this._returnError(response, {message: 'Unrecognized request type'});
   },
@@ -217,6 +214,27 @@ Faye.NodeAdapter = Faye.Class({
     };
     response.writeHead(200, headers);
     response.end('');
+  },
+
+  _concatStream: function(stream, callback, context) {
+    var chunks = [],
+        length = 0;
+
+    stream.on('data', function(chunk) {
+      chunks.push(chunk);
+      length += chunk.length;
+    });
+
+    stream.on('end', function() {
+      var buffer = new Buffer(length),
+          offset = 0;
+
+      for (var i = 0, n = chunks.length; i < n; i++) {
+        chunks[i].copy(buffer, offset);
+        offset += chunks[i].length;
+      }
+      callback.call(context, buffer.toString('utf8'));
+    });
   },
 
   _formatRequest: function(request) {
