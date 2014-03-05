@@ -40,6 +40,8 @@ var Faye = {
       i = object.length;
       while (i--) clone[i] = Faye.copyObject(object[i]);
       return clone;
+    } else if (object instanceof Date) {
+        return new Date(object);
     } else if (typeof object === 'object') {
       clone = (object === null) ? null : {};
       for (key in object) clone[key] = Faye.copyObject(object[key]);
