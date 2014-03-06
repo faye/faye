@@ -20,7 +20,7 @@ module Faye
     # down. Better suggestions welcome.
     HTTP_X_NO_CONTENT_LENGTH = 'HTTP_X_NO_CONTENT_LENGTH'
 
-    def initialize(app = nil, options = nil)
+    def initialize(app = nil, options = nil, &block)
       @app     = app if app.respond_to?(:call)
       @options = [app, options].grep(Hash).first || {}
 
@@ -31,6 +31,8 @@ module Faye
       @static = StaticServer.new(ROOT, /\.(?:js|map)$/)
       @static.map(File.basename(@endpoint) + '.js', SCRIPT_PATH)
       @static.map('client.js', SCRIPT_PATH)
+      
+      yield(self) if block_given?
 
       return unless extensions = @options[:extensions]
       [*extensions].each { |extension| add_extension(extension) }
