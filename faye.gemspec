@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
             %w[lib/faye-browser.js lib/faye-browser-min.js lib/faye-browser-min.js.map] +
             Dir.glob('lib/**/*.rb')
   
-  s.add_dependency 'cookiejar', '>= 0.3.0'
+  s.add_dependency 'cookiejar', '0.3.0'
   s.add_dependency 'em-http-request', '>= 0.3.0'
   s.add_dependency 'eventmachine', '>= 0.12.0'
   s.add_dependency 'faye-websocket', '>= 0.7.0'
