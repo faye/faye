@@ -14,7 +14,7 @@ applications, and clients that can be used on the server and in the browser.
 
 (The MIT License)
 
-Copyright (c) 2009-2013 James Coglan and contributors
+Copyright (c) 2009-2014 James Coglan and contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the 'Software'), to deal in
