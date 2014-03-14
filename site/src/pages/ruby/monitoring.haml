@@ -18,6 +18,15 @@
       # event listener logic
     end</pre>
 
+    You when you insert Faye::RackAdapter as Rack middleware from config.ru or
+    Rails config/application.rb, you can provide a block instead:
+
+    <pre>use(Faye::RackAdapter, {:mount => '/faye', :timeout => 25}) do |bayeux|
+      bayeux.on(:handshake) do |client_id|
+        # event listener logic
+      end
+    end</pre>
+
     The available events are:
 
     * *@:handshake [client_id]@* - Triggered when a new client connects and is
