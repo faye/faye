@@ -18,8 +18,17 @@ describe Faye::RackAdapter do
   let(:status)                { last_response.status.to_i }
 
   before do
-    Faye::Server.should_receive(:new).with(options).and_return server
+    Faye::Server.stub(:new).with(options).and_return server
     adapter.stub(:get_client).and_return double("client")
+  end
+
+  describe "monitoring configuration" do
+    it 'should be possible by providing a block to initializer' do
+      yielded = nil
+      probe = lambda {|bayeux| yielded = bayeux}
+      Faye::RackAdapter.new(options, &probe)
+      yielded.should be_instance_of(Faye::RackAdapter)
+    end
   end
 
   describe "POST requests" do
