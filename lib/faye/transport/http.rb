@@ -1,3 +1,5 @@
+require 'uri'
+
 module Faye
 
   class Transport::Http < Transport
@@ -46,6 +48,12 @@ module Faye
                   options = {                 # for em-http-request >= 1.0
                     :inactivity_timeout => 0  # connection inactivity (post-setup) timeout (0 = disable timeout)
                   }
+                  proxy = @endpoint.find_proxy
+                  if proxy
+                    options.merge!({
+                      :proxy => { :host => proxy.host, :port => proxy.port, :type => :http }
+                    })
+                  end
                   EventMachine::HttpRequest.new(@endpoint.to_s, options)
                 else
                   EventMachine::HttpRequest.new(@endpoint.to_s)
