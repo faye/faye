@@ -18,4 +18,3 @@ Faye.Namespace = Faye.Class({
     delete this._used[id];
   }
 });
-

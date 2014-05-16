@@ -122,4 +122,3 @@ Faye.extend(Faye.Channel, {
     }
   })
 });
-

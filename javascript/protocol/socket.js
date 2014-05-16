@@ -17,4 +17,3 @@ Faye.Server.Socket = Faye.Class({
     delete this._socket;
   }
 });
-

@@ -91,4 +91,3 @@ JS.ENV.UriSpec = JS.Test.describe("URI", function() { with(this) {
     }})
   }})
 }})
-

@@ -36,4 +36,3 @@ end
 App.on(:disconnect) do |client_id|
   puts "[ DISCONNECT] #{client_id}"
 end
-

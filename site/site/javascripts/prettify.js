@@ -1396,4 +1396,3 @@ window['PR']
         'PR_TYPE': PR_TYPE
       };
 })();
-

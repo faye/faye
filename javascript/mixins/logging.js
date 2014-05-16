@@ -45,4 +45,3 @@ Faye.Logging = {
       };
     })(key, Faye.Logging.LOG_LEVELS[key]);
 })();
-

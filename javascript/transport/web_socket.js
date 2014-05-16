@@ -138,4 +138,3 @@ if (Faye.Event && Faye.ENV.onbeforeunload !== undefined)
   Faye.Event.on(Faye.ENV, 'beforeunload', function() {
     Faye.Transport.WebSocket._unloaded = true;
   });
-

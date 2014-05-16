@@ -405,4 +405,3 @@ Faye.extend(Faye.Client.prototype, Faye.Deferrable);
 Faye.extend(Faye.Client.prototype, Faye.Publisher);
 Faye.extend(Faye.Client.prototype, Faye.Logging);
 Faye.extend(Faye.Client.prototype, Faye.Extensible);
-

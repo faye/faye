@@ -43,4 +43,3 @@ EM.run {
     end
   end
 }
-

@@ -395,4 +395,3 @@ module Faye
 
   end
 end
-

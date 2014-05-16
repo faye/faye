@@ -143,4 +143,3 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
     itShouldBehaveLike("network transports")
   }})
 }})
-

@@ -145,4 +145,3 @@ else
   Faye.Promise = Promise;
 
 })();
-

@@ -225,4 +225,3 @@ module Faye
 
   end
 end
-

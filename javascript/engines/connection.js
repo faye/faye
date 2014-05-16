@@ -45,4 +45,3 @@ Faye.Engine.Connection = Faye.Class({
 
 Faye.extend(Faye.Engine.Connection.prototype, Faye.Deferrable);
 Faye.extend(Faye.Engine.Connection.prototype, Faye.Timeouts);
-

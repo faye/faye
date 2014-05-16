@@ -78,4 +78,3 @@ describe "server publish" do
     end
   end
 end
-

@@ -82,4 +82,3 @@ JS.ENV.Server.PublishSpec = JS.Test.describe("Server publish", function() { with
     }})
   }})
 }})
-

@@ -8,4 +8,3 @@ Faye.Envelope = Faye.Class({
 });
 
 Faye.extend(Faye.Envelope.prototype, Faye.Deferrable);
-

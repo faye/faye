@@ -28,4 +28,3 @@ Faye.Publisher = {
 
 Faye.extend(Faye.Publisher, Faye.EventEmitter.prototype);
 Faye.Publisher.trigger = Faye.Publisher.emit;
-

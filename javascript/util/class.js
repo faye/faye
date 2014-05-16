@@ -17,4 +17,3 @@ Faye.Class = function(parent, methods) {
 
   return klass;
 };
-

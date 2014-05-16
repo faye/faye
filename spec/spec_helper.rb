@@ -20,4 +20,3 @@ class EnvelopeMatcher
     Faye::Envelope === other and @message == other.message
   end
 end
-

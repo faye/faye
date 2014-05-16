@@ -24,4 +24,3 @@ JS.ENV.PublisherSpec = JS.Test.describe("Publisher", function() { with(this) {
     }})
   }})
 }})
-

@@ -45,4 +45,3 @@ client.bind('transport:down', function() {
 client.bind('transport:up', function() {
   console.log('[CONNECTION UP]');
 });
-

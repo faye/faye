@@ -16,4 +16,3 @@ pong.subscribe('/pong', function() {
 });
 
 setTimeout(function() { ping.publish('/pong', {}) }, 500);
-

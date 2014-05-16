@@ -78,4 +78,3 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
 
 Faye.extend(Faye.Transport.EventSource.prototype, Faye.Deferrable);
 Faye.Transport.register('eventsource', Faye.Transport.EventSource);
-

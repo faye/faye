@@ -141,4 +141,3 @@ module Faye
 
   end
 end
-

@@ -49,4 +49,3 @@ EM.run {
     puts "[CONNECTION UP]"
   end
 }
-

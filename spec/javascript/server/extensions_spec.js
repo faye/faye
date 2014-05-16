@@ -57,4 +57,3 @@ JS.ENV.Server.ExtensionsSpec = JS.Test.describe("Server extensions", function() 
     }})
   }})
 }})
-

@@ -45,4 +45,3 @@ end
 # Re-dock all the browsers when we're finished
 
 Terminus.return_to_dock
-

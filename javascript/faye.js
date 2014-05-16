@@ -134,4 +134,3 @@ if (typeof module !== 'undefined')
   module.exports = Faye;
 else if (typeof window !== 'undefined')
   window.Faye = Faye;
-

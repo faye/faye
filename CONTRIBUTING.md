@@ -19,4 +19,3 @@ npm run-script build
 bundle exec rspec -c spec/
 node spec/node.js
 ```
-

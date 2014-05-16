@@ -48,4 +48,3 @@ when 'thin'
     end
   }
 end
-

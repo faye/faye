@@ -68,4 +68,3 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
 });
 
 Faye.Transport.register('long-polling', Faye.Transport.NodeHttp);
-

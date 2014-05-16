@@ -44,4 +44,3 @@ Faye.Set = Faye.Class({
     return array;
   }
 });
-

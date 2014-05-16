@@ -22,4 +22,3 @@ module Faye
 
   end
 end
-

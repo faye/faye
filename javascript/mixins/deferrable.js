@@ -42,4 +42,3 @@ Faye.Deferrable = {
       delete this._promise;
   }
 };
-

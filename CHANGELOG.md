@@ -340,4 +340,3 @@
 * Ruby Bayeux server and Rack adapter
 * Internally evented using EventMachine, web frontend blocks
 * JavaScript client with `long-polling` and `callback-polling`
-

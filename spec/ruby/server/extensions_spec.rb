@@ -65,4 +65,3 @@ describe "server extensions" do
     end
   end
 end
-

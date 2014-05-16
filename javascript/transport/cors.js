@@ -66,4 +66,3 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
 });
 
 Faye.Transport.register('cross-origin-long-polling', Faye.Transport.CORS);
-

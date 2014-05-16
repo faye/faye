@@ -20,4 +20,3 @@ EM.run {
 
   EM.add_timer(0.5) { ping.publish('/pong', {}) }
 }
-

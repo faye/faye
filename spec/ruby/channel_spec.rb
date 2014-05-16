@@ -14,4 +14,3 @@ describe Faye::Channel do
     end
   end
 end
-

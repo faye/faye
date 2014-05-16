@@ -24,4 +24,3 @@ describe Faye::Publisher do
     end
   end
 end
-

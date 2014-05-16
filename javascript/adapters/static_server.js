@@ -57,4 +57,3 @@ Faye.StaticServer = Faye.Class({
     }
   }
 });
-

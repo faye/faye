@@ -4,4 +4,3 @@ module EncodingHelper
     string.force_encoding("UTF-8")
   end
 end
-

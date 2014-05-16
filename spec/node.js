@@ -44,4 +44,3 @@ JS.require( 'FayeSpec',
             'UriSpec',
             'TransportSpec',
             function() { JS.Test.autorun() })
-

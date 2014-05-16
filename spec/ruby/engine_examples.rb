@@ -422,4 +422,3 @@ shared_examples_for "distributed engine" do
     end
   end
 end
-

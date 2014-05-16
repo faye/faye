@@ -125,4 +125,3 @@ module Faye
     resume.call
   end
 end
-

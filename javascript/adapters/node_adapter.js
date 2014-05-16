@@ -268,4 +268,3 @@ for (var method in Faye.Publisher) (function(method) {
 })(method);
 
 Faye.extend(Faye.NodeAdapter.prototype, Faye.Logging);
-

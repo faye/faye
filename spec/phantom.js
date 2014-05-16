@@ -4,4 +4,3 @@ var options  = {format: 'dot'},
     reporter = new JS.Test.Reporters.Headless(options)
 
 reporter.open('spec/browser.html')
-

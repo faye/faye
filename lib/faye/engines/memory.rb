@@ -119,4 +119,3 @@ module Faye
 
   end
 end
-

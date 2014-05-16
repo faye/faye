@@ -41,4 +41,3 @@ Faye.Event = {
 };
 
 if (Faye.ENV.onunload !== undefined) Faye.Event.on(Faye.ENV, 'unload', Faye.Event.detach, Faye.Event);
-

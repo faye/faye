@@ -22,4 +22,3 @@ Faye.Timeouts = {
     for (var name in this._timeouts) this.removeTimeout(name);
   }
 };
-

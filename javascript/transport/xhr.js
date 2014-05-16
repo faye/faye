@@ -56,4 +56,3 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
 });
 
 Faye.Transport.register('long-polling', Faye.Transport.XHR);
-

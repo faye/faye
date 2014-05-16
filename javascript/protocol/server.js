@@ -310,4 +310,3 @@ Faye.Server = Faye.Class({
 
 Faye.extend(Faye.Server.prototype, Faye.Logging);
 Faye.extend(Faye.Server.prototype, Faye.Extensible);
-

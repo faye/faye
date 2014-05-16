@@ -50,4 +50,3 @@ bayeux.on('disconnect', function(clientId) {
 });
 
 console.log('Listening on ' + port + (secure? ' (https)' : ''));
-

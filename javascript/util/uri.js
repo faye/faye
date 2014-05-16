@@ -80,4 +80,3 @@ Faye.URI = {
     return '?' + pairs.join('&');
   }
 };
-
