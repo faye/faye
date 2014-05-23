@@ -84,34 +84,33 @@ Faye.Client = Faye.Class({
     if (this._state !== this.UNCONNECTED) return;
 
     this._state = this.CONNECTING;
-    var self = this;
 
     this.info('Initiating handshake with ?', Faye.URI.stringify(this.endpoint));
-    this._selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
+    this._selectTransport(Faye.MANDATORY_CONNECTION_TYPES, function() {
+      this._send({
+        channel:                  Faye.Channel.HANDSHAKE,
+        version:                  Faye.BAYEUX_VERSION,
+        supportedConnectionTypes: [this._transport.connectionType]
 
-    this._send({
-      channel:                  Faye.Channel.HANDSHAKE,
-      version:                  Faye.BAYEUX_VERSION,
-      supportedConnectionTypes: [this._transport.connectionType]
+      }, function(response) {
 
-    }, function(response) {
+        if (response.successful) {
+          this._state     = this.CONNECTED;
+          this._clientId  = response.clientId;
 
-      if (response.successful) {
-        this._state     = this.CONNECTED;
-        this._clientId  = response.clientId;
+          this.info('Handshake successful: ?', this._clientId);
 
-        this._selectTransport(response.supportedConnectionTypes);
+          this._selectTransport(response.supportedConnectionTypes, function() {
+            this.subscribe(this._channels.getKeys(), true);
+            if (callback) Faye.Promise.defer(function() { callback.call(context) });
+          }, this);
 
-        this.info('Handshake successful: ?', this._clientId);
-
-        this.subscribe(this._channels.getKeys(), true);
-        if (callback) Faye.Promise.defer(function() { callback.call(context) });
-
-      } else {
-        this.info('Handshake unsuccessful');
-        Faye.ENV.setTimeout(function() { self.handshake(callback, context) }, this._advice.interval);
-        this._state = this.UNCONNECTED;
-      }
+        } else {
+          this.info('Handshake unsuccessful');
+          Faye.ENV.setTimeout(function() { this.handshake(callback, context) }, this._advice.interval);
+          this._state = this.UNCONNECTED;
+        }
+      }, this);
     }, this);
   },
 
@@ -334,14 +333,16 @@ Faye.Client = Faye.Class({
     this.trigger('transport:down');
   },
 
-  _selectTransport: function(transportTypes) {
+  _selectTransport: function(transportTypes, callback, context) {
+
     Faye.Transport.get(this, transportTypes, this._disabled, function(transport) {
       this.debug('Selected ? transport for ?', transport.connectionType, Faye.URI.stringify(transport.endpoint));
 
-      if (transport === this._transport) return;
+      if (transport === this._transport) return callback.call(context);
       if (this._transport) this._transport.close();
 
       this._transport = transport;
+      callback.call(context);
     }, this);
   },
 
