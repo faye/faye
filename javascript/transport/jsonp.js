@@ -18,17 +18,23 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
     endpoint.query.message = Faye.toJSON(messages);
     endpoint.query.jsonp   = callbackName;
 
-    Faye.ENV[callbackName] = function(data) {
+    var cleanup = function() {
       if (!Faye.ENV[callbackName]) return false;
       Faye.ENV[callbackName] = undefined;
       try { delete Faye.ENV[callbackName] } catch (e) {}
       script.parentNode.removeChild(script);
+    };
+
+    Faye.ENV[callbackName] = function(data) {
+      cleanup();
       self.receive(envelopes, data);
     };
 
     script.type = 'text/javascript';
     script.src  = Faye.URI.stringify(endpoint);
     head.appendChild(script);
+
+    return {abort: cleanup};
   }
 }), {
   _cbCount: 0,

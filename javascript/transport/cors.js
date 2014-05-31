@@ -48,6 +48,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
 
     xhr.onprogress = function() {};
     xhr.send(this.encode(envelopes));
+    return xhr;
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {

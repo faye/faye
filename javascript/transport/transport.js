@@ -40,7 +40,9 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (this._outbox.length > 1 && this._connectMessage)
       this._connectMessage.advice = {timeout: 0};
 
-    this.request(this._outbox);
+    var request = this.request(this._outbox), n = this._outbox.length;
+    while (n--)
+      this._outbox[n].errback(function() { if (request) request.abort() });
 
     this._connectMessage = null;
     this._outbox = [];
