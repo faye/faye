@@ -109,7 +109,7 @@ Faye.Client = Faye.Class({
 
       } else {
         this.info('Handshake unsuccessful');
-        Faye.ENV.setTimeout(function() { self.handshake(callback, context) }, this._advice.interval);
+        this.addTimeout("handshake", this._advice.interval / 1000, function() { this.handshake(callback, context) }, this);
         this._state = this.UNCONNECTED;
       }
     }, this);
@@ -396,8 +396,8 @@ Faye.Client = Faye.Class({
       this._connectRequest = null;
       this.info('Closed connection for ?', this._clientId);
     }
-    var self = this;
-    Faye.ENV.setTimeout(function() { self.connect() }, this._advice.interval);
+
+    this.addTimeout('connect', this._advice.interval / 1000, function() { this.connect() }, this);
   }
 });
 
@@ -405,3 +405,5 @@ Faye.extend(Faye.Client.prototype, Faye.Deferrable);
 Faye.extend(Faye.Client.prototype, Faye.Publisher);
 Faye.extend(Faye.Client.prototype, Faye.Logging);
 Faye.extend(Faye.Client.prototype, Faye.Extensible);
+Faye.extend(Faye.Client.prototype, Faye.Timeouts);
+
