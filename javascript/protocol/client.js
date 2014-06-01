@@ -292,6 +292,12 @@ Faye.Client = Faye.Class({
     return publication;
   },
 
+  reset: function() {
+    this._clientId  = null;
+    this._state     = this.UNCONNECTED;
+    this._cycleConnection();
+  },
+
   receiveMessage: function(message) {
     var id = message.id, timeout, callback;
 
