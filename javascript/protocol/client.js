@@ -125,6 +125,8 @@ Faye.Client = Faye.Class({
   //                                                     * id
   //                                                     * timestamp
   connect: function(callback, context) {
+    this.removeTimeout('connect');
+
     if (this._advice.reconnect === this.NONE) return;
     if (this._state === this.DISCONNECTED) return;
 
