@@ -6,14 +6,15 @@ EnvelopeMatcher.prototype.equals = function(other) {
 }
 
 JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
+  include(JS.Test.FakeClock)
+
   before(function() { with(this) {
+    clock.stub()
     this.transport = {connectionType: "fake", endpoint: {}, send: function() {}}
     stub(Faye.Transport, "get").yields([transport])
   }})
 
-  before(function() { with(this) {
-    stub("setTimeout")
-  }})
+  after(function() { this.clock.reset() })
 
   define("envelope", function(message) {
     return new EnvelopeMatcher(message)
@@ -167,7 +168,6 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("puts the client in the UNCONNECTED state", function() { with(this) {
-        stub("setTimeout")
         client.handshake()
         assertEqual( client.UNCONNECTED, client._state )
       }})
