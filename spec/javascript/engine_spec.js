@@ -87,8 +87,7 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   },
 
   expect_no_event: function(name, event, args, resume) {
-    var params  = [this._clients[name]].concat(args),
-        handler = function() {}
+    var handler = function() {}
 
     this.engine.bind(event, handler)
     this.expect(handler, "apply").exactly(0)

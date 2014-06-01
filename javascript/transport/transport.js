@@ -63,7 +63,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     this.debug('Client ? received from ?: ?',
                this._client._clientId, Faye.URI.stringify(this.endpoint), responses);
 
-    for (var i = 0, n = responses.length; i < n; i++)
+    for (var i = 0, m = responses.length; i < m; i++)
       this._client.receiveMessage(responses[i]);
   },
 
