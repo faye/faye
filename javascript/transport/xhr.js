@@ -48,6 +48,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
     };
 
     xhr.send(this.encode(envelopes));
+    return xhr;
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {
