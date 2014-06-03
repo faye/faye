@@ -268,7 +268,7 @@ describe Faye::Client do
           "id"             => instance_of(String)
         )).
         exactly(1).
-        and_return # override stub implementation
+        and_return(nil) # override stub implementation
 
         @client.connect
         @client.connect
@@ -378,7 +378,7 @@ describe Faye::Client do
         it "activates the subscription" do
           active = false
           @client.subscribe("/foo/*").callback { active = true }
-          active.should be_true
+          active.should be true
         end
 
         describe "with an incoming extension installed" do
@@ -440,7 +440,7 @@ describe Faye::Client do
           it "does not activate the subscription" do
             active = false
             @client.subscribe("/foo/*").callback { active = true }
-            active.should be_false
+            active.should be false
           end
         end
       end
@@ -464,7 +464,7 @@ describe Faye::Client do
         it "does not activate the subscription" do
           active = false
           @client.subscribe("/meta/foo").callback { active = true }
-          active.should be_false
+          active.should be false
         end
 
         it "reports the error through an errback" do
@@ -496,7 +496,7 @@ describe Faye::Client do
       it "activates the subscription" do
         active = false
         @client.subscribe("/foo/*").callback { active = true }
-        active.should be_true
+        active.should be true
       end
     end
   end
@@ -625,7 +625,7 @@ describe Faye::Client do
       it "should not be published" do
         published = false
         @client.publish("/messages/foo", "text" => "hi").callback { published = true }
-        published.should be_false
+        published.should be false
       end
 
       it "reports the error through an errback" do
@@ -649,7 +649,7 @@ describe Faye::Client do
         publication = @client.publish("/messages/foo", "text" => "hi")
         publication.callback { published = true }
         publication.errback { published = true }
-        published.should be_false
+        published.should be false
       end
     end
 
