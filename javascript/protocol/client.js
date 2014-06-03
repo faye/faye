@@ -293,7 +293,6 @@ Faye.Client = Faye.Class({
   },
 
   reset: function() {
-    this._clientId  = null;
     this._state     = this.UNCONNECTED;
     this._cycleConnection();
   },
