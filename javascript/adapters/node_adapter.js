@@ -87,7 +87,6 @@ Faye.NodeAdapter = Faye.Class({
   handle: function(request, response) {
     var requestUrl    = url.parse(request.url, true),
         requestMethod = request.method,
-        origin        = request.headers.origin,
         self          = this;
 
     request.originalUrl = request.url;

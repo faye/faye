@@ -91,7 +91,7 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
         handler = function() {}
 
     this.engine.bind(event, handler)
-    this.expect(handler, "apply").exactly(0)
+    this.expect(handler, "apply").given(undefined, params).exactly(0)
     resume()
   },
 

@@ -104,8 +104,7 @@ module Faye
     end
 
     def handle_meta(message, local, &callback)
-      method    = Channel.parse(message['channel'])[1]
-      client_id = message['clientId']
+      method = Channel.parse(message['channel'])[1]
 
       unless META_METHODS.include?(method)
         response = make_response(message)

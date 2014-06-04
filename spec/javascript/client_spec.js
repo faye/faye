@@ -470,7 +470,6 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         }})
 
         it("reports the error through an errback", function(resume) { with(this) {
-          var error = null
           client.subscribe("/meta/foo").errback(function(error) {
             resume(function() {
               assertEqual( objectIncluding({code: 403, params: ["/meta/foo"], message: "Forbidden channel"}), error )

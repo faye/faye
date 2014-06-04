@@ -104,8 +104,7 @@ Faye.Server = Faye.Class({
   },
 
   _handleMeta: function(message, local, callback, context) {
-    var method   = Faye.Channel.parse(message.channel)[1],
-        clientId = message.clientId,
+    var method = Faye.Channel.parse(message.channel)[1],
         response;
 
     if (Faye.indexOf(this.META_METHODS, method) < 0) {

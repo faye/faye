@@ -109,7 +109,7 @@ Faye.Engine.METHODS.forEach(function(method) {
   Faye.Engine.Proxy.prototype[method] = function() {
     return this._engine[method].apply(this._engine, arguments);
   };
-})
+});
 
 Faye.extend(Faye.Engine.Proxy.prototype, Faye.Publisher);
 Faye.extend(Faye.Engine.Proxy.prototype, Faye.Logging);

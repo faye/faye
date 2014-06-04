@@ -43,9 +43,9 @@ JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
     request.end()
   },
 
-  post: function(path, body, resume) {
-    var self    = this,
-        body    = (typeof body === "string") ? body : querystring.stringify(body),
+  post: function(path, params, resume) {
+    var self = this,
+        body = (typeof params === "string") ? params : querystring.stringify(params),
 
         headers = Faye.extend({
           "Host":           "localhost",

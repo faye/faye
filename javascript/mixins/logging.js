@@ -10,13 +10,13 @@ Faye.Logging = {
   writeLog: function(messageArgs, level) {
     if (!Faye.logger) return;
 
-    var messageArgs = Array.prototype.slice.apply(messageArgs),
-        banner      = '[Faye',
-        klass       = this.className,
+    var args   = Array.prototype.slice.apply(messageArgs),
+        banner = '[Faye',
+        klass  = this.className,
 
-        message = messageArgs.shift().replace(/\?/g, function() {
+        message = args.shift().replace(/\?/g, function() {
           try {
-            return Faye.toJSON(messageArgs.shift());
+            return Faye.toJSON(args.shift());
           } catch (e) {
             return '[Object]';
           }
@@ -39,9 +39,9 @@ Faye.Logging = {
 
 (function() {
   for (var key in Faye.Logging.LOG_LEVELS)
-    (function(level, value) {
+    (function(level) {
       Faye.Logging[level] = function() {
         this.writeLog(arguments, level);
       };
-    })(key, Faye.Logging.LOG_LEVELS[key]);
+    })(key);
 })();
