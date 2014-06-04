@@ -1,0 +1,7 @@
+{
+  "asi": true,
+  "unused": true,
+  "loopfunc": true,
+  "-W085": true,
+  "-W014": true
+}

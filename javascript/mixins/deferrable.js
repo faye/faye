@@ -32,7 +32,7 @@ Faye.Deferrable = {
   setDeferredStatus: function(status, value) {
     if (this._timer) Faye.ENV.clearTimeout(this._timer);
 
-    var promise = this.then();
+    this.then();
 
     if (status === 'succeeded')
       this._fulfill(value);

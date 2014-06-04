@@ -7,10 +7,10 @@ Faye.Logging = {
     debug:  0
   },
 
-  writeLog: function(messageArgs, level) {
+  writeLog: function(_messageArgs, level) {
     if (!Faye.logger) return;
 
-    var messageArgs = Array.prototype.slice.apply(messageArgs),
+    var messageArgs = Array.prototype.slice.apply(_messageArgs),
         banner      = '[Faye',
         klass       = this.className,
 
@@ -39,7 +39,7 @@ Faye.Logging = {
 
 (function() {
   for (var key in Faye.Logging.LOG_LEVELS)
-    (function(level, value) {
+    (function(level) {
       Faye.Logging[level] = function() {
         this.writeLog(arguments, level);
       };
