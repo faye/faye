@@ -21,7 +21,7 @@ module Faye
 
     def self.random(bitlength = ID_LENGTH)
       limit    = 2 ** bitlength
-      max_size = (limit - 1).to_s(36).size
+      max_size = (bitlength * Math.log(2) / Math.log(36)).ceil
       string   = SecureRandom.random_number(limit).to_s(36)
       string   = '0' + string while string.size < max_size
       string
