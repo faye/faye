@@ -15,7 +15,7 @@ module Faye
       end
 
       def deliver(message)
-        return socket.send(message) if socket
+        return @socket.send(message) if @socket
         return unless @inbox.add?(message)
         begin_delivery_timeout
       end
@@ -31,25 +31,25 @@ module Faye
         begin_connection_timeout(timeout)
       end
 
-      def flush!(force = false)
-        @engine.close_connection(@id) if force or socket.nil?
-
+      def flush
         remove_timeout(:connection)
         remove_timeout(:delivery)
 
         set_deferred_status(:succeeded, @inbox.entries)
         @inbox = []
+
+        @engine.close_connection(@id) unless @socket
       end
 
     private
 
       def begin_delivery_timeout
         return if @inbox.empty?
-        add_timeout(:delivery, MAX_DELAY) { flush! }
+        add_timeout(:delivery, MAX_DELAY) { flush }
       end
 
       def begin_connection_timeout(timeout)
-        add_timeout(:connection, timeout) { flush! }
+        add_timeout(:connection, timeout) { flush }
       end
     end
 

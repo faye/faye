@@ -19,8 +19,8 @@ Faye.Server = Faye.Class({
     this._engine.openSocket(clientId, new Faye.Server.Socket(this, socket, request));
   },
 
-  closeSocket: function(clientId) {
-    this._engine.flush(clientId);
+  closeSocket: function(clientId, close) {
+    this._engine.flushConnection(clientId, close);
   },
 
   process: function(messages, request, callback, context) {

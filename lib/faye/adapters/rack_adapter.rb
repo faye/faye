@@ -166,7 +166,7 @@ module Faye
           message = MultiJson.load(event.data)
           cid     = Faye.client_id_from_messages(message)
 
-          @server.close_socket(client_id) if client_id and cid and cid != client_id
+          @server.close_socket(client_id, false) if client_id and cid and cid != client_id
           @server.open_socket(cid, ws, request)
           client_id = cid
 
