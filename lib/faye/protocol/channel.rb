@@ -75,7 +75,7 @@ module Faye
     end
 
     class Set
-      def initialize(parent = nil, value = nil)
+      def initialize
         @channels = {}
       end
 
