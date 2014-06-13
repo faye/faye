@@ -7,6 +7,7 @@ Faye.Engine.Connection = Faye.Class({
   },
 
   deliver: function(message) {
+    delete message.clientId;
     if (this.socket) return this.socket.send(message);
     this._inbox.push(message);
     this._beginDeliveryTimeout();

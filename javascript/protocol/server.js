@@ -94,7 +94,6 @@ Faye.Server = Faye.Class({
     if (!Faye.Grammar.CHANNEL_NAME.test(channelName))
       error = Faye.Error.channelInvalid(channelName);
 
-    delete message.clientId;
     if (!error) this._engine.publish(message);
 
     response = this._makeResponse(message);
