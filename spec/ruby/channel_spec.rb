@@ -13,4 +13,15 @@ describe Faye::Channel do
                            "/**", "/foo/bar/qux", "/foo/bar/*", "/foo/**", "/foo/bar/**"]
     end
   end
+
+  describe Faye::Channel::Set do
+    describe :subscribe do
+      it "subscribes and unsubscribes without callback" do
+        channels = Faye::Channel::Set.new
+        channels.subscribe(["/foo/**"], nil)
+        channels.keys.should == ["/foo/**"]
+        channels.unsubscribe("/foo/**", nil).should == true
+      end
+    end
+  end
 end
