@@ -90,12 +90,11 @@ Faye.extend(Faye.Channel, {
     },
 
     subscribe: function(names, callback, context) {
-      if (!callback) return;
       var name;
       for (var i = 0, n = names.length; i < n; i++) {
         name = names[i];
         var channel = this._channels[name] = this._channels[name] || new Faye.Channel(name);
-        channel.bind('message', callback, context);
+        if (callback) channel.bind('message', callback, context);
       }
     },
 

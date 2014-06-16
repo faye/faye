@@ -12,4 +12,15 @@ JS.ENV.ChannelSpec = JS.Test.describe("Channel", function() { with(this) {
                    Faye.Channel.expand("/foo/bar/qux") )
     }})
   }})
+
+  describe("Set", function() { with(this) {
+    describe("subscribe", function() { with(this) {
+      it("subscribes and unsubscribes without callback", function() { with(this) {
+        var channels = new Faye.Channel.Set()
+        channels.subscribe(["/foo/**"], null)
+        assertEqual( ["/foo/**"], channels.getKeys() )
+        assert( channels.unsubscribe("/foo/**", null) )
+      }})
+    }})
+  }})
 }})
