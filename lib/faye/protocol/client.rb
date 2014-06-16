@@ -109,7 +109,7 @@ module Faye
 
         else
           info('Handshake unsuccessful')
-          EventMachine.add_timer(@advice['interval'] / 1000.0) { handshake(&block) }
+          EventMachine.add_timer(@retry) { handshake(&block) }
           @state = UNCONNECTED
         end
       end

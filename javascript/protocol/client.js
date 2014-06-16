@@ -109,7 +109,7 @@ Faye.Client = Faye.Class({
 
       } else {
         this.info('Handshake unsuccessful');
-        Faye.ENV.setTimeout(function() { self.handshake(callback, context) }, this._advice.interval);
+        Faye.ENV.setTimeout(function() { self.handshake(callback, context) }, this._retry * 1000);
         this._state = this.UNCONNECTED;
       }
     }, this);
