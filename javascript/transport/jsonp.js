@@ -32,6 +32,12 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
 
     script.type = 'text/javascript';
     script.src  = Faye.URI.stringify(endpoint);
+    script.onerror = function(){
+      self._client.trigger('transport:error');
+    };
+    script.onload = function(){
+      self._client.trigger('transport:success');
+    };
     head.appendChild(script);
 
     return {abort: cleanup};
