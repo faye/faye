@@ -51,11 +51,11 @@ module Faye
           EventMachine.next_tick { flush_connection(client_id) }
         end
 
-        debug 'Created new engine: ?', @options
+        debug('Created new engine: ?', @options)
       end
 
       def connect(client_id, options = {}, &callback)
-        debug 'Accepting connection from ?', client_id
+        debug('Accepting connection from ?', client_id)
         @engine.ping(client_id)
         conn = connection(client_id, true)
         conn.connect(options, &callback)
@@ -75,7 +75,7 @@ module Faye
       end
 
       def close_connection(client_id)
-        debug 'Closing connection for ?', client_id
+        debug('Closing connection for ?', client_id)
         return unless conn = @connections[client_id]
         conn.socket.close if conn.socket
         trigger('connection:close', client_id)
@@ -100,7 +100,7 @@ module Faye
 
       def flush_connection(client_id, close = true)
         return unless client_id
-        debug 'Flushing connection for ?', client_id
+        debug('Flushing connection for ?', client_id)
         return unless conn = connection(client_id, false)
         conn.socket = nil unless close
         conn.flush
