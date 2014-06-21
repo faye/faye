@@ -1,63 +1,53 @@
 Faye.Client = Faye.Class({
-  UNCONNECTED:          1,
-  CONNECTING:           2,
-  CONNECTED:            3,
-  DISCONNECTED:         4,
+  UNCONNECTED:        1,
+  CONNECTING:         2,
+  CONNECTED:          3,
+  DISCONNECTED:       4,
 
-  HANDSHAKE:            'handshake',
-  RETRY:                'retry',
-  NONE:                 'none',
+  HANDSHAKE:          'handshake',
+  RETRY:              'retry',
+  NONE:               'none',
 
-  CONNECTION_TIMEOUT:   60,
-  DEFAULT_RETRY:        5,
-  MAX_REQUEST_SIZE:     2048,
+  CONNECTION_TIMEOUT: 60,
 
-  DEFAULT_ENDPOINT:     '/bayeux',
-  INTERVAL:             0,
+  DEFAULT_ENDPOINT:   '/bayeux',
+  INTERVAL:           0,
 
   initialize: function(endpoint, options) {
     this.info('New client created for ?', endpoint);
+    options = options || {};
 
-    this._options   = options || {};
-    this.endpoint   = Faye.URI.parse(endpoint || this.DEFAULT_ENDPOINT);
-    this.endpoints  = this._options.endpoints || {};
-    this.transports = {};
-    this.cookies    = Faye.Cookies && new Faye.Cookies.CookieJar();
-    this.headers    = {};
-    this.ca         = this._options.ca;
-    this._disabled  = [];
-    this._retry     = this._options.retry || this.DEFAULT_RETRY;
+    this._endpoint   = endpoint || this.DEFAULT_ENDPOINT;
+    this._channels   = new Faye.Channel.Set();
+    this._dispatcher = new Faye.Dispatcher(this, this._endpoint, options);
 
-    for (var key in this.endpoints)
-      this.endpoints[key] = Faye.URI.parse(this.endpoints[key]);
-
-    this.maxRequestSize = this.MAX_REQUEST_SIZE;
-
-    this._state     = this.UNCONNECTED;
-    this._channels  = new Faye.Channel.Set();
     this._messageId = 0;
+    this._state     = this.UNCONNECTED;
 
     this._responseCallbacks = {};
 
     this._advice = {
       reconnect: this.RETRY,
-      interval:  1000 * (this._options.interval || this.INTERVAL),
-      timeout:   1000 * (this._options.timeout  || this.CONNECTION_TIMEOUT)
+      interval:  1000 * (options.interval || this.INTERVAL),
+      timeout:   1000 * (options.timeout  || this.CONNECTION_TIMEOUT)
     };
+    this._dispatcher.timeout = this._advice.timeout / 1000;
+
+    this._dispatcher.bind('message', this._receiveMessage, this);
 
     if (Faye.Event && Faye.ENV.onbeforeunload !== undefined)
       Faye.Event.on(Faye.ENV, 'beforeunload', function() {
-        if (Faye.indexOf(this._disabled, 'autodisconnect') < 0)
+        if (Faye.indexOf(this._dispatcher._disabled, 'autodisconnect') < 0)
           this.disconnect();
       }, this);
   },
 
   disable: function(feature) {
-    this._disabled.push(feature);
+    return this._dispatcher.disable(feature);
   },
 
   setHeader: function(name, value) {
-    this.headers[name] = value;
+    return this._dispatcher.setHeader(name, value);
   },
 
   // Request
@@ -86,30 +76,30 @@ Faye.Client = Faye.Class({
     this._state = this.CONNECTING;
     var self = this;
 
-    this.info('Initiating handshake with ?', Faye.URI.stringify(this.endpoint));
-    this._selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
+    this.info('Initiating handshake with ?', Faye.URI.stringify(this._endpoint));
+    this._dispatcher.selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
 
-    this._send({
+    this._sendMessage({
       channel:                  Faye.Channel.HANDSHAKE,
       version:                  Faye.BAYEUX_VERSION,
-      supportedConnectionTypes: [this._transport.connectionType]
+      supportedConnectionTypes: [this._dispatcher.connectionType]
 
     }, function(response) {
 
       if (response.successful) {
-        this._state     = this.CONNECTED;
-        this._clientId  = response.clientId;
+        this._state = this.CONNECTED;
+        this._dispatcher.clientId  = response.clientId;
 
-        this._selectTransport(response.supportedConnectionTypes);
+        this._dispatcher.selectTransport(response.supportedConnectionTypes);
 
-        this.info('Handshake successful: ?', this._clientId);
+        this.info('Handshake successful: ?', this._dispatcher.clientId);
 
         this.subscribe(this._channels.getKeys(), true);
         if (callback) Faye.Promise.defer(function() { callback.call(context) });
 
       } else {
         this.info('Handshake unsuccessful');
-        Faye.ENV.setTimeout(function() { self.handshake(callback, context) }, this._retry * 1000);
+        Faye.ENV.setTimeout(function() { self.handshake(callback, context) }, this._dispatcher.retry * 1000);
         this._state = this.UNCONNECTED;
       }
     }, this);
@@ -134,19 +124,19 @@ Faye.Client = Faye.Class({
     this.callback(callback, context);
     if (this._state !== this.CONNECTED) return;
 
-    this.info('Calling deferred actions for ?', this._clientId);
+    this.info('Calling deferred actions for ?', this._dispatcher.clientId);
     this.setDeferredStatus('succeeded');
     this.setDeferredStatus('unknown');
 
     if (this._connectRequest) return;
     this._connectRequest = true;
 
-    this.info('Initiating connection for ?', this._clientId);
+    this.info('Initiating connection for ?', this._dispatcher.clientId);
 
-    this._send({
+    this._sendMessage({
       channel:        Faye.Channel.CONNECT,
-      clientId:       this._clientId,
-      connectionType: this._transport.connectionType
+      clientId:       this._dispatcher.clientId,
+      connectionType: this._dispatcher.connectionType
 
     }, this._cycleConnection, this);
   },
@@ -162,19 +152,17 @@ Faye.Client = Faye.Class({
     if (this._state !== this.CONNECTED) return;
     this._state = this.DISCONNECTED;
 
-    this.info('Disconnecting ?', this._clientId);
+    this.info('Disconnecting ?', this._dispatcher.clientId);
 
-    this._send({
+    this._sendMessage({
       channel:  Faye.Channel.DISCONNECT,
-      clientId: this._clientId
+      clientId: this._dispatcher.clientId
 
     }, function(response) {
-      if (!response.successful) return;
-      this._transport.close();
-      delete this._transport;
+      if (response.successful) this._dispatcher.close();
     }, this);
 
-    this.info('Clearing channel listeners for ?', this._clientId);
+    this.info('Clearing channel listeners for ?', this._dispatcher.clientId);
     this._channels = new Faye.Channel.Set();
   },
 
@@ -205,12 +193,12 @@ Faye.Client = Faye.Class({
     }
 
     this.connect(function() {
-      this.info('Client ? attempting to subscribe to ?', this._clientId, channel);
+      this.info('Client ? attempting to subscribe to ?', this._dispatcher.clientId, channel);
       if (!force) this._channels.subscribe([channel], callback, context);
 
-      this._send({
+      this._sendMessage({
         channel:      Faye.Channel.SUBSCRIBE,
-        clientId:     this._clientId,
+        clientId:     this._dispatcher.clientId,
         subscription: channel
 
       }, function(response) {
@@ -220,7 +208,7 @@ Faye.Client = Faye.Class({
         }
 
         var channels = [].concat(response.subscription);
-        this.info('Subscription acknowledged for ? to ?', this._clientId, channels);
+        this.info('Subscription acknowledged for ? to ?', this._dispatcher.clientId, channels);
         subscription.setDeferredStatus('succeeded');
       }, this);
     }, this);
@@ -248,18 +236,18 @@ Faye.Client = Faye.Class({
     if (!dead) return;
 
     this.connect(function() {
-      this.info('Client ? attempting to unsubscribe from ?', this._clientId, channel);
+      this.info('Client ? attempting to unsubscribe from ?', this._dispatcher.clientId, channel);
 
-      this._send({
+      this._sendMessage({
         channel:      Faye.Channel.UNSUBSCRIBE,
-        clientId:     this._clientId,
+        clientId:     this._dispatcher.clientId,
         subscription: channel
 
       }, function(response) {
         if (!response.successful) return;
 
         var channels = [].concat(response.subscription);
-        this.info('Unsubscription acknowledged for ? from ?', this._clientId, channels);
+        this.info('Unsubscription acknowledged for ? from ?', this._dispatcher.clientId, channels);
       }, this);
     }, this);
   },
@@ -274,12 +262,12 @@ Faye.Client = Faye.Class({
     var publication = new Faye.Publication();
 
     this.connect(function() {
-      this.info('Client ? queueing published message to ?: ?', this._clientId, channel, data);
+      this.info('Client ? queueing published message to ?: ?', this._dispatcher.clientId, channel, data);
 
-      this._send({
+      this._sendMessage({
         channel:  channel,
         data:     data,
-        clientId: this._clientId
+        clientId: this._dispatcher.clientId
 
       }, function(response) {
         if (response.successful)
@@ -292,7 +280,27 @@ Faye.Client = Faye.Class({
     return publication;
   },
 
-  receiveMessage: function(message) {
+  _sendMessage: function(message, callback, context) {
+    message.id = this._generateMessageId();
+
+    var timeout = this._advice.timeout
+                ? 1.2 * this._advice.timeout / 1000
+                : 1.2 * this._dispatcher.retry;
+
+    this.pipeThroughExtensions('outgoing', message, null, function(message) {
+      if (!message) return;
+      if (callback) this._responseCallbacks[message.id] = [callback, context];
+      this._dispatcher.sendMessage(message, timeout);
+    }, this);
+  },
+
+  _generateMessageId: function() {
+    this._messageId += 1;
+    if (this._messageId >= Math.pow(2,32)) this._messageId = 0;
+    return this._messageId.toString(36);
+  },
+
+  _receiveMessage: function(message) {
     var id = message.id, callback;
 
     if (message.successful !== undefined) {
@@ -302,99 +310,33 @@ Faye.Client = Faye.Class({
 
     this.pipeThroughExtensions('incoming', message, null, function(message) {
       if (!message) return;
-
       if (message.advice) this._handleAdvice(message.advice);
       this._deliverMessage(message);
-
       if (callback) callback[0].call(callback[1], message);
     }, this);
-
-    if (this._transportUp === true) return;
-    this._transportUp = true;
-    this.trigger('transport:up');
-  },
-
-  messageError: function(messages, immediate) {
-    var retry = this._retry,
-        self  = this,
-        id, message;
-
-    for (var i = 0, n = messages.length; i < n; i++) {
-      message = messages[i];
-      id      = message.id;
-
-      if (immediate)
-        this._transportSend(message);
-      else
-        Faye.ENV.setTimeout(function() { self._transportSend(message) }, retry * 1000);
-    }
-
-    if (immediate || this._transportUp === false) return;
-    this._transportUp = false;
-    this.trigger('transport:down');
-  },
-
-  _selectTransport: function(transportTypes) {
-    Faye.Transport.get(this, transportTypes, this._disabled, function(transport) {
-      this.debug('Selected ? transport for ?', transport.connectionType, Faye.URI.stringify(transport.endpoint));
-
-      if (transport === this._transport) return;
-      if (this._transport) this._transport.close();
-
-      this._transport = transport;
-    }, this);
-  },
-
-  _send: function(message, callback, context) {
-    if (!this._transport) return;
-    message.id = message.id || this._generateMessageId();
-
-    this.pipeThroughExtensions('outgoing', message, null, function(message) {
-      if (!message) return;
-      if (callback) this._responseCallbacks[message.id] = [callback, context];
-      this._transportSend(message);
-    }, this);
-  },
-
-  _transportSend: function(message) {
-    if (!this._transport) return;
-
-    var timeout  = 1.2 * (this._advice.timeout || this._retry * 1000),
-        envelope = new Faye.Envelope(message, timeout);
-
-    envelope.errback(function(immediate) {
-      this.messageError([message], immediate);
-    }, this);
-
-    this._transport.send(envelope);
-  },
-
-  _generateMessageId: function() {
-    this._messageId += 1;
-    if (this._messageId >= Math.pow(2,32)) this._messageId = 0;
-    return this._messageId.toString(36);
   },
 
   _handleAdvice: function(advice) {
     Faye.extend(this._advice, advice);
+    this._dispatcher.timeout = this._advice.timeout / 1000;
 
     if (this._advice.reconnect === this.HANDSHAKE && this._state !== this.DISCONNECTED) {
-      this._state    = this.UNCONNECTED;
-      this._clientId = null;
+      this._state = this.UNCONNECTED;
+      this._dispatcher.clientId = null;
       this._cycleConnection();
     }
   },
 
   _deliverMessage: function(message) {
     if (!message.channel || message.data === undefined) return;
-    this.info('Client ? calling listeners for ? with ?', this._clientId, message.channel, message.data);
+    this.info('Client ? calling listeners for ? with ?', this._dispatcher.clientId, message.channel, message.data);
     this._channels.distributeMessage(message);
   },
 
   _cycleConnection: function() {
     if (this._connectRequest) {
       this._connectRequest = null;
-      this.info('Closed connection for ?', this._clientId);
+      this.info('Closed connection for ?', this._dispatcher.clientId);
     }
     var self = this;
     Faye.ENV.setTimeout(function() { self.connect() }, this._advice.interval);

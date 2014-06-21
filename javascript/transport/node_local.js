@@ -1,11 +1,10 @@
 Faye.Transport.NodeLocal = Faye.extend(Faye.Class(Faye.Transport, {
   batching: false,
 
-  request: function(envelopes) {
-    var messages = Faye.map(envelopes, function(e) { return e.message });
+  request: function(messages) {
     messages = Faye.copyObject(messages);
-    this.endpoint.process(messages, null, function(responses) {
-      this.receive(envelopes, Faye.copyObject(responses));
+    this.endpoint.process(messages, null, function(replies) {
+      this._receive(Faye.copyObject(replies));
     }, this);
   }
 }), {

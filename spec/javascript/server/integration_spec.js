@@ -5,7 +5,7 @@ var fs    = require('fs'),
     key   = fs.readFileSync(__dirname + '/../../../examples/server.key')
 
 JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
-  server: function(port, ssl, callback) {
+  server: function(ssl, callback) {
     this._adapter = new Faye.NodeAdapter({mount: "/bayeux", timeout: 2})
 
     this._adapter.addExtension({
@@ -20,7 +20,6 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
       }
     })
 
-    this._port = port
     this._secure = ssl
 
     this._http = ssl
@@ -28,22 +27,23 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
                : http.createServer()
 
     this._adapter.attach(this._http)
-    this._http.listen(port, callback)
+    var self = this
+
+    this._http.listen(0, function() {
+      self._port = self._http.address().port
+      callback()
+    })
   },
 
   stop: function(callback) {
-    for (var id in this._clients) this._clients[id].disconnect()
-    var self = this
-    setTimeout(function() {
-      self._http.on('close', callback)
-      self._http.close()
-    }, 100)
+    this._http.close()
+    callback()
   },
 
   client: function(name, channels, callback) {
-    var scheme = this._secure ? "https" : "http"
-    this._clients = this._clients || {}
-    this._inboxes = this._inboxes || {}
+    var scheme          = this._secure ? "https" : "http"
+    this._clients       = this._clients || {}
+    this._inboxes       = this._inboxes || {}
     this._clients[name] = new Faye.Client(scheme + "://localhost:" + this._port  + "/bayeux", {ca: cert})
     this._inboxes[name] = {}
 
@@ -80,7 +80,7 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
 
   sharedExamplesFor("message bus", function() { with(this) {
     before(function() { with(this) {
-      server(4180, serverOptions.ssl)
+      server(serverOptions.ssl)
       client("alice", [])
       client("bob", ["/foo"])
     }})

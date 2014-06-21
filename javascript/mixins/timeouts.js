@@ -13,7 +13,7 @@ Faye.Timeouts = {
     this._timeouts = this._timeouts || {};
     var timeout = this._timeouts[name];
     if (!timeout) return;
-    clearTimeout(timeout);
+    Faye.ENV.clearTimeout(timeout);
     delete this._timeouts[name];
   },
 
