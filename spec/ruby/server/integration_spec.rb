@@ -15,16 +15,14 @@ IntegrationSteps = RSpec::EM.async_steps do
     end
   end
 
-  def server(&callback)
+  def server(port, &callback)
     @faye = Faye::RackAdapter.new(:mount => "/bayeux", :timeout => 25)
     @faye.add_extension(Tagger.new)
 
-    port = TCPServer.new('0.0.0.0', 0).addr[1]
-
     @server = ServerProxy::App.new(@faye)
-    @server.listen(port)
+    @port   = port
 
-    @port = port
+    @server.listen(@port)
     EM.next_tick(&callback)
   end
 
@@ -73,7 +71,7 @@ describe "server integration" do
   include EncodingHelper
 
   before do
-    server
+    server 4180
     client :alice, []
     client :bob,   ["/foo"]
   end
