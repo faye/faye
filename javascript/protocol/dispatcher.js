@@ -69,8 +69,7 @@ Faye.Dispatcher = Faye.Class({
       self.handleError(message, false);
     }, timeout * 1000);
 
-    envelope.request = this._transport; // TODO return a request object
-    this._transport.sendMessage(message);
+    envelope.request = this._transport.sendMessage(message);
   },
 
   handleResponse: function(reply) {
@@ -89,8 +88,15 @@ Faye.Dispatcher = Faye.Class({
   },
 
   handleError: function(message, immediate) {
-    var envelope = this._envelopes[message.id], self = this;
+    var envelope = this._envelopes[message.id],
+        request  = envelope && envelope.request,
+        self     = this;
+
     if (!envelope || !envelope.request) return;
+
+    request.then(function(req) {
+      if (req && req.abort) req.abort();
+    });
 
     Faye.ENV.clearTimeout(envelope.timer);
     envelope.request = envelope.timer = null;
@@ -101,7 +107,7 @@ Faye.Dispatcher = Faye.Class({
       envelope.timer = Faye.ENV.setTimeout(function() {
         envelope.timer = null;
         self.sendMessage(envelope.message, envelope.timeout);
-      }, this._retry * 1000);
+      }, this.retry * 1000);
     }
 
     if (this._state === this.DOWN) return;

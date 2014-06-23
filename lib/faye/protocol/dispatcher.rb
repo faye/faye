@@ -81,8 +81,7 @@ module Faye
         handle_error(message, false)
       end
 
-      envelope.request = @transport # TODO return a request object
-      @transport.send_message(message)
+      envelope.request = @transport.send_message(message)
     end
 
     def handle_response(reply)
@@ -99,7 +98,11 @@ module Faye
 
     def handle_error(message, immediate)
       return unless envelope = @envelopes[message['id']]
-      return unless envelope.request
+      return unless request = envelope.request
+
+      request.callback do |req|
+        req.close if req.respond_to?(:close)
+      end
 
       EventMachine.cancel_timer(envelope.timer)
       envelope.request = envelope.timer = nil

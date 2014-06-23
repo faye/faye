@@ -18,18 +18,22 @@ Faye.Transport = Faye.extend(Faye.Class({
     this.debug('Client ? sending message to ?: ?',
                this._dispatcher.clientId, Faye.URI.stringify(this.endpoint), message);
 
-    if (!this.batching) return this.request([message]);
+    if (!this.batching) return Faye.Promise.fulfilled(this.request([message]));
 
+    this._promise = this._promise || new Faye.Promise();
     this._outbox.push(message);
+    this._flushLargeBatch();
 
-    if (message.channel === Faye.Channel.HANDSHAKE)
-      return this.addTimeout('publish', 0.01, this._flush, this);
+    if (message.channel === Faye.Channel.HANDSHAKE) {
+      this.addTimeout('publish', 0.01, this._flush, this);
+      return this._promise;
+    }
 
     if (message.channel === Faye.Channel.CONNECT)
       this._connectMessage = message;
 
-    this._flushLargeBatch();
     this.addTimeout('publish', this.MAX_DELAY, this._flush, this);
+    return this._promise;
   },
 
   _flush: function() {
@@ -38,12 +42,8 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (this._outbox.length > 1 && this._connectMessage)
       this._connectMessage.advice = {timeout: 0};
 
-    // TODO fix this
-    // var request = this.request(this._outbox), n = this._outbox.length;
-    // while (n--)
-      // this._outbox[n].errback(function() { if (request) request.abort() });
-
-    this.request(this._outbox);
+    Faye.Promise.fulfill(this._promise, this.request(this._outbox));
+    delete this._promise;
 
     this._connectMessage = null;
     this._outbox = [];

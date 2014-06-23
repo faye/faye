@@ -22,6 +22,8 @@ module Faye
       request.errback do
         handle_error(messages)
       end
+
+      request
     end
 
   private
@@ -29,10 +31,10 @@ module Faye
     def build_params(uri, content)
       {
         :head => {
-          'Content-Length'  => content.bytesize,
-          'Content-Type'    => 'application/json',
-          'Cookie'          => get_cookies,
-          'Host'            => uri.host
+          'Content-Length' => content.bytesize,
+          'Content-Type'   => 'application/json',
+          'Cookie'         => get_cookies,
+          'Host'           => uri.host
         }.merge(@dispatcher.headers),
 
         :body    => content,
@@ -43,9 +45,7 @@ module Faye
     def create_request(params)
       version = EventMachine::HttpRequest::VERSION.split('.')[0].to_i
       client  = if version >= 1
-                  options = {                 # for em-http-request >= 1.0
-                    :inactivity_timeout => 0  # connection inactivity (post-setup) timeout (0 = disable timeout)
-                  }
+                  options = {:inactivity_timeout => 0}
                   EventMachine::HttpRequest.new(@endpoint.to_s, options)
                 else
                   EventMachine::HttpRequest.new(@endpoint.to_s)

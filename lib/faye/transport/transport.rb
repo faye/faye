@@ -33,20 +33,27 @@ module Faye
       client_id = @dispatcher.client_id
       debug('Client ? sending message to ? via ?: ?', client_id, @endpoint, connection_type, message)
 
-      return request([message]) unless batching?
+      unless batching?
+        promise = EventMachine::DefaultDeferrable.new
+        promise.succeed(request([message]))
+        promise
+      end
 
+      @promise ||= EventMachine::DefaultDeferrable.new
       @outbox << message
+      flush_large_batch
 
       if message['channel'] == Channel::HANDSHAKE
-        return add_timeout(:publish, 0.01) { flush }
+        add_timeout(:publish, 0.01) { flush }
+        return @promise
       end
 
       if message['channel'] == Channel::CONNECT
         @connection_message = message
       end
 
-      flush_large_batch
       add_timeout(:publish, Engine::MAX_DELAY) { flush }
+      @promise
     end
 
   private
@@ -58,7 +65,8 @@ module Faye
         @connection_message['advice'] = {'timeout' => 0}
       end
 
-      request(@outbox)
+      @promise.succeed(request(@outbox))
+      @promise = nil
 
       @connection_message = nil
       @outbox = []

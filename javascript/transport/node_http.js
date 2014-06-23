@@ -23,6 +23,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
     });
 
     request.end(content);
+    return request;
   },
 
   _buildParams: function(uri, content, secure) {
