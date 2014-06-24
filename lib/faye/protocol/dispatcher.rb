@@ -30,7 +30,7 @@ module Faye
       @envelopes  = {}
       @headers    = {}
       @retry      = options[:retry] || DEFAULT_RETRY
-      @state      = DOWN
+      @state      = 0
       @transports = {}
 
       @alternates.each do |type, url|

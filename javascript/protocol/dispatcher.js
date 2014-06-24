@@ -16,7 +16,7 @@ Faye.Dispatcher = Faye.Class({
     this._envelopes = {};
     this.headers    = {};
     this.retry      = options.retry || this.DEFAULT_RETRY;
-    this._state     = this.DOWN;
+    this._state     = 0;
     this.transports = {};
 
     for (var type in this._alternates)
