@@ -32,6 +32,11 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
     script.src  = Faye.URI.stringify(endpoint);
     head.appendChild(script);
 
+    script.onerror = function() {
+      cleanup();
+      self._handleError(messages);
+    };
+
     return {abort: cleanup};
   }
 }), {
