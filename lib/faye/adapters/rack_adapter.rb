@@ -87,7 +87,12 @@ module Faye
         return [400, TYPE_TEXT, ['Bad request']]
       end
 
-      debug "Received message via HTTP #{request.request_method}: ?", json_msg
+      unless json_msg.force_encoding('UTF-8').valid_encoding?
+        error 'Received request with invalid encoding: ?', format_request(request)
+        return [400, TYPE_TEXT, ['Bad request']]
+      end
+
+      debug("Received message via HTTP #{request.request_method}: ?", json_msg)
 
       message = MultiJson.load(json_msg)
       request.env['rack.hijack'].call if request.env['rack.hijack']
