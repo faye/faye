@@ -15,6 +15,7 @@ module Faye
       end
 
       def deliver(message)
+        message.delete('clientId')
         return @socket.send(message) if @socket
         return unless @inbox.add?(message)
         begin_delivery_timeout
