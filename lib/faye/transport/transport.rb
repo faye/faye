@@ -36,7 +36,7 @@ module Faye
       unless batching?
         promise = EventMachine::DefaultDeferrable.new
         promise.succeed(request([message]))
-        promise
+        return promise
       end
 
       @promise ||= EventMachine::DefaultDeferrable.new

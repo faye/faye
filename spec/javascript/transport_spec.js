@@ -100,27 +100,27 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
       }})
 
       it("queues the message to be sent after a timeout", function() { with(this) {
-        expect(transport, "request").given([{batch: "me"}])
+        expect(transport, "request").given([{batch: "me"}]).exactly(1)
         sendMessage({batch: "me"})
         clock.tick(10)
       }})
 
       it("allows multiple messages to be batched together", function() { with(this) {
-        expect(transport, "request").given([{id: 1}, {id: 2}])
+        expect(transport, "request").given([{id: 1}, {id: 2}]).exactly(1)
         sendMessage({id: 1})
         sendMessage({id: 2})
         clock.tick(10)
       }})
 
       it("adds advice to connect messages sent with others", function() { with(this) {
-        expect(transport, "request").given([{channel: "/meta/connect", advice: {timeout: 0}}, {}])
+        expect(transport, "request").given([{channel: "/meta/connect", advice: {timeout: 0}}, {}]).exactly(1)
         sendMessage({channel: "/meta/connect"})
         sendMessage({})
         clock.tick(10)
       }})
 
       it("adds no advice to connect messages sent alone", function() { with(this) {
-        expect(transport, "request").given([{channel: "/meta/connect"}])
+        expect(transport, "request").given([{channel: "/meta/connect"}]).exactly(1)
         sendMessage({channel: "/meta/connect"})
         clock.tick(10)
       }})
@@ -133,8 +133,9 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
       }})
 
       it("makes a request immediately", function() { with(this) {
-        expect(transport, "request").given([{no: "batch"}])
+        expect(transport, "request").given([{no: "batch"}]).exactly(1)
         sendMessage({no: "batch"})
+        clock.tick(10)
       }})
     }})
   }})

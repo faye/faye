@@ -100,27 +100,27 @@ describe Faye::Transport do
       end
 
       it "queues the message to be sent after a timeout" do
-        @transport.should_receive(:request).with([{"batch" => "me"}])
+        @transport.should_receive(:request).with([{"batch" => "me"}]).once
         send_message({"batch" => "me"})
         clock.tick(0.01)
       end
 
       it "allows multiple messages to be batched together" do
-        @transport.should_receive(:request).with([{"id" => 1}, {"id" => 2}])
+        @transport.should_receive(:request).with([{"id" => 1}, {"id" => 2}]).once
         send_message({"id" => 1})
         send_message({"id" => 2})
         clock.tick(0.01)
       end
 
       it "adds advice to connect messages sent with others" do
-        @transport.should_receive(:request).with([{"channel" => "/meta/connect", "advice" => {"timeout" => 0}}, {}])
+        @transport.should_receive(:request).with([{"channel" => "/meta/connect", "advice" => {"timeout" => 0}}, {}]).once
         send_message({"channel" => "/meta/connect"})
         send_message({})
         clock.tick(0.01)
       end
 
       it "adds no advice to connect messages sent alone" do
-        @transport.should_receive(:request).with([{"channel" => "/meta/connect"}])
+        @transport.should_receive(:request).with([{"channel" => "/meta/connect"}]).once
         send_message({"channel" => "/meta/connect"})
         clock.tick(0.01)
       end
@@ -137,8 +137,9 @@ describe Faye::Transport do
       end
 
       it "makes a request immediately" do
-        @transport.should_receive(:request).with([{"no" => "batch"}])
+        @transport.should_receive(:request).with([{"no" => "batch"}]).once
         send_message({"no" => "batch"})
+        clock.tick(0.01)
       end
     end
   end
