@@ -18,8 +18,9 @@
       # event listener logic
     end</pre>
 
-    When you insert @RackAdapter@ as Rack middleware from config.ru or Rails
-    config/application.rb, you can provide a block instead:
+    When you insert @RackAdapter@ as Rack middleware from @config.ru@ or Rails
+    @config/application.rb@, you can provide a block that gives you access to
+    the adapter after it has been instantiated.
 
     <pre>use Faye::RackAdapter, {:mount => '/faye', :timeout => 25} do |bayeux|
       bayeux.on(:handshake) do |client_id|

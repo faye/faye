@@ -32,10 +32,11 @@ module Faye
       @static.map(File.basename(@endpoint) + '.js', SCRIPT_PATH)
       @static.map('client.js', SCRIPT_PATH)
 
-      block.call(self) if block
+      if extensions = @options[:extensions]
+        [*extensions].each { |extension| add_extension(extension) }
+      end
 
-      return unless extensions = @options[:extensions]
-      [*extensions].each { |extension| add_extension(extension) }
+      block.call(self) if block
     end
 
     def listen(*args)
