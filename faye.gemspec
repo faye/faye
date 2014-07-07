@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   # You should generate them by running `npm run-script build` in the project
   # root.
   s.files = %w[CHANGELOG.md README.md] +
-            %w[lib/faye-browser.js lib/faye-browser-min.js lib/faye-browser-min.js.map] +
+            %w[.js -min.js -min.js.map].map { |ext| "lib/faye-browser#{ext}" } +
             Dir.glob('lib/**/*.rb')
   
   s.add_dependency 'cookiejar', '>= 0.3.0'
@@ -34,7 +34,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rack-test'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rspec'
-  s.add_development_dependency 'rspec-eventmachine'
+  s.add_development_dependency 'rspec-eventmachine', '>= 0.2.0'
   s.add_development_dependency 'RedCloth', '~> 3.0.0'
   s.add_development_dependency 'sinatra'
   s.add_development_dependency 'staticmatic'
