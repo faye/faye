@@ -15,6 +15,8 @@ module Faye
     TYPE_SCRIPT = {'Content-Type' => 'text/javascript; charset=utf-8'}
     TYPE_TEXT   = {'Content-Type' => 'text/plain; charset=utf-8'}
 
+    VALID_JSONP_CALLBACK = /^[a-z_\$][a-z0-9_\$]*(\.[a-z_\$][a-z0-9_\$]*)*$/i
+
     # This header is passed by Rack::Proxy during testing. Rack::Proxy seems to
     # set content-length for you, and setting it in here really slows the tests
     # down. Better suggestions welcome.
@@ -89,22 +91,33 @@ module Faye
 
       debug "Received message via HTTP #{request.request_method}: ?", json_msg
 
-      message = MultiJson.load(json_msg)
-      request.env['rack.hijack'].call if request.env['rack.hijack']
-
+      message  = MultiJson.load(json_msg)
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
       headers  = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
       origin   = request.env['HTTP_ORIGIN']
       callback = request.env['async.callback']
-      hijack   = request.env['rack.hijack_io']
+
+      if jsonp !~ VALID_JSONP_CALLBACK
+        error 'Invalid JSON-P callback: ?', jsonp
+        return [400, TYPE_TEXT, ['Bad request']]
+      end
 
       headers['Access-Control-Allow-Origin'] = origin if origin
       headers['Cache-Control'] = 'no-cache, no-store'
+      headers['X-Content-Type-Options'] = 'nosniff'
+
+      request.env['rack.hijack'].call if request.env['rack.hijack']
+      hijack = request.env['rack.hijack_io']
 
       EventMachine.next_tick do
         @server.process(message, request) do |replies|
           response = Faye.to_json(replies)
-          response = "#{ jsonp }(#{ jsonp_escape(response) });" if request.get?
+
+          if request.get?
+            response = "/**/#{ jsonp }(#{ jsonp_escape(response) });"
+            headers['Content-Disposition'] = 'attachment; filename=f.txt'
+          end
+
           headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
           headers['Connection'] = 'close'
           debug 'HTTP response: ?', response
