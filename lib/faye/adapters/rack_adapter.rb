@@ -15,6 +15,8 @@ module Faye
     TYPE_SCRIPT = {'Content-Type' => 'text/javascript; charset=utf-8'}
     TYPE_TEXT   = {'Content-Type' => 'text/plain; charset=utf-8'}
 
+    VALID_JSONP_CALLBACK = /^[a-z_\$][a-z0-9_\$]*(\.[a-z_\$][a-z0-9_\$]*)*$/i
+
     # This header is passed by Rack::Proxy during testing. Rack::Proxy seems to
     # set content-length for you, and setting it in here really slows the tests
     # down. Better suggestions welcome.
@@ -107,14 +109,25 @@ module Faye
       origin   = request.env['HTTP_ORIGIN']
       callback = request.env['async.callback']
 
+      if jsonp !~ VALID_JSONP_CALLBACK
+        error 'Invalid JSON-P callback: ?', jsonp
+        return [400, TYPE_TEXT, ['Bad request']]
+      end
+
       @server.flush_connection(message) if request.get?
 
       headers['Access-Control-Allow-Origin'] = origin if origin
       headers['Cache-Control'] = 'no-cache, no-store'
+      headers['X-Content-Type-Options'] = 'nosniff'
 
       @server.process(message, false) do |replies|
         response = Faye.to_json(replies)
-        response = "#{ jsonp }(#{ response });" if request.get?
+
+        if request.get?
+          response = "/**/#{ jsonp }(#{ response });"
+          headers['Content-Disposition'] = 'attachment; filename=f.txt'
+        end
+
         headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
         headers['Connection'] = 'close'
         debug 'HTTP response: ?', response
