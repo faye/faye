@@ -246,8 +246,8 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
         get("/bayeux", params)
         check_status(200)
         check_content_type("text/javascript")
-        check_content_length("42")
-        check_body('callback([{"channel":"/meta/handshake"}]);')
+        check_content_length("46")
+        check_body('/**/callback([{"channel":"/meta/handshake"}]);')
       }})
 
       it("does not let the client cache the response", function() { with(this) {
@@ -267,8 +267,8 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
         get("/bayeux", params)
         check_status(200)
         check_content_type("text/javascript")
-        check_content_length("47")
-        check_body('jsonpcallback([{"channel":"/meta/handshake"}]);')
+        check_content_length("51")
+        check_body('/**/jsonpcallback([{"channel":"/meta/handshake"}]);')
       }})
     }})
 
@@ -288,6 +288,13 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
     describe("with malformed JSON", function() { with(this) {
       before(function() { with(this) {
         params.message = "[}"
+      }})
+      behavesLike("bad GET request")
+    }})
+
+    describe("with a callback that's not a JS identifier", function() { with(this) {
+      before(function() { with(this) {
+        params.jsonp = "42"
       }})
       behavesLike("bad GET request")
     }})

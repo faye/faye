@@ -22,6 +22,8 @@ Faye.NodeAdapter = Faye.Class({
   TYPE_SCRIPT:  {'Content-Type': 'text/javascript; charset=utf-8'},
   TYPE_TEXT:    {'Content-Type': 'text/plain; charset=utf-8'},
 
+  VALID_JSONP_CALLBACK: /^[a-z_\$][a-z0-9_\$]*(\.[a-z_\$][a-z0-9_\$]*)*$/i,
+
   initialize: function(options) {
     this._options    = options || {};
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
@@ -135,12 +137,21 @@ Faye.NodeAdapter = Faye.Class({
           headers = Faye.extend({}, type),
           origin  = request.headers.origin;
 
+      if (!this.VALID_JSONP_CALLBACK.test(jsonp))
+        return this._returnError(response, {message: 'Invalid JSON-P callback: ' + jsonp});
+
       if (origin) headers['Access-Control-Allow-Origin'] = origin;
       headers['Cache-Control'] = 'no-cache, no-store';
+      headers['X-Content-Type-Options'] = 'nosniff';
 
       this._server.process(message, request, function(replies) {
         var body = Faye.toJSON(replies);
-        if (isGet) body = jsonp + '(' + this._jsonpEscape(body) + ');';
+
+        if (isGet) {
+          body = '/**/' + jsonp + '(' + this._jsonpEscape(body) + ');';
+          headers['Content-Disposition'] = 'attachment; filename=f.txt';
+        }
+
         headers['Content-Length'] = new Buffer(body, 'utf8').length.toString();
         headers['Connection'] = 'close';
 
