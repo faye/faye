@@ -1,7 +1,10 @@
-### 1.0.2 / 2014-07-08
+### 1.0.3 / 2014-07-08
 
 * Make some changes to JSON-P responses to mitigate the Rosetta Flash attack
 * http://miki.it/blog/2014/7/8/abusing-jsonp-with-rosetta-flash/
+
+
+### 1.0.2 -- removed due to error while publishing
 
 
 ### 1.0.1 / 2013-12-10
