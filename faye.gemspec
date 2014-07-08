@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name              = 'faye'
-  s.version           = '1.0.2'
+  s.version           = '1.0.3'
   s.summary           = 'Simple pub/sub messaging for the web'
   s.author            = 'James Coglan'
   s.email             = 'jcoglan@gmail.com'
@@ -37,6 +37,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec-eventmachine', '>= 0.2.0'
   s.add_development_dependency 'RedCloth', '~> 3.0.0'
   s.add_development_dependency 'sinatra'
+  s.add_development_dependency 'sass', '~> 3.2.0'
   s.add_development_dependency 'staticmatic'
 
   jruby = RUBY_PLATFORM =~ /java/
