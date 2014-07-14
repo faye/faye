@@ -78,7 +78,7 @@ module Faye
       return if envelope.request or envelope.timer
 
       envelope.timer = EventMachine.add_timer(timeout) do
-        handle_error(message, false)
+        handle_error(message)
       end
 
       envelope.request = @transport.send_message(message)
@@ -96,7 +96,7 @@ module Faye
       @client.trigger('transport:up')
     end
 
-    def handle_error(message, immediate)
+    def handle_error(message, immediate = false)
       return unless envelope = @envelopes[message['id']]
       return unless request = envelope.request
 
@@ -110,7 +110,7 @@ module Faye
       if immediate
         send_message(envelope.message, envelope.timeout)
       else
-        envelope.timer = EventMachine.add_timer(@rety) do
+        envelope.timer = EventMachine.add_timer(@retry) do
           envelope.timer = nil
           send_message(envelope.message, envelope.timeout)
         end

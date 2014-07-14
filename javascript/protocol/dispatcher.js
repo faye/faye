@@ -66,7 +66,7 @@ Faye.Dispatcher = Faye.Class({
     if (envelope.request || envelope.timer) return;
 
     envelope.timer = Faye.ENV.setTimeout(function() {
-      self.handleError(message, false);
+      self.handleError(message);
     }, timeout * 1000);
 
     envelope.request = this._transport.sendMessage(message);

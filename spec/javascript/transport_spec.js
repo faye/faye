@@ -68,6 +68,12 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
         })
       }})
 
+      it("does not return disabled types", function() { with(this) {
+        Faye.Transport.get(dispatcher, [longPolling, inProcess], [inProcess], function(transport) {
+          assertKindOf( HttpTransport, transport )
+        })
+      }})
+
       it("allows types to be specifically selected", function() { with(this) {
         Faye.Transport.get(dispatcher, [inProcess], [], function(transport) {
           assertKindOf( LocalTransport, transport )

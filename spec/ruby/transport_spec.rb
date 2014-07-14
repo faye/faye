@@ -64,6 +64,12 @@ describe Faye::Transport do
         transport.should be_kind_of(Faye::Transport::Local)
       end
 
+      it "does not return disabled types" do
+        Faye::Transport.get dispatcher, ["long-polling", "in-process"], ["in-process"] do |t|
+          t.should be_kind_of(Faye::Transport::Http)
+        end
+      end
+
       it "allows types to be specifically selected" do
         local_transport.should be_kind_of(Faye::Transport::Local)
         http_transport.should be_kind_of(Faye::Transport::Http)
