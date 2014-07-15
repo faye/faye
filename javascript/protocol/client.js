@@ -83,6 +83,11 @@ Faye.Client = Faye.Class({
     if (this._advice.reconnect === this.NONE) return;
     if (this._state !== this.UNCONNECTED) return;
 
+    if (this._options.reuseTransport === false && this._transport) {
+      this._transport.close();
+      this._transport = null;
+    }
+
     this._state = this.CONNECTING;
     var self = this;
 
