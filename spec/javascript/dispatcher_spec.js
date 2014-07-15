@@ -152,12 +152,20 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
         dispatcher.handleError(message)
         expect(transport, "sendMessage").exactly(0)
         clock.tick(2500)
-        dispatcher.sendMessage({id: 1}, 25)
+        dispatcher.sendMessage(message, 25)
+      }})
+
+      it("does not schedule another resend if an error is reported while a resend is scheduled", function() { with(this) {
+        expect(transport, "sendMessage").given({id: 1}).exactly(1)
+        dispatcher.handleError(message)
+        clock.tick(2500)
+        dispatcher.handleError(message)
+        clock.tick(5500)
       }})
 
       it("emits the transport:down event via the client", function() { with(this) {
         expect(client, "trigger").given("transport:down").exactly(1)
-        dispatcher.handleError({id: 1})
+        dispatcher.handleError(message)
       }})
 
       it("only emits transport:down once, when the first error is received", function() { with(this) {
@@ -195,7 +203,7 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
 
       it("leaves the timeout to resend the message if successful is missing", function() { with(this) {
         expect(dispatcher, "handleError").given({id: 1}).exactly(1)
-        dispatcher.handleResponse({id: 1})
+        dispatcher.handleResponse(message)
         clock.tick(25000)
       }})
 
@@ -206,7 +214,7 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
 
       it("emits the transport:up event via the client", function() { with(this) {
         expect(client, "trigger").given("transport:up").exactly(1)
-        dispatcher.handleResponse({id: 1})
+        dispatcher.handleResponse(message)
       }})
 
       it("only emits transport:up once, when the first message is received", function() { with(this) {

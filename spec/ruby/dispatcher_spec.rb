@@ -30,7 +30,7 @@ describe Faye::Dispatcher do
     end
   end
 
-  describe "select_transport" do
+  describe :select_transport do
     let(:connection_types) { ["long-polling", "callback-polling", "websocket"] }
 
     it "asks Transport to select one of the given transports" do
@@ -67,7 +67,7 @@ describe Faye::Dispatcher do
     end
   end
 
-  describe "messaging" do
+  describe :messaging do
     let(:message) { {'id' => 1} }
     let(:request) { double(:request) }
 
@@ -147,12 +147,20 @@ describe Faye::Dispatcher do
         @dispatcher.handle_error(message)
         expect(transport).not_to receive(:send_message)
         clock.tick(2.5)
-        @dispatcher.send_message({'id' => 1}, 25)
+        @dispatcher.send_message(message, 25)
+      end
+
+      it "does not schedule another resend if an error is reported while a resend is scheduled" do
+        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1)
+        @dispatcher.handle_error(message)
+        clock.tick(2.5)
+        @dispatcher.handle_error(message)
+        clock.tick(5.5)
       end
 
       it "emits the transport:down event via the client" do
         expect(client).to receive(:trigger).with("transport:down").exactly(1)
-        @dispatcher.handle_error({'id' => 1})
+        @dispatcher.handle_error(message)
       end
 
       it "only emits transport:down once, when the first error is received" do
@@ -190,7 +198,7 @@ describe Faye::Dispatcher do
 
       it "leaves the timeout to resend the message if successful is missing" do
         expect(@dispatcher).to receive(:handle_error).with({'id' => 1}).exactly(1)
-        @dispatcher.handle_response({'id' => 1})
+        @dispatcher.handle_response(message)
         clock.tick(25)
       end
 
@@ -201,7 +209,7 @@ describe Faye::Dispatcher do
 
       it "emits the transport:up event via the client" do
         expect(client).to receive(:trigger).with("transport:up").exactly(1)
-        @dispatcher.handle_response({'id' => 1})
+        @dispatcher.handle_response(message)
       end
 
       it "only emits transport:up once, when the first message is received" do
