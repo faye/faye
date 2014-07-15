@@ -1,0 +1,5 @@
+rvm:
+  - "1.9.3"
+  - "2.1.2"
+before_install: "npm install && npm run-script build"
+script: "bundle exec rake && node spec/node.js"
