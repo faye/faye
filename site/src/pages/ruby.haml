@@ -71,6 +71,11 @@
 
     run app</pre>
 
+    Some servers supported by Faye, such as Passenger, use a multi-process model
+    rather than using threads or events in the same process. For those servers,
+    the default in-memory "engine":/ruby/engines.html will not work; you should
+    use a multi-process engine such as the Redis backend.
+
     Faye uses "MultiJson":http://rubygems.org/gems/multi_json to allow fast JSON
     processing on both MRI and JRuby. For speed, we recommand using the
     "@:oj@":http://rubygems.org/gems/oj engine on MRI and the
