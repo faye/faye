@@ -92,7 +92,7 @@ Faye.Dispatcher = Faye.Class({
         request  = envelope && envelope.request,
         self     = this;
 
-    if (!envelope || !envelope.request) return;
+    if (!request) return;
 
     request.then(function(req) {
       if (req && req.abort) req.abort();
