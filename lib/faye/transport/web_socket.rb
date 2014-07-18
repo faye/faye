@@ -12,6 +12,16 @@ module Faye
 
     include Deferrable
 
+    class Request
+      def initialize(transport)
+        @transport = transport
+      end
+
+      def close
+        @transport.callback { |socket| socket.close }
+      end
+    end
+
     def self.usable?(dispatcher, endpoint, &callback)
       create(dispatcher, endpoint).usable?(&callback)
     end
@@ -40,6 +50,8 @@ module Faye
         socket.send(Faye.to_json(messages))
       end
       connect
+
+      Request.new(self)
     end
 
     def connect
