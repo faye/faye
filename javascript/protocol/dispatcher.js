@@ -55,15 +55,24 @@ Faye.Dispatcher = Faye.Class({
     }, this);
   },
 
-  sendMessage: function(message, timeout) {
+  sendMessage: function(message, timeout, options) {
     if (!this._transport) return;
+    options = options || {};
 
     var self     = this,
         id       = message.id,
+        attempts = options.attempts,
+        deadline = options.deadline && new Date().getTime() + (options.deadline * 1000),
+
         envelope = this._envelopes[id] = this._envelopes[id] ||
-                   {message: message, timeout: timeout, request: null, timer: null};
+                   {message: message, timeout: timeout, attempts: attempts, deadline: deadline};
 
     if (envelope.request || envelope.timer) return;
+
+    if (this._attemptsExhausted(envelope) || this._deadlinePassed(envelope)) {
+      delete this._envelopes[id];
+      return;
+    }
 
     envelope.timer = Faye.ENV.setTimeout(function() {
       self.handleError(message);
@@ -113,6 +122,20 @@ Faye.Dispatcher = Faye.Class({
     if (this._state === this.DOWN) return;
     this._state = this.DOWN;
     this._client.trigger('transport:down');
+  },
+
+  _attemptsExhausted: function(envelope) {
+    if (envelope.attempts === undefined) return false;
+    envelope.attempts -= 1;
+    if (envelope.attempts >= 0) return false;
+    return true;
+  },
+
+  _deadlinePassed: function(envelope) {
+    var deadline = envelope.deadline;
+    if (deadline === undefined) return false;
+    if (new Date().getTime() <= deadline) return false;
+    return true;
   }
 });
 

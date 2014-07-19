@@ -76,7 +76,7 @@ module Faye
         'version'                  => BAYEUX_VERSION,
         'supportedConnectionTypes' => [@dispatcher.connection_type]
 
-      }) do |response|
+      }, {}) do |response|
 
         if response['successful']
           @state = CONNECTED
@@ -129,7 +129,7 @@ module Faye
         'clientId'       => @dispatcher.client_id,
         'connectionType' => @dispatcher.connection_type
 
-      }) do
+      }, {}) do
         cycle_connection
       end
     end
@@ -151,7 +151,7 @@ module Faye
         'channel'  => Channel::DISCONNECT,
         'clientId' => @dispatcher.client_id
 
-      }) do |response|
+      }, {}) do |response|
         @dispatcher.close if response['successful']
       end
 
@@ -192,7 +192,7 @@ module Faye
           'clientId'     => @dispatcher.client_id,
           'subscription' => channel
 
-        }) do |response|
+        }, {}) do |response|
           unless response['successful']
             subscription.set_deferred_status(:failed, Error.parse(response['error']))
             next @channels.unsubscribe(channel, block)
@@ -232,7 +232,7 @@ module Faye
           'clientId'     => @dispatcher.client_id,
           'subscription' => channel
 
-        }) do |response|
+        }, {}) do |response|
           next unless response['successful']
 
           channels = [response['subscription']].flatten
@@ -247,7 +247,7 @@ module Faye
     # MAY include:   * clientId            MAY include:   * id
     #                * id                                 * error
     #                * ext                                * ext
-    def publish(channel, data)
+    def publish(channel, data, options = {})
       publication = Publication.new
       connect {
         info('Client ? queueing published message to ?: ?', @dispatcher.client_id, channel, data)
@@ -257,7 +257,7 @@ module Faye
           'data'     => data,
           'clientId' => @dispatcher.client_id
 
-        }) do |response|
+        }, options) do |response|
           if response['successful']
             publication.set_deferred_status(:succeeded)
           else
@@ -270,7 +270,7 @@ module Faye
 
   private
 
-    def send_message(message, &callback)
+    def send_message(message, options, &callback)
       message['id'] = generate_message_id
 
       timeout = [nil, 0].include?(@advice['timeout']) ?
@@ -280,7 +280,7 @@ module Faye
       pipe_through_extensions(:outgoing, message, nil) do |message|
         next unless message
         @response_callbacks[message['id']] = callback if callback
-        @dispatcher.send_message(message, timeout)
+        @dispatcher.send_message(message, timeout, options)
       end
     end
 

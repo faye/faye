@@ -31,3 +31,28 @@
     }, function(error) {
       alert('There was a problem: ' + error.message);
     });</pre>
+
+    The Faye client will automatically try to resend your messages if it
+    encounters a network error. It will attempt to resend the message until it
+    receives confirmation that the server has processed it. Sometimes, you might
+    not want messages to be retried indefinitely, and Faye gives you two ways to
+    limit this behaviour.
+
+    The @deadline@ option specifies how long to wait before giving up, for
+    example if you call
+
+    <pre>client.publish('/foo', {text: 'Hi there'}, {deadline: 10});</pre>
+
+    then the client will not attempt to resend the message any later than 10
+    seconds after your first @publish()@ call.
+
+    The @attempts@ option sets how many times the client will try to send a
+    message before giving up, including the first attempt. For example, this
+    will make the client try to deliver the message up to 3 times:
+
+    <pre>client.publish('/foo', {text: 'Hi there'}, {attempts: 3});</pre>
+
+    Bear in mind that error detection depends somewhat on the transport in use,
+    and these options do not tightly control when your messages will be retried.
+    Faye will make a best effort to ensure delivery of your messages within the
+    parameters you specify.

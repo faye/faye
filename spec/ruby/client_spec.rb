@@ -77,7 +77,7 @@ describe Faye::Client do
         "version" => "1.0",
         "supportedConnectionTypes" => ["fake-transport"],
         "id"      => instance_of(String)
-      }, 72)
+      }, 72, {})
       @client.handshake
     end
 
@@ -104,7 +104,7 @@ describe Faye::Client do
           "supportedConnectionTypes" => ["fake-transport"],
           "id"      => instance_of(String),
           "ext"     => {"auth" => "password"}
-        }, 72)
+        }, 72, {})
         @client.handshake
       end
     end
@@ -175,13 +175,13 @@ describe Faye::Client do
       end
 
       it "resends the subscriptions to the server" do
-        dispatcher.should_receive(:send_message).with(hash_including("channel" => "/meta/handshake"), 72)
+        dispatcher.should_receive(:send_message).with(hash_including("channel" => "/meta/handshake"), 72, {})
         dispatcher.should_receive(:send_message).with({
           "channel"      => "/meta/subscribe",
           "clientId"     => "reconnectid",
           "subscription" => "/messages/foo",
           "id"           => instance_of(String)
-        }, 72)
+        }, 72, {})
         @client.handshake
       end
 
@@ -201,7 +201,7 @@ describe Faye::Client do
           "version" => "1.0",
           "supportedConnectionTypes" => ["fake-transport"],
           "id"      => instance_of(String)
-        }, 72)
+        }, 72, {})
         @client.handshake
       end
     end
@@ -225,7 +225,7 @@ describe Faye::Client do
           "clientId"       => "handshakeid",
           "connectionType" => "fake-transport",
           "id"             => instance_of(String)
-        }, 72)
+        }, 72, {})
         @client.connect
       end
     end
@@ -239,7 +239,7 @@ describe Faye::Client do
           "clientId"       => "fakeid",
           "connectionType" => "fake-transport",
           "id"             => instance_of(String)
-        }, 72)
+        }, 72, {})
         @client.connect
       end
 
@@ -249,7 +249,7 @@ describe Faye::Client do
           "clientId"       => "fakeid",
           "connectionType" => "fake-transport",
           "id"             => instance_of(String)
-        }, 72).
+        }, 72, {}).
         exactly(1).
         and_return(nil) # override stub implementation
 
@@ -268,7 +268,7 @@ describe Faye::Client do
         "channel"  => "/meta/disconnect",
         "clientId" => "fakeid",
         "id"       => instance_of(String)
-      }, 72)
+      }, 72, {})
       @client.disconnect
     end
 
@@ -305,7 +305,7 @@ describe Faye::Client do
 
     describe "with no prior subscriptions" do
       it "sends a subscribe message to the server" do
-        dispatcher.should_receive(:send_message).with(@subscribe_message, 72)
+        dispatcher.should_receive(:send_message).with(@subscribe_message, 72, {})
         @client.subscribe("/foo/*")
       end
 
@@ -318,13 +318,13 @@ describe Faye::Client do
             "clientId"     => "fakeid",
             "subscription" => "/foo",
             "id"           => instance_of(String)
-          }, 72)
+          }, 72, {})
           dispatcher.should_receive(:send_message).with({
             "channel"      => "/meta/subscribe",
             "clientId"     => "fakeid",
             "subscription" => "/bar",
             "id"           => instance_of(String)
-          }, 72)
+          }, 72, {})
           @client.subscribe(["/foo", "/bar"])
         end
 
@@ -465,7 +465,7 @@ describe Faye::Client do
       end
 
       it "does not send another subscribe message to the server" do
-        dispatcher.should_not_receive(:send_message).with(@subscribe_message, 72)
+        dispatcher.should_not_receive(:send_message).with(@subscribe_message, 72, {})
         @client.subscribe("/foo/*")
       end
 
@@ -496,7 +496,7 @@ describe Faye::Client do
 
     describe "with no subscriptions" do
       it "does not send an unsubscribe message to the server" do
-        dispatcher.should_not_receive(:send_message).with(@unsubscribe_message, 72)
+        dispatcher.should_not_receive(:send_message).with(@unsubscribe_message, 72, {})
         @client.unsubscribe("/foo/*")
       end
     end
@@ -509,7 +509,7 @@ describe Faye::Client do
       end
 
       it "sends an unsubscribe message to the server" do
-        dispatcher.should_receive(:send_message).with(@unsubscribe_message, 72)
+        dispatcher.should_receive(:send_message).with(@unsubscribe_message, 72, {})
         @client.unsubscribe("/foo/*")
       end
 
@@ -538,18 +538,18 @@ describe Faye::Client do
       end
 
       it "does not send an unsubscribe message if one listener is removed" do
-        dispatcher.should_not_receive(:send_message).with(@unsubscribe_message, 72)
+        dispatcher.should_not_receive(:send_message).with(@unsubscribe_message, 72, {})
         @client.unsubscribe("/foo/*", &@bye)
       end
 
       it "sends an unsubscribe message if each listener is removed" do
-        dispatcher.should_receive(:send_message).with(@unsubscribe_message, 72)
+        dispatcher.should_receive(:send_message).with(@unsubscribe_message, 72, {})
         @client.unsubscribe("/foo/*", &@bye)
         @client.unsubscribe("/foo/*", &@hey)
       end
 
       it "sends an unsubscribe message if all listeners are removed" do
-        dispatcher.should_receive(:send_message).with(@unsubscribe_message, 72)
+        dispatcher.should_receive(:send_message).with(@unsubscribe_message, 72, {})
         @client.unsubscribe("/foo/*")
       end
     end
@@ -566,13 +566,13 @@ describe Faye::Client do
           "clientId"     => "fakeid",
           "subscription" => "/foo",
           "id"           => instance_of(String)
-        }, 72)
+        }, 72, {})
         dispatcher.should_receive(:send_message).with({
           "channel"      => "/meta/unsubscribe",
           "clientId"     => "fakeid",
           "subscription" => "/bar",
           "id"           => instance_of(String)
-        }, 72)
+        }, 72, {})
         @client.unsubscribe(["/foo", "/bar"])
       end
     end
@@ -587,12 +587,12 @@ describe Faye::Client do
         "clientId" => "fakeid",
         "data"     => {"hello" => "world"},
         "id"       => instance_of(String)
-      }, 72)
+      }, 72, {})
       @client.publish("/messages/foo", "hello" => "world")
     end
 
     it "throws an error when publishing to an invalid channel" do
-      dispatcher.should_not_receive(:send_message).with(hash_including("channel" => "/messages/*"), 72)
+      dispatcher.should_not_receive(:send_message).with(hash_including("channel" => "/messages/*"), 72, {})
       lambda { @client.publish("/messages/*", "hello" => "world") }.should raise_error
     end
 
@@ -653,7 +653,7 @@ describe Faye::Client do
           "data"     => {"hello" => "world"},
           "id"       => instance_of(String),
           "ext"      => {"auth" => "password"}
-        }, 72)
+        }, 72, {})
         @client.publish("/messages/foo", "hello" => "world")
       end
     end
@@ -675,7 +675,7 @@ describe Faye::Client do
           "clientId" => "fakeid",
           "data"     => {"hello" => "world"},
           "id"       => instance_of(String)
-        }, 72)
+        }, 72, {})
         @client.publish("/messages/foo", "hello" => "world")
       end
     end

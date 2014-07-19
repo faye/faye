@@ -150,12 +150,36 @@ describe Faye::Dispatcher do
         @dispatcher.send_message(message, 25)
       end
 
-      it "does not schedule another resend if an error is reported while a resend is scheduled" do
+      it "does not schedule another resend if an error is reported while waiting to resend" do
         expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1)
         @dispatcher.handle_error(message)
         clock.tick(2.5)
         @dispatcher.handle_error(message)
         clock.tick(5.5)
+      end
+
+      it "does not schedule a resend if the number of attempts has been exhausted" do
+        expect(transport).to receive(:send_message).with({'id' => 2}).exactly(2).and_return(req_promise)
+        @dispatcher.send_message({'id' => 2}, 25, :attempts => 2)
+        @dispatcher.handle_error({'id' => 2}, true)
+        @dispatcher.handle_error({'id' => 2}, true)
+      end
+
+      it "does not count down attempts when an error is reported while waiting to resend" do
+        @dispatcher.send_message({'id' => 2}, 25, :attempts => 3)
+        @dispatcher.handle_error({'id' => 2})
+        clock.tick(2.5)
+        @dispatcher.handle_error({'id' => 2}, true)
+        clock.tick(2.5)
+        expect(transport).to receive(:send_message).with({'id' => 2}).exactly(1).and_return(req_promise)
+        @dispatcher.handle_error({'id' => 2}, true)
+      end
+
+      it "does not schedule a resend if the deadline has been reached" do
+        @dispatcher.handle_response({'id' => 1, 'successful' => true})
+        @dispatcher.send_message({'id' => 2}, 25, :deadline => 60)
+        expect(transport).to receive(:send_message).with({'id' => 2}).exactly(2).and_return(req_promise)
+        clock.tick(90)
       end
 
       it "emits the transport:down event via the client" do
