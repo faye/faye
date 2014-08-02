@@ -77,6 +77,22 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
     setTimeout(resume, time)
   },
 
+  expect_non_exclusive_event: function(name, event, args, engine, resume) {
+    var params  = [this._clients[name]].concat(args),
+        handler = function() {};
+
+    // we don't care if the event is called for other clients
+    var filter = function() {
+      if (arguments[0] == params[0]) {
+        handler.apply(undefined, Array.prototype.slice.call(arguments));
+      }
+    };
+
+    engine.bind(event, filter)
+    this.expect(handler, "apply").given(undefined, params).exactly(1)
+    resume()
+  },
+
   expect_event: function(name, event, args, resume) {
     var params  = [this._clients[name]].concat(args),
         handler = function() {}
@@ -411,6 +427,17 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         publish({channel: "/foo", data: "second"})
         connect("alice", right)
         expect_message("alice", [{channel: "/foo", data: "first"}, {channel: "/foo", data: "second"}])
+      }})
+    }})
+
+    describe("gc", function() { with(this) {
+      define("options", function() { return {timeout: 0.3, gc: 0.08} })
+
+      it("calls close in each engine when a client is removed", function() { with(this) {
+        expect_non_exclusive_event("alice", "close", [], this.left);
+        expect_non_exclusive_event("alice", "close", [], this.right);
+
+        clock_tick(700);
       }})
     }})
   }})
