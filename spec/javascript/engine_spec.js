@@ -145,6 +145,15 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
         expect(engine, "trigger").given("handshake", match(/^[a-z0-9]+$/))
         create_client("dave")
       }})
+
+      describe("gc", function() { with(this) {
+        define("options", function() { return {timeout: 0.3, gc: 0.2} })
+
+        it("doesn't prematurely remove a client after creation", function() { with(this) {
+          clock_tick(250)
+          check_client_exists("alice", true)
+        }})
+      }})
     }})
 
     describe("clientExists", function() { with(this) {
