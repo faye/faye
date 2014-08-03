@@ -127,6 +127,7 @@ end
 shared_examples_for "faye engine" do
   include EncodingHelper
   include EngineSteps
+  include RSpec::EM::FakeClock
 
   def create_engine
     opts = options.merge(engine_opts)
@@ -169,23 +170,30 @@ shared_examples_for "faye engine" do
       check_client_exists :anything, false
     end
   end
-=begin
+
   describe :ping do
+    before { clock.stub  }
+    after  { clock.reset }
+
+    def options
+      {:timeout => 0.3, :gc => 0.08}
+    end
+
     it "removes a client if it does not ping often enough" do
-      clock_tick 2
+      clock_tick 0.7
       check_client_exists :alice, false
     end
 
     it "prolongs the life of a client" do
-      clock_tick 1
+      clock_tick 0.45
       ping :alice
-      clock_tick 1
+      clock_tick 0.45
       check_client_exists :alice, true
-      clock_tick 1
+      clock_tick 0.45
       check_client_exists :alice, false
     end
   end
-=end
+
   describe :destroy_client do
     it "removes the given client" do
       destroy_client :alice
