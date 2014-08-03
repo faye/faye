@@ -33,7 +33,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rack-proxy', '~> 0.4.0'
   s.add_development_dependency 'rack-test'
   s.add_development_dependency 'rake'
-  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'rspec', '~> 2.99.0'
   s.add_development_dependency 'rspec-eventmachine', '>= 0.2.0'
   s.add_development_dependency 'RedCloth', '~> 3.0.0'
   s.add_development_dependency 'sinatra'
