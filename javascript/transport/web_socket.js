@@ -15,8 +15,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     this._pending = this._pending || new Faye.Set();
     for (var i = 0, n = messages.length; i < n; i++) this._pending.add(messages[i]);
 
-    var promise = new Faye.Promise(),
-        self    = this;
+    var promise = new Faye.Promise();
 
     this.callback(function(socket) {
       if (!socket) return;
