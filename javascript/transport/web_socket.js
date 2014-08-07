@@ -15,18 +15,19 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     this._pending = this._pending || new Faye.Set();
     for (var i = 0, n = messages.length; i < n; i++) this._pending.add(messages[i]);
 
+    var promise = new Faye.Promise(),
+        self    = this;
+
     this.callback(function(socket) {
       if (!socket) return;
       socket.send(Faye.toJSON(messages));
+      Faye.Promise.fulfill(promise, socket);
     }, this);
 
     this.connect();
-    var self = this;
 
     return {
-      abort: function() {
-        self.callback(function(socket) { socket.close() });
-      }
+      abort: function() { promise.then(function(ws) { ws.close() }) }
     };
   },
 

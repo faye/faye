@@ -13,12 +13,10 @@ module Faye
     include Deferrable
 
     class Request
-      def initialize(transport)
-        @transport = transport
-      end
+      include Deferrable
 
       def close
-        @transport.callback { |socket| socket.close }
+        callback { |socket| socket.close }
       end
     end
 
@@ -45,13 +43,16 @@ module Faye
       @pending ||= Set.new
       messages.each { |message| @pending.add(message) }
 
+      promise = Request.new
+
       callback do |socket|
         next unless socket
         socket.send(Faye.to_json(messages))
+        promise.succeed(socket)
       end
-      connect
 
-      Request.new(self)
+      connect
+      promise
     end
 
     def connect
