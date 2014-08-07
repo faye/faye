@@ -137,6 +137,11 @@ describe Faye::Dispatcher do
         clock.tick(5.5)
       end
 
+      it "aborts the request used to send the message" do
+        expect(request).to receive(:close).exactly(1)
+        @dispatcher.handle_error(message)
+      end
+
       it "does not resend a message with an ID it does not recognize" do
         @dispatcher.handle_error({'id' => 2})
         expect(transport).not_to receive(:send_message)

@@ -142,6 +142,12 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
         clock.tick(5500)
       }})
 
+      it("aborts the request used to send the message", function(resume) { with(this) {
+        expect(request, "abort").exactly(1)
+        dispatcher.handleError(message)
+        Faye.Promise.defer(resume)
+      }})
+
       it("does not resend a message with an ID it does not recognize", function() { with(this) {
         dispatcher.handleError({id: 2})
         expect(transport, "sendMessage").exactly(0)
