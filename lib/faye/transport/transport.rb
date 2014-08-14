@@ -39,9 +39,9 @@ module Faye
         return promise
       end
 
-      @promise ||= EventMachine::DefaultDeferrable.new
       @outbox << message
       flush_large_batch
+      @promise ||= EventMachine::DefaultDeferrable.new
 
       if message['channel'] == Channel::HANDSHAKE
         add_timeout(:publish, 0.01) { flush }
