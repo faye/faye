@@ -45,8 +45,9 @@
 
     If the connection to the server is lost, the client will periodically try to
     reconnect and redeliver dropped messages. You can control how often these
-    retries happen using the @retry@ setting. It sets how often, in seconds, the
-    client will try to reconnect:
+    retries happen using the @retry@ setting. It sets the amount of time the
+    client will wait between detecting a network error and attempting to resend
+    a message.
 
     <pre>var client = new Faye.Client('http://localhost:8000/faye', {
         retry: 5

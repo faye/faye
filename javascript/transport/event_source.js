@@ -1,12 +1,12 @@
 Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
-  initialize: function(client, endpoint) {
-    Faye.Transport.prototype.initialize.call(this, client, endpoint);
+  initialize: function(dispatcher, endpoint) {
+    Faye.Transport.prototype.initialize.call(this, dispatcher, endpoint);
     if (!Faye.ENV.EventSource) return this.setDeferredStatus('failed');
 
-    this._xhr = new Faye.Transport.XHR(client, endpoint);
+    this._xhr = new Faye.Transport.XHR(dispatcher, endpoint);
 
     endpoint = Faye.copyObject(endpoint);
-    endpoint.pathname += '/' + client._clientId;
+    endpoint.pathname += '/' + dispatcher.clientId;
 
     var socket = new EventSource(Faye.URI.stringify(endpoint)),
         self   = this;
@@ -18,7 +18,7 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
 
     socket.onerror = function() {
       if (self._everConnected) {
-        self._client.messageError([]);
+        self._handleError([]);
       } else {
         self.setDeferredStatus('failed');
         socket.close();
@@ -26,7 +26,7 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     };
 
     socket.onmessage = function(event) {
-      self.receive([], JSON.parse(event.data));
+      self._receive(JSON.parse(event.data));
     };
 
     this._socket = socket;
@@ -44,34 +44,34 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     this.errback(function() { callback.call(context, false) });
   },
 
-  encode: function(envelopes) {
-    return this._xhr.encode(envelopes);
+  encode: function(messages) {
+    return this._xhr.encode(messages);
   },
 
-  request: function(envelopes) {
-    this._xhr.request(envelopes);
+  request: function(messages) {
+    return this._xhr.request(messages);
   }
 
 }), {
-  isUsable: function(client, endpoint, callback, context) {
-    var id = client._clientId;
+  isUsable: function(dispatcher, endpoint, callback, context) {
+    var id = dispatcher.clientId;
     if (!id) return callback.call(context, false);
 
-    Faye.Transport.XHR.isUsable(client, endpoint, function(usable) {
+    Faye.Transport.XHR.isUsable(dispatcher, endpoint, function(usable) {
       if (!usable) return callback.call(context, false);
-      this.create(client, endpoint).isUsable(callback, context);
+      this.create(dispatcher, endpoint).isUsable(callback, context);
     }, this);
   },
 
-  create: function(client, endpoint) {
-    var sockets = client.transports.eventsource = client.transports.eventsource || {},
-        id      = client._clientId;
+  create: function(dispatcher, endpoint) {
+    var sockets = dispatcher.transports.eventsource = dispatcher.transports.eventsource || {},
+        id      = dispatcher.clientId;
 
     endpoint = Faye.copyObject(endpoint);
     endpoint.pathname += '/' + (id || '');
     var url = Faye.URI.stringify(endpoint);
 
-    sockets[url] = sockets[url] || new this(client, endpoint);
+    sockets[url] = sockets[url] || new this(dispatcher, endpoint);
     return sockets[url];
   }
 });

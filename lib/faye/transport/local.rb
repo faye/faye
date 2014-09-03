@@ -1,7 +1,7 @@
 module Faye
 
   class Transport::Local < Transport
-    def self.usable?(client, endpoint, &callback)
+    def self.usable?(dispatcher, endpoint, &callback)
       callback.call(Server === endpoint)
     end
 
@@ -9,10 +9,9 @@ module Faye
       false
     end
 
-    def request(envelopes)
-      messages = Faye.copy_object(envelopes.map { |e| e.message })
-      @endpoint.process(messages, nil) do |responses|
-        receive(envelopes, Faye.copy_object(responses))
+    def request(messages)
+      @endpoint.process(messages, nil) do |replies|
+        receive(Faye.copy_object(replies))
       end
     end
   end

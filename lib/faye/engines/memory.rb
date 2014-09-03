@@ -28,7 +28,7 @@ module Faye
 
       def create_client(&callback)
         client_id = @namespace.generate
-        @server.debug 'Created new client ?', client_id
+        @server.debug('Created new client ?', client_id)
         ping(client_id)
         @server.trigger(:handshake, client_id)
         callback.call(client_id)
@@ -44,7 +44,7 @@ module Faye
         remove_timeout(client_id)
         @namespace.release(client_id)
         @messages.delete(client_id)
-        @server.debug 'Destroyed client ?', client_id
+        @server.debug('Destroyed client ?', client_id)
         @server.trigger(:disconnect, client_id)
         @server.trigger(:close, client_id)
         callback.call if callback
@@ -57,7 +57,7 @@ module Faye
       def ping(client_id)
         timeout = @server.timeout
         return unless Numeric === timeout
-        @server.debug 'Ping ?, ?', client_id, timeout
+        @server.debug('Ping ?, ?', client_id, timeout)
         remove_timeout(client_id)
         add_timeout(client_id, 2 * timeout) { destroy_client(client_id) }
       end
@@ -69,7 +69,7 @@ module Faye
         @channels[channel] ||= Set.new
         @channels[channel].add(client_id)
 
-        @server.debug 'Subscribed client ? to channel ?', client_id, channel
+        @server.debug('Subscribed client ? to channel ?', client_id, channel)
         @server.trigger(:subscribe, client_id, channel) if should_trigger
         callback.call(true) if callback
       end
@@ -85,13 +85,13 @@ module Faye
           @channels.delete(channel) if @channels[channel].empty?
         end
 
-        @server.debug 'Unsubscribed client ? from channel ?', client_id, channel
+        @server.debug('Unsubscribed client ? from channel ?', client_id, channel)
         @server.trigger(:unsubscribe, client_id, channel) if should_trigger
         callback.call(true) if callback
       end
 
       def publish(message, channels)
-        @server.debug 'Publishing message ?', message
+        @server.debug('Publishing message ?', message)
 
         clients = Set.new
 
@@ -101,7 +101,7 @@ module Faye
         end
 
         clients.each do |client_id|
-          @server.debug 'Queueing for client ?: ?', client_id, message
+          @server.debug('Queueing for client ?: ?', client_id, message)
           @messages[client_id] ||= []
           @messages[client_id] << Faye.copy_object(message)
           empty_queue(client_id)

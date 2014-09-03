@@ -58,10 +58,10 @@
                                     "protocol/grammar",
                                     "protocol/extensible",
                                     "protocol/channel",
-                                    "protocol/envelope",
                                     "protocol/publication",
                                     "protocol/subscription",
                                     "protocol/client",
+                                    "protocol/dispatcher",
                                     "transport/transport"
         ]},
         "node/faye-node": {       "extend": "core",

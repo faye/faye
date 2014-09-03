@@ -1,13 +1,12 @@
 Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
-  encode: function(envelopes) {
-    var messages = Faye.map(envelopes, function(e) { return e.message });
+  encode: function(messages) {
     return 'message=' + encodeURIComponent(Faye.toJSON(messages));
   },
 
-  request: function(envelopes) {
+  request: function(messages) {
     var xhrClass = Faye.ENV.XDomainRequest ? XDomainRequest : XMLHttpRequest,
         xhr      = new xhrClass(),
-        headers  = this._client.headers,
+        headers  = this._dispatcher.headers,
         self     = this,
         key;
 
@@ -28,30 +27,30 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     };
 
     xhr.onload = function() {
-      var parsedMessage = null;
+      var replies = null;
       try {
-        parsedMessage = JSON.parse(xhr.responseText);
+        replies = JSON.parse(xhr.responseText);
       } catch (e) {}
 
       cleanUp();
 
-      if (parsedMessage)
-        self.receive(envelopes, parsedMessage);
+      if (replies)
+        self._receive(replies);
       else
-        self.handleError(envelopes);
+        self._handleError(messages);
     };
 
     xhr.onerror = xhr.ontimeout = function() {
       cleanUp();
-      self.handleError(envelopes);
+      self._handleError(messages);
     };
 
     xhr.onprogress = function() {};
-    xhr.send(this.encode(envelopes));
+    xhr.send(this.encode(messages));
     return xhr;
   }
 }), {
-  isUsable: function(client, endpoint, callback, context) {
+  isUsable: function(dispatcher, endpoint, callback, context) {
     if (Faye.URI.isSameOrigin(endpoint))
       return callback.call(context, false);
 

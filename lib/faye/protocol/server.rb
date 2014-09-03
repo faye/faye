@@ -16,7 +16,7 @@ module Faye
       engine_opts[:timeout] = @options[:timeout]
       @engine     = Faye::Engine.get(engine_opts)
 
-      info 'Created new server: ?', @options
+      info('Created new server: ?', @options)
     end
 
     def close
@@ -35,7 +35,7 @@ module Faye
     def process(messages, env, &callback)
       local    = env.nil?
       messages = [messages].flatten
-      info 'Processing messages: ? (local: ?)', messages, local
+      info('Processing messages: ? (local: ?)', messages, local)
 
       return callback.call([]) if messages.size == 0
       processed, responses = 0, []
@@ -44,7 +44,7 @@ module Faye
         responses.concat(replies)
         processed += 1
         responses.compact!
-        info 'Returning replies: ?', responses
+        info('Returning replies: ?', responses)
         callback.call(responses) if processed == messages.size
       end
 
@@ -53,7 +53,7 @@ module Faye
         gather_replies.call(replies) if expected == 0
 
         replies.each_with_index do |reply, i|
-          debug 'Processing reply: ?', reply
+          debug('Processing reply: ?', reply)
           pipe_through_extensions(:outgoing, reply, env) do |message|
             replies[i] = message
             extended  += 1
@@ -83,7 +83,7 @@ module Faye
 
     def handle(message, local = false, &callback)
       return callback.call([]) if !message
-      info 'Handling message: ? (local: ?)', message, local
+      info('Handling message: ? (local: ?)', message, local)
 
       channel_name = message['channel']
       error        = message['error']

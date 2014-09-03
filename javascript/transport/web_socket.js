@@ -11,16 +11,23 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     this.connect();
   },
 
-  request: function(envelopes) {
+  request: function(messages) {
     this._pending = this._pending || new Faye.Set();
-    for (var i = 0, n = envelopes.length; i < n; i++) this._pending.add(envelopes[i]);
+    for (var i = 0, n = messages.length; i < n; i++) this._pending.add(messages[i]);
+
+    var promise = new Faye.Promise();
 
     this.callback(function(socket) {
       if (!socket) return;
-      var messages = Faye.map(envelopes, function(e) { return e.message });
       socket.send(Faye.toJSON(messages));
+      Faye.Promise.fulfill(promise, socket);
     }, this);
+
     this.connect();
+
+    return {
+      abort: function() { promise.then(function(ws) { ws.close() }) }
+    };
   },
 
   connect: function() {
@@ -61,28 +68,25 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
       delete self._pending;
 
       if (wasConnected) {
-        self.handleError(pending, true);
+        self._handleError(pending, true);
       } else if (self._everConnected) {
-        self.handleError(pending);
+        self._handleError(pending);
       } else {
         self.setDeferredStatus('failed');
       }
     };
 
     socket.onmessage = function(event) {
-      var messages  = JSON.parse(event.data),
-          envelopes = [],
-          envelope;
+      var replies = JSON.parse(event.data);
+      if (!replies) return;
 
-      if (!messages) return;
-      messages = [].concat(messages);
+      replies = [].concat(replies);
 
-      for (var i = 0, n = messages.length; i < n; i++) {
-        if (messages[i].successful === undefined) continue;
-        envelope = self._pending.remove(messages[i]);
-        if (envelope) envelopes.push(envelope);
+      for (var i = 0, n = replies.length; i < n; i++) {
+        if (replies[i].successful === undefined) continue;
+        self._pending.remove(replies[i]);
       }
-      self.receive(envelopes, messages);
+      self._receive(replies);
     };
   },
 
@@ -93,7 +97,8 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
 
   _createSocket: function() {
     var url     = Faye.Transport.WebSocket.getSocketUrl(this.endpoint),
-        options = {headers: Faye.copyObject(this._client.headers), ca: this._client.ca};
+        headers = Faye.copyObject(this._dispatcher.headers),
+        options = {headers: headers, ca: this._dispatcher.ca};
 
     options.headers['Cookie'] = this._getCookies();
 
@@ -105,7 +110,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   _ping: function() {
     if (!this._socket) return;
     this._socket.send('[]');
-    this.addTimeout('ping', this._client._advice.timeout/2000, this._ping, this);
+    this.addTimeout('ping', this._dispatcher.timeout / 2, this._ping, this);
   }
 
 }), {
@@ -114,9 +119,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     'https:': 'wss:'
   },
 
-  create: function(client, endpoint) {
-    var sockets = client.transports.websocket = client.transports.websocket || {};
-    sockets[endpoint.href] = sockets[endpoint.href] || new this(client, endpoint);
+  create: function(dispatcher, endpoint) {
+    var sockets = dispatcher.transports.websocket = dispatcher.transports.websocket || {};
+    sockets[endpoint.href] = sockets[endpoint.href] || new this(dispatcher, endpoint);
     return sockets[endpoint.href];
   },
 
@@ -126,8 +131,8 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     return Faye.URI.stringify(endpoint);
   },
 
-  isUsable: function(client, endpoint, callback, context) {
-    this.create(client, endpoint).isUsable(callback, context);
+  isUsable: function(dispatcher, endpoint, callback, context) {
+    this.create(dispatcher, endpoint).isUsable(callback, context);
   }
 });
 

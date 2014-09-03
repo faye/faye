@@ -1,28 +1,29 @@
 Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
-  encode: function(envelopes) {
-    var messages = Faye.map(envelopes, function(e) { return e.message });
+  encode: function(messages) {
     return Faye.toJSON(messages);
   },
 
-  request: function(envelopes) {
+  request: function(messages) {
     var uri     = this.endpoint,
         secure  = (uri.protocol === 'https:'),
         client  = secure ? https : http,
-        content = new Buffer(this.encode(envelopes), 'utf8'),
+        content = new Buffer(this.encode(messages), 'utf8'),
         self    = this;
 
     var params  = this._buildParams(uri, content, secure),
         request = client.request(params);
 
     request.on('response', function(response) {
-      self._handleResponse(response, envelopes);
+      self._handleResponse(messages, response);
       self._storeCookies(response.headers['set-cookie']);
     });
 
-    request.on('error', function() {
-      self.handleError(envelopes);
+    request.on('error', function(error) {
+      self._handleError(messages);
     });
+
     request.end(content);
+    return request;
   },
 
   _buildParams: function(uri, content, secure) {
@@ -36,33 +37,34 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
         'Content-Type':   'application/json',
         'Cookie':         this._getCookies(),
         'Host':           uri.host
-      }, this._client.headers)
+      }, this._dispatcher.headers)
     };
-    if (this._client.ca) params.ca = this._client.ca;
+    if (this._dispatcher.ca) params.ca = this._dispatcher.ca;
     return params;
   },
 
-  _handleResponse: function(response, envelopes) {
-    var message = null,
+  _handleResponse: function(messages, response) {
+    var replies = null,
         body    = '',
         self    = this;
 
     response.setEncoding('utf8');
     response.on('data', function(chunk) { body += chunk });
+
     response.on('end', function() {
       try {
-        message = JSON.parse(body);
+        replies = JSON.parse(body);
       } catch (e) {}
 
-      if (message)
-        self.receive(envelopes, message);
+      if (replies)
+        self._receive(replies);
       else
-        self.handleError(envelopes);
+        self._handleError(messages);
     });
   }
 
 }), {
-  isUsable: function(client, endpoint, callback, context) {
+  isUsable: function(dispatcher, endpoint, callback, context) {
     callback.call(context, Faye.URI.isURI(endpoint));
   }
 });

@@ -125,7 +125,7 @@ module Faye
 
           headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
           headers['Connection'] = 'close'
-          debug 'HTTP response: ?', response
+          debug('HTTP response: ?', response)
           send_response([200, headers, [response]], hijack, callback)
         end
       end
@@ -179,7 +179,7 @@ module Faye
 
       ws.onmessage = lambda do |event|
         begin
-          debug "Received message via WebSocket[#{ws.version}]: ?", event.data
+          debug("Received message via WebSocket[#{ws.version}]: ?", event.data)
 
           message = MultiJson.load(event.data)
           cid     = Faye.client_id_from_messages(message)
@@ -208,7 +208,7 @@ module Faye
       es        = Faye::EventSource.new(request.env, :ping => @options[:ping])
       client_id = es.url.split('/').pop
 
-      debug 'Opened EventSource connection for ?', client_id
+      debug('Opened EventSource connection for ?', client_id)
       @server.open_socket(client_id, es, request)
 
       es.onclose = lambda do |event|

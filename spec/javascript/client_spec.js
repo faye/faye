@@ -1,28 +1,19 @@
-var EnvelopeMatcher = function(message) {
-  this.message = message
-}
-EnvelopeMatcher.prototype.equals = function(other) {
-  return (other instanceof Faye.Envelope) && JS.Enumerable.areEqual(this.message, other.message)
-}
-
 JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   before(function() { with(this) {
-    this.transport = {connectionType: "fake", endpoint: {}, send: function() {}}
-    stub(Faye.Transport, "get").yields([transport])
-  }})
+    this.dispatcher = {connectionType: "fake-transport", retry: 5}
+    stub(dispatcher, "selectTransport")
+    stub(dispatcher, "sendMessage")
 
-  before(function() { with(this) {
+    Faye.extend(dispatcher, Faye.Publisher)
+    stub("new", Faye, "Dispatcher").returns(dispatcher)
+
     stub("setTimeout")
   }})
 
-  define("envelope", function(message) {
-    return new EnvelopeMatcher(message)
-  })
-
   define("stubResponse", function(response) { with(this) {
-    stub(transport, "send", function(message) {
+    stub(dispatcher, "sendMessage", function(message) {
       response.id = message.id
-      client.receiveMessage(response)
+      dispatcher.emit("message", response)
     })
   }})
 
@@ -54,7 +45,6 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
 
   describe("initialize", function() { with(this) {
     it("puts the client in the UNCONNECTED state", function() { with(this) {
-      stub(Faye.Transport, "get")
       var client = new Faye.Client("http://localhost/")
       assertEqual( client.UNCONNECTED, client._state )
     }})
@@ -64,25 +54,21 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     before(function() { this.createClient() })
 
     it("creates a transport the server must support", function() { with(this) {
-      expect(Faye.Transport, "get").given(instanceOf(Faye.Client),
-                                          ["long-polling", "callback-polling", "in-process"],
-                                          [])
-                                   .yielding([transport])
+      expect(dispatcher, "selectTransport").given(["long-polling", "callback-polling", "in-process"])
       client.handshake()
     }})
 
     it("sends a handshake message to the server", function() { with(this) {
-      expect(transport, "send").given(envelope({
+      expect(dispatcher, "sendMessage").given({
         channel:  "/meta/handshake",
         version:  "1.0",
-        supportedConnectionTypes: ["fake"],
+        supportedConnectionTypes: ["fake-transport"],
         id:       instanceOf("string")
-      }))
+      }, 72, {})
       client.handshake()
     }})
 
     it("puts the client in the CONNECTING state", function() { with(this) {
-      stub(transport, "send")
       client.handshake()
       assertEqual( client.CONNECTING, client._state )
     }})
@@ -99,13 +85,13 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("passes the handshake message through the extension", function() { with(this) {
-        expect(transport, "send").given(envelope({
+        expect(dispatcher, "sendMessage").given({
           channel:  "/meta/handshake",
           version:  "1.0",
-          supportedConnectionTypes: ["fake"],
+          supportedConnectionTypes: ["fake-transport"],
           id:       instanceOf("string"),
           ext:      {auth: "password"}
-        }))
+        }, 72, {})
         client.handshake()
       }})
     }})
@@ -116,12 +102,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
                       successful: true,
                       version:    "1.0",
                       supportedConnectionTypes: ["long-polling", "websocket"],
-                      clientId:   "fakeid" })
+                      clientId:   "handshakeid" })
       }})
 
       it("stores the clientId", function() { with(this) {
         client.handshake()
-        assertEqual( "fakeid", client._clientId )
+        assertEqual( "handshakeid", client._dispatcher.clientId )
       }})
 
       it("puts the client in the CONNECTED state", function() { with(this) {
@@ -135,21 +121,8 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("selects a new transport based on what the server supports", function() { with(this) {
-        expect(Faye.Transport, "get").given(instanceOf(Faye.Client), ["long-polling", "websocket"], [])
-                                     .yielding([transport])
+        expect(dispatcher, "selectTransport").given(["long-polling", "websocket"])
         client.handshake()
-      }})
-
-      describe("with websocket disabled", function() { with(this) {
-        before(function() { this.client.disable('websocket') })
-
-        it("selects a new transport, excluding websocket", function() { with(this) {
-          expect(Faye.Transport, "get").given(instanceOf(Faye.Client),
-                                              ["long-polling", "websocket"],
-                                              ["websocket"])
-                                       .yielding([transport])
-          client.handshake()
-        }})
       }})
     }})
 
@@ -167,7 +140,6 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("puts the client in the UNCONNECTED state", function() { with(this) {
-        stub("setTimeout")
         client.handshake()
         assertEqual( client.UNCONNECTED, client._state )
       }})
@@ -179,7 +151,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         this.message = null
 
         subscribe(client, "/messages/foo", function(m) { message = m }).then(function() {
-          client.receiveMessage({advice: {reconnect: "handshake"}})
+          client._receiveMessage({advice: {reconnect: "handshake"}})
 
           stubResponse({channel:      "/meta/handshake",
                         successful:   true,
@@ -193,18 +165,18 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("resends the subscriptions to the server", function(resume) { with(this) {
-        expect(transport, "send").given(envelope({
+        expect(dispatcher, "sendMessage").given({
           channel:      "/meta/subscribe",
           clientId:     "reconnectid",
           subscription: "/messages/foo",
           id:           instanceOf("string")
-        }))
+        }, 72, {})
         client.connect(resume)
       }})
 
       it("retains the listeners for the subscriptions", function() { with(this) {
         client.handshake()
-        client.receiveMessage({channel: "/messages/foo", "data": "ok"})
+        client._receiveMessage({channel: "/messages/foo", "data": "ok"})
         assertEqual( "ok", message )
       }})
     }})
@@ -213,12 +185,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       before(function() { this.createConnectedClient() })
 
       it("does not send a handshake message to the server", function() { with(this) {
-        expect(transport, "send").given(envelope({
+        expect(dispatcher, "sendMessage").given({
           channel:  "/meta/handshake",
           version:  "1.0",
-          supportedConnectionTypes: ["fake"],
+          supportedConnectionTypes: ["fake-transport"],
           id:       instanceOf("string")
-        }))
+        }, 72, {})
         .exactly(0)
 
         client.handshake()
@@ -239,12 +211,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("handshakes before connecting", function(resume) { with(this) {
-        expect(transport, "send").given(envelope({
+        expect(dispatcher, "sendMessage").given({
           channel:        "/meta/connect",
           clientId:       "handshakeid",
-          connectionType: "fake",
+          connectionType: "fake-transport",
           id:             instanceOf("string")
-        }))
+        }, 72, {})
         client.connect()
         Faye.Promise.defer(resume)
       }})
@@ -254,22 +226,22 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       before(function() { this.createConnectedClient() })
 
       it("sends a connect message to the server", function() { with(this) {
-        expect(transport, "send").given(envelope({
+        expect(dispatcher, "sendMessage").given({
           channel:        "/meta/connect",
           clientId:       "fakeid",
-          connectionType: "fake",
+          connectionType: "fake-transport",
           id:             instanceOf("string")
-        }))
+        }, 72, {})
         client.connect()
       }})
 
       it("only opens one connect request at a time", function() { with(this) {
-        expect(transport, "send").given(envelope({
+        expect(dispatcher, "sendMessage").given({
           channel:        "/meta/connect",
           clientId:       "fakeid",
-          connectionType: "fake",
+          connectionType: "fake-transport",
           id:             instanceOf("string")
-        }))
+        }, 72, {})
         .exactly(1)
 
         client.connect()
@@ -282,16 +254,16 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     before(function() { this.createConnectedClient() })
 
     it("sends a disconnect message to the server", function() { with(this) {
-      expect(transport, "send").given(envelope({
+      expect(dispatcher, "sendMessage").given({
         channel:  "/meta/disconnect",
         clientId: "fakeid",
         id:       instanceOf("string")
-      }))
+      }, 72, {})
       client.disconnect()
     }})
 
     it("puts the client in the DISCONNECTED state", function() { with(this) {
-      stub(transport, "close")
+      stub(dispatcher, "close")
       client.disconnect()
       assertEqual( client.DISCONNECTED, client._state )
     }})
@@ -303,8 +275,8 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
                       clientId:     "fakeid" })
       }})
 
-      it("closes the transport", function() { with(this) {
-        expect(transport, "close")
+      it("closes the dispatcher", function() { with(this) {
+        expect(dispatcher, "close")
         client.disconnect()
       }})
     }})
@@ -323,7 +295,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
 
     describe("with no prior subscriptions", function() { with(this) {
       it("sends a subscribe message to the server", function(resume) { with(this) {
-        expect(transport, "send").given(envelope(subscribeMessage))
+        expect(dispatcher, "sendMessage").given(subscribeMessage, 72, {})
         client.subscribe("/foo")
         client.connect(resume)
       }})
@@ -332,24 +304,23 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       // in one message but the cometD server doesn't actually support this
       describe("with an array of subscriptions", function() { with(this) {
         it("sends multiple subscribe messages", function(resume) { with(this) {
-          expect(transport, "send").given(envelope({
+          expect(dispatcher, "sendMessage").given({
             channel:      "/meta/subscribe",
             clientId:     "fakeid",
             subscription: "/foo",
             id:           instanceOf("string")
-          }))
-          expect(transport, "send").given(envelope({
+          }, 72, {})
+          expect(dispatcher, "sendMessage").given({
             channel:      "/meta/subscribe",
             clientId:     "fakeid",
             subscription: "/bar",
             id:           instanceOf("string")
-          }))
+          }, 72, {})
           client.subscribe(["/foo", "/bar"])
           client.connect(resume)
         }})
 
         it("returns an array of subscriptions", function() { with(this) {
-          stub(transport, "send")
           var subs = client.subscribe(["/foo", "/bar"])
           assertEqual( 2, subs.length )
           assertKindOf( Faye.Subscription, subs[0] )
@@ -368,7 +339,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           var message
           client.subscribe("/foo/*", function(m) { message = m }).then(function() {
             resume(function() {
-              client.receiveMessage({channel: "/foo/bar", data: "hi"})
+              client._receiveMessage({channel: "/foo/bar", data: "hi"})
               assertEqual( "hi", message )
             })
           })
@@ -377,7 +348,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         it("does not call the listener for non-matching channels", function() { with(this) {
           var message
           client.subscribe("/foo/*", function(m) { message = m })
-          client.receiveMessage({channel: "/bar", data: "hi"})
+          client._receiveMessage({channel: "/bar", data: "hi"})
           assertEqual( undefined, message )
         }})
 
@@ -399,7 +370,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           }})
 
           it("passes delivered messages through the extension", function() { with(this) {
-            client.receiveMessage({channel: "/foo/bar", data: {hello: "there"}})
+            client._receiveMessage({channel: "/foo/bar", data: {hello: "there"}})
             assertEqual( {hello: "there", changed: true}, message )
           }})
         }})
@@ -418,7 +389,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           }})
 
           it("leaves messages unchanged", function() { with(this) {
-            client.receiveMessage({channel: "/foo/bar", data: {hello: "there"}})
+            client._receiveMessage({channel: "/foo/bar", data: {hello: "there"}})
             assertEqual( {hello: "there"}, message )
           }})
         }})
@@ -437,7 +408,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
           it("does not set up a listener for the subscribed channel", function() { with(this) {
             var message
             client.subscribe("/foo/*", function(m) { message = m })
-            client.receiveMessage({channel: "/foo/bar", data: "hi"})
+            client._receiveMessage({channel: "/foo/bar", data: "hi"})
             assertEqual( undefined, message )
           }})
 
@@ -461,7 +432,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         it("does not set up a listener for the subscribed channel", function() { with(this) {
           var message
           client.subscribe("/meta/foo", function(m) { message = m })
-          client.receiveMessage({channel: "/meta/foo", data: "hi"})
+          client._receiveMessage({channel: "/meta/foo", data: "hi"})
           assertEqual( undefined, message )
         }})
 
@@ -485,14 +456,14 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("does not send another subscribe message to the server", function() { with(this) {
-        expect(transport, "send").given(envelope(subscribeMessage)).exactly(0)
+        expect(dispatcher, "sendMessage").given(subscribeMessage, 72, {}).exactly(0)
         client.subscribe("/foo/*")
       }})
 
       it("sets up another listener on the channel", function(resume) { with(this) {
         client.subscribe("/foo/*", function() { subsCalled += 1 }).then(function() {
           resume(function() {
-            client.receiveMessage({channel: "/foo/bar", data: "hi"})
+            client._receiveMessage({channel: "/foo/bar", data: "hi"})
             assertEqual( 2, subsCalled )
           })
         })
@@ -517,7 +488,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
 
     describe("with no subscriptions", function() { with(this) {
       it("does not send an unsubscribe message to the server", function() { with(this) {
-        expect(transport, "send").given(envelope(unsubscribeMessage)).exactly(0)
+        expect(dispatcher, "sendMessage").given(unsubscribeMessage, 72, {}).exactly(0)
         client.unsubscribe("/foo/*")
       }})
     }})
@@ -530,15 +501,15 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("sends an unsubscribe message to the server", function(resume) { with(this) {
-        expect(transport, "send").given(envelope(unsubscribeMessage))
+        expect(dispatcher, "sendMessage").given(unsubscribeMessage, 72, {})
         client.unsubscribe("/foo/*")
         client.connect(resume)
       }})
 
       it("removes the listener from the channel", function() { with(this) {
-        client.receiveMessage({channel: "/foo/bar", data: "first"})
+        client._receiveMessage({channel: "/foo/bar", data: "first"})
         client.unsubscribe("/foo/*", listener)
-        client.receiveMessage({channel: "/foo/bar", data: "second"})
+        client._receiveMessage({channel: "/foo/bar", data: "second"})
         assertEqual( "first", message )
       }})
     }})
@@ -555,26 +526,26 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("removes one of the listeners from the channel", function() { with(this) {
-        client.receiveMessage({channel: "/foo/bar", data: {text: "you"}})
+        client._receiveMessage({channel: "/foo/bar", data: {text: "you"}})
         client.unsubscribe("/foo/*", hey)
-        client.receiveMessage({channel: "/foo/bar", data: {text: "you"}})
+        client._receiveMessage({channel: "/foo/bar", data: {text: "you"}})
         assertEqual( ["hey you", "bye you", "bye you"], messages)
       }})
 
       it("does not send an unsubscribe message if one listener is removed", function() { with(this) {
-        expect(transport, "send").given(envelope(unsubscribeMessage)).exactly(0)
+        expect(dispatcher, "sendMessage").given(unsubscribeMessage, 72, {}).exactly(0)
         client.unsubscribe("/foo/*", bye)
       }})
 
       it("sends an unsubscribe message if each listener is removed", function(resume) { with(this) {
-        expect(transport, "send").given(envelope(unsubscribeMessage))
+        expect(dispatcher, "sendMessage").given(unsubscribeMessage, 72, {})
         client.unsubscribe("/foo/*", bye)
         client.unsubscribe("/foo/*", hey)
         client.connect(resume)
       }})
 
       it("sends an unsubscribe message if all listeners are removed", function(resume) { with(this) {
-        expect(transport, "send").given(envelope(unsubscribeMessage))
+        expect(dispatcher, "sendMessage").given(unsubscribeMessage, 72, {})
         client.unsubscribe("/foo/*")
         client.connect(resume)
       }})
@@ -588,18 +559,18 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("sends multiple unsubscribe messages if given an array", function(resume) { with(this) {
-        expect(transport, "send").given(envelope({
+        expect(dispatcher, "sendMessage").given({
           channel:      "/meta/unsubscribe",
           clientId:     "fakeid",
           subscription: "/foo",
           id:           instanceOf("string")
-        }))
-        expect(transport, "send").given(envelope({
+        }, 72, {})
+        expect(dispatcher, "sendMessage").given({
           channel:      "/meta/unsubscribe",
           clientId:     "fakeid",
           subscription: "/bar",
           id:           instanceOf("string")
-        }))
+        }, 72, {})
         client.unsubscribe(["/foo", "/bar"])
         client.connect(resume)
       }})
@@ -610,12 +581,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     before(function() { this.createConnectedClient() })
 
     it("sends the message to the server with an ID", function(resume) { with(this) {
-      expect(transport, "send").given(envelope({
+      expect(dispatcher, "sendMessage").given({
         channel:  "/messages/foo",
         clientId: "fakeid",
         data:     {hello: "world"},
         id:       instanceOf("string")
-      }))
+      }, 72, {})
       client.publish("/messages/foo", {hello: "world"})
       client.connect(resume)
     }})
@@ -673,13 +644,13 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("passes messages through the extension", function(resume) { with(this) {
-        expect(transport, "send").given(envelope({
+        expect(dispatcher, "sendMessage").given({
           channel:  "/messages/foo",
           clientId: "fakeid",
           data:     {hello: "world"},
           id:       instanceOf("string"),
           ext:      {auth: "password"}
-        }))
+        }, 72, {})
         client.publish("/messages/foo", {hello: "world"})
         client.connect(resume)
       }})
@@ -697,61 +668,14 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       }})
 
       it("leaves the message unchanged", function(resume) { with(this) {
-        expect(transport, "send").given(envelope({
+        expect(dispatcher, "sendMessage").given({
           channel:  "/messages/foo",
           clientId: "fakeid",
           data:     {hello: "world"},
           id:       instanceOf("string")
-        }))
+        }, 72, {})
         client.publish("/messages/foo", {hello: "world"})
         client.connect(resume)
-      }})
-    }})
-  }})
-
-  describe("network notifications", function() { with(this) {
-    before(function() { with(this) {
-      createClient()
-      client.handshake()
-    }})
-
-    describe("in the default state", function() { with(this) {
-      it("broadcasts a down notification", function() { with(this) {
-        expect(client, "trigger").given("transport:down")
-        client.messageError([])
-      }})
-
-      it("broadcasts an up notification", function() { with(this) {
-        expect(client, "trigger").given("transport:up")
-        client.receiveMessage({})
-      }})
-    }})
-
-    describe("when the transport is up", function() { with(this) {
-      before(function() { this.client.receiveMessage({}) })
-
-      it("broadcasts a down notification", function() { with(this) {
-        expect(client, "trigger").given("transport:down")
-        client.messageError([])
-      }})
-
-      it("does not broadcast an up notification", function() { with(this) {
-        expect(client, "trigger").exactly(0)
-        client.receiveMessage({})
-      }})
-    }})
-
-    describe("when the transport is down", function() { with(this) {
-      before(function() { this.client.messageError([]) })
-
-      it("does not broadcast a down notification", function() { with(this) {
-        expect(client, "trigger").exactly(0)
-        client.messageError([])
-      }})
-
-      it("broadcasts an up notification", function() { with(this) {
-        expect(client, "trigger").given("transport:up")
-        client.receiveMessage({})
       }})
     }})
   }})

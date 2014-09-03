@@ -20,9 +20,9 @@ IntegrationSteps = RSpec::EM.async_steps do
     @faye.add_extension(Tagger.new)
 
     @server = ServerProxy::App.new(@faye)
-    @server.listen(port)
+    @port   = port
 
-    @port = port
+    @server.listen(@port)
     EM.next_tick(&callback)
   end
 
@@ -32,10 +32,10 @@ IntegrationSteps = RSpec::EM.async_steps do
   end
 
   def client(name, channels, &callback)
-    @clients ||= {}
-    @inboxes ||= {}
-    @clients[name] = Faye::Client.new("http://0.0.0.0:#{@port}/bayeux")
-    @inboxes[name] = {}
+    @clients       ||= {}
+    @inboxes       ||= {}
+    @clients[name]   = Faye::Client.new("http://localhost:#{@port}/bayeux")
+    @inboxes[name]   = {}
 
     n = channels.size
     return @clients[name].connect(&callback) if n.zero?
