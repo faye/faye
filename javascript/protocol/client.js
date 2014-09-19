@@ -148,7 +148,7 @@ Faye.Client = Faye.Class({
   //                * id                  MAY include:   * error
   //                                                     * ext
   //                                                     * id
-  disconnect: function() {
+  disconnect: function(callback) {
     if (this._state !== this.CONNECTED) return;
     this._state = this.DISCONNECTED;
 
@@ -160,6 +160,7 @@ Faye.Client = Faye.Class({
 
     }, {}, function(response) {
       if (response.successful) this._dispatcher.close();
+      if (callback) callback(response.successful);
     }, this);
 
     this.info('Clearing channel listeners for ?', this._dispatcher.clientId);
