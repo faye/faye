@@ -13,7 +13,7 @@ require 'faye'
 
 port     = ARGV[0] || 9292
 path     = ARGV[1] || 'bayeux'
-scheme   = ARGV[2] == 'ssl' ? 'https' : 'http'
+scheme   = ARGV[2] == 'tls' ? 'https' : 'http'
 endpoint = "#{scheme}://localhost:#{port}/#{path}"
 
 EM.run {

@@ -7,15 +7,17 @@
 // The client connects to the chat server and logs all messages sent by all
 // connected users.
 
-var faye = require('../../build/node/faye-node'),
+var fs   = require('fs'),
+    faye = require('../../build/node/faye-node'),
 
     port     = process.argv[2] || 8000,
     path     = process.argv[3] || 'bayeux',
-    scheme   = process.argv[4] === 'ssl' ? 'https' : 'http',
-    endpoint = scheme + '://localhost:' + port + '/' + path;
+    scheme   = process.argv[4] === 'tls' ? 'https' : 'http',
+    endpoint = scheme + '://localhost:' + port + '/' + path,
+    cert     = fs.readFileSync(__dirname + '/../server.crt');
 
 console.log('Connecting to ' + endpoint);
-var client = new faye.Client(endpoint);
+var client = new faye.Client(endpoint, {tls: {ca: cert}});
 
 var subscription = client.subscribe('/chat/*', function(message) {
   var user = message.user;
