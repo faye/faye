@@ -1,6 +1,7 @@
 JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   before(function() { with(this) {
     this.dispatcher = {connectionType: "fake-transport", retry: 5}
+    stub(dispatcher, "getConnectionTypes").returns(["fake-transport", "another-transport"])
     stub(dispatcher, "selectTransport")
     stub(dispatcher, "sendMessage")
 
@@ -62,7 +63,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
       expect(dispatcher, "sendMessage").given({
         channel:  "/meta/handshake",
         version:  "1.0",
-        supportedConnectionTypes: ["fake-transport"],
+        supportedConnectionTypes: ["fake-transport", "another-transport"],
         id:       instanceOf("string")
       }, 72, {})
       client.handshake()
@@ -88,7 +89,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         expect(dispatcher, "sendMessage").given({
           channel:  "/meta/handshake",
           version:  "1.0",
-          supportedConnectionTypes: ["fake-transport"],
+          supportedConnectionTypes: ["fake-transport", "another-transport"],
           id:       instanceOf("string"),
           ext:      {auth: "password"}
         }, 72, {})
@@ -188,7 +189,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         expect(dispatcher, "sendMessage").given({
           channel:  "/meta/handshake",
           version:  "1.0",
-          supportedConnectionTypes: ["fake-transport"],
+          supportedConnectionTypes: ["fake-transport", "another-transport"],
           id:       instanceOf("string")
         }, 72, {})
         .exactly(0)

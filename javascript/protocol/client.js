@@ -82,7 +82,7 @@ Faye.Client = Faye.Class({
     this._sendMessage({
       channel:                  Faye.Channel.HANDSHAKE,
       version:                  Faye.BAYEUX_VERSION,
-      supportedConnectionTypes: [this._dispatcher.connectionType]
+      supportedConnectionTypes: this._dispatcher.getConnectionTypes()
 
     }, {}, function(response) {
 

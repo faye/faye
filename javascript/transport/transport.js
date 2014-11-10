@@ -143,6 +143,10 @@ Faye.Transport = Faye.extend(Faye.Class({
     klass.prototype.connectionType = type;
   },
 
+  getConnectionTypes: function() {
+    return Faye.map(this._transports, function(t) { return t[0] });
+  },
+
   _transports: []
 });
 

@@ -59,6 +59,10 @@ module Faye
       transport.close if transport
     end
 
+    def connection_types
+      Transport.connection_types
+    end
+
     def select_transport(transport_types)
       Transport.get(self, transport_types, @disabled) do |transport|
         debug('Selected ? transport for ?', transport.connection_type, transport.endpoint)

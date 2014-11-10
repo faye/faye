@@ -74,7 +74,7 @@ module Faye
       send_message({
         'channel'                  => Channel::HANDSHAKE,
         'version'                  => BAYEUX_VERSION,
-        'supportedConnectionTypes' => [@dispatcher.connection_type]
+        'supportedConnectionTypes' => @dispatcher.connection_types
 
       }, {}) do |response|
 

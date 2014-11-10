@@ -4,6 +4,7 @@ describe Faye::Client do
   let :dispatcher do
     dispatcher = double(:dispatcher,
                         :connection_type  => "fake-transport",
+                        :connection_types => ["fake-transport", "another-transport"],
                         :retry            => 5,
                         :select_transport => nil,
                         :send_message     => nil)
@@ -75,7 +76,7 @@ describe Faye::Client do
       dispatcher.should_receive(:send_message).with({
         "channel" => "/meta/handshake",
         "version" => "1.0",
-        "supportedConnectionTypes" => ["fake-transport"],
+        "supportedConnectionTypes" => ["fake-transport", "another-transport"],
         "id"      => instance_of(String)
       }, 72, {})
       @client.handshake
@@ -101,7 +102,7 @@ describe Faye::Client do
         dispatcher.should_receive(:send_message).with({
           "channel" => "/meta/handshake",
           "version" => "1.0",
-          "supportedConnectionTypes" => ["fake-transport"],
+          "supportedConnectionTypes" => ["fake-transport", "another-transport"],
           "id"      => instance_of(String),
           "ext"     => {"auth" => "password"}
         }, 72, {})
@@ -199,7 +200,7 @@ describe Faye::Client do
         dispatcher.should_not_receive(:send_message).with({
           "channel" => "/meta/handshake",
           "version" => "1.0",
-          "supportedConnectionTypes" => ["fake-transport"],
+          "supportedConnectionTypes" => ["fake-transport", "another-transport"],
           "id"      => instance_of(String)
         }, 72, {})
         @client.handshake

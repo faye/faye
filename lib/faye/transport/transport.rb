@@ -153,6 +153,10 @@ module Faye
         @transports << [type, klass]
         klass.connection_type = type
       end
+
+      def connection_types
+        @transports.map { |t| t[0] }
+      end
     end
 
     %w[local web_socket http].each do |type|

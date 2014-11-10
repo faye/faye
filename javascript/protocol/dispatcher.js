@@ -46,6 +46,10 @@ Faye.Dispatcher = Faye.Class({
     if (transport) transport.close();
   },
 
+  getConnectionTypes: function() {
+    return Faye.Transport.getConnectionTypes();
+  },
+
   selectTransport: function(transportTypes) {
     Faye.Transport.get(this, transportTypes, this._disabled, function(transport) {
       this.debug('Selected ? transport for ?', transport.connectionType, Faye.URI.stringify(transport.endpoint));
