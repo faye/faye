@@ -8,7 +8,8 @@ var crypto = require('crypto'),
     url    = require('url'),
     querystring = require('querystring'),
 
-    csprng = require('csprng');
+    csprng = require('csprng'),
+    tunnel = require('tunnel-agent');
 
 Faye.WebSocket   = require('faye-websocket');
 Faye.EventSource = Faye.WebSocket.EventSource;

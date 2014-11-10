@@ -22,10 +22,10 @@ Gem::Specification.new do |s|
   s.add_dependency 'cookiejar', '>= 0.3.0'
   s.add_dependency 'em-http-request', '>= 0.3.0'
   s.add_dependency 'eventmachine', '>= 0.12.0'
-  s.add_dependency 'faye-websocket', '>= 0.7.0'
+  s.add_dependency 'faye-websocket', '>= 0.8.0'
   s.add_dependency 'multi_json', '>= 1.0.0'
   s.add_dependency 'rack', '>= 1.0.0'
-  s.add_dependency 'websocket-driver', '>= 0.3.0'
+  s.add_dependency 'websocket-driver', '>= 0.4.0'
 
   s.add_development_dependency 'compass', '~> 0.11.0'
   s.add_development_dependency 'haml', '~> 3.1.0'

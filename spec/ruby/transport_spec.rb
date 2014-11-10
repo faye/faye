@@ -11,6 +11,7 @@ describe Faye::Transport do
                         :max_request_size => 2048,
                         :cookies          => CookieJar::Jar.new,
                         :headers          => {},
+                        :proxy            => nil,
                         :transports       => {})
   end
 

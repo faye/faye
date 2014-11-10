@@ -65,7 +65,7 @@ module Faye
 
       url = @endpoint.dup
       url.scheme = PROTOCOLS[url.scheme]
-      socket = Faye::WebSocket::Client.new(url.to_s, [], :headers => headers)
+      socket = Faye::WebSocket::Client.new(url.to_s, [], :headers => headers, :proxy => @proxy)
 
       socket.onopen = lambda do |*args|
         store_cookies(socket.headers['Set-Cookie'])

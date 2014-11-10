@@ -15,10 +15,11 @@ port     = ARGV[0] || 9292
 path     = ARGV[1] || 'bayeux'
 scheme   = ARGV[2] == 'tls' ? 'https' : 'http'
 endpoint = "#{scheme}://localhost:#{port}/#{path}"
+proxy    = {:headers => {'User-Agent' => 'Faye'}}
 
 EM.run {
   puts "Connecting to #{endpoint}"
-  client = Faye::Client.new(endpoint)
+  client = Faye::Client.new(endpoint, :proxy => proxy)
 
   subscription = client.subscribe '/chat/*' do |message|
     user = message['user']

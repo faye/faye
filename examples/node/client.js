@@ -14,10 +14,11 @@ var fs   = require('fs'),
     path     = process.argv[3] || 'bayeux',
     scheme   = process.argv[4] === 'tls' ? 'https' : 'http',
     endpoint = scheme + '://localhost:' + port + '/' + path,
-    cert     = fs.readFileSync(__dirname + '/../server.crt');
+    cert     = fs.readFileSync(__dirname + '/../server.crt'),
+    proxy    = {headers: {'User-Agent': 'Faye'}, tls: {ca: cert}};
 
 console.log('Connecting to ' + endpoint);
-var client = new faye.Client(endpoint, {tls: {ca: cert}});
+var client = new faye.Client(endpoint, {proxy: proxy, tls: {ca: cert}});
 
 var subscription = client.subscribe('/chat/*', function(message) {
   var user = message.user;

@@ -1,11 +1,21 @@
 Faye.Transport = Faye.extend(Faye.Class({
-  MAX_DELAY: 0,
+  DEFAULT_PORTS:    {'http:': 80, 'https:': 443, 'ws:': 80, 'wss:': 443},
+  SECURE_PROTOCOLS: ['https:', 'wss:'],
+  MAX_DELAY:        0,
+
   batching:  true,
 
   initialize: function(dispatcher, endpoint) {
     this._dispatcher = dispatcher;
     this.endpoint    = endpoint;
     this._outbox     = [];
+    this._proxy      = Faye.extend({}, this._dispatcher.proxy);
+
+    if (!this._proxy.origin && Faye.NodeAdapter) {
+      this._proxy.origin = Faye.indexOf(this.SECURE_PROTOCOLS, this.endpoint.protocol) >= 0
+                         ? (process.env.HTTPS_PROXY || process.env.https_proxy)
+                         : (process.env.HTTP_PROXY  || process.env.http_proxy);
+    }
   },
 
   close: function() {},

@@ -10,14 +10,17 @@ Faye.Dispatcher = Faye.Class({
     this.endpoint    = Faye.URI.parse(endpoint);
     this._alternates = options.endpoints || {};
 
-    this.ca         = options.ca;
     this.cookies    = Faye.Cookies && new Faye.Cookies.CookieJar();
     this._disabled  = [];
     this._envelopes = {};
     this.headers    = {};
     this.retry      = options.retry || this.DEFAULT_RETRY;
+    this.proxy      = options.proxy || {};
     this._state     = 0;
     this.transports = {};
+
+    this.tls = options.tls || {};
+    this.tls.ca = this.tls.ca || options.ca;
 
     for (var type in this._alternates)
       this._alternates[type] = Faye.URI.parse(this._alternates[type]);

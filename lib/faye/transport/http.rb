@@ -34,7 +34,7 @@ module Faye
           'Content-Length' => content.bytesize,
           'Content-Type'   => 'application/json',
           'Cookie'         => get_cookies,
-          'Host'           => uri.host
+          'Host'           => uri.host + (uri.port ? ":#{uri.port}" : '')
         }.merge(@dispatcher.headers),
 
         :body    => content,
@@ -44,12 +44,21 @@ module Faye
 
     def create_request(params)
       version = EventMachine::HttpRequest::VERSION.split('.')[0].to_i
-      client  = if version >= 1
-                  options = {:inactivity_timeout => 0}
-                  EventMachine::HttpRequest.new(@endpoint.to_s, options)
-                else
-                  EventMachine::HttpRequest.new(@endpoint.to_s)
-                end
+      options = {:inactivity_timeout => 0}
+
+      if @proxy[:origin]
+        uri = URI.parse(@proxy[:origin])
+        options[:proxy] = {:host => uri.host, :port => uri.port}
+        if uri.user
+          options[:proxy][:authorization] = [uri.user, uri.password]
+        end
+      end
+
+      if version >= 1
+        client = EventMachine::HttpRequest.new(@endpoint.to_s, options)
+      else
+        client = EventMachine::HttpRequest.new(@endpoint.to_s)
+      end
 
       client.post(params)
     end

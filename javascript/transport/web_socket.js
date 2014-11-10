@@ -97,8 +97,9 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
 
   _createSocket: function() {
     var url     = Faye.Transport.WebSocket.getSocketUrl(this.endpoint),
-        headers = Faye.copyObject(this._dispatcher.headers),
-        options = {headers: headers, ca: this._dispatcher.ca};
+        headers = this._dispatcher.headers,
+        tls     = this._dispatcher.tls,
+        options = {headers: headers, proxy: this._proxy, tls: tls};
 
     options.headers['Cookie'] = this._getCookies();
 

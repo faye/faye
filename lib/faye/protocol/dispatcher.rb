@@ -16,7 +16,7 @@ module Faye
     def_delegators :@transport, :connection_type
 
     attr_accessor :client_id, :timeout
-    attr_reader   :cookies, :endpoint, :headers, :max_request_size, :retry, :transports
+    attr_reader   :cookies, :endpoint, :headers, :max_request_size, :proxy, :retry, :transports
 
     def initialize(client, endpoint, options)
       super()
@@ -29,6 +29,7 @@ module Faye
       @disabled   = []
       @envelopes  = {}
       @headers    = {}
+      @proxy      = options[:proxy] || {}
       @retry      = options[:retry] || DEFAULT_RETRY
       @state      = 0
       @transports = {}
