@@ -11,7 +11,7 @@ describe Faye::Transport do
                         :max_request_size => 2048,
                         :cookies          => CookieJar::Jar.new,
                         :headers          => {},
-                        :proxy            => nil,
+                        :proxy            => {},
                         :transports       => {})
   end
 
@@ -98,7 +98,7 @@ describe Faye::Transport do
             true
           end
         end
-        @transport = transport_klass.new(dispatcher, "")
+        @transport = transport_klass.new(dispatcher, dispatcher.endpoint)
       end
 
       it "does not make an immediate request" do
@@ -140,7 +140,7 @@ describe Faye::Transport do
             false
           end
         end
-        @transport = transport_klass.new(dispatcher, "")
+        @transport = transport_klass.new(dispatcher, dispatcher.endpoint)
       end
 
       it "makes a request immediately" do

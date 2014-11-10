@@ -5,6 +5,7 @@ JS.ENV.TransportSpec = JS.Test.describe("Transport", function() { with(this) {
       endpoints:      {},
       maxRequestSize: 2048,
       headers:        {},
+      proxy:          {},
       transports:     {}
     }
     dispatcher.endpointFor = function() { return dispatcher.endpoint }
