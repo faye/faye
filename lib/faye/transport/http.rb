@@ -11,7 +11,7 @@ module Faye
 
     def request(messages)
       content = encode(messages)
-      params  = build_params(@endpoint, content)
+      params  = build_params(content)
       request = create_request(params)
 
       request.callback do
@@ -28,18 +28,22 @@ module Faye
 
   private
 
-    def build_params(uri, content)
-      {
+    def build_params(content)
+      params = {
         :head => {
           'Content-Length' => content.bytesize,
           'Content-Type'   => 'application/json',
-          'Cookie'         => get_cookies,
-          'Host'           => uri.host + (uri.port ? ":#{uri.port}" : '')
+          'Host'           => @endpoint.host + (@endpoint.port ? ":#{@endpoint.port}" : '')
         }.merge(@dispatcher.headers),
 
         :body    => content,
         :timeout => -1  # for em-http-request < 1.0
       }
+
+      cookie = get_cookies
+      params[:head]['Cookie'] = cookie unless cookie == ''
+
+      params
     end
 
     def create_request(params)

@@ -69,10 +69,12 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
       headers:  Faye.extend({
         'Content-Length': content.length,
         'Content-Type':   'application/json',
-        'Cookie':         this._getCookies(),
         'Host':           uri.host
       }, this._dispatcher.headers)
     };
+
+    var cookie = this._getCookies();
+    if (cookie !== '') params.headers['Cookie'] = cookie;
 
     if (this._tunnel) {
       params.agent = this._tunnel;

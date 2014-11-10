@@ -97,11 +97,12 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
 
   _createSocket: function() {
     var url     = Faye.Transport.WebSocket.getSocketUrl(this.endpoint),
+        cookie  = this._getCookies(),
         headers = this._dispatcher.headers,
         tls     = this._dispatcher.tls,
         options = {headers: headers, proxy: this._proxy, tls: tls};
 
-    options.headers['Cookie'] = this._getCookies();
+    if (cookie !== '') options.headers['Cookie'] = cookie;
 
     if (Faye.WebSocket)        return new Faye.WebSocket.Client(url, [], options);
     if (Faye.ENV.MozWebSocket) return new MozWebSocket(url);

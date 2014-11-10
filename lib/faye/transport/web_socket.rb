@@ -61,7 +61,9 @@ module Faye
       @state = CONNECTING
 
       headers = @dispatcher.headers.dup
-      headers['Cookie'] = get_cookies
+      cookie  = get_cookies
+
+      headers['Cookie'] = cookie unless cookie == ''
 
       url = @endpoint.dup
       url.scheme = PROTOCOLS[url.scheme]
