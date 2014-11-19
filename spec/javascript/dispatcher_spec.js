@@ -1,3 +1,9 @@
+JS.ENV.Scheduler = function() {
+  Faye.Scheduler.apply(this, arguments)
+  Scheduler.instance = this
+}
+Scheduler.prototype = new Faye.Scheduler()
+
 JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
   include(JS.Test.FakeClock)
 
@@ -211,6 +217,73 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
         dispatcher.handleError({id: 1})
         dispatcher.handleResponse({id: 3})
         dispatcher.handleError({id: 2})
+      }})
+    }})
+
+    describe("with a scheduler", function() { with(this) {
+      define("options", function() {
+        return {scheduler: Scheduler}
+      })
+
+      before(function() { with(this) {
+        dispatcher.sendMessage(message, 25)
+      }})
+
+      it("notifies the scheduler that the message failed", function() { with(this) {
+        expect(Scheduler.instance, "fail").exactly(1)
+        dispatcher.handleError(message)
+      }})
+
+      it("asks the scheduler how long to wait before retrying", function() { with(this) {
+        expect(Scheduler.instance, "getInterval").exactly(1).returning(1)
+        dispatcher.handleError(message)
+      }})
+
+      it("resends a message after the interval given by the scheduler", function() { with(this) {
+        stub(Scheduler.instance, "getInterval").returns(3)
+        dispatcher.handleError(message)
+        expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
+        clock.tick(3500)
+      }})
+
+      it("asks the scheduler what the message timeout should be", function() { with(this) {
+        expect(Scheduler.instance, "getTimeout").exactly(1).returning(25)
+        dispatcher.handleError(message, true)
+      }})
+
+      it("waits the specified amount of time to fail the message", function() { with(this) {
+        stub(Scheduler.instance, "getTimeout").returns(3)
+        dispatcher.handleError(message, true)
+        expect(dispatcher, "handleError").given({id: 1}).exactly(1)
+        clock.tick(3000)
+      }})
+
+      it("asks the scheduler whether the message is deliverable", function() { with(this) {
+        expect(Scheduler.instance, "isDeliverable").returning(true)
+        dispatcher.handleError(message, true)
+      }})
+
+      it("resends the message if it's deliverable", function() { with(this) {
+        stub(Scheduler.instance, "isDeliverable").returns(true)
+        expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
+        dispatcher.handleError(message, true)
+      }})
+
+      it("does not resend the message if it's not deliverable", function() { with(this) {
+        stub(Scheduler.instance, "isDeliverable").returns(false)
+        expect(transport, "sendMessage").exactly(0)
+        dispatcher.handleError(message, true)
+      }})
+
+      it("notifies the scheduler that the message is being sent", function() { with(this) {
+        expect(Scheduler.instance, "send").exactly(1)
+        dispatcher.handleError(message, true)
+      }})
+
+      it("notifies the scheduler to abort of it's not deliverable", function() { with(this) {
+        stub(Scheduler.instance, "isDeliverable").returns(false)
+        expect(Scheduler.instance, "abort").exactly(1)
+        dispatcher.handleError(message, true)
       }})
     }})
 

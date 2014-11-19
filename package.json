@@ -63,6 +63,7 @@
                                     "protocol/subscription",
                                     "protocol/client",
                                     "protocol/dispatcher",
+                                    "protocol/scheduler",
                                     "transport/transport"
         ]},
         "node/faye-node": {       "extend": "core",

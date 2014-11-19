@@ -16,6 +16,7 @@ Faye.Dispatcher = Faye.Class({
     this.headers    = {};
     this.retry      = options.retry || this.DEFAULT_RETRY;
     this.proxy      = options.proxy || {};
+    this._scheduler = options.scheduler || Faye.Scheduler;
     this._state     = 0;
     this.transports = {};
 
@@ -70,21 +71,29 @@ Faye.Dispatcher = Faye.Class({
         id       = message.id,
         attempts = options.attempts,
         deadline = options.deadline && new Date().getTime() + (options.deadline * 1000),
+        envelope = this._envelopes[id],
+        scheduler;
 
-        envelope = this._envelopes[id] = this._envelopes[id] ||
-                   {message: message, timeout: timeout, attempts: attempts, deadline: deadline};
+    if (envelope) {
+      scheduler = envelope.scheduler;
+    } else {
+      scheduler = new this._scheduler(message, {timeout: timeout, interval: this.retry, attempts: attempts, deadline: deadline});
+      envelope  = this._envelopes[id] = {message: message, scheduler: scheduler};
+    }
 
     if (envelope.request || envelope.timer) return;
 
-    if (this._attemptsExhausted(envelope) || this._deadlinePassed(envelope)) {
+    if (!scheduler.isDeliverable()) {
+      scheduler.abort();
       delete this._envelopes[id];
       return;
     }
 
     envelope.timer = Faye.ENV.setTimeout(function() {
       self.handleError(message);
-    }, timeout * 1000);
+    }, scheduler.getTimeout() * 1000);
 
+    scheduler.send();
     envelope.request = this._transport.sendMessage(message);
   },
 
@@ -92,6 +101,7 @@ Faye.Dispatcher = Faye.Class({
     var envelope = this._envelopes[reply.id];
 
     if (reply.successful !== undefined && envelope) {
+      envelope.scheduler.succeed();
       delete this._envelopes[reply.id];
       Faye.ENV.clearTimeout(envelope.timer);
     }
@@ -114,6 +124,9 @@ Faye.Dispatcher = Faye.Class({
       if (req && req.abort) req.abort();
     });
 
+    var scheduler = envelope.scheduler;
+    scheduler.fail();
+
     Faye.ENV.clearTimeout(envelope.timer);
     envelope.request = envelope.timer = null;
 
@@ -123,26 +136,12 @@ Faye.Dispatcher = Faye.Class({
       envelope.timer = Faye.ENV.setTimeout(function() {
         envelope.timer = null;
         self.sendMessage(envelope.message, envelope.timeout);
-      }, this.retry * 1000);
+      }, scheduler.getInterval() * 1000);
     }
 
     if (this._state === this.DOWN) return;
     this._state = this.DOWN;
     this._client.trigger('transport:down');
-  },
-
-  _attemptsExhausted: function(envelope) {
-    if (envelope.attempts === undefined) return false;
-    envelope.attempts -= 1;
-    if (envelope.attempts >= 0) return false;
-    return true;
-  },
-
-  _deadlinePassed: function(envelope) {
-    var deadline = envelope.deadline;
-    if (deadline === undefined) return false;
-    if (new Date().getTime() <= deadline) return false;
-    return true;
   }
 });
 

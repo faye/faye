@@ -1,0 +1,134 @@
+.content
+  = partial 'browser_navigation'
+
+  :textile
+    h4. Controlling dispatch
+
+    When you send a message, the Faye client attempts to resend the message
+    until it receives confirmation that the server has received it. There are a
+    few options available that let you control how and when the client will
+    retry, once it has detected that a message has failed to send.
+
+    First, the constructor takes an option called @retry@, which sets the amount
+    of time in seconds that the client will wait between detecting a failed
+    delivery and retrying the message.
+
+    <pre>var client = new Faye.Client(url, {retry: 15});</pre>
+
+    When calling @publish()@, the @deadline@ option specifies how long to wait
+    before giving up, for example if you call
+
+    <pre>client.publish('/foo', {text: 'Hi there'}, {deadline: 10});</pre>
+
+    then the client will not attempt to resend the message any later than 10
+    seconds after your first @publish()@ call.
+
+    The @attempts@ option sets how many times the client will try to send a
+    message before giving up, including the first attempt. For example, this
+    will make the client try to deliver the message up to 3 times:
+
+    <pre>client.publish('/foo', {text: 'Hi there'}, {attempts: 3});</pre>
+
+    Bear in mind that error detection depends somewhat on the transport in use,
+    and these options do not tightly control when your messages will be retried.
+    Faye will make a best effort to ensure delivery of your messages within the
+    parameters you specify.
+
+    h4. Advanced customisation
+
+    To make the above options work, Faye uses an object called a @Scheduler@.
+    The Faye client is responsible for selecting which transport to use, sending
+    messages, detecting delivery success and failure, scheduling retries, and
+    making sure no duplicate messages are sent. But the scheduler gets to decide
+    if and when each message is sent. If you want full control over this
+    concern, you can supply your own scheduler.
+
+    For example, by default Faye uses fixed-period retries, as controlled by the
+    @retry@ option above. But, say you wanted to have exponential backoff. You
+    can implement that like so:
+
+    <pre>var BackoffScheduler = function() {
+      Faye.Scheduler.apply(this, arguments);
+    };
+    BackoffScheduler.prototype = Object.create(Faye.Scheduler.prototype);
+
+    BackoffScheduler.prototype.getInterval = function() {
+      var interval = this.options.interval,
+          attempts = this.attempts;
+
+      return interval * Math.pow(2, attempts - 1);
+    };
+
+    var client = new Faye.Client(url, {scheduler: BackoffScheduler});</pre>
+
+    That is, we create a subclass of @Faye.Scheduler@ and override the
+    @getInterval()@ method, which the client uses to decide how long to wait
+    before the next retry. Then we pass that class into the @Client@ via the
+    @scheduler@ option. Note that this option is a _class_, not a single object.
+    Faye creates a separate scheduler to track each message.
+
+    When you inherit from @Faye.Scheduler@, the class gets the following
+    instance properties that you can refer to in its methods:
+
+    * *@message@* - the Bayeux message that the scheduler applies to.
+    * *@attempts@* - the number of times the client has tried to deliver the
+      message.
+    * *@options.interval@* - the time in seconds to wait between detecting a
+      failed delivery and resending the message.
+    * *@options.timeout@* - the time in seconds after which a delivery is
+      considered failed if no response has been received.
+    * *@options.deadline@* - a @Date@ object representing the latest time at
+      which the message should be sent.
+    * *@options.attempts@* - the maximum number of times the client should
+      attempt to deliver the message.
+
+    The default @Faye.Scheduler@ class provides the following API, which you may
+    override any method of.
+
+    * *@getInterval()@* - should return the time in seconds to wait between
+      detecting a failed delivery and resending the message.
+    * *@getTimeout()@* - should return the time in seconds after which a
+      delivery is considered failed if no response has been received.
+    * *@isDeliverable()@* - should return @true@ or @false@ to indicate whether
+      the client should attempt to deliver the message. This is called when the
+      client is about to send the message, not when an error has just been
+      detected.
+    * *@send()@* - is called by client just before it attempts to deliver the
+      message.
+    * *@succeed()@* - is called by the client when a response is received from
+      the server. This includes responses that are 'unsuccessful' within the
+      semantics of Bayeux; it simply means the server received the message and
+      the client will no try sending it again.
+    * *@fail()@* - is called when the client decides a delivery has failed,
+      either by an explicitly signalled network error or a timeout.
+    * *@abort()@* - is called when the client decides to stop sending the
+      message, because @isDeliverable()@ returned @false@.
+
+    Note that when you override a method, particularly one of the latter four
+    command methods, you should call the @Faye.Scheduler@ method before adding
+    your own customisation. For example:
+
+    <pre>BackoffScheduler.prototype.send = function() {
+      Faye.Scheduler.prototype.send.apply(this, arguments);
+      console.log('Sent message:', this.message);
+    };</pre>
+
+    This also applies to @isDeliverable()@; the client's @deadline@ and
+    @attempts@ options rely on this method and so if the default implementation
+    returns @false@, you should too:
+
+    <pre>BackoffScheduler.prototype.isDeliverable = function() {
+      var deliverable = Faye.Scheduler.prototype.isDeliverable.apply(this, arguments);
+      if (!deliverable) return false;
+      // your own logic here
+    };</pre>
+
+    This might seem cumbersome but the intent of this API is to allow
+    applications to gain full control of the decision-making about if and when
+    messages are sent, without having to deal with requests, sockets, timeouts,
+    error detection, or the messaging protocol. This does mean you can render
+    the client's built-in control options inactive, if you wish.
+    
+    The scheduler and its support infrastructure is designed to work with almost
+    no knowledge of how Bayeux works, so it can deal exclusively with message
+    delivery in a clean way.
