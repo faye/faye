@@ -1,7 +1,7 @@
 module Faye
   class Dispatcher
 
-    class Envelope < Struct.new(:message, :timeout, :attempts, :deadline, :request, :timer)
+    class Envelope < Struct.new(:message, :scheduler, :request, :timer)
     end
 
     MAX_REQUEST_SIZE = 2048
@@ -31,6 +31,7 @@ module Faye
       @headers    = {}
       @proxy      = options[:proxy] || {}
       @retry      = options[:retry] || DEFAULT_RETRY
+      @scheduler  = options[:scheduler] || Faye::Scheduler
       @state      = 0
       @transports = {}
 
@@ -74,30 +75,42 @@ module Faye
       end
     end
 
-    def send_message(message, timeout, options = {})
+    def send_message(message, timeout = nil, options = {})
       return unless @transport
 
       id       = message['id']
-      attempts  = options[:attempts]
+      attempts = options[:attempts]
       deadline = options[:deadline] && Time.now.to_f + options[:deadline]
-      envelope = @envelopes[id] ||= Envelope.new(message, timeout, attempts, deadline, nil, nil)
+      envelope = @envelopes[id]
+
+      if envelope
+        scheduler = envelope.scheduler
+      else
+        scheduler = @scheduler.new(message, :timeout => timeout, :interval => @retry, :attempts => attempts, :deadline => deadline)
+        envelope  = @envelopes[id] = Envelope.new(message, scheduler, nil, nil)
+      end
 
       return if envelope.request or envelope.timer
 
-      if attempts_exhausted(envelope) or deadline_passed(envelope)
+      unless scheduler.deliverable?
+        scheduler.abort!
         @envelopes.delete(id)
         return
       end
 
-      envelope.timer = EventMachine.add_timer(timeout) do
+      envelope.timer = EventMachine.add_timer(scheduler.timeout) do
         handle_error(message)
       end
 
+      scheduler.send!
       envelope.request = @transport.send_message(message)
     end
 
     def handle_response(reply)
-      if reply.has_key?('successful') and envelope = @envelopes.delete(reply['id'])
+      envelope = @envelopes.delete(reply['id'])
+
+      if reply.has_key?('successful') and envelope
+        envelope.scheduler.succeed!
         EventMachine.cancel_timer(envelope.timer) if envelope.timer
       end
 
@@ -116,15 +129,18 @@ module Faye
         req.close if req.respond_to?(:close)
       end
 
+      scheduler = envelope.scheduler
+      scheduler.fail!
+
       EventMachine.cancel_timer(envelope.timer)
       envelope.request = envelope.timer = nil
 
       if immediate
-        send_message(envelope.message, envelope.timeout)
+        send_message(envelope.message)
       else
-        envelope.timer = EventMachine.add_timer(@retry) do
+        envelope.timer = EventMachine.add_timer(scheduler.interval) do
           envelope.timer = nil
-          send_message(envelope.message, envelope.timeout)
+          send_message(envelope.message)
         end
       end
 
@@ -133,19 +149,5 @@ module Faye
       @client.trigger('transport:down')
     end
 
-  private
-
-    def attempts_exhausted(envelope)
-      return false unless envelope.attempts
-      envelope.attempts -= 1
-      return false if envelope.attempts >= 0
-      return true
-    end
-
-    def deadline_passed(envelope)
-      return false unless deadline = envelope.deadline
-      return false if Time.now.to_f <= deadline
-      return true
-    end
   end
 end

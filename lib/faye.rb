@@ -30,6 +30,7 @@ module Faye
   autoload :Channel,      File.join(ROOT, 'faye', 'protocol', 'channel')
   autoload :Client,       File.join(ROOT, 'faye', 'protocol', 'client')
   autoload :Dispatcher,   File.join(ROOT, 'faye', 'protocol', 'dispatcher')
+  autoload :Scheduler,    File.join(ROOT, 'faye', 'protocol', 'scheduler')
   autoload :Extensible,   File.join(ROOT, 'faye', 'protocol', 'extensible')
   autoload :Grammar,      File.join(ROOT, 'faye', 'protocol', 'grammar')
   autoload :Publication,  File.join(ROOT, 'faye', 'protocol', 'publication')

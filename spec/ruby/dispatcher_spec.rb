@@ -1,5 +1,16 @@
 require "spec_helper"
 
+class Scheduler < Faye::Scheduler
+  class << self
+    attr_accessor :instance
+  end
+
+  def initialize(*args)
+    super
+    Scheduler.instance = self
+  end
+end
+
 describe Faye::Dispatcher do
   include RSpec::EM::FakeClock
 
@@ -205,6 +216,71 @@ describe Faye::Dispatcher do
         @dispatcher.handle_error({'id' => 1})
         @dispatcher.handle_response({'id' => 3})
         @dispatcher.handle_error({'id' => 2})
+      end
+    end
+
+    describe "with a scheduler" do
+      let(:options) { {:scheduler => Scheduler} }
+
+      before do
+        @dispatcher.send_message(message, 25)
+      end
+
+      it "notifies the scheduler that the message failed" do
+        expect(Scheduler.instance).to receive(:fail!).exactly(1)
+        @dispatcher.handle_error(message)
+      end
+
+      it "asks the scheduler how long to wait before retrying" do
+        expect(Scheduler.instance).to receive(:interval).exactly(1).and_return(1)
+        @dispatcher.handle_error(message)
+      end
+
+      it "resends a message after the interval given by the scheduler" do
+        allow(Scheduler.instance).to receive(:interval).and_return(3)
+        @dispatcher.handle_error(message)
+        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1).and_return(req_promise)
+        clock.tick(3.5)
+      end
+
+      it "asks the scheduler what the message timeout should be" do
+        expect(Scheduler.instance).to receive(:timeout).exactly(1).and_return(25)
+        @dispatcher.handle_error(message, true)
+      end
+
+      it "waits the specified amount of time to fail the message" do
+        allow(Scheduler.instance).to receive(:timeout).and_return(3)
+        @dispatcher.handle_error(message, true)
+        expect(@dispatcher).to receive(:handle_error).with({'id' => 1}).exactly(1)
+        clock.tick(3)
+      end
+
+      it "asks the scheduler whether the message is deliverable" do
+        expect(Scheduler.instance).to receive(:deliverable?).and_return(true)
+        @dispatcher.handle_error(message, true)
+      end
+
+      it "resends the message if it's deliverable" do
+        allow(Scheduler.instance).to receive(:deliverable?).and_return(true)
+        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1)
+        @dispatcher.handle_error(message, true)
+      end
+
+      it "does not resend the message if it's not deliverable" do
+        allow(Scheduler.instance).to receive(:deliverable?).and_return(false)
+        expect(transport).not_to receive(:send_message)
+        @dispatcher.handle_error(message, true)
+      end
+
+      it "notifies the scheduler that the message is being sent" do
+        expect(Scheduler.instance).to receive(:send!).exactly(1)
+        @dispatcher.handle_error(message, true)
+      end
+
+      it "notifies the scheduler to abort of it's not deliverable" do
+        allow(Scheduler.instance).to receive(:deliverable?).and_return(false)
+        expect(Scheduler.instance).to receive(:abort!).exactly(1)
+        @dispatcher.handle_error(message, true)
       end
     end
 
