@@ -19,7 +19,7 @@ Faye.extend(Faye.Scheduler.prototype, {
         deadline = this.options.deadline,
         now      = new Date().getTime();
 
-    if (attempts !== undefined && this.attempts >= attempts)
+    if (attempts !== undefined && made >= attempts)
       return false;
 
     if (deadline !== undefined && now > deadline)
