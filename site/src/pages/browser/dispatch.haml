@@ -93,8 +93,8 @@
       the client should attempt to deliver the message. This is called when the
       client is about to send the message, not when an error has just been
       detected.
-    * *@send()@* - is called by client just before it attempts to deliver the
-      message.
+    * *@send()@* - is called by the client just before it attempts to deliver
+      the message.
     * *@succeed()@* - is called by the client when a response is received from
       the server. This includes responses that are 'unsuccessful' within the
       semantics of Bayeux; it simply means the server received the message and
@@ -132,3 +132,10 @@
     The scheduler and its support infrastructure is designed to work with almost
     no knowledge of how Bayeux works, so it can deal exclusively with message
     delivery in a clean way.
+
+    Note that whereas the @deadline@ and @attempts@ options to
+    @client.publish()@ only affect messages the client publishes, the scheduler
+    is actually used for _all_ messages the client sends, including the
+    @/meta/subscribe@ and @/meta/connect@ messages it uses to receive data from
+    the server. The @publish()@ options are simply convenient sugar; if you
+    implement your own scheduler you get to control all messages.
