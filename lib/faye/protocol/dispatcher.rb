@@ -75,7 +75,7 @@ module Faye
       end
     end
 
-    def send_message(message, timeout = nil, options = {})
+    def send_message(message, timeout, options = {})
       return unless @transport
 
       id       = message['id']
@@ -83,18 +83,23 @@ module Faye
       deadline = options[:deadline] && Time.now.to_f + options[:deadline]
       envelope = @envelopes[id]
 
-      if envelope
-        scheduler = envelope.scheduler
-      else
+      unless envelope
         scheduler = @scheduler.new(message, :timeout => timeout, :interval => @retry, :attempts => attempts, :deadline => deadline)
         envelope  = @envelopes[id] = Envelope.new(message, scheduler, nil, nil)
       end
 
+      send_envelope(envelope)
+    end
+
+    def send_envelope(envelope)
       return if envelope.request or envelope.timer
+
+      message   = envelope.message
+      scheduler = envelope.scheduler
 
       unless scheduler.deliverable?
         scheduler.abort!
-        @envelopes.delete(id)
+        @envelopes.delete(message['id'])
         return
       end
 
@@ -105,6 +110,7 @@ module Faye
       scheduler.send!
       envelope.request = @transport.send_message(message)
     end
+    private :send_envelope
 
     def handle_response(reply)
       envelope = @envelopes.delete(reply['id'])
@@ -136,11 +142,11 @@ module Faye
       envelope.request = envelope.timer = nil
 
       if immediate
-        send_message(envelope.message)
+        send_envelope(envelope)
       else
         envelope.timer = EventMachine.add_timer(scheduler.interval) do
           envelope.timer = nil
-          send_message(envelope.message)
+          send_envelope(envelope)
         end
       end
 

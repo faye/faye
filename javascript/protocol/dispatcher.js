@@ -67,25 +67,30 @@ Faye.Dispatcher = Faye.Class({
     if (!this._transport) return;
     options = options || {};
 
-    var self     = this,
-        id       = message.id,
+    var id       = message.id,
         attempts = options.attempts,
         deadline = options.deadline && new Date().getTime() + (options.deadline * 1000),
         envelope = this._envelopes[id],
         scheduler;
 
-    if (envelope) {
-      scheduler = envelope.scheduler;
-    } else {
+    if (!envelope) {
       scheduler = new this._scheduler(message, {timeout: timeout, interval: this.retry, attempts: attempts, deadline: deadline});
       envelope  = this._envelopes[id] = {message: message, scheduler: scheduler};
     }
 
+    this._sendEnvelope(envelope);
+  },
+
+  _sendEnvelope: function(envelope) {
     if (envelope.request || envelope.timer) return;
+
+    var message   = envelope.message,
+        scheduler = envelope.scheduler,
+        self      = this;
 
     if (!scheduler.isDeliverable()) {
       scheduler.abort();
-      delete this._envelopes[id];
+      delete this._envelopes[message.id];
       return;
     }
 
@@ -131,11 +136,11 @@ Faye.Dispatcher = Faye.Class({
     envelope.request = envelope.timer = null;
 
     if (immediate) {
-      this.sendMessage(envelope.message, envelope.timeout);
+      this._sendEnvelope(envelope);
     } else {
       envelope.timer = Faye.ENV.setTimeout(function() {
         envelope.timer = null;
-        self.sendMessage(envelope.message, envelope.timeout);
+        self._sendEnvelope(envelope);
       }, scheduler.getInterval() * 1000);
     }
 
