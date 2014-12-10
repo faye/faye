@@ -11,17 +11,35 @@
       JS.cache = false
 
       JS.packages(function() { with(this) {
-        file('../build/browser/faye-browser-min.js').provides('Faye')
+        file('../build/browser/faye-cov.js').provides('Faye')
         autoload(/.*Spec/, {from: './javascript', require: 'Faye'})
       }})
+
+      var coverage = {
+        endSuite: function() {
+          var ws = new WebSocket(coverage.url)
+          ws.onopen = function() {
+            ws.send(JSON.stringify(__coverage__))
+            ws.close()
+          }
+        },
+        url: 'ws://localhost:4180/'
+      }
+
+      var run = function() {
+        JS.Test.autorun(function(runner) {
+          runner.addReporter(coverage)
+        })
+      }
 
       JS.require( 'FayeSpec',
                   'GrammarSpec',
                   'ChannelSpec',
                   'ClientSpec',
+                  'DispatcherSpec',
                   'UriSpec',
                   'TransportSpec',
-                  function() { JS.Test.autorun() })
+                  run)
     </script>
 
   </body>
