@@ -27,6 +27,7 @@ module Faye
       @options = [app, options].grep(Hash).first || {}
 
       @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
+      @extensions  = []
       @endpoint_re = Regexp.new('^' + @endpoint.gsub(/\/$/, '') + '(/[^/]*)*(\\.[^\\.]+)?$')
       @server      = Server.new(@options)
 
@@ -36,6 +37,10 @@ module Faye
 
       if extensions = @options[:extensions]
         [*extensions].each { |extension| add_extension(extension) }
+      end
+
+      if websocket_extensions = @options[:websocket_extensions]
+        [*websocket_extensions].each { |ext| add_websocket_extension(ext) }
       end
 
       block.call(self) if block
@@ -51,6 +56,10 @@ module Faye
 
     def remove_extension(extension)
       @server.remove_extension(extension)
+    end
+
+    def add_websocket_extension(extension)
+      @extensions << extension
     end
 
     def close
@@ -177,7 +186,8 @@ module Faye
     end
 
     def handle_websocket(request)
-      ws        = Faye::WebSocket.new(request.env, nil, :ping => @options[:ping])
+      options   = {:extensions => @extensions, :ping => @options[:ping]}
+      ws        = Faye::WebSocket.new(request.env, [], options)
       client_id = nil
 
       ws.onmessage = lambda do |event|

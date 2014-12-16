@@ -5,18 +5,19 @@
 , "keywords"        : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
 , "license"         : "MIT"
 
-, "version"         : "1.0.3"
+, "version"         : "1.1.0"
 , "engines"         : {"node": ">=0.6.0"}
 , "main"            : "./node/faye-node"
 , "browserify"      : "./browser/faye-browser"
 
 , "dependencies"    : { "csprng": ""
-                      , "faye-websocket": ">=0.8.0"
+                      , "faye-websocket": ">=0.9.0"
                       , "tough-cookie": ""
                       , "tunnel-agent": ""
                       }
 , "devDependencies" : { "jstest": "~1.0.0"
                       , "mime": "~1.2.0"
+                      , "permessage-deflate": ">=0.1.0"
                       , "promises-aplus-tests": "~2.0.0"
                       , "wake": "~0.3.0"
                       }

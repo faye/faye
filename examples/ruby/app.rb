@@ -1,5 +1,6 @@
 require 'sinatra'
 require 'faye'
+require 'permessage_deflate'
 
 ROOT_DIR = File.expand_path('../..', __FILE__)
 set :root, ROOT_DIR
@@ -21,6 +22,8 @@ App = Faye::RackAdapter.new(Sinatra::Application,
   :mount   => '/bayeux',
   :timeout => 25
 )
+
+App.add_websocket_extension(PermessageDeflate)
 
 def App.log(message)
 end

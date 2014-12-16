@@ -1,9 +1,10 @@
-var fs    = require('fs'),
-    path  = require('path'),
-    http  = require('http'),
-    https = require('https'),
-    mime  = require('mime'),
-    faye  = require('../../build/node/faye-node');
+var fs      = require('fs'),
+    path    = require('path'),
+    http    = require('http'),
+    https   = require('https'),
+    mime    = require('mime'),
+    deflate = require('permessage-deflate'),
+    faye    = require('../../build/node/faye-node');
 
 var SHARED_DIR = __dirname + '/..',
     PUBLIC_DIR = SHARED_DIR + '/public',
@@ -13,6 +14,8 @@ var SHARED_DIR = __dirname + '/..',
     secure     = process.argv[3] === 'tls',
     key        = fs.readFileSync(SHARED_DIR + '/server.key'),
     cert       = fs.readFileSync(SHARED_DIR + '/server.crt');
+
+bayeux.addWebsocketExtension(deflate);
 
 var handleRequest = function(request, response) {
   var path = (request.url === '/') ? '/index.html' : request.url;

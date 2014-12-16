@@ -60,14 +60,16 @@ module Faye
       return unless @state == UNCONNECTED
       @state = CONNECTING
 
-      headers = @dispatcher.headers.dup
-      cookie  = get_cookies
+      url        = @endpoint.dup
+      headers    = @dispatcher.headers.dup
+      extensions = @dispatcher.websocket_extensions
+      cookie     = get_cookies
 
+      url.scheme = PROTOCOLS[url.scheme]
       headers['Cookie'] = cookie unless cookie == ''
 
-      url = @endpoint.dup
-      url.scheme = PROTOCOLS[url.scheme]
-      socket = Faye::WebSocket::Client.new(url.to_s, [], :headers => headers, :proxy => @proxy)
+      options = {:extensions => extensions, :headers => headers, :proxy => @proxy}
+      socket  = Faye::WebSocket::Client.new(url.to_s, [], options)
 
       socket.onopen = lambda do |*args|
         store_cookies(socket.headers['Set-Cookie'])

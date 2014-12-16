@@ -27,6 +27,7 @@ Faye.NodeAdapter = Faye.Class({
 
   initialize: function(options) {
     this._options    = options || {};
+    this._extensions = [];
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
     this._endpointRe = new RegExp('^' + this._endpoint.replace(/\/$/, '') + '(/[^/]*)*(\\.[^\\.]+)?$');
     this._server     = new Faye.Server(this._options);
@@ -35,12 +36,21 @@ Faye.NodeAdapter = Faye.Class({
     this._static.map(path.basename(this._endpoint) + '.js', this.SCRIPT_PATH);
     this._static.map('client.js', this.SCRIPT_PATH);
 
-    var extensions = this._options.extensions;
-    if (!extensions) return;
+    var extensions = this._options.extensions,
+        websocketExtensions = this._options.websocketExtensions,
+        i, n;
 
-    extensions = [].concat(extensions);
-    for (var i = 0, n = extensions.length; i < n; i++)
-      this.addExtension(extensions[i]);
+    if (extensions) {
+      extensions = [].concat(extensions);
+      for (i = 0, n = extensions.length; i < n; i++)
+        this.addExtension(extensions[i]);
+    }
+
+    if (websocketExtensions) {
+      websocketExtensions = [].concat(websocketExtensions);
+      for (i = 0, n = websocketExtensions.length; i < n; i++)
+        this.addWebsocketExtension(websocketExtensions[i]);
+    }
   },
 
   listen: function() {
@@ -53,6 +63,10 @@ Faye.NodeAdapter = Faye.Class({
 
   removeExtension: function(extension) {
     return this._server.removeExtension(extension);
+  },
+
+  addWebsocketExtension: function(extension) {
+    this._extensions.push(extension);
   },
 
   close: function() {
@@ -170,7 +184,8 @@ Faye.NodeAdapter = Faye.Class({
   },
 
   handleUpgrade: function(request, socket, head) {
-    var ws       = new Faye.WebSocket(request, socket, head, null, {ping: this._options.ping}),
+    var options  = {extensions: this._extensions, ping: this._options.ping},
+        ws       = new Faye.WebSocket(request, socket, head, [], options),
         clientId = null,
         self     = this;
 

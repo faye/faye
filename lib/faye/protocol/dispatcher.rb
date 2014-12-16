@@ -16,7 +16,7 @@ module Faye
     def_delegators :@transport, :connection_type
 
     attr_accessor :client_id, :timeout
-    attr_reader   :cookies, :endpoint, :headers, :max_request_size, :proxy, :retry, :transports
+    attr_reader   :cookies, :endpoint, :headers, :max_request_size, :proxy, :retry, :transports, :websocket_extensions
 
     def initialize(client, endpoint, options)
       super()
@@ -34,6 +34,8 @@ module Faye
       @scheduler  = options[:scheduler] || Faye::Scheduler
       @state      = 0
       @transports = {}
+
+      @websocket_extensions = options[:websocket_extensions]
 
       @alternates.each do |type, url|
         @alternates[type] = Faye.parse_url(url)

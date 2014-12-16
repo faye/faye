@@ -20,6 +20,8 @@ Faye.Dispatcher = Faye.Class({
     this._state     = 0;
     this.transports = {};
 
+    this.websocketExtensions = options.websocketExtensions;
+
     this.tls = options.tls || {};
     this.tls.ca = this.tls.ca || options.ca;
 

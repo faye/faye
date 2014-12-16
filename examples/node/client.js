@@ -7,8 +7,9 @@
 // The client connects to the chat server and logs all messages sent by all
 // connected users.
 
-var fs   = require('fs'),
-    faye = require('../../build/node/faye-node'),
+var fs      = require('fs'),
+    deflate = require('permessage-deflate'),
+    faye    = require('../../build/node/faye-node'),
 
     port     = process.argv[2] || 8000,
     path     = process.argv[3] || 'bayeux',
@@ -18,7 +19,9 @@ var fs   = require('fs'),
     proxy    = {headers: {'User-Agent': 'Faye'}, tls: {ca: cert}};
 
 console.log('Connecting to ' + endpoint);
-var client = new faye.Client(endpoint, {proxy: proxy, tls: {ca: cert}});
+
+var options = {websocketExtensions: [deflate], proxy: proxy, tls: {ca: cert}},
+    client  = new faye.Client(endpoint, options);
 
 var subscription = client.subscribe('/chat/*', function(message) {
   var user = message.user;
