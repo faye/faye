@@ -13,7 +13,7 @@ bundle install
 npm install
 
 # Build Faye
-npm run-script build
+npm run build
 
 # Run tests
 bundle exec rspec -c spec/
