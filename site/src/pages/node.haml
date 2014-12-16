@@ -34,6 +34,20 @@
       messages over WebSocket and EventSource connections. Use this if your Faye
       server will be accessed through a proxy that kills idle connections.
 
+    It also allows WebSocket extensions to be plugged in. For example, to enable
+    "permessage-deflate":https://github.com/faye/permessage-deflate-node for
+    supporting clients:
+
+    <pre>var faye    = require('faye'),
+        deflate = require('permessage-deflate');
+
+    var bayeux = new faye.NodeAdapter({mount: '/faye', timeout: 45});
+    bayeux.addWebsocketExtension(deflate);</pre>
+
+    You can use any extension that's compatible with the
+    "websocket-extensions":https://github.com/faye/websocket-extensions-node
+    framework.
+
     Faye should be attached to an existing HTTP server using the @attach()@
     method. It will handle all requests to paths matching the @mount@ path and
     delegate all other requests to your handlers.

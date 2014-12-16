@@ -28,13 +28,25 @@
       the response. This is given in seconds and must be smaller than the
       timeout on your frontend webserver. Faye uses Thin as its webserver, whose
       default timeout is 30 seconds.
-    * *@:extensions@* - (optional) a list of extensions to add to the server,
-      useful when using @RackAdapter@ as middleware.
     * *@:engine@* - (optional) the type and parameters for the engine you want
       to use - see the "engines documentation":/ruby/engines.html
     * *@:ping@* - (optional) how often, in seconds, to send keep-alive ping
       messages over WebSocket and EventSource connections. Use this if your Faye
       server will be accessed through a proxy that kills idle connections.
+
+    It also allows WebSocket extensions to be plugged in. For example, to enable
+    "permessage-deflate":https://github.com/faye/permessage-deflate-ruby for
+    supporting clients:
+
+    <pre>require 'faye'
+    require 'permessage_deflate'
+
+    bayeux = Faye::RackAdapter.new(:mount => '/faye', :timeout => 25)
+    bayeux.add_websocket_extension(PermessageDeflate)</pre>
+
+    You can use any extension that's compatible with the
+    "websocket-extensions":https://github.com/faye/websocket-extensions-ruby
+    framework.
 
     Faye can also be setup as Rack middleware, for example in front of a Sinatra
     application:
@@ -44,11 +56,17 @@
     require 'faye'
     require File.expand_path('../app', __FILE__)
 
-    use Faye::RackAdapter, :mount      => '/faye',
-                           :timeout    => 25,
-                           :extensions => [MyExtension.new]
+    use Faye::RackAdapter, :mount => '/faye', :timeout => 25
 
     run Sinatra::Application</pre>
+
+    When set up as middleware, extensions can be added using a block that is
+    called with the middleware instance once it is created:
+
+    <pre>use Faye::RackAdapter, :mount => '/faye', :timeout => 25 do |bayeux|
+      bayeux.add_extension(MyExtension.new)
+      bayeux.add_websocket_extension(PermessageDeflate)
+    end</pre>
 
     h4. Running your Faye application
 
