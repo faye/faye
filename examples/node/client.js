@@ -20,8 +20,8 @@ var fs      = require('fs'),
 
 console.log('Connecting to ' + endpoint);
 
-var options = {websocketExtensions: [deflate], proxy: proxy, tls: {ca: cert}},
-    client  = new faye.Client(endpoint, options);
+var client = new faye.Client(endpoint, {proxy: proxy, tls: {ca: cert}});
+client.addWebsocketExtension(deflate);
 
 var subscription = client.subscribe('/chat/*', function(message) {
   var user = message.user;

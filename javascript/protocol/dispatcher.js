@@ -10,17 +10,23 @@ Faye.Dispatcher = Faye.Class({
     this.endpoint    = Faye.URI.parse(endpoint);
     this._alternates = options.endpoints || {};
 
-    this.cookies    = Faye.Cookies && new Faye.Cookies.CookieJar();
-    this._disabled  = [];
-    this._envelopes = {};
-    this.headers    = {};
-    this.retry      = options.retry || this.DEFAULT_RETRY;
-    this.proxy      = options.proxy || {};
-    this._scheduler = options.scheduler || Faye.Scheduler;
-    this._state     = 0;
-    this.transports = {};
+    this.cookies      = Faye.Cookies && new Faye.Cookies.CookieJar();
+    this._disabled    = [];
+    this._envelopes   = {};
+    this.headers      = {};
+    this.retry        = options.retry || this.DEFAULT_RETRY;
+    this.proxy        = options.proxy || {};
+    this._scheduler   = options.scheduler || Faye.Scheduler;
+    this._state       = 0;
+    this.transports   = {};
+    this.wsExtensions = [];
 
-    this.websocketExtensions = options.websocketExtensions;
+    var exts = options.websocketExtensions;
+    if (exts) {
+      exts = [].concat(exts);
+      for (var i = 0, n = exts.length; i < n; i++)
+        this.addWebsocketExtension(exts[i]);
+    }
 
     this.tls = options.tls || {};
     this.tls.ca = this.tls.ca || options.ca;
@@ -33,6 +39,10 @@ Faye.Dispatcher = Faye.Class({
 
   endpointFor: function(connectionType) {
     return this._alternates[connectionType] || this.endpoint;
+  },
+
+  addWebsocketExtension: function(extension) {
+    this.wsExtensions.push(extension);
   },
 
   disable: function(feature) {

@@ -21,8 +21,8 @@ proxy    = {:headers => {'User-Agent' => 'Faye'}}
 EM.run {
   puts "Connecting to #{endpoint}"
 
-  options = {:websocket_extensions => [PermessageDeflate], :proxy => proxy}
-  client  = Faye::Client.new(endpoint, options)
+  client = Faye::Client.new(endpoint, :proxy => proxy)
+  client.add_websocket_extension(PermessageDeflate)
 
   subscription = client.subscribe '/chat/*' do |message|
     user = message['user']

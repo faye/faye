@@ -18,7 +18,7 @@ module Faye
     CONNECTION_TIMEOUT = 60.0
 
     extend Forwardable
-    def_delegators :@dispatcher, :disable, :set_header
+    def_delegators :@dispatcher, :add_websocket_extension, :disable, :set_header
 
     def initialize(endpoint = nil, options = {})
       super()

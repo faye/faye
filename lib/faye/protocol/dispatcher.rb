@@ -16,7 +16,7 @@ module Faye
     def_delegators :@transport, :connection_type
 
     attr_accessor :client_id, :timeout
-    attr_reader   :cookies, :endpoint, :headers, :max_request_size, :proxy, :retry, :transports, :websocket_extensions
+    attr_reader   :cookies, :endpoint, :headers, :max_request_size, :proxy, :retry, :transports, :ws_extensions
 
     def initialize(client, endpoint, options)
       super()
@@ -25,17 +25,20 @@ module Faye
       @endpoint   = Faye.parse_url(endpoint)
       @alternates = options[:endpoints] || {}
 
-      @cookies    = CookieJar::Jar.new
-      @disabled   = []
-      @envelopes  = {}
-      @headers    = {}
-      @proxy      = options[:proxy] || {}
-      @retry      = options[:retry] || DEFAULT_RETRY
-      @scheduler  = options[:scheduler] || Faye::Scheduler
-      @state      = 0
-      @transports = {}
+      @cookies       = CookieJar::Jar.new
+      @disabled      = []
+      @envelopes     = {}
+      @headers       = {}
+      @proxy         = options[:proxy] || {}
+      @retry         = options[:retry] || DEFAULT_RETRY
+      @scheduler     = options[:scheduler] || Faye::Scheduler
+      @state         = 0
+      @transports    = {}
+      @ws_extensions = []
 
-      @websocket_extensions = options[:websocket_extensions]
+      [*options[:websocket_extensions]].each do |extension|
+        add_websocket_extension(extension)
+      end
 
       @alternates.each do |type, url|
         @alternates[type] = Faye.parse_url(url)
@@ -46,6 +49,10 @@ module Faye
 
     def endpoint_for(connection_type)
       @alternates[connection_type] || @endpoint
+    end
+
+    def add_websocket_extension(extension)
+      @ws_extensions << extension
     end
 
     def disable(feature)

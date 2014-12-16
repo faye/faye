@@ -62,7 +62,7 @@ module Faye
 
       url        = @endpoint.dup
       headers    = @dispatcher.headers.dup
-      extensions = @dispatcher.websocket_extensions
+      extensions = @dispatcher.ws_extensions
       cookie     = get_cookies
 
       url.scheme = PROTOCOLS[url.scheme]
