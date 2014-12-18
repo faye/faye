@@ -15,11 +15,13 @@ Faye.Dispatcher = Faye.Class({
     this._envelopes   = {};
     this.headers      = {};
     this.retry        = options.retry || this.DEFAULT_RETRY;
-    this.proxy        = options.proxy || {};
     this._scheduler   = options.scheduler || Faye.Scheduler;
     this._state       = 0;
     this.transports   = {};
     this.wsExtensions = [];
+
+    this.proxy = options.proxy || {};
+    if (typeof this._proxy === 'string') this._proxy = {origin: this._proxy};
 
     var exts = options.websocketExtensions;
     if (exts) {

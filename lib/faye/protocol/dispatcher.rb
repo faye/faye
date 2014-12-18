@@ -29,12 +29,14 @@ module Faye
       @disabled      = []
       @envelopes     = {}
       @headers       = {}
-      @proxy         = options[:proxy] || {}
       @retry         = options[:retry] || DEFAULT_RETRY
       @scheduler     = options[:scheduler] || Faye::Scheduler
       @state         = 0
       @transports    = {}
       @ws_extensions = []
+
+      @proxy = options[:proxy] || {}
+      @proxy = {:origin => @proxy} if String === @proxy
 
       [*options[:websocket_extensions]].each do |extension|
         add_websocket_extension(extension)
