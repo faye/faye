@@ -11,7 +11,7 @@
 , "browserify"      : "./browser/faye-browser"
 
 , "dependencies"    : { "csprng": ""
-                      , "faye-websocket": ">=0.9.0"
+                      , "faye-websocket": ">=0.9.1"
                       , "tough-cookie": ""
                       , "tunnel-agent": ""
                       }

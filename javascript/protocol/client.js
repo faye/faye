@@ -17,6 +17,8 @@ Faye.Client = Faye.Class({
     this.info('New client created for ?', endpoint);
     options = options || {};
 
+    Faye.validateOptions(options, ['interval', 'timeout', 'endpoints', 'proxy', 'retry', 'scheduler', 'websocketExtensions', 'tls', 'ca']);
+
     this._endpoint   = endpoint || this.DEFAULT_ENDPOINT;
     this._channels   = new Faye.Channel.Set();
     this._dispatcher = new Faye.Dispatcher(this, this._endpoint, options);
@@ -263,6 +265,7 @@ Faye.Client = Faye.Class({
   //                * id                                 * error
   //                * ext                                * ext
   publish: function(channel, data, options) {
+    Faye.validateOptions(options || {}, ['attempts', 'deadline']);
     var publication = new Faye.Publication();
 
     this.connect(function() {

@@ -29,6 +29,13 @@ var Faye = {
     return string;
   },
 
+  validateOptions: function(options, validKeys) {
+    for (var key in options) {
+      if (this.indexOf(validKeys, key) < 0)
+        throw new Error('Unrecognized option: ' + key);
+    }
+  },
+
   clientIdFromMessages: function(messages) {
     var connect = this.filter([].concat(messages), function(message) {
       return message.channel === '/meta/connect';
