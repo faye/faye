@@ -6,14 +6,14 @@ describe Faye::Transport do
   end
 
   let :dispatcher do
-    double(:dispatcher, :endpoint_for         => URI.parse("http://example.com/"),
-                        :endpoint             => URI.parse("http://example.com/"),
-                        :max_request_size     => 2048,
-                        :cookies              => CookieJar::Jar.new,
-                        :headers              => {},
-                        :proxy                => {},
-                        :transports           => {},
-                        :websocket_extensions => [])
+    double(:dispatcher, :endpoint_for     => URI.parse("http://example.com/"),
+                        :endpoint         => URI.parse("http://example.com/"),
+                        :max_request_size => 2048,
+                        :cookies          => CookieJar::Jar.new,
+                        :headers          => {},
+                        :proxy            => {},
+                        :transports       => {},
+                        :ws_extensions    => [])
   end
 
   describe :get do
