@@ -24,7 +24,7 @@
     connect to:
 
     <pre><script type="text/javascript">
-        var client = new Faye.Client('http://localhost:8000/faye');
+      var client = new Faye.Client('http://localhost:8000/faye');
     </script></pre>
 
     h4. Timeouts
@@ -33,9 +33,7 @@
     data for the given period of time, the client will assume the server has
     gone away and will attempt to reconnect. Specify the timeout as follows:
 
-    <pre>var client = new Faye.Client('http://localhost:8000/faye', {
-        timeout: 120
-    });</pre>
+    <pre>var client = new Faye.Client(url, {timeout: 120});</pre>
 
     The timeout is given in seconds and should be larger that the timeout you
     set up on the server side, so we give the server ample time to respond
@@ -49,9 +47,7 @@
     client will wait between detecting a network error and attempting to resend
     a message.
 
-    <pre>var client = new Faye.Client('http://localhost:8000/faye', {
-        retry: 5
-    });</pre>
+    <pre>var client = new Faye.Client(url, {retry: 5});</pre>
 
     h4. Custom headers
 
@@ -76,10 +72,8 @@
     @http://ws.example.com/@. You can set per-transport endpoints using the
     @endpoints@ option:
 
-    <pre>var client = new Faye.Client('http://example.com/faye', {
-        endpoints: {
-            websocket: 'http://ws.example.com/'
-        }
+    <pre>var client = new Faye.Client(url, {
+      endpoints: { websocket: 'http://ws.example.com/' }
     });</pre>
 
     h4. Disabling specific transports

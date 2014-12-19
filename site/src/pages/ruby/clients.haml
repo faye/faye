@@ -56,3 +56,31 @@
       'text'      => 'New email has arrived!',
       'inboxSize' => 34
     })</pre>
+
+    h4. Transport control
+
+    When using the client on the server, you can control parts of the transport
+    layer that the browser doesn't provide access to. For a start, headers
+    added using the @client.set_header@ method will be added to WebSocket
+    connections, not just regular HTTP requests.
+
+    You can also request that all connections go via an HTTP proxy:
+
+    <pre>client = Faye::Client.new(url, {
+      :proxy => 'http://username:password@proxy.example.com'
+    })</pre>
+
+    You can also set the @HTTP_PROXY@ or @HTTPS_PROXY@ environment variables,
+    which will make all Faye client connections use the given proxy by default;
+    @HTTP_PROXY@ for @http:@ and @ws:@ requests, and @HTTPS_PROXY@ for @https:@
+    and @wss:@ requests.
+
+    Finally, the WebSocket transport can be configured to use protocol
+    extensions; any extension library compatible with
+    "websocket-extensions":https://github.com/faye/websocket-extensions-ruby
+    will work. For example, to add
+    "permessage-deflate":https://github.com/faye/permessage-deflate-ruby:
+
+    <pre>require 'permessage_deflate'
+
+    client.add_websocket_extension(PermessageDeflate)</pre>
