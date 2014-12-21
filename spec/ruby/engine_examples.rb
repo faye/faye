@@ -92,6 +92,20 @@ EngineSteps = RSpec::EM.async_steps do
     resume.call
   end
 
+  def expect_non_exclusive_event(name, event, args, engine, &resume)
+    params  = [@clients[name]] + args
+    handler = lambda { |*a| }
+
+    # we don't care if the event is called for other clients
+    filter = lambda do |*args|
+      handler.call(*args) if args[0] == params[0]
+    end
+
+    engine.bind(event, &handler)
+    handler.should_receive(:call).with(*params)
+    resume.call
+  end
+
   def expect_event(name, event, args, &resume)
     params  = [@clients[name]] + args
     handler = lambda { |*a| }
@@ -158,6 +172,15 @@ shared_examples_for "faye engine" do
     it "publishes an event" do
       engine.should_receive(:trigger).with(:handshake, match(/^[a-z0-9]+$/)).exactly(4)
       create_client :dave
+    end
+
+    describe :gc do
+      let(:options) { {:timeout => 0.3, :gc => 0.2} }
+
+      it "doesn't prematurely remove a client after creation" do
+        clock_tick 0.25
+        check_client_exists :alice, true
+      end
     end
   end
 
@@ -427,6 +450,17 @@ shared_examples_for "distributed engine" do
       publish "channel" => "/foo", "data" => "second"
       connect :alice, right
       expect_message :alice, [{"channel" => "/foo", "data" => "first"}, {"channel" => "/foo", "data" => "second"}]
+    end
+  end
+
+  describe :gc do
+    let(:options) { {:timeout => 0.3, :gc => 0.08} }
+
+    it "calls close in each engine when a client is removed" do
+      expect_non_exclusive_event :alice, :close, [], left
+      expect_non_exclusive_event :alice, :close, [], right
+
+      clock_tick 0.7
     end
   end
 end
