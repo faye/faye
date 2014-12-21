@@ -159,17 +159,25 @@ Faye.Client = Faye.Class({
     this._state = this.DISCONNECTED;
 
     this.info('Disconnecting ?', this._dispatcher.clientId);
+    var promise = new Faye.Publication();
 
     this._sendMessage({
       channel:  Faye.Channel.DISCONNECT,
       clientId: this._dispatcher.clientId
 
     }, {}, function(response) {
-      if (response.successful) this._dispatcher.close();
+      if (response.successful) {
+        this._dispatcher.close();
+        promise.setDeferredStatus('succeeded');
+      } else {
+        promise.setDeferredStatus('failed', Faye.Error.parse(response.error));
+      }
     }, this);
 
     this.info('Clearing channel listeners for ?', this._dispatcher.clientId);
     this._channels = new Faye.Channel.Set();
+
+    return promise;
   },
 
   // Request                              Response
