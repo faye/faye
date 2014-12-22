@@ -1,3 +1,18 @@
+### 1.1.0 / 2014-12-22
+
+* Allow the server and client to use WebSocket extensions, for example permessage-deflate
+* Support the `HTTP_PROXY` and `HTTPS_PROXY` environment variables to send all client connections through an HTTP proxy
+* Introduce the `Scheduler` API to allow the user to control message retries
+* Add the `attempts` and `deadline` options to `Client#publish()`
+* Let `RackAdapter` take a block that yields the instance, so extensions can be added to middleware
+* Allow monitoring listeners to see the `clientId` on publishd messages but still avoid sending it to subscribers
+* Return a promise from `Client#disconnect()`
+* Fix client-side retry bugs causing the client to flood the server with duplicate messages
+* Send all transport types in the `supportedConnectionTypes` handshake parameter
+* Don't close WebSockets when the client recovers from an error and sends a new `clientId`
+* Replace `cookiejar` with `tough-cookie` to avoid global variable leaks
+
+
 ### 1.0.3 / 2014-07-08
 
 * Make some changes to JSON-P responses to mitigate the Rosetta Flash attack

@@ -16,6 +16,6 @@ npm install
 npm run build
 
 # Run tests
-bundle exec rspec -c spec/
-node spec/node.js
+bundle exec rspec spec/
+npm test
 ```
