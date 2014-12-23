@@ -1,4 +1,9 @@
 JS.ENV.EngineSteps = JS.Test.asyncSteps({
+  disconnect_engine: function(resume) {
+    this.engine.disconnect()
+    resume()
+  },
+
   create_client: function(name, resume) {
     var inboxes = this._inboxes = this._inboxes || {}
     var clients = this._clients = this._clients || {}

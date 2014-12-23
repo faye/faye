@@ -16,6 +16,11 @@ require root + '/lib/faye/protocol/grammar'
 require root + '/lib/faye/engines/proxy'
 
 EngineSteps = RSpec::EM.async_steps do
+  def disconnect_engine(&resume)
+    engine.disconnect
+    resume.call
+  end
+
   def create_client(name, &resume)
     @inboxes ||= {}
     @clients ||= {}
@@ -88,8 +93,7 @@ EngineSteps = RSpec::EM.async_steps do
   end
 
   def clock_tick(time, &resume)
-    clock.tick(time)
-    resume.call
+    EM.add_timer(time, &resume)
   end
 
   def expect_non_exclusive_event(name, event, args, engine, &resume)
@@ -101,7 +105,7 @@ EngineSteps = RSpec::EM.async_steps do
       handler.call(*args) if args[0] == params[0]
     end
 
-    engine.bind(event, &handler)
+    engine.bind(event, &filter)
     handler.should_receive(:call).with(*params)
     resume.call
   end
@@ -141,7 +145,6 @@ end
 shared_examples_for "faye engine" do
   include EncodingHelper
   include EngineSteps
-  include RSpec::EM::FakeClock
 
   def create_engine
     opts = options.merge(engine_opts)
@@ -195,12 +198,7 @@ shared_examples_for "faye engine" do
   end
 
   describe :ping do
-    before { clock.stub  }
-    after  { clock.reset }
-
-    def options
-      {:timeout => 0.3, :gc => 0.08}
-    end
+    let(:options) { {:timeout => 0.3, :gc => 0.08} }
 
     it "removes a client if it does not ping often enough" do
       clock_tick 0.7
