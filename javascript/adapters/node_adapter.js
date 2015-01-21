@@ -184,7 +184,7 @@ Faye.NodeAdapter = Faye.Class({
 
         if (clientId && cid && cid !== clientId) self._server.closeSocket(clientId, false);
         self._server.openSocket(cid, ws, request);
-        clientId = cid;
+        if (cid) clientId = cid;
 
         self._server.process(message, request, function(replies) {
           if (ws) ws.send(Faye.toJSON(replies));

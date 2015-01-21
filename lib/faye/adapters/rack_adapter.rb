@@ -186,7 +186,7 @@ module Faye
 
           @server.close_socket(client_id, false) if client_id and cid and cid != client_id
           @server.open_socket(cid, ws, request)
-          client_id = cid
+          client_id = cid if cid
 
           @server.process(message, request) do |replies|
             ws.send(Faye.to_json(replies)) if ws
