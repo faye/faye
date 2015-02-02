@@ -68,6 +68,9 @@ Faye.Transport = Faye.extend(Faye.Class({
   },
 
   _receive: function(replies) {
+    if (!replies)
+      return;
+
     replies = [].concat(replies);
 
     this.debug('Client ? received from ? via ?: ?',
