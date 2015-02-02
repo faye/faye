@@ -25,7 +25,8 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
 
     Faye.ENV[callbackName] = function(replies) {
       cleanup();
-      self._receive(replies);
+      if (replies)
+        self._receive(replies);
     };
 
     script.type = 'text/javascript';
