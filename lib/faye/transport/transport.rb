@@ -89,7 +89,9 @@ module Faye
     end
 
     def receive(replies)
+      return unless replies
       replies = [replies].flatten
+
       client_id = @dispatcher.client_id
       debug('Client ? received from ? via ?: ?', client_id, @endpoint, connection_type, replies)
       replies.each do |reply|
