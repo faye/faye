@@ -38,8 +38,7 @@ module Faye
     end
 
     def send_message(message)
-      client_id = @dispatcher.client_id
-      debug('Client ? sending message to ? via ?: ?', client_id, @endpoint, connection_type, message)
+      debug('Client ? sending message to ? via ?: ?', @dispatcher.client_id, @endpoint, connection_type, message)
 
       unless batching?
         promise = EventMachine::DefaultDeferrable.new
@@ -92,16 +91,16 @@ module Faye
       return unless replies
       replies = [replies].flatten
 
-      client_id = @dispatcher.client_id
-      debug('Client ? received from ? via ?: ?', client_id, @endpoint, connection_type, replies)
+      debug('Client ? received from ? via ?: ?', @dispatcher.client_id, @endpoint, connection_type, replies)
+
       replies.each do |reply|
         @dispatcher.handle_response(reply)
       end
     end
 
     def handle_error(messages, immediate = false)
-      client_id = @dispatcher.client_id
-      debug('Client ? failed to send to ? via ?: ?', client_id, @endpoint, connection_type, messages)
+      debug('Client ? failed to send to ? via ?: ?', @dispatcher.client_id, @endpoint, connection_type, messages)
+
       messages.each do |message|
         @dispatcher.handle_error(message, immediate)
       end
