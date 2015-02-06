@@ -148,6 +148,14 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
         clock.tick(5500)
       }})
 
+      it("does not resend a message if the dispatcher was closed while waiting", function() { with(this) {
+        dispatcher.handleError(message)
+        expect(transport, "sendMessage").exactly(0)
+        clock.tick(3500)
+        dispatcher.close()
+        clock.tick(2000)
+      }})
+
       it("aborts the request used to send the message", function(resume) { with(this) {
         expect(request, "abort").exactly(1)
         dispatcher.handleError(message)

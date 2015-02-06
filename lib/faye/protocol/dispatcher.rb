@@ -87,8 +87,6 @@ module Faye
     end
 
     def send_message(message, timeout, options = {})
-      return unless @transport
-
       id       = message['id']
       attempts = options[:attempts]
       deadline = options[:deadline] && Time.now.to_f + options[:deadline]
@@ -103,6 +101,7 @@ module Faye
     end
 
     def send_envelope(envelope)
+      return unless @transport
       return if envelope.request or envelope.timer
 
       message   = envelope.message

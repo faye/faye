@@ -148,6 +148,14 @@ describe Faye::Dispatcher do
         clock.tick(5.5)
       end
 
+      it "does not resend a message if the dispatcher was closed while waiting" do
+        @dispatcher.handle_error(message)
+        expect(transport).not_to receive(:send_message)
+        clock.tick(3.5)
+        @dispatcher.close
+        clock.tick(2)
+      end
+
       it "aborts the request used to send the message" do
         expect(request).to receive(:close).exactly(1)
         @dispatcher.handle_error(message)
