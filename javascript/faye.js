@@ -44,19 +44,7 @@ var Faye = {
   },
 
   copyObject: function(object) {
-    var clone, i, key;
-    if (object instanceof Array) {
-      clone = [];
-      i = object.length;
-      while (i--) clone[i] = Faye.copyObject(object[i]);
-      return clone;
-    } else if (typeof object === 'object') {
-      clone = (object === null) ? null : {};
-      for (key in object) clone[key] = Faye.copyObject(object[key]);
-      return clone;
-    } else {
-      return object;
-    }
+  	return JSON.parse(JSON.stringify(object));
   },
 
   commonElement: function(lista, listb) {
