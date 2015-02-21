@@ -2,13 +2,13 @@
 
 <html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta charset="utf-8">
     <title>Faye demo: chat client</title>
-    <link rel="stylesheet" type="text/css" href="/style.css">
-    <script type="text/javascript" src="/mootools.js"></script>
-    <script type="text/javascript" src="/jquery.js"></script>
-    <script type="text/javascript" src="/bayeux/client.js"></script>
-    <script type="text/javascript" src="/soapbox.js"></script>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/mootools.js"></script>
+    <script src="/jquery.js"></script>
+    <script src="/bayeux/client.js"></script>
+    <script src="/soapbox.js"></script>
   </head>
   <body>
 
@@ -38,7 +38,7 @@
         </ul>
       </div>
 
-      <script type="text/javascript">
+      <script>
         var bayeux = new Faye.Client('/bayeux');
         Faye.logger = window.console;
         Soapbox.init(bayeux);
