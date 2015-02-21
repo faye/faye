@@ -67,9 +67,9 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     var sockets = dispatcher.transports.eventsource = dispatcher.transports.eventsource || {},
         id      = dispatcher.clientId;
 
-    endpoint = Faye.copyObject(endpoint);
-    endpoint.pathname += '/' + (id || '');
-    var url = Faye.URI.stringify(endpoint);
+    var url = Faye.copyObject(endpoint);
+    url.pathname += '/' + (id || '');
+    url = Faye.URI.stringify(url);
 
     sockets[url] = sockets[url] || new this(dispatcher, endpoint);
     return sockets[url];
