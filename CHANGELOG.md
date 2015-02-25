@@ -1,3 +1,11 @@
+### 1.1.1 / 2015-02-25
+
+* Make sure the client ID associated with a WebSocket is not dropped, so the socket can be closed properly
+* Handle cases where a JSON-P endpoint returns no response argument
+* Stop trying to retry messages after the client has been disconnected
+* Remove duplication of the client ID in EventSource URLs
+
+
 ### 1.1.0 / 2014-12-22
 
 * Allow the server and client to use WebSocket extensions, for example permessage-deflate
