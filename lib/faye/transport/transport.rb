@@ -17,7 +17,9 @@ module Faye
       @outbox     = []
       @proxy      = @dispatcher.proxy.dup
 
-      @proxy[:origin] ||= SECURE_PROTOCOLS.include?(@endpoint.scheme) ?
+      scheme = @endpoint.respond_to?(:scheme) ? @endpoint.scheme : nil
+
+      @proxy[:origin] ||= SECURE_PROTOCOLS.include?(scheme) ?
                           (ENV['HTTPS_PROXY'] || ENV['https_proxy']) :
                           (ENV['HTTP_PROXY']  || ENV['http_proxy'])
     end
