@@ -239,14 +239,14 @@ Faye.NodeAdapter = Faye.Class({
       'Access-Control-Allow-Methods':     'POST, GET, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Origin':      '*',
     };
-    if(req.headers.origin) {
-        headers['Access-Control-Allow-Origin'] =  req.headers.origin;
+    if(request.headers.origin) {
+        headers['Access-Control-Allow-Origin'] =  request.headers.origin;
     }
-    if(req.headers['access-control-request-method']) {
-        headers['Access-Control-Allow-Methods'] = req.headers['access-control-request-method'];
+    if(request.headers['access-control-request-method']) {
+        headers['Access-Control-Allow-Methods'] = request.headers['access-control-request-method'];
     }
-    if(req.headers['access-control-request-headers']) {
-        headers['Access-Control-Allow-Headers'] = req.headers['access-control-request-headers'];
+    if(request.headers['access-control-request-headers']) {
+        headers['Access-Control-Allow-Headers'] = request.headers['access-control-request-headers'];
     }
     response.writeHead(200, headers);
     response.end('');
