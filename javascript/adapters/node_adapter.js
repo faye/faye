@@ -239,9 +239,6 @@ Faye.NodeAdapter = Faye.Class({
       'Access-Control-Allow-Methods':     'POST, GET, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Origin':      '*',
     };
-    if(request.headers.origin) {
-        headers['Access-Control-Allow-Origin'] =  request.headers.origin;
-    }
     if(request.headers['access-control-request-method']) {
         headers['Access-Control-Allow-Methods'] = request.headers['access-control-request-method'];
     }
