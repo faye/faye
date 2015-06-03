@@ -1,3 +1,5 @@
+var pendingXDR = [];
+
 Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
   encode: function(messages) {
     return 'message=' + encodeURIComponent(Faye.toJSON(messages));
@@ -22,6 +24,9 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
 
     var cleanUp = function() {
       if (!xhr) return false;
+      var index = Faye.indexOf(pendingXDR, xhr);
+      if (index >= 0)
+        pendingXDR.splice(index, 1);
       xhr.onload = xhr.onerror = xhr.ontimeout = xhr.onprogress = null;
       xhr = null;
     };
@@ -46,6 +51,8 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     };
 
     xhr.onprogress = function() {};
+    if (xhrClass === Faye.ENV.XDomainRequest)
+      pendingXDR.push(xhr);
     xhr.send(this.encode(messages));
     return xhr;
   }
