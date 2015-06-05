@@ -1,5 +1,3 @@
-var pendingXDR = [];
-
 Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
   encode: function(messages) {
     return 'message=' + encodeURIComponent(Faye.toJSON(messages));
@@ -8,6 +6,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
   request: function(messages) {
     var xhrClass = Faye.ENV.XDomainRequest ? XDomainRequest : XMLHttpRequest,
         xhr      = new xhrClass(),
+        id       = ++Faye.Transport.CORS._id,
         headers  = this._dispatcher.headers,
         self     = this,
         key;
@@ -24,9 +23,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
 
     var cleanUp = function() {
       if (!xhr) return false;
-      var index = Faye.indexOf(pendingXDR, xhr);
-      if (index >= 0)
-        pendingXDR.splice(index, 1);
+      Faye.Transport.CORS._pending.remove(id);
       xhr.onload = xhr.onerror = xhr.ontimeout = xhr.onprogress = null;
       xhr = null;
     };
@@ -51,12 +48,17 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
     };
 
     xhr.onprogress = function() {};
+
     if (xhrClass === Faye.ENV.XDomainRequest)
-      pendingXDR.push(xhr);
+      Faye.Transport.CORS._pending.add({id: id, xhr: xhr});
+
     xhr.send(this.encode(messages));
     return xhr;
   }
 }), {
+  _id:      0,
+  _pending: new Faye.Set(),
+
   isUsable: function(dispatcher, endpoint, callback, context) {
     if (Faye.URI.isSameOrigin(endpoint))
       return callback.call(context, false);
