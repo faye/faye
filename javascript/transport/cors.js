@@ -1,4 +1,4 @@
-var pendingXDR = [];
+var pendingXDR = new Faye.Set();
 
 Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
   encode: function(messages) {
@@ -24,9 +24,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
 
     var cleanUp = function() {
       if (!xhr) return false;
-      var index = Faye.indexOf(pendingXDR, xhr);
-      if (index >= 0)
-        pendingXDR.splice(index, 1);
+      pendingXDR.remove(xhr);
       xhr.onload = xhr.onerror = xhr.ontimeout = xhr.onprogress = null;
       xhr = null;
     };
@@ -52,7 +50,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
 
     xhr.onprogress = function() {};
     if (xhrClass === Faye.ENV.XDomainRequest)
-      pendingXDR.push(xhr);
+      pendingXDR.add(xhr);
     xhr.send(this.encode(messages));
     return xhr;
   }
