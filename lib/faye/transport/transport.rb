@@ -49,8 +49,8 @@ module Faye
       end
 
       @outbox << message
-      flush_large_batch
       @promise ||= EventMachine::DefaultDeferrable.new
+      flush_large_batch
 
       if message['channel'] == Channel::HANDSHAKE
         add_timeout(:publish, 0.01) { flush }

@@ -31,8 +31,8 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (!this.batching) return Faye.Promise.fulfilled(this.request([message]));
 
     this._outbox.push(message);
-    this._flushLargeBatch();
     this._promise = this._promise || new Faye.Promise();
+    this._flushLargeBatch();
 
     if (message.channel === Faye.Channel.HANDSHAKE) {
       this.addTimeout('publish', 0.01, this._flush, this);
