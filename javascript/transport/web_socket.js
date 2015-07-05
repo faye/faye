@@ -18,7 +18,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
     var promise = new Faye.Promise();
 
     this.callback(function(socket) {
-      if (!socket) return;
+      if (!socket || socket.readyState !== 1) return;
       socket.send(Faye.toJSON(messages));
       Faye.Promise.fulfill(promise, socket);
     }, this);
