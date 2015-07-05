@@ -118,7 +118,7 @@ Faye.NodeAdapter = Faye.Class({
 
     // http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
     if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST')
-      return this._handleOptions(request, response);
+      return this._handleOptions(response);
 
     if (Faye.EventSource.isEventSource(request))
       return this.handleEventSource(request, response);
@@ -232,12 +232,13 @@ Faye.NodeAdapter = Faye.Class({
     };
   },
 
-  _handleOptions: function(request, response) {
+  _handleOptions: function(response) {
     var headers = {
       'Access-Control-Allow-Credentials': 'false',
-      'Access-Control-Allow-Headers':     'Authorization, Accept, Content-Type, Pragma, X-Requested-With',
-      'Access-Control-Allow-Methods':     'POST, GET, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers':     'Accept, Authorization, Content-Type, Pragma, X-Requested-With',
+      'Access-Control-Allow-Methods':     'POST, GET',
       'Access-Control-Allow-Origin':      '*',
+      'Access-Control-Max-Age':           '86400'
     };
     if(request.headers['access-control-request-method']) {
         headers['Access-Control-Allow-Methods'] = request.headers['access-control-request-method'];
