@@ -240,12 +240,7 @@ Faye.NodeAdapter = Faye.Class({
       'Access-Control-Allow-Origin':      '*',
       'Access-Control-Max-Age':           '86400'
     };
-    if(request.headers['access-control-request-method']) {
-        headers['Access-Control-Allow-Methods'] = request.headers['access-control-request-method'];
-    }
-    if(request.headers['access-control-request-headers']) {
-        headers['Access-Control-Allow-Headers'] = request.headers['access-control-request-headers'];
-    }
+
     response.writeHead(200, headers);
     response.end('');
   },
