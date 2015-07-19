@@ -1,5 +1,5 @@
 var Faye = {
-  VERSION:          '1.1.1',
+  VERSION:          '1.1.2',
 
   BAYEUX_VERSION:   '1.0',
   ID_LENGTH:        160,

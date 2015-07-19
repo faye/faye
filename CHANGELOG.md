@@ -1,3 +1,13 @@
+### 1.1.2 / 2015-07-19
+
+* Allow the `Authorization` header to be used on CORS requests
+* Disallow unused methods like PUT and DELETE on CORS requests
+* Stop IE prematurely garbage-collecting `XDomainRequest` objects
+* Make sure messages can be sent if they overflow the request size limit and the outbox is empty
+* Don't send messages over WebSockets unless they are in the 'open' ready-state
+* Fix a bug preventing use of the in-process transport in Ruby
+
+
 ### 1.1.1 / 2015-02-25
 
 * Make sure the client ID associated with a WebSocket is not dropped, so the socket can be closed properly
