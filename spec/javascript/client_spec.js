@@ -337,11 +337,12 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
         }})
 
         it("sets up a listener for the subscribed channel", function(resume) { with(this) {
-          var message
-          client.subscribe("/foo/*", function(m) { message = m }).then(function() {
+          var message, channel
+          client.subscribe("/foo/*", function(m, c) { message = m; channel = c }).then(function() {
             resume(function() {
               client._receiveMessage({channel: "/foo/bar", data: "hi"})
               assertEqual( "hi", message )
+              assertEqual( "/foo/bar", channel )
             })
           })
         }})
