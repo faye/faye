@@ -53,7 +53,7 @@ describe Faye::Client do
                   "subscription" => channel
 
     @subs_called = 0
-    callback ||= lambda { |m| @subs_called = 1 }
+    callback ||= Proc.new { |m| @subs_called = 1 }
     @client.subscribe(channel, &callback)
   end
 
@@ -164,7 +164,7 @@ describe Faye::Client do
         create_connected_client
 
         @message = nil
-        subscribe @client, "/messages/foo", lambda { |m| @message = m }
+        subscribe @client, "/messages/foo", Proc.new { |m| @message = m }
 
         @client.__send__(:receive_message, "advice" => {"reconnect" => "handshake"})
 
@@ -346,9 +346,10 @@ describe Faye::Client do
 
         it "sets up a listener for the subscribed channel" do
           @message = nil
-          @client.subscribe("/foo/*") { |m| @message = m }
+          @client.subscribe("/foo/*") { |m, c| @message = m; @channel = c }
           @client.__send__(:receive_message, "channel" => "/foo/bar", "data" => "hi")
           @message.should == "hi"
+          @channel.should == "/foo/bar"
         end
 
         it "does not call the listener for non-matching channels" do
@@ -505,7 +506,7 @@ describe Faye::Client do
     describe "with a single subscription" do
       before do
         @message = nil
-        @listener = lambda { |m| @message = m }
+        @listener = Proc.new { |m| @message = m }
         subscribe @client, "/foo/*", @listener
       end
 
@@ -525,8 +526,8 @@ describe Faye::Client do
     describe "with multiple subscriptions to the same channel" do
       before do
         @messages = []
-        @hey = lambda { |m| @messages << ("hey " + m["text"]) }
-        @bye = lambda { |m| @messages << ("bye " + m["text"]) }
+        @hey = Proc.new { |m| @messages << ("hey " + m["text"]) }
+        @bye = Proc.new { |m| @messages << ("bye " + m["text"]) }
         subscribe @client, "/foo/*", @hey
         subscribe @client, "/foo/*", @bye
       end

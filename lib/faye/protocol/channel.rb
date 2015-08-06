@@ -114,7 +114,7 @@ module Faye
         channels = Channel.expand(message['channel'])
         channels.each do |name|
           channel = @channels[name]
-          channel.trigger(:message, message['data']) if channel
+          channel.trigger(:message, message['data'], message['channel']) if channel
         end
       end
     end
