@@ -19,7 +19,7 @@ Faye.Client = Faye.Class({
 
     Faye.validateOptions(options, ['interval', 'timeout', 'endpoints', 'proxy', 'retry', 'scheduler', 'websocketExtensions', 'tls', 'ca']);
 
-    this._endpoint   = endpoint || this.DEFAULT_ENDPOINT;
+    this._endpoint   = Faye.URI.parse(endpoint || this.DEFAULT_ENDPOINT);
     this._channels   = new Faye.Channel.Set();
     this._dispatcher = new Faye.Dispatcher(this, this._endpoint, options);
 

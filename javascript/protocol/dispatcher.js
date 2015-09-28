@@ -7,7 +7,7 @@ Faye.Dispatcher = Faye.Class({
 
   initialize: function(client, endpoint, options) {
     this._client     = client;
-    this.endpoint    = Faye.URI.parse(endpoint);
+    this.endpoint    = endpoint;
     this._alternates = options.endpoints || {};
 
     this.cookies      = Faye.Cookies && new Faye.Cookies.CookieJar();
