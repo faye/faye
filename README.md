@@ -1,3 +1,8 @@
+# Differences from faye/faye
+
+
+* Removed json2, now relying 100% on native JSON. This breaks Prototype and Mootools and requires >IE9
+
 # Faye
 
 Faye is a set of tools for simple publish-subscribe messaging between web

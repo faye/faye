@@ -85,7 +85,6 @@
         "browser/faye-browser": { "extend": "core",
                                   "files": [
                                     "util/browser/event",
-                                    "util/browser/json2",
                                     "transport/web_socket",
                                     "transport/event_source",
                                     "transport/xhr",
