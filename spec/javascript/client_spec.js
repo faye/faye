@@ -1,6 +1,8 @@
 JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
   before(function() { with(this) {
-    this.dispatcher = {connectionType: "fake-transport", retry: 5}
+    var uri = Faye.URI.parse("http://localhost/bayeux")
+
+    this.dispatcher = {endpoint: uri, connectionType: "fake-transport", retry: 5}
     stub(dispatcher, "getConnectionTypes").returns(["fake-transport", "another-transport"])
     stub(dispatcher, "selectTransport")
     stub(dispatcher, "sendMessage")

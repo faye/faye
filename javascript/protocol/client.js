@@ -19,9 +19,8 @@ Faye.Client = Faye.Class({
 
     Faye.validateOptions(options, ['interval', 'timeout', 'endpoints', 'proxy', 'retry', 'scheduler', 'websocketExtensions', 'tls', 'ca']);
 
-    this._endpoint   = endpoint || this.DEFAULT_ENDPOINT;
     this._channels   = new Faye.Channel.Set();
-    this._dispatcher = new Faye.Dispatcher(this, this._endpoint, options);
+    this._dispatcher = new Faye.Dispatcher(this, endpoint || this.DEFAULT_ENDPOINT, options);
 
     this._messageId = 0;
     this._state     = this.UNCONNECTED;
@@ -82,7 +81,7 @@ Faye.Client = Faye.Class({
     this._state = this.CONNECTING;
     var self = this;
 
-    this.info('Initiating handshake with ?', Faye.URI.stringify(this._endpoint));
+    this.info('Initiating handshake with ?', Faye.URI.stringify(this._dispatcher.endpoint));
     this._dispatcher.selectTransport(Faye.MANDATORY_CONNECTION_TYPES);
 
     this._sendMessage({

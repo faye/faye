@@ -25,9 +25,8 @@ module Faye
       super()
       info('New client created for ?', endpoint)
 
-      @endpoint   = endpoint || RackAdapter::DEFAULT_ENDPOINT
       @channels   = Channel::Set.new
-      @dispatcher = Dispatcher.new(self, @endpoint, options)
+      @dispatcher = Dispatcher.new(self, endpoint || RackAdapter::DEFAULT_ENDPOINT, options)
 
       @message_id = 0
       @state      = UNCONNECTED
@@ -69,7 +68,7 @@ module Faye
 
       @state = CONNECTING
 
-      info('Initiating handshake with ?', @endpoint)
+      info('Initiating handshake with ?', @dispatcher.endpoint.to_s)
       @dispatcher.select_transport(MANDATORY_CONNECTION_TYPES)
 
       send_message({
