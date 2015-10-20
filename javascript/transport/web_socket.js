@@ -109,7 +109,7 @@ Faye.Transport.WebSocket = Faye.extend(Faye.Class(Faye.Transport, {
   },
 
   _ping: function() {
-    if (!this._socket) return;
+    if (!this._socket || this._socket.readyState !== 1) return;
     this._socket.send('[]');
     this.addTimeout('ping', this._dispatcher.timeout / 2, this._ping, this);
   }
