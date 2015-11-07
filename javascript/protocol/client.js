@@ -200,14 +200,14 @@ Faye.Client = Faye.Class({
         hasSubscribe = this._channels.hasSubscription(channel);
 
     if (hasSubscribe && !force) {
-      this._channels.subscribe([channel], callback, context);
+      this._channels.subscribe([channel], subscription);
       subscription.setDeferredStatus('succeeded');
       return subscription;
     }
 
     this.connect(function() {
       this.info('Client ? attempting to subscribe to ?', this._dispatcher.clientId, channel);
-      if (!force) this._channels.subscribe([channel], callback, context);
+      if (!force) this._channels.subscribe([channel], subscription);
 
       this._sendMessage({
         channel:      Faye.Channel.SUBSCRIBE,
@@ -217,7 +217,7 @@ Faye.Client = Faye.Class({
       }, {}, function(response) {
         if (!response.successful) {
           subscription.setDeferredStatus('failed', Faye.Error.parse(response.error));
-          return this._channels.unsubscribe(channel, callback, context);
+          return this._channels.unsubscribe(channel, subscription);
         }
 
         var channels = [].concat(response.subscription);
@@ -239,13 +239,13 @@ Faye.Client = Faye.Class({
   //                                                     * ext
   //                                                     * id
   //                                                     * timestamp
-  unsubscribe: function(channel, callback, context) {
+  unsubscribe: function(channel, subscription) {
     if (channel instanceof Array)
       return Faye.map(channel, function(c) {
-        return this.unsubscribe(c, callback, context);
+        return this.unsubscribe(c, subscription);
       }, this);
 
-    var dead = this._channels.unsubscribe(channel, callback, context);
+    var dead = this._channels.unsubscribe(channel, subscription);
     if (!dead) return;
 
     this.connect(function() {

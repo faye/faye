@@ -498,9 +498,9 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
 
     describe("with a single subscription", function() { with(this) {
       before(function(resume) { with(this) {
-        this.message  = null
-        this.listener = function(m) { message = m }
-        subscribe(client, "/foo/*", listener).then(resume)
+        this.message = null
+        this.subscription = subscribe(client, "/foo/*", function(m) { message = m })
+        this.subscription.then(resume)
       }})
 
       it("sends an unsubscribe message to the server", function(resume) { with(this) {
@@ -511,7 +511,7 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
 
       it("removes the listener from the channel", function() { with(this) {
         client._receiveMessage({channel: "/foo/bar", data: "first"})
-        client.unsubscribe("/foo/*", listener)
+        client.unsubscribe("/foo/*", subscription)
         client._receiveMessage({channel: "/foo/bar", data: "second"})
         assertEqual( "first", message )
       }})
@@ -520,12 +520,10 @@ JS.ENV.ClientSpec = JS.Test.describe("Client", function() { with(this) {
     describe("with multiple subscriptions to the same channel", function() { with(this) {
       before(function(resume) { with(this) {
         this.messages = []
-        this.hey = function(m) { messages.push("hey " + m.text) }
-        this.bye = function(m) { messages.push("bye " + m.text) }
+        this.hey = subscribe(client, "/foo/*", function(m) { messages.push("hey " + m.text) })
+        this.bye = subscribe(client, "/foo/*", function(m) { messages.push("bye " + m.text) })
 
-        subscribe(client, "/foo/*", hey).then(function() {
-          return subscribe(client, "/foo/*", bye)
-        }).then(resume)
+        hey.then(function() { bye.then(resume) })
       }})
 
       it("removes one of the listeners from the channel", function() { with(this) {
