@@ -33,7 +33,7 @@ module Faye
       @endpoint_re = Regexp.new('^' + @endpoint.gsub(/\/$/, '') + '(/[^/]*)*(\\.[^\\.]+)?$')
       @server      = Server.new(@options)
 
-      @static = StaticServer.new(ROOT, /\.(?:js|map)$/)
+      @static = StaticServer.new(File.join(ROOT, 'client'), /\.(?:js|map)$/)
       @static.map(File.basename(@endpoint) + '.js', SCRIPT_PATH)
       @static.map('client.js', SCRIPT_PATH)
 

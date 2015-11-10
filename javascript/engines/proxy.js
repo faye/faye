@@ -1,12 +1,16 @@
-Faye.Engine = {
-  get: function(options) {
-    return new Faye.Engine.Proxy(options);
-  },
+'use strict';
 
-  METHODS: ['createClient', 'clientExists', 'destroyClient', 'ping', 'subscribe', 'unsubscribe']
-};
+var extend     = require('../util/extend'),
+    random     = require('../util/random'),
+    Class      = require('../util/class'),
+    Promise    = require('../util/promise'),
+    Logging    = require('../mixins/logging'),
+    Publisher  = require('../mixins/publisher'),
+    Channel    = require('../protocol/channel'),
+    Connection = require('./connection'),
+    Memory     = require('./memory');
 
-Faye.Engine.Proxy = Faye.Class({
+var Proxy = extend(Class({ className: 'Engine.Proxy',
   MAX_DELAY:  0,
   INTERVAL:   0,
   TIMEOUT:    60,
@@ -19,12 +23,12 @@ Faye.Engine.Proxy = Faye.Class({
     this.interval     = this._options.interval || this.INTERVAL;
     this.timeout      = this._options.timeout  || this.TIMEOUT;
 
-    var engineClass = this._options.type || Faye.Engine.Memory;
+    var engineClass = this._options.type || Memory;
     this._engine    = engineClass.create(this, this._options);
 
     this.bind('close', function(clientId) {
       var self = this;
-      Faye.Promise.defer(function() { self.flushConnection(clientId) });
+      Promise.defer(function() { self.flushConnection(clientId) });
     }, this);
 
     this.debug('Created new engine: ?', this._options);
@@ -45,7 +49,7 @@ Faye.Engine.Proxy = Faye.Class({
   connection: function(clientId, create) {
     var conn = this._connections[clientId];
     if (conn || !create) return conn;
-    this._connections[clientId] = new Faye.Engine.Connection(this, clientId);
+    this._connections[clientId] = new Connection(this, clientId);
     this.trigger('connection:open', clientId);
     return this._connections[clientId];
   },
@@ -77,7 +81,7 @@ Faye.Engine.Proxy = Faye.Class({
   },
 
   generateId: function() {
-    return Faye.random();
+    return random();
   },
 
   flushConnection: function(clientId, close) {
@@ -100,16 +104,24 @@ Faye.Engine.Proxy = Faye.Class({
   },
 
   publish: function(message) {
-    var channels = Faye.Channel.expand(message.channel);
+    var channels = Channel.expand(message.channel);
     return this._engine.publish(message, channels);
+  }
+}), {
+  get: function(options) {
+    return new Proxy(options);
   }
 });
 
-Faye.Engine.METHODS.forEach(function(method) {
-  Faye.Engine.Proxy.prototype[method] = function() {
+var METHODS = ['createClient', 'clientExists', 'destroyClient', 'ping', 'subscribe', 'unsubscribe'];
+
+METHODS.forEach(function(method) {
+  Proxy.prototype[method] = function() {
     return this._engine[method].apply(this._engine, arguments);
   };
 });
 
-Faye.extend(Faye.Engine.Proxy.prototype, Faye.Publisher);
-Faye.extend(Faye.Engine.Proxy.prototype, Faye.Logging);
+extend(Proxy.prototype, Publisher);
+extend(Proxy.prototype, Logging);
+
+module.exports = Proxy;

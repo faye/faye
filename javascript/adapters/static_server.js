@@ -1,4 +1,15 @@
-Faye.StaticServer = Faye.Class({
+'use strict';
+
+var crypto = require('crypto'),
+    fs     = require('fs'),
+    path   = require('path'),
+    url    = require('url');
+
+var Class        = require('../util/class'),
+    extend       = require('../util/extend'),
+    contenttypes = require('./content_types');
+
+var StaticServer = Class({
   initialize: function(directory, pathRegex) {
     this._directory = directory;
     this._pathRegex = pathRegex;
@@ -51,9 +62,11 @@ Faye.StaticServer = Faye.Class({
     }
     else {
       headers['Content-Length'] = cache.content.length;
-      Faye.extend(headers, Faye.NodeAdapter.prototype[type]);
+      extend(headers, contenttypes[type]);
       response.writeHead(200, headers);
       response.end(cache.content);
     }
   }
 });
+
+module.exports = StaticServer;

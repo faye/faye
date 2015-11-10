@@ -1,4 +1,6 @@
-Faye.Event = {
+'use strict';
+
+var Event = {
   _registry: [],
 
   on: function(element, eventName, callback, context) {
@@ -23,10 +25,10 @@ Faye.Event = {
     while (i--) {
       register = this._registry[i];
 
-      if ((element    && element    !== register._element)   ||
-          (eventName  && eventName  !== register._type)      ||
-          (callback   && callback   !== register._callback)  ||
-          (context      && context      !== register._context))
+      if ((element    && element    !== register._element)  ||
+          (eventName  && eventName  !== register._type)     ||
+          (callback   && callback   !== register._callback) ||
+          (context    && context    !== register._context))
         continue;
 
       if (register._element.removeEventListener)
@@ -40,4 +42,9 @@ Faye.Event = {
   }
 };
 
-if (Faye.ENV.onunload !== undefined) Faye.Event.on(Faye.ENV, 'unload', Faye.Event.detach, Faye.Event);
+if (window.onunload !== undefined)
+  Event.on(window, 'unload', Event.detach, Event);
+
+module.exports = {
+  Event: Event
+};

@@ -1,10 +1,14 @@
-Faye.URI = {
+'use strict';
+
+var ENV = require('./constants').ENV;
+
+module.exports = {
   isURI: function(uri) {
     return uri && uri.protocol && uri.host && uri.path;
   },
 
   isSameOrigin: function(uri) {
-    var location = Faye.ENV.location;
+    var location = ENV.location;
     return uri.protocol === location.protocol &&
            uri.hostname === location.hostname &&
            uri.port     === location.port;
@@ -26,13 +30,13 @@ Faye.URI = {
     consume('host',     /^\/\/[^\/\?#]+/);
 
     if (!/^\//.test(url) && !uri.host)
-      url = Faye.ENV.location.pathname.replace(/[^\/]*$/, '') + url;
+      url = ENV.location.pathname.replace(/[^\/]*$/, '') + url;
 
     consume('pathname', /^[^\?#]*/);
     consume('search',   /^\?[^#]*/);
     consume('hash',     /^#.*/);
 
-    uri.protocol = uri.protocol || Faye.ENV.location.protocol;
+    uri.protocol = uri.protocol || ENV.location.protocol;
 
     if (uri.host) {
       uri.host     = uri.host.substr(2);
@@ -40,9 +44,9 @@ Faye.URI = {
       uri.hostname = parts[0];
       uri.port     = parts[1] || '';
     } else {
-      uri.host     = Faye.ENV.location.host;
-      uri.hostname = Faye.ENV.location.hostname;
-      uri.port     = Faye.ENV.location.port;
+      uri.host     = ENV.location.host;
+      uri.hostname = ENV.location.hostname;
+      uri.port     = ENV.location.port;
     }
 
     uri.pathname = uri.pathname || '/';

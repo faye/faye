@@ -1,10 +1,14 @@
-Faye.Scheduler = function(message, options) {
+'use strict';
+
+var extend = require('../util/extend');
+
+var Scheduler = function(message, options) {
   this.message  = message;
   this.options  = options;
   this.attempts = 0;
 };
 
-Faye.extend(Faye.Scheduler.prototype, {
+extend(Scheduler.prototype, {
   getTimeout: function() {
     return this.options.timeout;
   },
@@ -38,3 +42,5 @@ Faye.extend(Faye.Scheduler.prototype, {
 
   abort: function() {}
 });
+
+module.exports = Scheduler;

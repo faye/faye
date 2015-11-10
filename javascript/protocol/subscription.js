@@ -1,9 +1,15 @@
-Faye.Subscription = Faye.Class({
+'use strict';
+
+var Class      = require('../util/class'),
+    extend     = require('../util/extend'),
+    Deferrable = require('../mixins/deferrable');
+
+var Subscription = Class({
   initialize: function(client, channels, callback, context) {
     this._client    = client;
     this._channels  = channels;
     this._callback  = callback;
-    this._context     = context;
+    this._context   = context;
     this._cancelled = false;
   },
 
@@ -18,4 +24,6 @@ Faye.Subscription = Faye.Class({
   }
 });
 
-Faye.extend(Faye.Subscription.prototype, Faye.Deferrable);
+extend(Subscription.prototype, Deferrable);
+
+module.exports = Subscription;

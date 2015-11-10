@@ -1,4 +1,8 @@
-Faye.Set = Faye.Class({
+'use strict';
+
+var Class = require('./class');
+
+module.exports = Class({
   initialize: function() {
     this._index = {};
   },

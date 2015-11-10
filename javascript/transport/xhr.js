@@ -1,11 +1,21 @@
-Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
+'use strict';
+
+var Class     = require('../util/class'),
+    ENV       = require('../util/constants').ENV,
+    URI       = require('../util/uri'),
+    browser   = require('../util/browser'),
+    extend    = require('../util/extend'),
+    toJSON    = require('../util/to_json'),
+    Transport = require('./transport');
+
+var XHR = extend(Class(Transport, {
   encode: function(messages) {
-    return Faye.toJSON(messages);
+    return toJSON(messages);
   },
 
   request: function(messages) {
     var href = this.endpoint.href,
-        xhr  = Faye.ENV.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
+        xhr  = ENV.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
         self = this;
 
     xhr.open('POST', href, true);
@@ -20,7 +30,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
     }
 
     var abort = function() { xhr.abort() };
-    if (Faye.ENV.onbeforeunload !== undefined) Faye.Event.on(Faye.ENV, 'beforeunload', abort);
+    if (ENV.onbeforeunload !== undefined) browser.Event.on(ENV, 'beforeunload', abort);
 
     xhr.onreadystatechange = function() {
       if (!xhr || xhr.readyState !== 4) return;
@@ -30,7 +40,7 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
           text       = xhr.responseText,
           successful = (status >= 200 && status < 300) || status === 304 || status === 1223;
 
-      if (Faye.ENV.onbeforeunload !== undefined) Faye.Event.detach(Faye.ENV, 'beforeunload', abort);
+      if (ENV.onbeforeunload !== undefined) browser.Event.detach(ENV, 'beforeunload', abort);
       xhr.onreadystatechange = function() {};
       xhr = null;
 
@@ -51,8 +61,8 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
   }
 }), {
   isUsable: function(dispatcher, endpoint, callback, context) {
-    callback.call(context, Faye.URI.isSameOrigin(endpoint));
+    callback.call(context, URI.isSameOrigin(endpoint));
   }
 });
 
-Faye.Transport.register('long-polling', Faye.Transport.XHR);
+module.exports = XHR;

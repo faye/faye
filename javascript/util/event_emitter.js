@@ -1,6 +1,3 @@
-(function() {
-var EventEmitter = Faye.EventEmitter = function() {};
-
 /*
 Copyright Joyent, Inc. and other Node contributors. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -36,6 +33,8 @@ function indexOf (xs, x) {
     return -1;
 }
 
+function EventEmitter() {}
+module.exports = EventEmitter;
 
 EventEmitter.prototype.emit = function(type) {
   // If there is no 'error' event listener then throw.
@@ -170,5 +169,3 @@ EventEmitter.prototype.listeners = function(type) {
   }
   return this._events[type];
 };
-
-})();

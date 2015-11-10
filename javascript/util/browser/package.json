@@ -1,0 +1,4 @@
+{
+  "main":     "node_shim",
+  "browser":  "event"
+}

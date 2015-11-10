@@ -1,35 +1,45 @@
-Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
+'use strict';
+
+var Class      = require('../util/class'),
+    ENV        = require('../util/constants').ENV,
+    URI        = require('../util/uri'),
+    copyObject = require('../util/copy_object'),
+    extend     = require('../util/extend'),
+    toJSON     = require('../util/to_json'),
+    Transport  = require('./transport');
+
+var JSONP = extend(Class(Transport, {
  encode: function(messages) {
-    var url = Faye.copyObject(this.endpoint);
-    url.query.message = Faye.toJSON(messages);
-    url.query.jsonp   = '__jsonp' + Faye.Transport.JSONP._cbCount + '__';
-    return Faye.URI.stringify(url);
+    var url = copyObject(this.endpoint);
+    url.query.message = toJSON(messages);
+    url.query.jsonp   = '__jsonp' + JSONP._cbCount + '__';
+    return URI.stringify(url);
   },
 
   request: function(messages) {
     var head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
-        callbackName = Faye.Transport.JSONP.getCallbackName(),
-        endpoint     = Faye.copyObject(this.endpoint),
+        callbackName = JSONP.getCallbackName(),
+        endpoint     = copyObject(this.endpoint),
         self         = this;
 
-    endpoint.query.message = Faye.toJSON(messages);
+    endpoint.query.message = toJSON(messages);
     endpoint.query.jsonp   = callbackName;
 
     var cleanup = function() {
-      if (!Faye.ENV[callbackName]) return false;
-      Faye.ENV[callbackName] = undefined;
-      try { delete Faye.ENV[callbackName] } catch (e) {}
+      if (!ENV[callbackName]) return false;
+      ENV[callbackName] = undefined;
+      try { delete ENV[callbackName] } catch (e) {}
       script.parentNode.removeChild(script);
     };
 
-    Faye.ENV[callbackName] = function(replies) {
+    ENV[callbackName] = function(replies) {
       cleanup();
       self._receive(replies);
     };
 
     script.type = 'text/javascript';
-    script.src  = Faye.URI.stringify(endpoint);
+    script.src  = URI.stringify(endpoint);
     head.appendChild(script);
 
     script.onerror = function() {
@@ -52,4 +62,4 @@ Faye.Transport.JSONP = Faye.extend(Faye.Class(Faye.Transport, {
   }
 });
 
-Faye.Transport.register('callback-polling', Faye.Transport.JSONP);
+module.exports = JSONP;

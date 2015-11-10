@@ -1,21 +1,29 @@
-Faye.Engine.Memory = function(server, options) {
+'use strict';
+
+var copyObject = require('../util/copy_object'),
+    extend     = require('../util/extend'),
+    Namespace  = require('../util/namespace'),
+    Set        = require('../util/set'),
+    Timeouts   = require('../mixins/timeouts');
+
+var Memory = function(server, options) {
   this._server    = server;
   this._options   = options || {};
   this.reset();
 };
 
-Faye.Engine.Memory.create = function(server, options) {
-  return new this(server, options);
+Memory.create = function(server, options) {
+  return new Memory(server, options);
 };
 
-Faye.Engine.Memory.prototype = {
+Memory.prototype = {
   disconnect: function() {
     this.reset();
     this.removeAllTimeouts();
   },
 
   reset: function() {
-    this._namespace = new Faye.Namespace();
+    this._namespace = new Namespace();
     this._clients   = {};
     this._channels  = {};
     this._messages  = {};
@@ -63,10 +71,10 @@ Faye.Engine.Memory.prototype = {
   subscribe: function(clientId, channel, callback, context) {
     var clients = this._clients, channels = this._channels;
 
-    clients[clientId] = clients[clientId] || new Faye.Set();
+    clients[clientId] = clients[clientId] || new Set();
     var trigger = clients[clientId].add(channel);
 
-    channels[channel] = channels[channel] || new Faye.Set();
+    channels[channel] = channels[channel] || new Set();
     channels[channel].add(clientId);
 
     this._server.debug('Subscribed client ? to channel ?', clientId, channel);
@@ -98,7 +106,7 @@ Faye.Engine.Memory.prototype = {
     this._server.debug('Publishing message ?', message);
 
     var messages = this._messages,
-        clients  = new Faye.Set(),
+        clients  = new Set(),
         subs;
 
     for (var i = 0, n = channels.length; i < n; i++) {
@@ -110,7 +118,7 @@ Faye.Engine.Memory.prototype = {
     clients.forEach(function(clientId) {
       this._server.debug('Queueing for client ?: ?', clientId, message);
       messages[clientId] = messages[clientId] || [];
-      messages[clientId].push(Faye.copyObject(message));
+      messages[clientId].push(copyObject(message));
       this.emptyQueue(clientId);
     }, this);
 
@@ -123,4 +131,7 @@ Faye.Engine.Memory.prototype = {
     delete this._messages[clientId];
   }
 };
-Faye.extend(Faye.Engine.Memory.prototype, Faye.Timeouts);
+
+extend(Memory.prototype, Timeouts);
+
+module.exports = Memory;

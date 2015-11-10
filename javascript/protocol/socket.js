@@ -1,4 +1,9 @@
-Faye.Server.Socket = Faye.Class({
+'use strict';
+
+var Class  = require('../util/class'),
+    toJSON = require('../util/to_json');
+
+module.exports = Class({
   initialize: function(server, socket, request) {
     this._server  = server;
     this._socket  = socket;
@@ -8,7 +13,7 @@ Faye.Server.Socket = Faye.Class({
   send: function(message) {
     this._server.pipeThroughExtensions('outgoing', message, this._request, function(pipedMessage) {
       if (this._socket)
-        this._socket.send(Faye.toJSON([pipedMessage]));
+        this._socket.send(toJSON([pipedMessage]));
     }, this);
   },
 

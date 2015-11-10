@@ -1,4 +1,8 @@
-Faye.Class = function(parent, methods) {
+'use strict';
+
+var extend = require('./extend');
+
+module.exports = function(parent, methods) {
   if (typeof parent !== 'function') {
     methods = parent;
     parent  = Object;
@@ -13,7 +17,7 @@ Faye.Class = function(parent, methods) {
   bridge.prototype = parent.prototype;
 
   klass.prototype = new bridge();
-  Faye.extend(klass.prototype, methods);
+  extend(klass.prototype, methods);
 
   return klass;
 };

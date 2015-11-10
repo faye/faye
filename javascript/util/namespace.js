@@ -1,4 +1,9 @@
-Faye.Namespace = Faye.Class({
+'use strict';
+
+var Class  = require('./class'),
+    random = require('./random');
+
+module.exports = Class({
   initialize: function() {
     this._used = {};
   },
@@ -8,9 +13,9 @@ Faye.Namespace = Faye.Class({
   },
 
   generate: function() {
-    var name = Faye.random();
+    var name = random();
     while (this._used.hasOwnProperty(name))
-      name = Faye.random();
+      name = random();
     return this._used[name] = name;
   },
 
