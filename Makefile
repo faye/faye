@@ -5,6 +5,7 @@ source_files   := $(shell find javascript -name '*.js')
 webpack_config := webpack.config.js
 
 name           := faye-browser
+browser_global := Faye
 bundles        := $(name).js $(name).js.map $(name)-min.js $(name)-min.js.map
 
 client_dir     := build/client
@@ -26,10 +27,11 @@ clean:
 
 $(client_dir)/$(name).js: $(webpack_config) $(source_files)
 	mkdir -p $(dir $@)
-	webpack javascript/faye_global.js $@ \
+	webpack javascript/faye_browser.js $@ \
 	        --config $< \
 	        --devtool source-map \
-	        --display-modules
+	        --display-modules \
+	        --output-library $(browser_global)
 
 $(client_dir)/$(name).js.map: $(client_dir)/$(name).js
 
