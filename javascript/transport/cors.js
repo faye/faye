@@ -1,7 +1,6 @@
 'use strict';
 
 var Class     = require('../util/class'),
-    ENV       = require('../util/constants').ENV,
     Set       = require('../util/set'),
     URI       = require('../util/uri'),
     extend    = require('../util/extend'),
@@ -14,7 +13,7 @@ var CORS = extend(Class(Transport, {
   },
 
   request: function(messages) {
-    var xhrClass = ENV.XDomainRequest ? XDomainRequest : XMLHttpRequest,
+    var xhrClass = window.XDomainRequest ? XDomainRequest : XMLHttpRequest,
         xhr      = new xhrClass(),
         id       = ++CORS._id,
         headers  = this._dispatcher.headers,
@@ -59,7 +58,7 @@ var CORS = extend(Class(Transport, {
 
     xhr.onprogress = function() {};
 
-    if (xhrClass === ENV.XDomainRequest)
+    if (xhrClass === window.XDomainRequest)
       CORS._pending.add({id: id, xhr: xhr});
 
     xhr.send(this.encode(messages));
@@ -73,11 +72,11 @@ var CORS = extend(Class(Transport, {
     if (URI.isSameOrigin(endpoint))
       return callback.call(context, false);
 
-    if (ENV.XDomainRequest)
-      return callback.call(context, endpoint.protocol === ENV.location.protocol);
+    if (window.XDomainRequest)
+      return callback.call(context, endpoint.protocol === location.protocol);
 
-    if (ENV.XMLHttpRequest) {
-      var xhr = new ENV.XMLHttpRequest();
+    if (window.XMLHttpRequest) {
+      var xhr = new XMLHttpRequest();
       return callback.call(context, xhr.withCredentials !== undefined);
     }
     return callback.call(context, false);

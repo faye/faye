@@ -1,7 +1,6 @@
 'use strict';
 
 var Class      = require('../util/class'),
-    ENV        = require('../util/constants').ENV,
     Promise    = require('../util/promise'),
     Set        = require('../util/set'),
     URI        = require('../util/uri'),
@@ -152,7 +151,7 @@ var WebSocket = extend(Class(Transport, {
 
 extend(WebSocket.prototype, Deferrable);
 
-if (browser.Event && ENV.onbeforeunload !== undefined)
-  browser.Event.on(ENV, 'beforeunload', function() { WebSocket._unloaded = true });
+if (browser.Event && global.onbeforeunload !== undefined)
+  browser.Event.on(global, 'beforeunload', function() { WebSocket._unloaded = true });
 
 module.exports = WebSocket;

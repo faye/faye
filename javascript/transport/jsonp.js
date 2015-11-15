@@ -1,7 +1,6 @@
 'use strict';
 
 var Class      = require('../util/class'),
-    ENV        = require('../util/constants').ENV,
     URI        = require('../util/uri'),
     copyObject = require('../util/copy_object'),
     extend     = require('../util/extend'),
@@ -27,13 +26,13 @@ var JSONP = extend(Class(Transport, {
     endpoint.query.jsonp   = callbackName;
 
     var cleanup = function() {
-      if (!ENV[callbackName]) return false;
-      ENV[callbackName] = undefined;
-      try { delete ENV[callbackName] } catch (e) {}
+      if (!window[callbackName]) return false;
+      window[callbackName] = undefined;
+      try { delete window[callbackName] } catch (e) {}
       script.parentNode.removeChild(script);
     };
 
-    ENV[callbackName] = function(replies) {
+    window[callbackName] = function(replies) {
       cleanup();
       self._receive(replies);
     };

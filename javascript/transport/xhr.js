@@ -1,7 +1,6 @@
 'use strict';
 
 var Class     = require('../util/class'),
-    ENV       = require('../util/constants').ENV,
     URI       = require('../util/uri'),
     browser   = require('../util/browser'),
     extend    = require('../util/extend'),
@@ -15,7 +14,7 @@ var XHR = extend(Class(Transport, {
 
   request: function(messages) {
     var href = this.endpoint.href,
-        xhr  = ENV.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
+        xhr  = window.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
         self = this;
 
     xhr.open('POST', href, true);
@@ -30,7 +29,8 @@ var XHR = extend(Class(Transport, {
     }
 
     var abort = function() { xhr.abort() };
-    if (ENV.onbeforeunload !== undefined) browser.Event.on(ENV, 'beforeunload', abort);
+    if (window.onbeforeunload !== undefined)
+      browser.Event.on(window, 'beforeunload', abort);
 
     xhr.onreadystatechange = function() {
       if (!xhr || xhr.readyState !== 4) return;
@@ -40,7 +40,9 @@ var XHR = extend(Class(Transport, {
           text       = xhr.responseText,
           successful = (status >= 200 && status < 300) || status === 304 || status === 1223;
 
-      if (ENV.onbeforeunload !== undefined) browser.Event.detach(ENV, 'beforeunload', abort);
+      if (window.onbeforeunload !== undefined)
+        browser.Event.detach(window, 'beforeunload', abort);
+
       xhr.onreadystatechange = function() {};
       xhr = null;
 

@@ -1,14 +1,11 @@
 'use strict';
 
-var ENV = require('./constants').ENV;
-
 module.exports = {
   isURI: function(uri) {
     return uri && uri.protocol && uri.host && uri.path;
   },
 
   isSameOrigin: function(uri) {
-    var location = ENV.location;
     return uri.protocol === location.protocol &&
            uri.hostname === location.hostname &&
            uri.port     === location.port;
@@ -30,13 +27,13 @@ module.exports = {
     consume('host',     /^\/\/[^\/\?#]+/);
 
     if (!/^\//.test(url) && !uri.host)
-      url = ENV.location.pathname.replace(/[^\/]*$/, '') + url;
+      url = location.pathname.replace(/[^\/]*$/, '') + url;
 
     consume('pathname', /^[^\?#]*/);
     consume('search',   /^\?[^#]*/);
     consume('hash',     /^#.*/);
 
-    uri.protocol = uri.protocol || ENV.location.protocol;
+    uri.protocol = uri.protocol || location.protocol;
 
     if (uri.host) {
       uri.host     = uri.host.substr(2);
@@ -44,9 +41,9 @@ module.exports = {
       uri.hostname = parts[0];
       uri.port     = parts[1] || '';
     } else {
-      uri.host     = ENV.location.host;
-      uri.hostname = ENV.location.hostname;
-      uri.port     = ENV.location.port;
+      uri.host     = location.host;
+      uri.hostname = location.hostname;
+      uri.port     = location.port;
     }
 
     uri.pathname = uri.pathname || '/';

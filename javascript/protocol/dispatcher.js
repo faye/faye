@@ -1,7 +1,6 @@
 'use strict';
 
 var Class     = require('../util/class'),
-    ENV       = require('../util/constants').ENV,
     URI       = require('../util/uri'),
     cookies   = require('../util/cookies'),
     extend    = require('../util/extend'),
@@ -120,7 +119,7 @@ var Dispatcher = Class({ className: 'Dispatcher',
       return;
     }
 
-    envelope.timer = ENV.setTimeout(function() {
+    envelope.timer = global.setTimeout(function() {
       self.handleError(message);
     }, scheduler.getTimeout() * 1000);
 
@@ -134,7 +133,7 @@ var Dispatcher = Class({ className: 'Dispatcher',
     if (reply.successful !== undefined && envelope) {
       envelope.scheduler.succeed();
       delete this._envelopes[reply.id];
-      ENV.clearTimeout(envelope.timer);
+      global.clearTimeout(envelope.timer);
     }
 
     this.trigger('message', reply);
@@ -158,13 +157,13 @@ var Dispatcher = Class({ className: 'Dispatcher',
     var scheduler = envelope.scheduler;
     scheduler.fail();
 
-    ENV.clearTimeout(envelope.timer);
+    global.clearTimeout(envelope.timer);
     envelope.request = envelope.timer = null;
 
     if (immediate) {
       this._sendEnvelope(envelope);
     } else {
-      envelope.timer = ENV.setTimeout(function() {
+      envelope.timer = global.setTimeout(function() {
         envelope.timer = null;
         self._sendEnvelope(envelope);
       }, scheduler.getInterval() * 1000);

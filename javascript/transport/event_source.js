@@ -1,7 +1,6 @@
 'use strict';
 
 var Class      = require('../util/class'),
-    ENV        = require('../util/constants').ENV,
     URI        = require('../util/uri'),
     copyObject = require('../util/copy_object'),
     extend     = require('../util/extend'),
@@ -12,14 +11,14 @@ var Class      = require('../util/class'),
 var EventSource = extend(Class(Transport, {
   initialize: function(dispatcher, endpoint) {
     Transport.prototype.initialize.call(this, dispatcher, endpoint);
-    if (!ENV.EventSource) return this.setDeferredStatus('failed');
+    if (!window.EventSource) return this.setDeferredStatus('failed');
 
     this._xhr = new XHR(dispatcher, endpoint);
 
     endpoint = copyObject(endpoint);
     endpoint.pathname += '/' + dispatcher.clientId;
 
-    var socket = new ENV.EventSource(URI.stringify(endpoint)),
+    var socket = new EventSource(URI.stringify(endpoint)),
         self   = this;
 
     socket.onopen = function() {

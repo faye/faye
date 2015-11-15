@@ -1,7 +1,6 @@
 'use strict';
 
-var Promise   = require('../util/promise'),
-    constants = require('../util/constants');
+var Promise   = require('../util/promise');
 
 module.exports = {
   then: function(callback, errback) {
@@ -29,13 +28,13 @@ module.exports = {
   timeout: function(seconds, message) {
     this.then();
     var self = this;
-    this._timer = constants.ENV.setTimeout(function() {
+    this._timer = global.setTimeout(function() {
       self._reject(message);
     }, seconds * 1000);
   },
 
   setDeferredStatus: function(status, value) {
-    if (this._timer) constants.ENV.clearTimeout(this._timer);
+    if (this._timer) global.clearTimeout(this._timer);
 
     this.then();
 

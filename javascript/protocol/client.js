@@ -56,8 +56,8 @@ var Client = Class({ className: 'Client',
 
     this._dispatcher.bind('message', this._receiveMessage, this);
 
-    if (browser.Event && constants.ENV.onbeforeunload !== undefined)
-      browser.Event.on(constants.ENV, 'beforeunload', function() {
+    if (browser.Event && global.onbeforeunload !== undefined)
+      browser.Event.on(global, 'beforeunload', function() {
         if (array.indexOf(this._dispatcher._disabled, 'autodisconnect') < 0)
           this.disconnect();
       }, this);
@@ -124,7 +124,7 @@ var Client = Class({ className: 'Client',
 
       } else {
         this.info('Handshake unsuccessful');
-        constants.ENV.setTimeout(function() { self.handshake(callback, context) }, this._dispatcher.retry * 1000);
+        global.setTimeout(function() { self.handshake(callback, context) }, this._dispatcher.retry * 1000);
         this._state = this.UNCONNECTED;
       }
     }, this);
@@ -373,7 +373,7 @@ var Client = Class({ className: 'Client',
       this.info('Closed connection for ?', this._dispatcher.clientId);
     }
     var self = this;
-    constants.ENV.setTimeout(function() { self.connect() }, this._advice.interval);
+    global.setTimeout(function() { self.connect() }, this._advice.interval);
   }
 });
 
