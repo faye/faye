@@ -21,9 +21,10 @@
                       , "promises-aplus-tests": "~2.1.0"
                       , "uglifyjs": "*"
                       , "webpack": "*"
+                      , "imports-loader": "*"
                       }
 
-, "scripts"         : { "test"    : "node spec/node.js"
+, "scripts"         : { "test"    : "find spec -name '*_spec.js' | xargs jstest"
                       , "promise" : "promises-aplus-tests javascript/util/promise.js"
                       }
 

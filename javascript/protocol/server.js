@@ -320,6 +320,10 @@ var Server = Class({ className: 'Server',
   }
 });
 
+Server.create = function(options) {
+  return new Server(options);
+};
+
 extend(Server.prototype, Logging);
 extend(Server.prototype, Extensible);
 

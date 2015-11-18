@@ -40,7 +40,7 @@ var Client = Class({ className: 'Client',
     validateOptions(options, ['interval', 'timeout', 'endpoints', 'proxy', 'retry', 'scheduler', 'websocketExtensions', 'tls', 'ca']);
 
     this._channels   = new Channel.Set();
-    this._dispatcher = new Dispatcher(this, endpoint || this.DEFAULT_ENDPOINT, options);
+    this._dispatcher = Dispatcher.create(this, endpoint || this.DEFAULT_ENDPOINT, options);
 
     this._messageId = 0;
     this._state     = this.UNCONNECTED;

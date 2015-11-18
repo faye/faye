@@ -2,6 +2,7 @@ PATH  := node_modules/.bin:$(PATH)
 SHELL := /bin/bash
 
 source_files   := $(shell find javascript -name '*.js')
+spec_files     := $(shell find spec -name '*_spec.js')
 webpack_config := webpack.config.js
 
 name           := faye-browser
@@ -15,7 +16,7 @@ ruby_bundles   := $(bundles:%=$(ruby_dir)/%)
 top_files      := package.json lib CHANGELOG.md README.md
 top_level      := $(top_files:%=build/%)
 
-.PHONY: all gem clean
+.PHONY: all gem test clean
 
 all: $(client_bundles) $(ruby_bundles) $(top_level)
 
@@ -23,13 +24,12 @@ gem: all
 	gem build faye.gemspec
 
 clean:
-	rm -rf build $(ruby_dir) *.gem
+	rm -rf build $(ruby_dir) *.gem spec/*_bundle.js spec/*.map
 
 $(client_dir)/$(name).js: $(webpack_config) $(source_files)
 	mkdir -p $(dir $@)
 	webpack javascript/faye_browser.js $@ \
 	        --config $< \
-	        --devtool source-map \
 	        --display-modules \
 	        --output-library $(browser_global)
 
@@ -44,6 +44,14 @@ $(client_dir)/$(name)-min.js: $(client_dir)/$(name).js $(client_dir)/$(name).js.
 	            --source-map-url $(notdir $@.map)
 
 $(client_dir)/$(name)-min.js.map: $(client_dir)/$(name)-min.js
+
+test: spec/browser_bundle.js
+
+spec/browser_bundle.js: $(webpack_config) $(source_files) $(spec_files)
+	webpack spec/browser.js $@ \
+	        --config $< \
+	        --display-modules \
+	        --watch
 
 $(ruby_dir)/%: $(client_dir)/% $(ruby_dir)
 	cp $< $@

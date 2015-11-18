@@ -32,7 +32,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
     this._extensions = [];
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
     this._endpointRe = new RegExp('^' + this._endpoint.replace(/\/$/, '') + '(/[^/]*)*(\\.[^\\.]+)?$');
-    this._server     = new Server(this._options);
+    this._server     = Server.create(this._options);
 
     this._static = new StaticServer(path.join(__dirname, '..', '..', 'client'), /\.(?:js|map)$/);
     this._static.map(path.basename(this._endpoint) + '.js', this.SCRIPT_PATH);

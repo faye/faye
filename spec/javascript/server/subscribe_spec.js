@@ -1,8 +1,13 @@
-JS.ENV.Server.SubscribeSpec = JS.Test.describe("Server subscribe", function() { with(this) {
+var jstest = require("jstest").Test
+
+var Engine = require("../../../javascript/engines/proxy"),
+    Server = require("../../../javascript/protocol/server")
+
+jstest.describe("Server subscribe", function() { with(this) {
   before(function() { with(this) {
     this.engine = {}
-    stub(Faye.Engine, "get").returns(engine)
-    this.server = new Faye.Server()
+    stub(Engine, "get").returns(engine)
+    this.server = new Server()
   }})
 
   describe("#subscribe", function() { with(this) {

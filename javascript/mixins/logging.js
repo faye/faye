@@ -12,7 +12,7 @@ var Logging = {
   },
 
   writeLog: function(messageArgs, level) {
-    var logger = Logging.logger || Logging.wrapper.logger;
+    var logger = Logging.logger || (Logging.wrapper || Logging).logger;
     if (!logger) return;
 
     var args   = Array.prototype.slice.apply(messageArgs),

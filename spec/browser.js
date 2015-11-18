@@ -1,0 +1,10 @@
+require("./javascript/util/copy_object_spec")
+require("./javascript/channel_spec")
+require("./javascript/client_spec")
+require("./javascript/dispatcher_spec")
+require("./javascript/grammar_spec")
+require("./javascript/publisher_spec")
+require("./javascript/transport_spec")
+require("./javascript/uri_spec")
+
+require("jstest").Test.autorun()

@@ -228,14 +228,5 @@ describe Faye::RackAdapter do
       before { params.delete(:message) }
       it_should_behave_like "bad GET request"
     end
-
-    describe "for the client script" do
-      it "returns the client script" do
-        get "/bayeux.js"
-        status.should == 200
-        content_type.should == "text/javascript; charset=utf-8"
-        body.should =~ /function\(\)\{/
-      end
-    end
   end
 end

@@ -1,6 +1,11 @@
-JS.ENV.PublisherSpec = JS.Test.describe("Publisher", function() { with(this) {
+var jstest = require("jstest").Test
+
+var Publisher = require("../../javascript/mixins/publisher"),
+    extend_   = require("../../javascript/util/extend")
+
+jstest.describe("Publisher", function() { with(this) {
   before(function() { with(this) {
-    this.publisher = Faye.extend({}, Faye.Publisher)
+    this.publisher = extend_({}, Publisher)
   }})
 
   describe("with subscribers that remove themselves", function() { with(this) {

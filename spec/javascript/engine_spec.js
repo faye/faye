@@ -1,4 +1,11 @@
-JS.ENV.EngineSteps = JS.Test.asyncSteps({
+var jstest = require("jstest").Test,
+    Set    = require("jstest").Set
+
+var Proxy   = require("../../javascript/engines/proxy"),
+    extend_ = require("../../javascript/util/extend"),
+    random  = require("../../javascript/util/random")
+
+var EngineSteps = jstest.asyncSteps({
   disconnect_engine: function(resume) {
     this.engine.disconnect()
     resume()
@@ -36,7 +43,7 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   },
 
   check_num_clients: function(n, resume) {
-    var ids = new JS.Set()
+    var ids = new Set()
     for (var key in this._clients) ids.add(this._clients[key])
     this.assertEqual(n, ids.count())
     resume()
@@ -61,14 +68,14 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   publish: function(messages, resume) {
     messages = [].concat(messages)
     for (var i = 0, n = messages.length; i < n; i++) {
-      var message = Faye.extend({id: Faye.random()}, messages[i])
+      var message = extend_({id: random()}, messages[i])
       this.engine.publish(message)
     }
     setTimeout(resume, 20)
   },
 
   publish_by: function(name, message, resume) {
-    message = Faye.extend({clientId: this._clients[name], id: Faye.random()}, message)
+    message = extend_({clientId: this._clients[name], id: random()}, message)
     this.engine.publish(message)
     setTimeout(resume, 10)
   },
@@ -132,14 +139,14 @@ JS.ENV.EngineSteps = JS.Test.asyncSteps({
   }
 })
 
-JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) {
+jstest.describe("Pub/sub engines", function() { with(this) {
   sharedExamplesFor("faye engine", function() { with(this) {
-    include(JS.Test.Helpers)
+    include(jstest.Helpers)
     include(EngineSteps)
 
     define("create_engine", function() { with(this) {
-      var opts = Faye.extend(options(), engineOpts)
-      return new Faye.Engine.Proxy(opts)
+      var opts = extend_(options(), engineOpts)
+      return new Proxy(opts)
     }})
 
     define("options", function() { return {timeout: 1} })
@@ -409,12 +416,12 @@ JS.ENV.EngineSpec = JS.Test.describe("Pub/sub engines", function() { with(this) 
   }})
 
   sharedBehavior("distributed engine", function() { with(this) {
-    include(JS.Test.Helpers)
+    include(jstest.Helpers)
     include(EngineSteps)
 
     define("create_engine", function() { with(this) {
-      var opts = Faye.extend(options(), engineOpts)
-      return new Faye.Engine.Proxy(opts)
+      var opts = extend_(options(), engineOpts)
+      return new Proxy(opts)
     }})
 
     define("options", function() { return {timeout: 1} })

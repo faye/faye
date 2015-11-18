@@ -175,6 +175,10 @@ var Dispatcher = Class({ className: 'Dispatcher',
   }
 });
 
+Dispatcher.create = function(client, endpoint, options) {
+  return new Dispatcher(client, endpoint, options);
+};
+
 extend(Dispatcher.prototype, Publisher);
 extend(Dispatcher.prototype, Logging);
 

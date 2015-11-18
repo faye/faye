@@ -1,10 +1,15 @@
-var http = require("http"),
+var jstest      = require("jstest").Test,
+    http        = require("http"),
     querystring = require("querystring")
 
-JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
+var NodeAdapter = require("../../javascript/adapters/node_adapter"),
+    Server      = require("../../javascript/protocol/server"),
+    extend_     = require("../../javascript/util/extend")
+
+var NodeAdapterSteps = jstest.asyncSteps({
   start_server: function(port, resume) {
     this._port = port
-    this._app  = new Faye.NodeAdapter(this.options())
+    this._app  = new NodeAdapter(this.options())
     this._http = http.createServer()
     this._app.attach(this._http)
     this._http.listen(port, resume)
@@ -47,7 +52,7 @@ JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
     var self = this,
         body = (typeof params === "string") ? params : querystring.stringify(params),
 
-        headers = Faye.extend({
+        headers = extend_({
           "Host":           "localhost",
           "Content-Length": body.length
         }, this._headers || {}),
@@ -112,7 +117,7 @@ JS.ENV.NodeAdapterSteps = JS.Test.asyncSteps({
   }
 })
 
-JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this) {
+jstest.describe("NodeAdapter", function() { with(this) {
   include(NodeAdapterSteps)
 
   define("options", function() {
@@ -121,7 +126,7 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
 
   before(function() { with(this) {
     this.server = {}
-    expect("new", Faye, "Server").given(options()).returning(server)
+    expect(Server, "create").given(options()).returning(server)
     start_server(8282)
   }})
 
@@ -304,15 +309,6 @@ JS.ENV.NodeAdapterSpec = JS.Test.describe("NodeAdapter", function() { with(this)
         delete params.message
       }})
       behavesLike("bad GET request")
-    }})
-
-    describe("for the client script", function() { with(this) {
-      it("returns the client script", function() { with(this) {
-        get("/bayeux.js", {})
-        check_status(200)
-        check_content_type("text/javascript")
-        check_body(/function\(\)\{/)
-      }})
     }})
   }})
 }})
