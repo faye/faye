@@ -5,8 +5,14 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
 
   request: function(messages) {
     var href = this.endpoint.href,
-        xhr  = Faye.ENV.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
+        xhr,
         self = this;
+
+    try {
+      xhr = new XMLHttpRequest();
+    } catch (e) {
+      xhr = Faye.ENV.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest();
+    }
 
     xhr.open('POST', href, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
