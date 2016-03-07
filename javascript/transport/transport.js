@@ -31,18 +31,25 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (!this.batching) return Faye.Promise.fulfilled(this.request([message]));
 
     this._outbox.push(message);
-    this._promise = this._promise || new Faye.Promise();
     this._flushLargeBatch();
 
-    if (message.channel === Faye.Channel.HANDSHAKE) {
-      this.addTimeout('publish', 0.01, this._flush, this);
-      return this._promise;
-    }
+    if (message.channel === Faye.Channel.HANDSHAKE)
+      return this._publish(0.01);
 
     if (message.channel === Faye.Channel.CONNECT)
       this._connectMessage = message;
 
-    this.addTimeout('publish', this.MAX_DELAY, this._flush, this);
+    return this._publish(this.MAX_DELAY);
+  },
+
+  _publish: function(delay) {
+    this._promise = this._promise || new Faye.Promise();
+
+    this.addTimeout('publish', delay, function() {
+      this._flush();
+      delete this._promise;
+    }, this);
+
     return this._promise;
   },
 
@@ -53,7 +60,6 @@ Faye.Transport = Faye.extend(Faye.Class({
       this._connectMessage.advice = {timeout: 0};
 
     Faye.Promise.fulfill(this._promise, this.request(this._outbox));
-    delete this._promise;
 
     this._connectMessage = null;
     this._outbox = [];
@@ -63,7 +69,10 @@ Faye.Transport = Faye.extend(Faye.Class({
     var string = this.encode(this._outbox);
     if (string.length < this._dispatcher.maxRequestSize) return;
     var last = this._outbox.pop();
+
+    this._promise = this._promise || new Faye.Promise();
     this._flush();
+
     if (last) this._outbox.push(last);
   },
 
