@@ -1,4 +1,3 @@
-(function() {
 'use strict';
 
 var timeout = setTimeout, defer;
@@ -159,9 +158,4 @@ Promise.rejected = function(reason) {
   return new Promise(function(fulfill, reject) { reject(reason) });
 };
 
-if (typeof Faye === 'undefined')
-  module.exports = Promise;
-else
-  Faye.Promise = Promise;
-
-})();
+module.exports = Promise;

@@ -1,14 +1,24 @@
-Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
+'use strict';
+
+var Class      = require('../util/class'),
+    URI        = require('../util/uri'),
+    copyObject = require('../util/copy_object'),
+    extend     = require('../util/extend'),
+    Deferrable = require('../mixins/deferrable'),
+    Transport  = require('./transport'),
+    XHR        = require('./xhr');
+
+var EventSource = extend(Class(Transport, {
   initialize: function(dispatcher, endpoint) {
-    Faye.Transport.prototype.initialize.call(this, dispatcher, endpoint);
-    if (!Faye.ENV.EventSource) return this.setDeferredStatus('failed');
+    Transport.prototype.initialize.call(this, dispatcher, endpoint);
+    if (!window.EventSource) return this.setDeferredStatus('failed');
 
-    this._xhr = new Faye.Transport.XHR(dispatcher, endpoint);
+    this._xhr = new XHR(dispatcher, endpoint);
 
-    endpoint = Faye.copyObject(endpoint);
+    endpoint = copyObject(endpoint);
     endpoint.pathname += '/' + dispatcher.clientId;
 
-    var socket = new EventSource(Faye.URI.stringify(endpoint)),
+    var socket = new EventSource(URI.stringify(endpoint)),
         self   = this;
 
     socket.onopen = function() {
@@ -57,7 +67,7 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     var id = dispatcher.clientId;
     if (!id) return callback.call(context, false);
 
-    Faye.Transport.XHR.isUsable(dispatcher, endpoint, function(usable) {
+    XHR.isUsable(dispatcher, endpoint, function(usable) {
       if (!usable) return callback.call(context, false);
       this.create(dispatcher, endpoint).isUsable(callback, context);
     }, this);
@@ -67,14 +77,15 @@ Faye.Transport.EventSource = Faye.extend(Faye.Class(Faye.Transport, {
     var sockets = dispatcher.transports.eventsource = dispatcher.transports.eventsource || {},
         id      = dispatcher.clientId;
 
-    var url = Faye.copyObject(endpoint);
+    var url = copyObject(endpoint);
     url.pathname += '/' + (id || '');
-    url = Faye.URI.stringify(url);
+    url = URI.stringify(url);
 
     sockets[url] = sockets[url] || new this(dispatcher, endpoint);
     return sockets[url];
   }
 });
 
-Faye.extend(Faye.Transport.EventSource.prototype, Faye.Deferrable);
-Faye.Transport.register('eventsource', Faye.Transport.EventSource);
+extend(EventSource.prototype, Deferrable);
+
+module.exports = EventSource;

@@ -1,4 +1,16 @@
-Faye.Transport = Faye.extend(Faye.Class({
+'use strict';
+
+var Class    = require('../util/class'),
+    Cookie   = require('../util/cookies').Cookie,
+    Promise  = require('../util/promise'),
+    URI      = require('../util/uri'),
+    array    = require('../util/array'),
+    extend   = require('../util/extend'),
+    Logging  = require('../mixins/logging'),
+    Timeouts = require('../mixins/timeouts'),
+    Channel  = require('../protocol/channel');
+
+var Transport = extend(Class({ className: 'Transport',
   DEFAULT_PORTS:    {'http:': 80, 'https:': 443, 'ws:': 80, 'wss:': 443},
   SECURE_PROTOCOLS: ['https:', 'wss:'],
   MAX_DELAY:        0,
@@ -9,10 +21,10 @@ Faye.Transport = Faye.extend(Faye.Class({
     this._dispatcher = dispatcher;
     this.endpoint    = endpoint;
     this._outbox     = [];
-    this._proxy      = Faye.extend({}, this._dispatcher.proxy);
+    this._proxy      = extend({}, this._dispatcher.proxy);
 
-    if (!this._proxy.origin && Faye.NodeAdapter) {
-      this._proxy.origin = Faye.indexOf(this.SECURE_PROTOCOLS, this.endpoint.protocol) >= 0
+    if (!this._proxy.origin && typeof process !== 'undefined') {
+      this._proxy.origin = array.indexOf(this.SECURE_PROTOCOLS, this.endpoint.protocol) >= 0
                          ? (process.env.HTTPS_PROXY || process.env.https_proxy)
                          : (process.env.HTTP_PROXY  || process.env.http_proxy);
     }
@@ -26,24 +38,24 @@ Faye.Transport = Faye.extend(Faye.Class({
 
   sendMessage: function(message) {
     this.debug('Client ? sending message to ?: ?',
-               this._dispatcher.clientId, Faye.URI.stringify(this.endpoint), message);
+               this._dispatcher.clientId, URI.stringify(this.endpoint), message);
 
-    if (!this.batching) return Faye.Promise.fulfilled(this.request([message]));
+    if (!this.batching) return Promise.fulfilled(this.request([message]));
 
     this._outbox.push(message);
     this._flushLargeBatch();
 
-    if (message.channel === Faye.Channel.HANDSHAKE)
+    if (message.channel === Channel.HANDSHAKE)
       return this._publish(0.01);
 
-    if (message.channel === Faye.Channel.CONNECT)
+    if (message.channel === Channel.CONNECT)
       this._connectMessage = message;
 
     return this._publish(this.MAX_DELAY);
   },
 
   _publish: function(delay) {
-    this._promise = this._promise || new Faye.Promise();
+    this._promise = this._promise || new Promise();
 
     this.addTimeout('publish', delay, function() {
       this._flush();
@@ -59,7 +71,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (this._outbox.length > 1 && this._connectMessage)
       this._connectMessage.advice = {timeout: 0};
 
-    Faye.Promise.fulfill(this._promise, this.request(this._outbox));
+    Promise.fulfill(this._promise, this.request(this._outbox));
 
     this._connectMessage = null;
     this._outbox = [];
@@ -70,7 +82,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     if (string.length < this._dispatcher.maxRequestSize) return;
     var last = this._outbox.pop();
 
-    this._promise = this._promise || new Faye.Promise();
+    this._promise = this._promise || new Promise();
     this._flush();
 
     if (last) this._outbox.push(last);
@@ -81,7 +93,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     replies = [].concat(replies);
 
     this.debug('Client ? received from ? via ?: ?',
-               this._dispatcher.clientId, Faye.URI.stringify(this.endpoint), this.connectionType, replies);
+               this._dispatcher.clientId, URI.stringify(this.endpoint), this.connectionType, replies);
 
     for (var i = 0, n = replies.length; i < n; i++)
       this._dispatcher.handleResponse(replies[i]);
@@ -91,7 +103,7 @@ Faye.Transport = Faye.extend(Faye.Class({
     messages = [].concat(messages);
 
     this.debug('Client ? failed to send to ? via ?: ?',
-               this._dispatcher.clientId, Faye.URI.stringify(this.endpoint), this.connectionType, messages);
+               this._dispatcher.clientId, URI.stringify(this.endpoint), this.connectionType, messages);
 
     for (var i = 0, n = messages.length; i < n; i++)
       this._dispatcher.handleError(messages[i]);
@@ -99,25 +111,25 @@ Faye.Transport = Faye.extend(Faye.Class({
 
   _getCookies: function() {
     var cookies = this._dispatcher.cookies,
-        url     = Faye.URI.stringify(this.endpoint);
+        url     = URI.stringify(this.endpoint);
 
     if (!cookies) return '';
 
-    return Faye.map(cookies.getCookiesSync(url), function(cookie) {
+    return array.map(cookies.getCookiesSync(url), function(cookie) {
       return cookie.cookieString();
     }).join('; ');
   },
 
   _storeCookies: function(setCookie) {
     var cookies = this._dispatcher.cookies,
-        url     = Faye.URI.stringify(this.endpoint),
+        url     = URI.stringify(this.endpoint),
         cookie;
 
     if (!setCookie || !cookies) return;
     setCookie = [].concat(setCookie);
 
     for (var i = 0, n = setCookie.length; i < n; i++) {
-      cookie = Faye.Cookies.Cookie.parse(setCookie[i]);
+      cookie = Cookie.parse(setCookie[i]);
       cookies.setCookieSync(cookie, url);
     }
   }
@@ -126,14 +138,14 @@ Faye.Transport = Faye.extend(Faye.Class({
   get: function(dispatcher, allowed, disabled, callback, context) {
     var endpoint = dispatcher.endpoint;
 
-    Faye.asyncEach(this._transports, function(pair, resume) {
+    array.asyncEach(this._transports, function(pair, resume) {
       var connType     = pair[0], klass = pair[1],
           connEndpoint = dispatcher.endpointFor(connType);
 
-      if (Faye.indexOf(disabled, connType) >= 0)
+      if (array.indexOf(disabled, connType) >= 0)
         return resume();
 
-      if (Faye.indexOf(allowed, connType) < 0) {
+      if (array.indexOf(allowed, connType) < 0) {
         klass.isUsable(dispatcher, connEndpoint, function() {});
         return resume();
       }
@@ -144,7 +156,7 @@ Faye.Transport = Faye.extend(Faye.Class({
         callback.call(context, transport);
       });
     }, function() {
-      throw new Error('Could not find a usable connection type for ' + Faye.URI.stringify(endpoint));
+      throw new Error('Could not find a usable connection type for ' + URI.stringify(endpoint));
     });
   },
 
@@ -154,11 +166,13 @@ Faye.Transport = Faye.extend(Faye.Class({
   },
 
   getConnectionTypes: function() {
-    return Faye.map(this._transports, function(t) { return t[0] });
+    return array.map(this._transports, function(t) { return t[0] });
   },
 
   _transports: []
 });
 
-Faye.extend(Faye.Transport.prototype, Faye.Logging);
-Faye.extend(Faye.Transport.prototype, Faye.Timeouts);
+extend(Transport.prototype, Logging);
+extend(Transport.prototype, Timeouts);
+
+module.exports = Transport;

@@ -1,40 +1,40 @@
-var crypto = require('crypto'),
-    fs     = require('fs'),
-    http   = require('http'),
-    https  = require('https'),
-    net    = require('net'),
-    path   = require('path'),
-    tls    = require('tls'),
-    url    = require('url'),
+'use strict';
+
+var path        = require('path'),
     querystring = require('querystring'),
+    url         = require('url'),
+    WebSocket   = require('faye-websocket'),
+    EventSource = WebSocket.EventSource;
 
-    csprng = require('csprng'),
-    tunnel = require('tunnel-agent');
+var constants       = require('../util/constants'),
+    extend          = require('../util/extend'),
+    idFromMessages  = require('../util/id_from_messages'),
+    toJSON          = require('../util/to_json'),
+    validateOptions = require('../util/validate_options'),
+    Class           = require('../util/class'),
+    Logging         = require('../mixins/logging'),
+    Publisher       = require('../mixins/publisher'),
+    Client          = require('../protocol/client'),
+    Server          = require('../protocol/server'),
+    contenttypes    = require('./content_types'),
+    StaticServer    = require('./static_server');
 
-Faye.WebSocket   = require('faye-websocket');
-Faye.EventSource = Faye.WebSocket.EventSource;
-Faye.Cookies     = require('tough-cookie');
-
-Faye.NodeAdapter = Faye.Class({
+var NodeAdapter = Class({ className: 'NodeAdapter',
   DEFAULT_ENDPOINT: '/bayeux',
   SCRIPT_PATH:      'faye-browser-min.js',
-
-  TYPE_JSON:    {'Content-Type': 'application/json; charset=utf-8'},
-  TYPE_SCRIPT:  {'Content-Type': 'text/javascript; charset=utf-8'},
-  TYPE_TEXT:    {'Content-Type': 'text/plain; charset=utf-8'},
 
   VALID_JSONP_CALLBACK: /^[a-z_\$][a-z0-9_\$]*(\.[a-z_\$][a-z0-9_\$]*)*$/i,
 
   initialize: function(options) {
     this._options = options || {};
-    Faye.WebSocket.validateOptions(this._options, ['engine', 'mount', 'ping', 'timeout', 'extensions', 'websocketExtensions']);
+    validateOptions(this._options, ['engine', 'mount', 'ping', 'timeout', 'extensions', 'websocketExtensions']);
 
     this._extensions = [];
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
     this._endpointRe = new RegExp('^' + this._endpoint.replace(/\/$/, '') + '(/[^/]*)*(\\.[^\\.]+)?$');
-    this._server     = new Faye.Server(this._options);
+    this._server     = Server.create(this._options);
 
-    this._static = new Faye.StaticServer(path.dirname(__filename) + '/../browser', /\.(?:js|map)$/);
+    this._static = new StaticServer(path.join(__dirname, '..', '..', 'client'), /\.(?:js|map)$/);
     this._static.map(path.basename(this._endpoint) + '.js', this.SCRIPT_PATH);
     this._static.map('client.js', this.SCRIPT_PATH);
 
@@ -76,7 +76,7 @@ Faye.NodeAdapter = Faye.Class({
   },
 
   getClient: function() {
-    return this._client = this._client || new Faye.Client(this._server);
+    return this._client = this._client || new Client(this._server);
   },
 
   attach: function(httpServer) {
@@ -120,7 +120,7 @@ Faye.NodeAdapter = Faye.Class({
     if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST')
       return this._handleOptions(response);
 
-    if (Faye.EventSource.isEventSource(request))
+    if (EventSource.isEventSource(request))
       return this.handleEventSource(request, response);
 
     if (requestMethod === 'GET')
@@ -148,10 +148,10 @@ Faye.NodeAdapter = Faye.Class({
       this.debug('Received message via HTTP ' + request.method + ': ?', params.message);
 
       var message = JSON.parse(params.message),
-          jsonp   = params.jsonp || Faye.JSONP_CALLBACK,
+          jsonp   = params.jsonp || constants.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
-          type    = isGet ? this.TYPE_SCRIPT : this.TYPE_JSON,
-          headers = Faye.extend({}, type),
+          type    = isGet ? contenttypes.TYPE_SCRIPT : contenttypes.TYPE_JSON,
+          headers = extend({}, type),
           origin  = request.headers.origin;
 
       if (!this.VALID_JSONP_CALLBACK.test(jsonp))
@@ -162,7 +162,7 @@ Faye.NodeAdapter = Faye.Class({
       headers['X-Content-Type-Options'] = 'nosniff';
 
       this._server.process(message, request, function(replies) {
-        var body = Faye.toJSON(replies);
+        var body = toJSON(replies);
 
         if (isGet) {
           body = '/**/' + jsonp + '(' + this._jsonpEscape(body) + ');';
@@ -187,7 +187,7 @@ Faye.NodeAdapter = Faye.Class({
 
   handleUpgrade: function(request, socket, head) {
     var options  = {extensions: this._extensions, ping: this._options.ping},
-        ws       = new Faye.WebSocket(request, socket, head, [], options),
+        ws       = new WebSocket(request, socket, head, [], options),
         clientId = null,
         self     = this;
 
@@ -198,16 +198,17 @@ Faye.NodeAdapter = Faye.Class({
         self.debug('Received message via WebSocket[' + ws.version + ']: ?', event.data);
 
         var message = JSON.parse(event.data),
-            cid     = Faye.clientIdFromMessages(message);
+            cid     = idFromMessages(message);
 
         if (clientId && cid && cid !== clientId) self._server.closeSocket(clientId, false);
         self._server.openSocket(cid, ws, request);
         if (cid) clientId = cid;
 
         self._server.process(message, request, function(replies) {
-          if (ws) ws.send(Faye.toJSON(replies));
+          if (ws) ws.send(toJSON(replies));
         });
       } catch (e) {
+        console.log(e.stack);
         self.error(e.message + '\nBacktrace:\n' + e.stack);
       }
     };
@@ -219,7 +220,7 @@ Faye.NodeAdapter = Faye.Class({
   },
 
   handleEventSource: function(request, response) {
-    var es       = new Faye.EventSource(request, response, {ping: this._options.ping}),
+    var es       = new EventSource(request, response, {ping: this._options.ping}),
         clientId = es.url.split('/').pop(),
         self     = this;
 
@@ -285,15 +286,17 @@ Faye.NodeAdapter = Faye.Class({
 
     if (!response) return;
 
-    response.writeHead(400, this.TYPE_TEXT);
+    response.writeHead(400, contenttypes.TYPE_TEXT);
     response.end('Bad request');
   }
 });
 
-for (var method in Faye.Publisher) (function(method) {
-  Faye.NodeAdapter.prototype[method] = function() {
+for (var method in Publisher) (function(method) {
+  NodeAdapter.prototype[method] = function() {
     return this._server._engine[method].apply(this._server._engine, arguments);
   };
 })(method);
 
-Faye.extend(Faye.NodeAdapter.prototype, Faye.Logging);
+extend(NodeAdapter.prototype, Logging);
+
+module.exports = NodeAdapter;

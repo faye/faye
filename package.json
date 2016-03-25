@@ -7,23 +7,24 @@
 
 , "version"         : "1.1.2"
 , "engines"         : {"node": ">=0.6.0"}
-, "main"            : "./node/faye-node"
-, "browserify"      : "./browser/faye-browser"
+, "main"            : "lib/faye_node"
+, "browser"         : "lib/faye_browser"
 
-, "dependencies"    : { "csprng": ""
+, "dependencies"    : { "csprng": "*"
                       , "faye-websocket": ">=0.9.1"
-                      , "tough-cookie": ""
-                      , "tunnel-agent": ""
+                      , "tough-cookie": "*"
+                      , "tunnel-agent": "*"
                       }
 , "devDependencies" : { "jstest": "~1.0.0"
                       , "mime": "~1.2.0"
                       , "permessage-deflate": ">=0.1.0"
-                      , "promises-aplus-tests": "~2.0.0"
-                      , "wake": "~0.3.0"
+                      , "promises-aplus-tests": "~2.1.0"
+                      , "uglifyjs": "*"
+                      , "webpack": "*"
+                      , "imports-loader": "*"
                       }
 
-, "scripts"         : { "build"   : "./node_modules/.bin/wake"
-                      , "test"    : "node spec/node.js"
+, "scripts"         : { "test"    : "find spec -name '*_spec.js' | xargs jstest"
                       , "promise" : "promises-aplus-tests javascript/util/promise.js"
                       }
 
@@ -31,81 +32,5 @@
                       , "url"   : "git://github.com/faye/faye.git"
                       }
 
-, "bugs"            : "http://github.com/faye/faye/issues"
-
-, "wake": {
-    "javascript": {
-      "sourceDirectory": "javascript",
-      "targetDirectory": "build",
-      "builds": {
-        "src": {"digest": false, "minify": false},
-        "min": {"digest": false, "minify": true, "sourceMap": "src", "tag": "suffix"}
-      },
-      "targets": {
-        "core": {                 "builds": {"src": false, "min": false},
-                                  "files": [
-                                    "_head",
-                                    "faye",
-                                    "util/class",
-                                    "util/event_emitter",
-                                    "util/namespace",
-                                    "util/promise",
-                                    "util/set",
-                                    "util/uri",
-                                    "error",
-                                    "mixins/deferrable",
-                                    "mixins/publisher",
-                                    "mixins/timeouts",
-                                    "mixins/logging",
-                                    "protocol/grammar",
-                                    "protocol/extensible",
-                                    "protocol/channel",
-                                    "protocol/publication",
-                                    "protocol/subscription",
-                                    "protocol/client",
-                                    "protocol/dispatcher",
-                                    "protocol/scheduler",
-                                    "transport/transport"
-        ]},
-        "node/faye-node": {       "extend": "core",
-                                  "builds": {"min": false},
-                                  "files": [
-                                    "engines/proxy",
-                                    "engines/connection",
-                                    "engines/memory",
-                                    "protocol/server",
-                                    "protocol/socket",
-                                    "transport/node_local",
-                                    "transport/web_socket",
-                                    "transport/node_http",
-                                    "adapters/node_adapter",
-                                    "adapters/static_server",
-                                    "_tail"
-        ]},
-        "browser/faye-browser": { "extend": "core",
-                                  "files": [
-                                    "util/browser/event",
-                                    "util/browser/json2",
-                                    "transport/web_socket",
-                                    "transport/event_source",
-                                    "transport/xhr",
-                                    "transport/cors",
-                                    "transport/jsonp",
-                                    "_tail"
-        ]}
-      }
-    },
-    "binary": {
-      "sourceDirectory": ".",
-      "targetDirectory": ".",
-      "builds": {
-        "min": {"digest": false}
-      },
-      "targets": {
-        "lib/faye-browser.js":          "build/browser/faye-browser.js",
-        "lib/faye-browser-min.js":      "build/browser/faye-browser-min.js",
-        "lib/faye-browser-min.js.map":  "build/browser/faye-browser-min.js.map",
-        "build/package.json":           "package.json",
-        "build/CHANGELOG.md":           "CHANGELOG.md",
-        "build/README.md":              "README.md"
-} } } }
+, "bugs"            : "https://github.com/faye/faye/issues"
+}

@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   # You should generate them by running `npm run-script build` in the project
   # root.
   s.files = %w[CHANGELOG.md README.md] +
-            %w[.js -min.js -min.js.map].map { |ext| "lib/faye-browser#{ext}" } +
+            %w[.js -min.js -min.js.map].map { |ext| "lib/client/faye-browser#{ext}" } +
             Dir.glob('lib/**/*.rb')
   
   s.add_dependency 'cookiejar', '>= 0.3.0'

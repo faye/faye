@@ -1,17 +1,26 @@
-Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
+'use strict';
+
+var Class     = require('../util/class'),
+    Set       = require('../util/set'),
+    URI       = require('../util/uri'),
+    extend    = require('../util/extend'),
+    toJSON    = require('../util/to_json'),
+    Transport = require('./transport');
+
+var CORS = extend(Class(Transport, {
   encode: function(messages) {
-    return 'message=' + encodeURIComponent(Faye.toJSON(messages));
+    return 'message=' + encodeURIComponent(toJSON(messages));
   },
 
   request: function(messages) {
-    var xhrClass = Faye.ENV.XDomainRequest ? XDomainRequest : XMLHttpRequest,
+    var xhrClass = window.XDomainRequest ? XDomainRequest : XMLHttpRequest,
         xhr      = new xhrClass(),
-        id       = ++Faye.Transport.CORS._id,
+        id       = ++CORS._id,
         headers  = this._dispatcher.headers,
         self     = this,
         key;
 
-    xhr.open('POST', Faye.URI.stringify(this.endpoint), true);
+    xhr.open('POST', URI.stringify(this.endpoint), true);
 
     if (xhr.setRequestHeader) {
       xhr.setRequestHeader('Pragma', 'no-cache');
@@ -23,7 +32,7 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
 
     var cleanUp = function() {
       if (!xhr) return false;
-      Faye.Transport.CORS._pending.remove(id);
+      CORS._pending.remove(id);
       xhr.onload = xhr.onerror = xhr.ontimeout = xhr.onprogress = null;
       xhr = null;
     };
@@ -49,29 +58,29 @@ Faye.Transport.CORS = Faye.extend(Faye.Class(Faye.Transport, {
 
     xhr.onprogress = function() {};
 
-    if (xhrClass === Faye.ENV.XDomainRequest)
-      Faye.Transport.CORS._pending.add({id: id, xhr: xhr});
+    if (xhrClass === window.XDomainRequest)
+      CORS._pending.add({id: id, xhr: xhr});
 
     xhr.send(this.encode(messages));
     return xhr;
   }
 }), {
   _id:      0,
-  _pending: new Faye.Set(),
+  _pending: new Set(),
 
   isUsable: function(dispatcher, endpoint, callback, context) {
-    if (Faye.URI.isSameOrigin(endpoint))
+    if (URI.isSameOrigin(endpoint))
       return callback.call(context, false);
 
-    if (Faye.ENV.XDomainRequest)
-      return callback.call(context, endpoint.protocol === Faye.ENV.location.protocol);
+    if (window.XDomainRequest)
+      return callback.call(context, endpoint.protocol === location.protocol);
 
-    if (Faye.ENV.XMLHttpRequest) {
-      var xhr = new Faye.ENV.XMLHttpRequest();
+    if (window.XMLHttpRequest) {
+      var xhr = new XMLHttpRequest();
       return callback.call(context, xhr.withCredentials !== undefined);
     }
     return callback.call(context, false);
   }
 });
 
-Faye.Transport.register('cross-origin-long-polling', Faye.Transport.CORS);
+module.exports = CORS;

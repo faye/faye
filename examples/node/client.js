@@ -9,7 +9,7 @@
 
 var fs      = require('fs'),
     deflate = require('permessage-deflate'),
-    faye    = require('../../build/node/faye-node'),
+    faye    = require('../../build'),
 
     port     = process.argv[2] || 8000,
     path     = process.argv[3] || 'bayeux',

@@ -1,8 +1,12 @@
-Faye.Deferrable = {
+'use strict';
+
+var Promise   = require('../util/promise');
+
+module.exports = {
   then: function(callback, errback) {
     var self = this;
     if (!this._promise)
-      this._promise = new Faye.Promise(function(fulfill, reject) {
+      this._promise = new Promise(function(fulfill, reject) {
         self._fulfill = fulfill;
         self._reject  = reject;
       });
@@ -24,13 +28,13 @@ Faye.Deferrable = {
   timeout: function(seconds, message) {
     this.then();
     var self = this;
-    this._timer = Faye.ENV.setTimeout(function() {
+    this._timer = global.setTimeout(function() {
       self._reject(message);
     }, seconds * 1000);
   },
 
   setDeferredStatus: function(status, value) {
-    if (this._timer) Faye.ENV.clearTimeout(this._timer);
+    if (this._timer) global.clearTimeout(this._timer);
 
     this.then();
 

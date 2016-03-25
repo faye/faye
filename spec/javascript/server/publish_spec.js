@@ -1,8 +1,13 @@
-JS.ENV.Server.PublishSpec = JS.Test.describe("Server publish", function() { with(this) {
+var jstest = require("jstest").Test
+
+var Engine = require("../../../javascript/engines/proxy"),
+    Server = require("../../../javascript/protocol/server")
+
+jstest.describe("Server publish", function() { with(this) {
   before(function() { with(this) {
     this.engine = {}
-    stub(Faye.Engine, "get").returns(engine)
-    this.server = new Faye.Server()
+    stub(Engine, "get").returns(engine)
+    this.server = new Server()
 
     this.message = {channel: "/some/channel",     data: "publish"}
   }})

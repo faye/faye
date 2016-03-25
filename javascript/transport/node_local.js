@@ -1,16 +1,25 @@
-Faye.Transport.NodeLocal = Faye.extend(Faye.Class(Faye.Transport, {
+'use strict';
+
+var Class      = require('../util/class'),
+    URI        = require('../util/uri'),
+    copyObject = require('../util/copy_object'),
+    extend     = require('../util/extend'),
+    Server     = require('../protocol/server'),
+    Transport  = require('./transport');
+
+var NodeLocal = extend(Class(Transport, {
   batching: false,
 
   request: function(messages) {
-    messages = Faye.copyObject(messages);
+    messages = copyObject(messages);
     this.endpoint.process(messages, null, function(replies) {
-      this._receive(Faye.copyObject(replies));
+      this._receive(copyObject(replies));
     }, this);
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {
-    callback.call(context, endpoint instanceof Faye.Server);
+    callback.call(context, endpoint instanceof Server);
   }
 });
 
-Faye.Transport.register('in-process', Faye.Transport.NodeLocal);
+module.exports = NodeLocal;

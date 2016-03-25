@@ -1,6 +1,18 @@
-Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
+'use strict';
+
+var http   = require('http'),
+    https  = require('https'),
+    tunnel = require('tunnel-agent');
+
+var Class     = require('../util/class'),
+    URI       = require('../util/uri'),
+    extend    = require('../util/extend'),
+    toJSON    = require('../util/to_json'),
+    Transport = require('./transport');
+
+var NodeHttp = extend(Class(Transport, {
   initialize: function() {
-    Faye.Transport.prototype.initialize.apply(this, arguments);
+    Transport.prototype.initialize.apply(this, arguments);
 
     this._endpointSecure = (this.SECURE_PROTOCOLS.indexOf(this.endpoint.protocol) >= 0);
     this._httpClient     = this._endpointSecure ? https : http;
@@ -16,17 +28,17 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
       return;
     }
 
-    var options = Faye.extend({
+    var options = extend({
       proxy: {
         host:       this._proxyUri.hostname,
         port:       this._proxyUri.port || this.DEFAULT_PORTS[this._proxyUri.protocol],
         proxyAuth:  this._proxyUri.auth,
-        headers:    Faye.extend({host: this.endpoint.host}, proxy.headers)
+        headers:    extend({host: this.endpoint.host}, proxy.headers)
       }
     }, this._dispatcher.tls);
 
     if (this._proxySecure) {
-      Faye.extend(options.proxy, proxy.tls);
+      extend(options.proxy, proxy.tls);
       this._tunnel = tunnel.httpsOverHttps(options);
     } else {
       this._tunnel = tunnel.httpsOverHttp(options);
@@ -34,7 +46,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
   },
 
   encode: function(messages) {
-    return Faye.toJSON(messages);
+    return toJSON(messages);
   },
 
   request: function(messages) {
@@ -66,7 +78,7 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
       host:     target.hostname,
       port:     target.port || this.DEFAULT_PORTS[target.protocol],
       path:     uri.path,
-      headers:  Faye.extend({
+      headers:  extend({
         'Content-Length': content.length,
         'Content-Type':   'application/json',
         'Host':           uri.host
@@ -79,10 +91,10 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
     if (this._tunnel) {
       params.agent = this._tunnel;
     } else if (this._endpointSecure) {
-      Faye.extend(params, this._dispatcher.tls);
+      extend(params, this._dispatcher.tls);
     } else if (proxy) {
       params.path = this.endpoint.href;
-      Faye.extend(params, this._proxy.tls);
+      extend(params, this._proxy.tls);
       if (proxy.auth)
         params.headers['Proxy-Authorization'] = new Buffer(proxy.auth, 'utf8').toString('base64');
     }
@@ -112,8 +124,8 @@ Faye.Transport.NodeHttp = Faye.extend(Faye.Class(Faye.Transport, {
 
 }), {
   isUsable: function(dispatcher, endpoint, callback, context) {
-    callback.call(context, Faye.URI.isURI(endpoint));
+    callback.call(context, URI.isURI(endpoint));
   }
 });
 
-Faye.Transport.register('long-polling', Faye.Transport.NodeHttp);
+module.exports = NodeHttp;

@@ -1,4 +1,8 @@
-Faye.Logging = {
+'use strict';
+
+var toJSON = require('../util/to_json');
+
+var Logging = {
   LOG_LEVELS: {
     fatal:  4,
     error:  3,
@@ -8,7 +12,8 @@ Faye.Logging = {
   },
 
   writeLog: function(messageArgs, level) {
-    if (!Faye.logger) return;
+    var logger = Logging.logger || (Logging.wrapper || Logging).logger;
+    if (!logger) return;
 
     var args   = Array.prototype.slice.apply(messageArgs),
         banner = '[Faye',
@@ -16,32 +21,27 @@ Faye.Logging = {
 
         message = args.shift().replace(/\?/g, function() {
           try {
-            return Faye.toJSON(args.shift());
+            return toJSON(args.shift());
           } catch (e) {
             return '[Object]';
           }
         });
 
-    for (var key in Faye) {
-      if (klass) continue;
-      if (typeof Faye[key] !== 'function') continue;
-      if (this instanceof Faye[key]) klass = key;
-    }
     if (klass) banner += '.' + klass;
     banner += '] ';
 
-    if (typeof Faye.logger[level] === 'function')
-      Faye.logger[level](banner + message);
-    else if (typeof Faye.logger === 'function')
-      Faye.logger(banner + message);
+    if (typeof logger[level] === 'function')
+      logger[level](banner + message);
+    else if (typeof logger === 'function')
+      logger(banner + message);
   }
 };
 
-(function() {
-  for (var key in Faye.Logging.LOG_LEVELS)
-    (function(level) {
-      Faye.Logging[level] = function() {
-        this.writeLog(arguments, level);
-      };
-    })(key);
-})();
+for (var key in Logging.LOG_LEVELS)
+  (function(level) {
+    Logging[level] = function() {
+      this.writeLog(arguments, level);
+    };
+  })(key);
+
+module.exports = Logging;

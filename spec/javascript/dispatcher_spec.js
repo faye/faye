@@ -1,21 +1,29 @@
-JS.ENV.Scheduler = function() {
-  Faye.Scheduler.apply(this, arguments)
-  Scheduler.instance = this
-}
-Scheduler.prototype = new Faye.Scheduler()
+var jstest = require("jstest").Test
 
-JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
-  include(JS.Test.FakeClock)
+var Dispatcher = require("../../javascript/protocol/dispatcher"),
+    Scheduler  = require("../../javascript/protocol/scheduler"),
+    Transport  = require("../../javascript/transport"),
+    Promise    = require("../../javascript/util/promise"),
+    URI        = require("../../javascript/util/uri")
+
+var CustomScheduler = function() {
+  Scheduler.apply(this, arguments)
+  CustomScheduler.instance = this
+}
+CustomScheduler.prototype = new Scheduler()
+
+jstest.describe("Dispatcher", function() { with(this) {
+  include(jstest.FakeClock)
 
   before(function() { with(this) {
     this.client    = {}
     this.endpoint  = "http://localhost/"
-    this.transport = {endpoint: Faye.URI.parse(endpoint), connectionType: "long-polling"}
+    this.transport = {endpoint: URI.parse(endpoint), connectionType: "long-polling"}
 
     stub(client, "trigger")
-    stub(Faye.Transport, "get").yields([transport])
+    stub(Transport, "get").yields([transport])
 
-    this.dispatcher = new Faye.Dispatcher(client, endpoint, options())
+    this.dispatcher = Dispatcher.create(client, endpoint, options())
 
     clock.stub()
   }})
@@ -50,13 +58,13 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
     }})
 
     it("asks Transport to select one of the given transports", function() { with(this) {
-      expect(Faye.Transport, "get").given(dispatcher, connectionTypes, []).yields([transport])
+      expect(Transport, "get").given(dispatcher, connectionTypes, []).yields([transport])
       dispatcher.selectTransport(connectionTypes)
     }})
 
     it("asks Transport not to select disabled transports", function() { with(this) {
       dispatcher.disable("websocket")
-      expect(Faye.Transport, "get").given(dispatcher, connectionTypes, ["websocket"]).yields([transport])
+      expect(Transport, "get").given(dispatcher, connectionTypes, ["websocket"]).yields([transport])
       dispatcher.selectTransport(connectionTypes)
     }})
 
@@ -67,8 +75,8 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
     }})
 
     it("closes the existing transport if a new one is selected", function() { with(this) {
-      var oldTransport = {endpoint: Faye.URI.parse(endpoint)}
-      stub(Faye.Transport, "get").given(dispatcher, ["long-polling"], []).yields([oldTransport])
+      var oldTransport = {endpoint: URI.parse(endpoint)}
+      stub(Transport, "get").given(dispatcher, ["long-polling"], []).yields([oldTransport])
       dispatcher.selectTransport(["long-polling"])
 
       expect(oldTransport, "close").exactly(1)
@@ -87,7 +95,7 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
     before(function() { with(this) {
       this.message    = {id: 1}
       this.request    = {}
-      this.reqPromise = Faye.Promise.fulfilled(request)
+      this.reqPromise = Promise.fulfilled(request)
 
       stub(transport, "close")
       stub(transport, "sendMessage").returns(reqPromise)
@@ -159,7 +167,7 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
       it("aborts the request used to send the message", function(resume) { with(this) {
         expect(request, "abort").exactly(1)
         dispatcher.handleError(message)
-        Faye.Promise.defer(resume)
+        Promise.defer(resume)
       }})
 
       it("does not resend a message with an ID it does not recognize", function() { with(this) {
@@ -230,7 +238,7 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
 
     describe("with a scheduler", function() { with(this) {
       define("options", function() {
-        return {scheduler: Scheduler}
+        return {scheduler: CustomScheduler}
       })
 
       before(function() { with(this) {
@@ -238,59 +246,59 @@ JS.ENV.DispatcherSpec = JS.Test.describe("Dispatcher", function() { with(this) {
       }})
 
       it("notifies the scheduler that the message failed", function() { with(this) {
-        expect(Scheduler.instance, "fail").exactly(1)
+        expect(CustomScheduler.instance, "fail").exactly(1)
         dispatcher.handleError(message)
       }})
 
       it("asks the scheduler how long to wait before retrying", function() { with(this) {
-        expect(Scheduler.instance, "getInterval").exactly(1).returning(1)
+        expect(CustomScheduler.instance, "getInterval").exactly(1).returning(1)
         dispatcher.handleError(message)
       }})
 
       it("resends a message after the interval given by the scheduler", function() { with(this) {
-        stub(Scheduler.instance, "getInterval").returns(3)
+        stub(CustomScheduler.instance, "getInterval").returns(3)
         dispatcher.handleError(message)
         expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
         clock.tick(3500)
       }})
 
       it("asks the scheduler what the message timeout should be", function() { with(this) {
-        expect(Scheduler.instance, "getTimeout").exactly(1).returning(25)
+        expect(CustomScheduler.instance, "getTimeout").exactly(1).returning(25)
         dispatcher.handleError(message, true)
       }})
 
       it("waits the specified amount of time to fail the message", function() { with(this) {
-        stub(Scheduler.instance, "getTimeout").returns(3)
+        stub(CustomScheduler.instance, "getTimeout").returns(3)
         dispatcher.handleError(message, true)
         expect(dispatcher, "handleError").given({id: 1}).exactly(1)
         clock.tick(3000)
       }})
 
       it("asks the scheduler whether the message is deliverable", function() { with(this) {
-        expect(Scheduler.instance, "isDeliverable").returning(true)
+        expect(CustomScheduler.instance, "isDeliverable").returning(true)
         dispatcher.handleError(message, true)
       }})
 
       it("resends the message if it's deliverable", function() { with(this) {
-        stub(Scheduler.instance, "isDeliverable").returns(true)
+        stub(CustomScheduler.instance, "isDeliverable").returns(true)
         expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
         dispatcher.handleError(message, true)
       }})
 
       it("does not resend the message if it's not deliverable", function() { with(this) {
-        stub(Scheduler.instance, "isDeliverable").returns(false)
+        stub(CustomScheduler.instance, "isDeliverable").returns(false)
         expect(transport, "sendMessage").exactly(0)
         dispatcher.handleError(message, true)
       }})
 
       it("notifies the scheduler that the message is being sent", function() { with(this) {
-        expect(Scheduler.instance, "send").exactly(1)
+        expect(CustomScheduler.instance, "send").exactly(1)
         dispatcher.handleError(message, true)
       }})
 
       it("notifies the scheduler to abort of it's not deliverable", function() { with(this) {
-        stub(Scheduler.instance, "isDeliverable").returns(false)
-        expect(Scheduler.instance, "abort").exactly(1)
+        stub(CustomScheduler.instance, "isDeliverable").returns(false)
+        expect(CustomScheduler.instance, "abort").exactly(1)
         dispatcher.handleError(message, true)
       }})
     }})

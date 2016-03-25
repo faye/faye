@@ -1,7 +1,7 @@
 *.gem
 build
 Gemfile.lock
-lib/*.js
-lib/*.map
+lib/client
 node_modules
-.wake.json
+spec/*_bundle.js
+spec/*.map

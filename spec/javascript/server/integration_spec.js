@@ -1,12 +1,18 @@
-var fs    = require('fs'),
-    http  = require('http'),
-    https = require('https'),
-    cert  = fs.readFileSync(__dirname + '/../../../examples/server.crt'),
-    key   = fs.readFileSync(__dirname + '/../../../examples/server.key')
+var fs    = require("fs"),
+    http  = require("http"),
+    https = require("https"),
+    cert  = fs.readFileSync(__dirname + "/../../../examples/server.crt"),
+    key   = fs.readFileSync(__dirname + "/../../../examples/server.key")
 
-JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
+var jstest = require("jstest").Test
+
+var NodeAdapter        = require("../../../javascript/adapters/node_adapter"),
+    Client             = require("../../../javascript/protocol/client"),
+    WebSocketTransport = require("../../../javascript/transport/web_socket")
+
+var IntegrationSteps = jstest.asyncSteps({
   server: function(ssl, callback) {
-    this._adapter = new Faye.NodeAdapter({mount: "/bayeux", timeout: 2})
+    this._adapter = new NodeAdapter({mount: "/bayeux", timeout: 2})
 
     this._adapter.addExtension({
       incoming: function(message, callback) {
@@ -44,7 +50,7 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
     var scheme          = this._secure ? "https" : "http"
     this._clients       = this._clients || {}
     this._inboxes       = this._inboxes || {}
-    this._clients[name] = new Faye.Client(scheme + "://localhost:" + this._port  + "/bayeux", {ca: cert})
+    this._clients[name] = new Client(scheme + "://localhost:" + this._port  + "/bayeux", {ca: cert})
     this._inboxes[name] = {}
 
     var n = channels.length
@@ -75,7 +81,7 @@ JS.ENV.IntegrationSteps = JS.Test.asyncSteps({
   }
 })
 
-JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function() { with(this) {
+jstest.describe("Server integration", function() { with(this) {
   include(IntegrationSteps)
 
   sharedExamplesFor("message bus", function() { with(this) {
@@ -112,7 +118,7 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
   sharedExamplesFor("network transports", function() { with(this) {
     describe("with HTTP transport", function() { with(this) {
       before(function() { with(this) {
-        stub(Faye.Transport.WebSocket, "isUsable").yields([false])
+        stub(WebSocketTransport, "isUsable").yields([false])
       }})
 
       itShouldBehaveLike("message bus")
@@ -120,7 +126,7 @@ JS.ENV.Server.IntegrationSpec = JS.Test.describe("Server integration", function(
 
     describe("with WebSocket transport", function() { with(this) {
       before(function() { with(this) {
-        stub(Faye.Transport.WebSocket, "isUsable").yields([true])
+        stub(WebSocketTransport, "isUsable").yields([true])
       }})
 
       itShouldBehaveLike("message bus")

@@ -1,4 +1,9 @@
-Faye.Extensible = {
+'use strict';
+
+var extend  = require('../util/extend'),
+    Logging = require('../mixins/logging');
+
+var Extensible = {
   addExtension: function(extension) {
     this._extensions = this._extensions || [];
     this._extensions.push(extension);
@@ -37,4 +42,6 @@ Faye.Extensible = {
   }
 };
 
-Faye.extend(Faye.Extensible, Faye.Logging);
+extend(Extensible, Logging);
+
+module.exports = Extensible;

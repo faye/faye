@@ -1,9 +1,11 @@
-Faye.Timeouts = {
+'use strict';
+
+module.exports = {
   addTimeout: function(name, delay, callback, context) {
     this._timeouts = this._timeouts || {};
     if (this._timeouts.hasOwnProperty(name)) return;
     var self = this;
-    this._timeouts[name] = Faye.ENV.setTimeout(function() {
+    this._timeouts[name] = global.setTimeout(function() {
       delete self._timeouts[name];
       callback.call(context);
     }, 1000 * delay);
@@ -13,7 +15,7 @@ Faye.Timeouts = {
     this._timeouts = this._timeouts || {};
     var timeout = this._timeouts[name];
     if (!timeout) return;
-    Faye.ENV.clearTimeout(timeout);
+    global.clearTimeout(timeout);
     delete this._timeouts[name];
   },
 
