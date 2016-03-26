@@ -96,19 +96,19 @@ extend(Channel, {
       return this._channels.hasOwnProperty(name);
     },
 
-    subscribe: function(names, callback, context) {
+    subscribe: function(names, subscription) {
       var name;
       for (var i = 0, n = names.length; i < n; i++) {
         name = names[i];
         var channel = this._channels[name] = this._channels[name] || new Channel(name);
-        if (callback) channel.bind('message', callback, context);
+        channel.bind('message', subscription);
       }
     },
 
-    unsubscribe: function(name, callback, context) {
+    unsubscribe: function(name, subscription) {
       var channel = this._channels[name];
       if (!channel) return false;
-      channel.unbind('message', callback, context);
+      channel.unbind('message', subscription);
 
       if (channel.isUnused()) {
         this.remove(name);
@@ -123,7 +123,7 @@ extend(Channel, {
 
       for (var i = 0, n = channels.length; i < n; i++) {
         var channel = this._channels[channels[i]];
-        if (channel) channel.trigger('message', message.data);
+        if (channel) channel.trigger('message', message);
       }
     }
   })

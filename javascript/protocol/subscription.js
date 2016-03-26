@@ -13,9 +13,24 @@ var Subscription = Class({
     this._cancelled = false;
   },
 
+  withChannel: function(callback, context) {
+    this._withChannel = [callback, context];
+    return this;
+  },
+
+  apply: function(context, args) {
+    var message = args[0];
+
+    if (this._callback)
+      this._callback.call(this._context, message.data);
+
+    if (this._withChannel)
+      this._withChannel[0].call(this._withChannel[1], message.channel, message.data);
+  },
+
   cancel: function() {
     if (this._cancelled) return;
-    this._client.unsubscribe(this._channels, this._callback, this._context);
+    this._client.unsubscribe(this._channels, this);
     this._cancelled = true;
   },
 
