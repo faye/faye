@@ -123,7 +123,7 @@ extend(Channel, {
 
       for (var i = 0, n = channels.length; i < n; i++) {
         var channel = this._channels[channels[i]];
-        if (channel) channel.trigger('message', message.data);
+        if (channel) channel.trigger('message', message.data, message);
       }
     }
   })
