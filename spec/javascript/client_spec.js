@@ -358,6 +358,16 @@ jstest.describe("Client", function() { with(this) {
           })
         }})
 
+        it("yields the channel when requested", function(resume) { with(this) {
+          var message
+          client.subscribe("/foo/*").withChannel(function(c, m) { message = [c, m] }).then(function() {
+            resume(function() {
+              client._receiveMessage({channel: "/foo/bar", data: "hi"})
+              assertEqual( ["/foo/bar", "hi"], message )
+            })
+          })
+        }})
+
         it("does not call the listener for non-matching channels", function() { with(this) {
           var message
           client.subscribe("/foo/*", function(m) { message = m })

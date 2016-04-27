@@ -354,6 +354,13 @@ describe Faye::Client do
           @message.should == "hi"
         end
 
+        it "yields the channel when requested" do
+          @message = nil
+          @client.subscribe("/foo/*").with_channel { |c, m| @message = [c, m] }
+          @client.__send__(:receive_message, "channel" => "/foo/bar", "data" => "hi")
+          @message.should == ["/foo/bar", "hi"]
+        end
+
         it "does not call the listener for non-matching channels" do
           @message = nil
           @client.subscribe("/foo/*") { |m| @message = m }
