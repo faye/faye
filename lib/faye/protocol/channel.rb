@@ -91,17 +91,17 @@ module Faye
         @channels.has_key?(name)
       end
 
-      def subscribe(names, callback)
+      def subscribe(names, subscription)
         names.each do |name|
           channel = @channels[name] ||= Channel.new(name)
-          channel.bind(:message, &callback) if callback
+          channel.bind(:message, &subscription)
         end
       end
 
-      def unsubscribe(name, callback)
+      def unsubscribe(name, subscription)
         channel = @channels[name]
         return false unless channel
-        channel.unbind(:message, &callback)
+        channel.unbind(:message, &subscription)
         if channel.unused?
           remove(name)
           true
@@ -114,7 +114,7 @@ module Faye
         channels = Channel.expand(message['channel'])
         channels.each do |name|
           channel = @channels[name]
-          channel.trigger(:message, message['data']) if channel
+          channel.trigger(:message, message) if channel
         end
       end
     end

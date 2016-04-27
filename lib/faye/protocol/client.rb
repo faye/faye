@@ -186,14 +186,14 @@ module Faye
       has_subscribe = @channels.has_subscription?(channel)
 
       if has_subscribe and not force
-        @channels.subscribe([channel], block)
+        @channels.subscribe([channel], subscription)
         subscription.set_deferred_status(:succeeded)
         return subscription
       end
 
       connect {
         info('Client ? attempting to subscribe to ?', @dispatcher.client_id, channel)
-        @channels.subscribe([channel], block) unless force
+        @channels.subscribe([channel], subscription) unless force
 
         send_message({
           'channel'      => Channel::SUBSCRIBE,
@@ -203,7 +203,7 @@ module Faye
         }, {}) do |response|
           unless response['successful']
             subscription.set_deferred_status(:failed, Error.parse(response['error']))
-            next @channels.unsubscribe(channel, block)
+            next @channels.unsubscribe(channel, subscription)
           end
 
           channels = [response['subscription']].flatten
@@ -224,12 +224,14 @@ module Faye
     #                                                     * ext
     #                                                     * id
     #                                                     * timestamp
-    def unsubscribe(channel, &block)
+    def unsubscribe(channel, subscription = nil, &block)
+      subscription ||= block
+
       if Array === channel
-        return channel.map { |c| unsubscribe(c, &block) }
+        return channel.map { |c| unsubscribe(c, subscription) }
       end
 
-      dead = @channels.unsubscribe(channel, block)
+      dead = @channels.unsubscribe(channel, subscription)
       return unless dead
 
       connect {
