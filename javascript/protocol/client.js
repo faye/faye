@@ -314,6 +314,35 @@ var Client = Class({ className: 'Client',
     return publication;
   },
 
+  // Request                              Response
+  // MUST include:  * channel             MUST include:  * channel
+  //                * data                               * successful
+  // MAY include:   * clientId            MAY include:   * id
+  //                * id                                 * error
+  //                * ext                                * ext
+  request: function(channel, data, options) {
+    Faye.validateOptions(options || {}, ['attempts', 'deadline']);
+    if (!Faye.Channel.isService(channel)) throw new Error('Request must be sent to a /service/** channel instead of: ' + channel);
+    var publication = new Faye.Publication();
+
+    this.connect(function() {
+      this.info('Client ? queueing request message to ?: ?', this._dispatcher.clientId, channel, data);
+
+      this._sendMessage({
+        channel:  channel,
+        data:     data,
+        clientId: this._dispatcher.clientId
+      }, options, function(response) {
+        if (response.successful)
+          publication.setDeferredStatus('succeeded', response);
+        else
+          publication.setDeferredStatus('failed', Faye.Error.parse(response.error));
+      }, this);
+    }, this);
+
+    return publication;
+  },
+
   _sendMessage: function(message, options, callback, context) {
     message.id = this._generateMessageId();
 
