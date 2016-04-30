@@ -62,6 +62,13 @@ describe Faye::RackAdapter do
           content_type.should == "text/plain; charset=utf-8"
         end
 
+        it "returns a 400 response if primitive JSON is given" do
+          server.should_not_receive(:process)
+          post "/bayeux", "message=1"
+          status.should == 400
+          content_type.should == "text/plain; charset=utf-8"
+        end
+
         it "returns a 404 if the path is not matched" do
           server.should_not_receive(:process)
           post "/blaf", 'message=%5B%5D'

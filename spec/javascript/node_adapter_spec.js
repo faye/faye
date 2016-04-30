@@ -165,6 +165,13 @@ jstest.describe("NodeAdapter", function() { with(this) {
           check_status(400)
           check_content_type("text/plain")
         }})
+
+        it("returns a 400 response if primitive JSON is given", function() { with(this) {
+          expect(server, "process").exactly(0)
+          post("/bayeux", "message=1")
+          check_status(400)
+          check_content_type("text/plain")
+        }})
       }})
 
       describe("with text/plain", function() { with(this) {

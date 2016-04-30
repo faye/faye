@@ -147,7 +147,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
     try {
       this.debug('Received message via HTTP ' + request.method + ': ?', params.message);
 
-      var message = JSON.parse(params.message),
+      var message = this._parseJSON(params.message),
           jsonp   = params.jsonp || constants.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
           type    = isGet ? contenttypes.TYPE_SCRIPT : contenttypes.TYPE_JSON,
@@ -197,7 +197,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
       try {
         self.debug('Received message via WebSocket[' + ws.version + ']: ?', event.data);
 
-        var message = JSON.parse(event.data),
+        var message = self._parseJSON(event.data),
             cid     = idFromMessages(message);
 
         if (clientId && cid && cid !== clientId) self._server.closeSocket(clientId, false);
@@ -265,6 +265,12 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
       }
       callback.call(context, buffer.toString('utf8'));
     });
+  },
+
+  _parseJSON: function(json) {
+    var data = JSON.parse(json);
+    if (typeof data === 'object') return data;
+    throw new SyntaxError('JSON messages must contain an object or array');
   },
 
   _formatRequest: function(request) {

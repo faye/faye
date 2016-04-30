@@ -110,7 +110,7 @@ module Faye
 
       debug("Received message via HTTP #{request.request_method}: ?", json_msg)
 
-      message  = MultiJson.load(json_msg)
+      message  = parse_json(json_msg)
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
       headers  = request.get? ? TYPE_SCRIPT.dup : TYPE_JSON.dup
       origin   = request.env['HTTP_ORIGIN']
@@ -196,7 +196,7 @@ module Faye
         begin
           debug("Received message via WebSocket[#{ws.version}]: ?", event.data)
 
-          message = MultiJson.load(event.data)
+          message = parse_json(event.data)
           cid     = Faye.client_id_from_messages(message)
 
           @server.close_socket(client_id, false) if client_id and cid and cid != client_id
@@ -243,6 +243,12 @@ module Faye
         'Access-Control-Max-Age'           => '86400'
       }
       [200, headers, []]
+    end
+
+    def parse_json(json)
+      data = MultiJson.load(json)
+      return data if Array === data or Hash === data
+      raise ArgumentError, 'JSON messages must contain an object or array'
     end
 
     def format_request(request)
