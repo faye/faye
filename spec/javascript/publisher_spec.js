@@ -1,7 +1,7 @@
 var jstest = require("jstest").Test
 
-var Publisher = require("../../javascript/mixins/publisher"),
-    extend_   = require("../../javascript/util/extend")
+var Publisher = require("../../src/mixins/publisher"),
+    extend_   = require("../../src/util/extend")
 
 jstest.describe("Publisher", function() { with(this) {
   before(function() { with(this) {

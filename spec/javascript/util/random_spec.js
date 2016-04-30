@@ -1,7 +1,7 @@
 var jstest = require("jstest").Test,
     Range  = require("jstest").Range
 
-var random = require("../../../javascript/util/random")
+var random = require("../../../src/util/random")
 
 jstest.describe("random", function() { with(this) {
   if (typeof document !== "undefined") return

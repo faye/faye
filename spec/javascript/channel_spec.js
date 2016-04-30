@@ -1,6 +1,6 @@
 var jstest = require("jstest").Test
 
-var Channel = require("../../javascript/protocol/channel")
+var Channel = require("../../src/protocol/channel")
 
 jstest.describe("Channel", function() { with(this) {
   describe("expand", function() { with(this) {

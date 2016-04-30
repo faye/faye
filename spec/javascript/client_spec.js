@@ -1,12 +1,12 @@
 var jstest = require("jstest").Test
 
-var Client       = require("../../javascript/protocol/client"),
-    Dispatcher   = require("../../javascript/protocol/dispatcher"),
-    Publisher    = require("../../javascript/mixins/publisher"),
-    Subscription = require("../../javascript/protocol/subscription"),
-    extend_      = require("../../javascript/util/extend"),
-    Promise      = require("../../javascript/util/promise"),
-    URI          = require("../../javascript/util/uri")
+var Client       = require("../../src/protocol/client"),
+    Dispatcher   = require("../../src/protocol/dispatcher"),
+    Publisher    = require("../../src/mixins/publisher"),
+    Subscription = require("../../src/protocol/subscription"),
+    extend_      = require("../../src/util/extend"),
+    Promise      = require("../../src/util/promise"),
+    URI          = require("../../src/util/uri")
 
 jstest.describe("Client", function() { with(this) {
   before(function() { with(this) {

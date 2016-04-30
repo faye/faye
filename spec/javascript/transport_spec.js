@@ -1,9 +1,9 @@
 var jstest = require("jstest").Test
 
-var Transport = require("../../javascript/transport"),
-    Class     = require("../../javascript/util/class"),
-    URI       = require("../../javascript/util/uri"),
-    array     = require("../../javascript/util/array")
+var Transport = require("../../src/transport"),
+    Class     = require("../../src/util/class"),
+    URI       = require("../../src/util/uri"),
+    array     = require("../../src/util/array")
 
 jstest.describe("Transport", function() { with(this) {
   before(function() { with(this) {

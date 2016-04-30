@@ -1,7 +1,7 @@
 var jstest = require("jstest").Test
 
-var Engine = require("../../../javascript/engines/proxy"),
-    Server = require("../../../javascript/protocol/server")
+var Engine = require("../../../src/engines/proxy"),
+    Server = require("../../../src/protocol/server")
 
 jstest.describe("Server subscribe", function() { with(this) {
   before(function() { with(this) {

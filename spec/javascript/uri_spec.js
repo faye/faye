@@ -1,6 +1,6 @@
 var jstest = require("jstest").Test
 
-var URI = require("../../javascript/util/uri")
+var URI = require("../../src/util/uri")
 
 jstest.describe("URI", function() { with(this) {
   describe("parse", function() { with(this) {

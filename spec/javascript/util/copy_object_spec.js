@@ -1,6 +1,6 @@
 var jstest = require("jstest").Test
 
-var copyObject = require("../../../javascript/util/copy_object")
+var copyObject = require("../../../src/util/copy_object")
 
 jstest.describe("copyObject", function() { with(this) {
   before(function() { with(this) {

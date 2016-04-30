@@ -1,6 +1,6 @@
 var jstest = require("jstest").Test
 
-var Grammar = require("../../javascript/protocol/grammar")
+var Grammar = require("../../src/protocol/grammar")
 
 jstest.describe("Grammar", function() { with(this) {
   describe("CHANNEL_NAME", function() { with(this) {

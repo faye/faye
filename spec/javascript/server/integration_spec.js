@@ -6,9 +6,9 @@ var fs    = require("fs"),
 
 var jstest = require("jstest").Test
 
-var NodeAdapter        = require("../../../javascript/adapters/node_adapter"),
-    Client             = require("../../../javascript/protocol/client"),
-    WebSocketTransport = require("../../../javascript/transport/web_socket")
+var NodeAdapter        = require("../../../src/adapters/node_adapter"),
+    Client             = require("../../../src/protocol/client"),
+    WebSocketTransport = require("../../../src/transport/web_socket")
 
 var IntegrationSteps = jstest.asyncSteps({
   server: function(ssl, callback) {

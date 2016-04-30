@@ -1,7 +1,7 @@
 PATH  := node_modules/.bin:$(PATH)
 SHELL := /bin/bash
 
-source_files   := $(shell find javascript -name '*.js')
+source_files   := $(shell find src -name '*.js')
 spec_files     := $(shell find spec -name '*_spec.js')
 webpack_config := webpack.config.js
 
@@ -13,7 +13,7 @@ client_dir     := build/client
 client_bundles := $(bundles:%=$(client_dir)/%)
 ruby_dir       := lib/client
 ruby_bundles   := $(bundles:%=$(ruby_dir)/%)
-top_files      := package.json lib CHANGELOG.md README.md
+top_files      := package.json src CHANGELOG.md README.md
 top_level      := $(top_files:%=build/%)
 
 .PHONY: all gem test clean
@@ -28,7 +28,7 @@ clean:
 
 $(client_dir)/$(name).js: $(webpack_config) $(source_files)
 	mkdir -p $(dir $@)
-	webpack javascript/faye_browser.js $@ \
+	webpack src/faye_browser.js $@ \
 	        --config $< \
 	        --display-modules \
 	        --output-library $(browser_global)
@@ -59,8 +59,8 @@ $(ruby_dir)/%: $(client_dir)/% $(ruby_dir)
 $(ruby_dir):
 	mkdir -p $@
 
-build/lib: $(source_files) build
-	rsync -a javascript/ $@/
+build/src: $(source_files) build
+	rsync -a src/ $@/
 
 build/%: % build
 	cp $< $@

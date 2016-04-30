@@ -1,9 +1,9 @@
 var jstest = require("jstest").Test,
     Set    = require("jstest").Set
 
-var Proxy   = require("../../javascript/engines/proxy"),
-    extend_ = require("../../javascript/util/extend"),
-    random  = require("../../javascript/util/random")
+var Proxy   = require("../../src/engines/proxy"),
+    extend_ = require("../../src/util/extend"),
+    random  = require("../../src/util/random")
 
 var EngineSteps = jstest.asyncSteps({
   disconnect_engine: function(resume) {

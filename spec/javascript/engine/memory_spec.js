@@ -1,6 +1,6 @@
 var jstest = require("jstest").Test
 
-var Memory = require("../../../javascript/engines/memory")
+var Memory = require("../../../src/engines/memory")
 
 require("../engine_spec")
 

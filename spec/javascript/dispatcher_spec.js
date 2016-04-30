@@ -1,10 +1,10 @@
 var jstest = require("jstest").Test
 
-var Dispatcher = require("../../javascript/protocol/dispatcher"),
-    Scheduler  = require("../../javascript/protocol/scheduler"),
-    Transport  = require("../../javascript/transport"),
-    Promise    = require("../../javascript/util/promise"),
-    URI        = require("../../javascript/util/uri")
+var Dispatcher = require("../../src/protocol/dispatcher"),
+    Scheduler  = require("../../src/protocol/scheduler"),
+    Transport  = require("../../src/transport"),
+    Promise    = require("../../src/util/promise"),
+    URI        = require("../../src/util/uri")
 
 var CustomScheduler = function() {
   Scheduler.apply(this, arguments)

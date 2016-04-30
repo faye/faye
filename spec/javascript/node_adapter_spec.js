@@ -2,9 +2,9 @@ var jstest      = require("jstest").Test,
     http        = require("http"),
     querystring = require("querystring")
 
-var NodeAdapter = require("../../javascript/adapters/node_adapter"),
-    Server      = require("../../javascript/protocol/server"),
-    extend_     = require("../../javascript/util/extend")
+var NodeAdapter = require("../../src/adapters/node_adapter"),
+    Server      = require("../../src/protocol/server"),
+    extend_     = require("../../src/util/extend")
 
 var NodeAdapterSteps = jstest.asyncSteps({
   start_server: function(port, resume) {
