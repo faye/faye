@@ -35,6 +35,10 @@ Promise.prototype.then = function(onFulfilled, onRejected) {
   return next;
 };
 
+Promise.prototype.catch = function(onRejected) {
+  return this.then(null, onRejected);
+};
+
 var registerOnFulfilled = function(promise, onFulfilled, next) {
   if (typeof onFulfilled !== 'function') onFulfilled = RETURN;
   var handler = function(value) { invoke(onFulfilled, value, next) };
