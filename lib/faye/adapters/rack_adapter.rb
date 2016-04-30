@@ -138,7 +138,6 @@ module Faye
           end
 
           headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
-          headers['Connection'] = 'close'
           debug('HTTP response: ?', response)
           send_response([200, headers, [response]], hijack, callback)
         end
