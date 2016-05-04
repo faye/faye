@@ -8,10 +8,13 @@ Faye.Transport.XHR = Faye.extend(Faye.Class(Faye.Transport, {
         xhr,
         self = this;
 
-    try {
+    // Prefer XMLHttpRequest over ActiveXObject if they both exist
+    if (Faye.ENV.XMLHttpRequest) {
       xhr = new XMLHttpRequest();
-    } catch (e) {
-      xhr = Faye.ENV.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest();
+    } else if (Faye.ENV.ActiveXObject) {
+      xhr = new ActiveXObject('Microsoft.XMLHTTP');
+    } else {
+      return self._handleError(messages);
     }
 
     xhr.open('POST', href, true);
