@@ -14,8 +14,17 @@ var XHR = extend(Class(Transport, {
 
   request: function(messages) {
     var href = this.endpoint.href,
-        xhr  = window.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest(),
-        self = this;
+        self = this,
+        xhr;
+
+    // Prefer XMLHttpRequest over ActiveXObject if they both exist
+    if (window.XMLHttpRequest) {
+      xhr = new XMLHttpRequest();
+    } else if (window.ActiveXObject) {
+      xhr = new ActiveXObject('Microsoft.XMLHTTP');
+    } else {
+      return this._handleError(messages);
+    }
 
     xhr.open('POST', href, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
