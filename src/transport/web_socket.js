@@ -29,15 +29,17 @@ var WebSocket = extend(Class(Transport, {
     this._pending = this._pending || new Set();
     for (var i = 0, n = messages.length; i < n; i++) this._pending.add(messages[i]);
 
-    var promise = new Promise();
+    var self = this;
 
-    this.callback(function(socket) {
-      if (!socket || socket.readyState !== 1) return;
-      socket.send(toJSON(messages));
-      Promise.fulfill(promise, socket);
-    }, this);
+    var promise = new Promise(function(resolve, reject) {
+      self.callback(function(socket) {
+        if (!socket || socket.readyState !== 1) return;
+        socket.send(toJSON(messages));
+        resolve(socket);
+      });
 
-    this.connect();
+      self.connect();
+    });
 
     return {
       abort: function() { promise.then(function(ws) { ws.close() }) }

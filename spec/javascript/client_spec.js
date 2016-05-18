@@ -4,6 +4,7 @@ var Client       = require("../../src/protocol/client"),
     Dispatcher   = require("../../src/protocol/dispatcher"),
     Publisher    = require("../../src/mixins/publisher"),
     Subscription = require("../../src/protocol/subscription"),
+    defer        = require("../../src/util/defer"),
     extend_      = require("../../src/util/extend"),
     Promise      = require("../../src/util/promise"),
     URI          = require("../../src/util/uri")
@@ -231,7 +232,7 @@ jstest.describe("Client", function() { with(this) {
           id:             instanceOf("string")
         }, 72, {})
         client.connect()
-        Promise.defer(resume)
+        defer(resume)
       }})
     }})
 

@@ -4,7 +4,8 @@ var Dispatcher = require("../../src/protocol/dispatcher"),
     Scheduler  = require("../../src/protocol/scheduler"),
     Transport  = require("../../src/transport"),
     Promise    = require("../../src/util/promise"),
-    URI        = require("../../src/util/uri")
+    URI        = require("../../src/util/uri"),
+    defer      = require("../../src/util/defer")
 
 var CustomScheduler = function() {
   Scheduler.apply(this, arguments)
@@ -95,7 +96,7 @@ jstest.describe("Dispatcher", function() { with(this) {
     before(function() { with(this) {
       this.message    = {id: 1}
       this.request    = {}
-      this.reqPromise = Promise.fulfilled(request)
+      this.reqPromise = Promise.resolve(request)
 
       stub(transport, "close")
       stub(transport, "sendMessage").returns(reqPromise)
@@ -167,7 +168,7 @@ jstest.describe("Dispatcher", function() { with(this) {
       it("aborts the request used to send the message", function(resume) { with(this) {
         expect(request, "abort").exactly(1)
         dispatcher.handleError(message)
-        Promise.defer(resume)
+        defer(resume)
       }})
 
       it("does not resend a message with an ID it does not recognize", function() { with(this) {

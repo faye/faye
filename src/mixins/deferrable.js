@@ -6,8 +6,8 @@ module.exports = {
   then: function(callback, errback) {
     var self = this;
     if (!this._promise)
-      this._promise = new Promise(function(fulfill, reject) {
-        self._fulfill = fulfill;
+      this._promise = new Promise(function(resolve, reject) {
+        self._resolve = resolve;
         self._reject  = reject;
       });
 
@@ -39,7 +39,7 @@ module.exports = {
     this.then();
 
     if (status === 'succeeded')
-      this._fulfill(value);
+      this._resolve(value);
     else if (status === 'failed')
       this._reject(value);
     else

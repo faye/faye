@@ -25,7 +25,7 @@
                       }
 
 , "scripts"         : { "test"    : "find spec -name '*_spec.js' | xargs jstest"
-                      , "promise" : "promises-aplus-tests javascript/util/promise.js"
+                      , "promise" : "promises-aplus-tests src/util/promise.js"
                       }
 
 , "repository"      : { "type"  : "git"

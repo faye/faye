@@ -1,13 +1,6 @@
 'use strict';
 
-var timeout = setTimeout, defer;
-
-if (typeof process === 'object' && process.nextTick)
-  defer = function(fn) { process.nextTick(fn) };
-else if (typeof setImmediate === 'function')
-  defer = function(fn) { setImmediate(fn) };
-else
-  defer = function(fn) { timeout(fn, 0) };
+var defer = require('./defer');
 
 var PENDING   = 0,
     FULFILLED = 1,
@@ -81,7 +74,7 @@ var _invoke = function(fn, value, next) {
   }
 };
 
-var fulfill = Promise.fulfill = Promise.resolve = function(promise, value) {
+var fulfill = function(promise, value) {
   var called = false, type, then;
 
   try {
@@ -114,7 +107,7 @@ var _fulfill = function(promise, value) {
   while (fn = onFulfilled.shift()) fn(value);
 };
 
-var reject = Promise.reject = function(promise, reason) {
+var reject = function(promise, reason) {
   if (promise._state !== PENDING) return;
 
   promise._state       = REJECTED;
@@ -125,41 +118,44 @@ var reject = Promise.reject = function(promise, reason) {
   while (fn = onRejected.shift()) fn(reason);
 };
 
-Promise.all = function(promises) {
-  return new Promise(function(fulfill, reject) {
-    var list = [],
-         n   = promises.length,
-         i;
+Promise.resolve = Promise.accept = Promise.fulfill = function(value) {
+  return new Promise(function(resolve, reject) { resolve(value) });
+};
 
-    if (n === 0) return fulfill(list);
+Promise.reject = function(reason) {
+  return new Promise(function(resolve, reject) { reject(reason) });
+};
+
+Promise.all = function(promises) {
+  return new Promise(function(resolve, reject) {
+    var list = [], n = promises.length, i;
+
+    if (n === 0) return resolve(list);
 
     for (i = 0; i < n; i++) (function(promise, i) {
-      Promise.fulfilled(promise).then(function(value) {
+      Promise.resolve(promise).then(function(value) {
         list[i] = value;
-        if (--n === 0) fulfill(list);
+        if (--n === 0) resolve(list);
       }, reject);
     })(promises[i], i);
   });
 };
 
-Promise.defer = defer;
+Promise.race = function(promises) {
+  return new Promise(function(resolve, reject) {
+    for (var i = 0, n = promises.length; i < n; i++)
+      Promise.resolve(promises[i]).then(resolve, reject);
+  });
+};
 
 Promise.deferred = Promise.pending = function() {
   var tuple = {};
 
-  tuple.promise = new Promise(function(fulfill, reject) {
-    tuple.fulfill = tuple.resolve = fulfill;
+  tuple.promise = new Promise(function(resolve, reject) {
+    tuple.fulfill = tuple.resolve = resolve;
     tuple.reject  = reject;
   });
   return tuple;
-};
-
-Promise.fulfilled = Promise.resolved = function(value) {
-  return new Promise(function(fulfill, reject) { fulfill(value) });
-};
-
-Promise.rejected = function(reason) {
-  return new Promise(function(fulfill, reject) { reject(reason) });
 };
 
 module.exports = Promise;

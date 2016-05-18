@@ -40,7 +40,7 @@ var Transport = extend(Class({ className: 'Transport',
     this.debug('Client ? sending message to ?: ?',
                this._dispatcher.clientId, URI.stringify(this.endpoint), message);
 
-    if (!this.batching) return Promise.fulfilled(this.request([message]));
+    if (!this.batching) return Promise.resolve(this.request([message]));
 
     this._outbox.push(message);
     this._flushLargeBatch();
@@ -54,8 +54,16 @@ var Transport = extend(Class({ className: 'Transport',
     return this._publish(this.MAX_DELAY);
   },
 
+  _makePromise: function() {
+    var self = this;
+
+    this._promise = this._promise || new Promise(function(resolve) {
+      self._resolvePromise = resolve;
+    });
+  },
+
   _publish: function(delay) {
-    this._promise = this._promise || new Promise();
+    this._makePromise();
 
     this.addTimeout('publish', delay, function() {
       this._flush();
@@ -71,7 +79,7 @@ var Transport = extend(Class({ className: 'Transport',
     if (this._outbox.length > 1 && this._connectMessage)
       this._connectMessage.advice = {timeout: 0};
 
-    Promise.fulfill(this._promise, this.request(this._outbox));
+    this._resolvePromise(this.request(this._outbox));
 
     this._connectMessage = null;
     this._outbox = [];
@@ -82,7 +90,7 @@ var Transport = extend(Class({ className: 'Transport',
     if (string.length < this._dispatcher.maxRequestSize) return;
     var last = this._outbox.pop();
 
-    this._promise = this._promise || new Promise();
+    this._makePromise();
     this._flush();
 
     if (last) this._outbox.push(last);

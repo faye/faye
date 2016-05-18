@@ -1,6 +1,7 @@
 'use strict';
 
-var extend     = require('../util/extend'),
+var defer      = require('../util/defer'),
+    extend     = require('../util/extend'),
     random     = require('../util/random'),
     Class      = require('../util/class'),
     Promise    = require('../util/promise'),
@@ -28,7 +29,7 @@ var Proxy = extend(Class({ className: 'Engine.Proxy',
 
     this.bind('close', function(clientId) {
       var self = this;
-      Promise.defer(function() { self.flushConnection(clientId) });
+      defer(function() { self.flushConnection(clientId) });
     }, this);
 
     this.debug('Created new engine: ?', this._options);
