@@ -1,7 +1,7 @@
 'use strict';
 
-var Class           = require('../util/class'),
-    defer           = require('../util/defer'),
+var asap            = require('asap'),
+    Class           = require('../util/class'),
     Promise         = require('../util/promise'),
     URI             = require('../util/uri'),
     array           = require('../util/array'),
@@ -121,7 +121,7 @@ var Client = Class({ className: 'Client',
         this.info('Handshake successful: ?', this._dispatcher.clientId);
 
         this.subscribe(this._channels.getKeys(), true);
-        if (callback) defer(function() { callback.call(context) });
+        if (callback) asap(function() { callback.call(context) });
 
       } else {
         this.info('Handshake unsuccessful');

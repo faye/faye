@@ -10,7 +10,8 @@
 , "main"            : "src/faye_node"
 , "browser"         : "src/faye_browser"
 
-, "dependencies"    : { "csprng": "*"
+, "dependencies"    : { "asap": "*"
+                      , "csprng": "*"
                       , "faye-websocket": ">=0.9.1"
                       , "tough-cookie": "*"
                       , "tunnel-agent": "*"

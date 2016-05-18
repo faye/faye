@@ -1,6 +1,6 @@
 'use strict';
 
-var defer = require('./defer');
+var asap = require('asap');
 
 var PENDING   = 0,
     FULFILLED = 1,
@@ -55,7 +55,7 @@ var registerOnRejected = function(promise, onRejected, next) {
 };
 
 var invoke = function(fn, value, next) {
-  defer(function() { _invoke(fn, value, next) });
+  asap(function() { _invoke(fn, value, next) });
 };
 
 var _invoke = function(fn, value, next) {
