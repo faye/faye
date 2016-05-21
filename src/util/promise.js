@@ -97,6 +97,7 @@ var fulfill = function(promise, value) {
 };
 
 var _fulfill = function(promise, value) {
+  if (!promise) return;
   if (promise._state !== PENDING) return;
 
   promise._state      = FULFILLED;
@@ -108,6 +109,7 @@ var _fulfill = function(promise, value) {
 };
 
 var reject = function(promise, reason) {
+  if (!promise) return;
   if (promise._state !== PENDING) return;
 
   promise._state       = REJECTED;
