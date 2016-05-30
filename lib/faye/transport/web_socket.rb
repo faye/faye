@@ -68,8 +68,16 @@ module Faye
       url.scheme = PROTOCOLS[url.scheme]
       headers['Cookie'] = cookie unless cookie == ''
 
-      options = {:extensions => extensions, :headers => headers, :proxy => @proxy}
-      socket  = Faye::WebSocket::Client.new(url.to_s, [], options)
+      options = {
+        :extensions => extensions,
+        :headers => headers,
+        :proxy => @proxy,
+        :tls => {
+          :sni_hostname => url.hostname
+        }
+      }
+
+      socket = Faye::WebSocket::Client.new(url.to_s, [], options)
 
       socket.onopen = lambda do |*args|
         store_cookies(socket.headers['Set-Cookie'])
