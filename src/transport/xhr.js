@@ -72,7 +72,10 @@ var XHR = extend(Class(Transport, {
   }
 }), {
   isUsable: function(dispatcher, endpoint, callback, context) {
-    callback.call(context, URI.isSameOrigin(endpoint));
+    var usable = (navigator.product === 'ReactNative')
+              || URI.isSameOrigin(endpoint);
+
+    callback.call(context, usable);
   }
 });
 
