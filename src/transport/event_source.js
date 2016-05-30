@@ -36,11 +36,13 @@ var EventSource = extend(Class(Transport, {
     };
 
     socket.onmessage = function(event) {
-      try {
-        self._receive(JSON.parse(event.data));
-      } catch (error) {
+      var replies;
+      try { replies = JSON.parse(event.data) } catch (error) {}
+
+      if (replies)
+        self._receive(replies);
+      else
         self._handleError([]);
-      }
     };
 
     this._socket = socket;

@@ -103,17 +103,15 @@ var NodeHttp = extend(Class(Transport, {
   },
 
   _handleResponse: function(messages, response) {
-    var replies = null,
-        body    = '',
-        self    = this;
+    var body = '',
+        self = this;
 
     response.setEncoding('utf8');
     response.on('data', function(chunk) { body += chunk });
 
     response.on('end', function() {
-      try {
-        replies = JSON.parse(body);
-      } catch (error) {}
+      var replies;
+      try { replies = JSON.parse(body) } catch (error) {}
 
       if (replies)
         self._receive(replies);

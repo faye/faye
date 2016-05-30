@@ -112,7 +112,7 @@ module Faye
       end
 
       socket.onmessage = lambda do |event|
-        replies = MultiJson.load(event.data)
+        replies = MultiJson.load(event.data) rescue nil
         next if replies.nil?
         replies = [replies].flatten
 

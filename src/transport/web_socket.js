@@ -91,7 +91,9 @@ var WebSocket = extend(Class(Transport, {
     };
 
     socket.onmessage = function(event) {
-      var replies = JSON.parse(event.data);
+      var replies;
+      try { replies = JSON.parse(event.data) } catch (error) {}
+
       if (!replies) return;
 
       replies = [].concat(replies);
