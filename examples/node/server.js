@@ -4,7 +4,7 @@ var fs      = require('fs'),
     https   = require('https'),
     mime    = require('mime'),
     deflate = require('permessage-deflate'),
-    faye    = require('../../build');
+    faye    = require('../..');
 
 var SHARED_DIR = __dirname + '/..',
     PUBLIC_DIR = SHARED_DIR + '/public',

@@ -1,4 +1,4 @@
-var faye = require('../../build');
+var faye = require('../..');
 
 ENDPOINT = 'http://localhost:8000/bayeux';
 console.log('Connecting to ' + ENDPOINT);
