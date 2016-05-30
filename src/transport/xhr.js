@@ -18,9 +18,9 @@ var XHR = extend(Class(Transport, {
         xhr;
 
     // Prefer XMLHttpRequest over ActiveXObject if they both exist
-    if (window.XMLHttpRequest) {
+    if (global.XMLHttpRequest) {
       xhr = new XMLHttpRequest();
-    } else if (window.ActiveXObject) {
+    } else if (global.ActiveXObject) {
       xhr = new ActiveXObject('Microsoft.XMLHTTP');
     } else {
       return this._handleError(messages);
@@ -38,8 +38,8 @@ var XHR = extend(Class(Transport, {
     }
 
     var abort = function() { xhr.abort() };
-    if (window.onbeforeunload !== undefined)
-      browser.Event.on(window, 'beforeunload', abort);
+    if (global.onbeforeunload !== undefined)
+      browser.Event.on(global, 'beforeunload', abort);
 
     xhr.onreadystatechange = function() {
       if (!xhr || xhr.readyState !== 4) return;
@@ -49,8 +49,8 @@ var XHR = extend(Class(Transport, {
           text       = xhr.responseText,
           successful = (status >= 200 && status < 300) || status === 304 || status === 1223;
 
-      if (window.onbeforeunload !== undefined)
-        browser.Event.detach(window, 'beforeunload', abort);
+      if (global.onbeforeunload !== undefined)
+        browser.Event.detach(global, 'beforeunload', abort);
 
       xhr.onreadystatechange = function() {};
       xhr = null;

@@ -26,13 +26,13 @@ var JSONP = extend(Class(Transport, {
     endpoint.query.jsonp   = callbackName;
 
     var cleanup = function() {
-      if (!window[callbackName]) return false;
-      window[callbackName] = undefined;
-      try { delete window[callbackName] } catch (error) {}
+      if (!global[callbackName]) return false;
+      global[callbackName] = undefined;
+      try { delete global[callbackName] } catch (error) {}
       script.parentNode.removeChild(script);
     };
 
-    window[callbackName] = function(replies) {
+    global[callbackName] = function(replies) {
       cleanup();
       self._receive(replies);
     };

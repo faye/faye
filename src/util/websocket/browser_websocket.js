@@ -1,6 +1,6 @@
 'use strict';
 
-var WS = window.MozWebSocket || window.WebSocket;
+var WS = global.MozWebSocket || global.WebSocket;
 
 module.exports = {
   create: function(url, protocols, options) {

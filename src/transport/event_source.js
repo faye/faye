@@ -11,7 +11,7 @@ var Class      = require('../util/class'),
 var EventSource = extend(Class(Transport, {
   initialize: function(dispatcher, endpoint) {
     Transport.prototype.initialize.call(this, dispatcher, endpoint);
-    if (!window.EventSource) return this.setDeferredStatus('failed');
+    if (!global.EventSource) return this.setDeferredStatus('failed');
 
     this._xhr = new XHR(dispatcher, endpoint);
 

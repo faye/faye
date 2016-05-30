@@ -13,7 +13,7 @@ var CORS = extend(Class(Transport, {
   },
 
   request: function(messages) {
-    var xhrClass = window.XDomainRequest ? XDomainRequest : XMLHttpRequest,
+    var xhrClass = global.XDomainRequest ? XDomainRequest : XMLHttpRequest,
         xhr      = new xhrClass(),
         id       = ++CORS._id,
         headers  = this._dispatcher.headers,
@@ -56,7 +56,7 @@ var CORS = extend(Class(Transport, {
 
     xhr.onprogress = function() {};
 
-    if (xhrClass === window.XDomainRequest)
+    if (xhrClass === global.XDomainRequest)
       CORS._pending.add({id: id, xhr: xhr});
 
     xhr.send(this.encode(messages));
@@ -70,10 +70,10 @@ var CORS = extend(Class(Transport, {
     if (URI.isSameOrigin(endpoint))
       return callback.call(context, false);
 
-    if (window.XDomainRequest)
+    if (global.XDomainRequest)
       return callback.call(context, endpoint.protocol === location.protocol);
 
-    if (window.XMLHttpRequest) {
+    if (global.XMLHttpRequest) {
       var xhr = new XMLHttpRequest();
       return callback.call(context, xhr.withCredentials !== undefined);
     }
