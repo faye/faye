@@ -26,7 +26,7 @@ clean:
 
 $(client_dir)/$(name).js: $(webpack_config) $(source_files)
 	mkdir -p $(dir $@)
-	webpack src/faye_browser.js $@ \
+	webpack . $@ \
 	        --config $< \
 	        --display-modules \
 	        --output-library $(browser_global)
@@ -34,12 +34,13 @@ $(client_dir)/$(name).js: $(webpack_config) $(source_files)
 $(client_dir)/$(name).js.map: $(client_dir)/$(name).js
 
 $(client_dir)/$(name)-min.js: $(client_dir)/$(name).js $(client_dir)/$(name).js.map
-	uglifyjs $< --in-source-map $(word 2,$^) \
-	            --compress \
-	            --mangle \
-	            --output $@ \
-	            --source-map $@.map \
-	            --source-map-url $(notdir $@.map)
+	uglifyjs $< \
+	         --in-source-map $(word 2,$^) \
+	         --compress \
+	         --mangle \
+	         --output $@ \
+	         --source-map $@.map \
+	         --source-map-url $(notdir $@.map)
 
 $(client_dir)/$(name)-min.js.map: $(client_dir)/$(name)-min.js
 
