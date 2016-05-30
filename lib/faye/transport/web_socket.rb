@@ -70,11 +70,9 @@ module Faye
 
       options = {
         :extensions => extensions,
-        :headers => headers,
-        :proxy => @proxy,
-        :tls => {
-          :sni_hostname => url.hostname
-        }
+        :headers    => headers,
+        :proxy      => @proxy,
+        :tls        => {:sni_hostname => url.hostname}
       }
 
       socket = Faye::WebSocket::Client.new(url.to_s, [], options)

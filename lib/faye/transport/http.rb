@@ -50,9 +50,7 @@ module Faye
       version = EventMachine::HttpRequest::VERSION.split('.')[0].to_i
       options = {
         :inactivity_timeout => 0,
-        :tls => {
-          :sni_hostname => @endpoint.hostname
-        }
+        :tls => {:sni_hostname => @endpoint.hostname}
       }
 
       if @proxy[:origin]
