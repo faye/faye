@@ -11,20 +11,18 @@ bundles        := $(name).js $(name).js.map $(name)-min.js $(name)-min.js.map
 
 client_dir     := build/client
 client_bundles := $(bundles:%=$(client_dir)/%)
-ruby_dir       := lib/client
-ruby_bundles   := $(bundles:%=$(ruby_dir)/%)
 top_files      := package.json src CHANGELOG.md README.md
 top_level      := $(top_files:%=build/%)
 
 .PHONY: all gem test clean
 
-all: $(client_bundles) $(ruby_bundles) $(top_level)
+all: $(client_bundles) $(top_level)
 
 gem: all
 	gem build faye.gemspec
 
 clean:
-	rm -rf build $(ruby_dir) *.gem spec/*_bundle.js spec/*.map
+	rm -rf build *.gem spec/*_bundle.js spec/*.map
 
 $(client_dir)/$(name).js: $(webpack_config) $(source_files)
 	mkdir -p $(dir $@)
@@ -52,12 +50,6 @@ spec/browser_bundle.js: $(webpack_config) $(source_files) $(spec_files)
 	        --config $< \
 	        --display-modules \
 	        --watch
-
-$(ruby_dir)/%: $(client_dir)/% $(ruby_dir)
-	cp $< $@
-
-$(ruby_dir):
-	mkdir -p $@
 
 build/src: $(source_files) build
 	rsync -a src/ $@/
