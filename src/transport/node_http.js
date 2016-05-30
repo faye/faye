@@ -113,7 +113,7 @@ var NodeHttp = extend(Class(Transport, {
     response.on('end', function() {
       try {
         replies = JSON.parse(body);
-      } catch (e) {}
+      } catch (error) {}
 
       if (replies)
         self._receive(replies);

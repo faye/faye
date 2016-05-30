@@ -22,7 +22,7 @@ var Logging = {
         message = args.shift().replace(/\?/g, function() {
           try {
             return toJSON(args.shift());
-          } catch (e) {
+          } catch (error) {
             return '[Object]';
           }
         });

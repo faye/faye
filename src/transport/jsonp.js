@@ -28,7 +28,7 @@ var JSONP = extend(Class(Transport, {
     var cleanup = function() {
       if (!window[callbackName]) return false;
       window[callbackName] = undefined;
-      try { delete window[callbackName] } catch (e) {}
+      try { delete window[callbackName] } catch (error) {}
       script.parentNode.removeChild(script);
     };
 

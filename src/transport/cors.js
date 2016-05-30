@@ -41,7 +41,7 @@ var CORS = extend(Class(Transport, {
       var replies = null;
       try {
         replies = JSON.parse(xhr.responseText);
-      } catch (e) {}
+      } catch (error) {}
 
       cleanUp();
 

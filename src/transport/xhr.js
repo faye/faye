@@ -59,7 +59,7 @@ var XHR = extend(Class(Transport, {
 
       try {
         replies = JSON.parse(text);
-      } catch (e) {}
+      } catch (error) {}
 
       if (replies)
         self._receive(replies);

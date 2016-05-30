@@ -206,7 +206,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
         self._server.process(message, request, function(replies) {
           if (ws) ws.send(toJSON(replies));
         });
-      } catch (e) {
+      } catch (error) {
         console.log(e.stack);
         self.error(e.message + '\nBacktrace:\n' + e.stack);
       }

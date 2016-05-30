@@ -39,7 +39,7 @@ var StaticServer = Class({
       cache.content = cache.content || fs.readFileSync(fullpath);
       cache.digest  = cache.digest  || crypto.createHash('sha1').update(cache.content).digest('hex');
       cache.mtime   = cache.mtime   || fs.statSync(fullpath).mtime;
-    } catch (e) {
+    } catch (error) {
       response.writeHead(404, {});
       return response.end();
     }
