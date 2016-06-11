@@ -43,3 +43,12 @@
     <pre>subscription.then(function() {
       alert('Subscription is now active!');
     });</pre>
+
+    If you're subscribing to a wildcard channel, you may want to receive the
+    specific channel the message was published to in your subscriber function.
+    You can do this using the `withChannel()` method:
+
+    <pre>client.subscribe('/foo/*').withChannel(function(channel, message) {
+      // handle message
+    });</pre>
+
