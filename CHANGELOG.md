@@ -1,3 +1,18 @@
+### 1.2.0 / 2016-06-{TODO}
+
+* Add `client.subscribe().withChannel()` to yield the message channel for wildcard subscriptions
+* Restructure the JavaScript codebase around Node modules (require/exports) rather than globals
+* Update the Promise shim to reflect the standard API, including `catch()` and `all()`
+* Support connecting to servers that use SNI in the Ruby client
+* Make the JavaScript client work inside React Native and Web Workers
+* Remove JSON2; you should import a JSON shim yourself if necessary
+* Handle errors that occur when a message is partially delivered via EventSource
+* Reject requests with invalid (non-array or -object) top-level JSON values
+* Remove `Connection: Close` from HTTP responses to allow use of keep-alive
+* Use `XMLHttpRequest` in preference to the ActiveX API in IE10
+* Fix bug where flushing large message batches puts promises in an invalid state
+
+
 ### 1.1.2 / 2015-07-19
 
 * Allow the `Authorization` header to be used on CORS requests
