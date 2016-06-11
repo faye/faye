@@ -46,7 +46,7 @@ module Faye
       promise = Request.new
 
       callback do |socket|
-        next unless socket
+        next unless socket and socket.ready_state == 1
         socket.send(Faye.to_json(messages))
         promise.succeed(socket)
       end
@@ -131,7 +131,7 @@ module Faye
   private
 
     def ping
-      return unless @socket
+      return unless @socket and @socket.ready_state == 1
       @socket.send('[]')
       add_timeout(:ping, @dispatcher.timeout / 2) { ping }
     end
