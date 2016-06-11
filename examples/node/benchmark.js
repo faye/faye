@@ -1,4 +1,4 @@
-var faye = require('../..'),
+var faye = require('../../build'),
 
     port   = process.argv[2] || 8000,
     path   = process.argv[3] || 'bayeux',

@@ -1,4 +1,4 @@
-var faye = require('../..');
+var faye = require('../../build');
 
 var endpoint = process.argv[2] || 'http://localhost:8000/bayeux',
     client   = new faye.Client(endpoint),
