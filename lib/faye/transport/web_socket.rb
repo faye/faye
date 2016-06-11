@@ -97,15 +97,13 @@ module Faye
         @socket = nil
         @state = UNCONNECTED
         remove_timeout(:ping)
-        set_deferred_status(:unknown)
 
         pending  = @pending ? @pending.to_a : []
         @pending = nil
 
-        if was_connected
-          handle_error(pending, true)
-        elsif @ever_connected
-          handle_error(pending)
+        if was_connected or @ever_connected
+          set_deferred_status(:unknown)
+          handle_error(pending, was_connected)
         else
           set_deferred_status(:failed)
         end
