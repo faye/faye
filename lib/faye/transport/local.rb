@@ -10,8 +10,10 @@ module Faye
     end
 
     def request(messages)
-      @endpoint.process(messages, nil) do |replies|
-        receive(Faye.copy_object(replies))
+      EventMachine.next_tick do
+        @endpoint.process(messages, nil) do |replies|
+          receive(Faye.copy_object(replies))
+        end
       end
     end
   end

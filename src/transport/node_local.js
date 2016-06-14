@@ -1,6 +1,7 @@
 'use strict';
 
-var Class      = require('../util/class'),
+var asap       = require('asap'),
+    Class      = require('../util/class'),
     URI        = require('../util/uri'),
     copyObject = require('../util/copy_object'),
     extend     = require('../util/extend'),
@@ -12,9 +13,13 @@ var NodeLocal = extend(Class(Transport, {
 
   request: function(messages) {
     messages = copyObject(messages);
-    this.endpoint.process(messages, null, function(replies) {
-      this._receive(copyObject(replies));
-    }, this);
+    var self = this;
+
+    asap(function() {
+      self.endpoint.process(messages, null, function(replies) {
+        self._receive(copyObject(replies));
+      });
+    });
   }
 }), {
   isUsable: function(client, endpoint, callback, context) {
