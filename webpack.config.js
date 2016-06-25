@@ -5,7 +5,7 @@ module.exports = {
 
   module: {
     loaders: [
-      {test: /\.js$/, loader: 'imports?define=>false'}
+      {test: /\/spec\/.*\.js$/, loader: 'imports?define=>false'}
     ],
 
     noParse: /jstest/
