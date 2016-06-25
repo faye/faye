@@ -57,7 +57,7 @@ var Transport = extend(Class({ className: 'Transport',
   _makePromise: function() {
     var self = this;
 
-    this._promise = this._promise || new Promise(function(resolve) {
+    this._requestPromise = this._requestPromise || new Promise(function(resolve) {
       self._resolvePromise = resolve;
     });
   },
@@ -67,10 +67,10 @@ var Transport = extend(Class({ className: 'Transport',
 
     this.addTimeout('publish', delay, function() {
       this._flush();
-      delete this._promise;
+      delete this._requestPromise;
     }, this);
 
-    return this._promise;
+    return this._requestPromise;
   },
 
   _flush: function() {
