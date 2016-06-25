@@ -16,8 +16,6 @@ var Proxy = extend(Class({ className: 'Engine.Proxy',
   INTERVAL:   0,
   TIMEOUT:    60,
 
-  className: 'Engine',
-
   initialize: function(options) {
     this._options     = options || {};
     this._connections = {};
