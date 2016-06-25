@@ -18,7 +18,7 @@ var EventSource = extend(Class(Transport, {
     endpoint = copyObject(endpoint);
     endpoint.pathname += '/' + dispatcher.clientId;
 
-    var socket = new EventSource(URI.stringify(endpoint)),
+    var socket = new global.EventSource(URI.stringify(endpoint)),
         self   = this;
 
     socket.onopen = function() {
