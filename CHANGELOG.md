@@ -1,4 +1,4 @@
-### 1.2.0 / 2016-06-{TODO}
+### 1.2.0 / 2016-06-26
 
 * Add `client.subscribe().withChannel()` to yield the message channel for wildcard subscriptions
 * Restructure the JavaScript codebase around Node modules (require/exports) rather than globals
@@ -8,6 +8,7 @@
 * Remove JSON2; you should import a JSON shim yourself if necessary
 * Handle errors that occur when a message is partially delivered via EventSource
 * Reject requests with invalid (non-array or -object) top-level JSON values
+* Make local client requests asynchronous to avoid re-entrant request handling errors
 * Remove `Connection: Close` from HTTP responses to allow use of keep-alive
 * Use `XMLHttpRequest` in preference to the ActiveX API in IE10
 * Fix bug where flushing large message batches puts promises in an invalid state

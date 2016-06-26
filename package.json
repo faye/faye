@@ -1,11 +1,11 @@
 { "name"            : "faye"
 , "description"     : "Simple pub/sub messaging for the web"
-, "homepage"        : "http://faye.jcoglan.com"
+, "homepage"        : "https://faye.jcoglan.com"
 , "author"          : "James Coglan <jcoglan@gmail.com> (http://jcoglan.com/)"
 , "keywords"        : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
 , "license"         : "MIT"
 
-, "version"         : "1.1.2"
+, "version"         : "1.2.0"
 , "engines"         : {"node": ">=0.6.0"}
 , "main"            : "src/faye_node"
 , "browser"         : "src/faye_browser"

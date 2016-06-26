@@ -2,7 +2,7 @@
   :textile
     h3. Download Faye
     
-    The latest version is 1.1.2, released July 19 2015. It is open-source
+    The latest version is 1.2.0, released July 26 2016. It is open-source
     software, released under the MIT license. You can follow development on
     Faye's "GitHub page":https://github.com/faye/faye.
 
@@ -14,29 +14,20 @@
 
     <pre>npm install faye</pre>
 
-    Alternatively you can grab the latest release package:
-    
-    "Download JavaScript version 1.1.2":/assets/faye.1-1-2.zip
+    If you're using "Browserify":http://browserify.org/,
+    "Webpack":https://webpack.github.io/ or a similar build tool, then
+    requiring @faye@ will get you the client-side package, for example:
 
-    The above package contains these files:
+    <pre>var faye = require('faye');
 
-    * @node/faye-node.js@
-    * @browser/faye-browser.js@
-    * @browser/faye-browser-min.js@
-    * @browser/faye-browser-min.js.map@
+    var client = new faye.Client('http://localhost:8000/faye');</pre>
 
-    To use Faye for Node.js, just put these two files together in a directory,
-    and load the server-side component using @require('./path/to/faye-node')@.
-    The @faye-browser-min.js@ file contains the web browser client, which your
-    Faye server will serve for you automatically.
-
-    The browser client can be used standalone with other Bayeux servers like
-    "CometD":http://cometd.org - just include @faye-browser-min.js@ in your web
-    page to use it.
+    If you're not using such a toolchain, you can get the client bundle from
+    the @client@ directory within the npm install.
 
     h4. Download for Ruby
 
-    For Ruby platforms, Faye is easily installable through RubyGems.
+    For Ruby platforms, Faye is installable through RubyGems.
 
     <pre>gem install faye</pre>
 
