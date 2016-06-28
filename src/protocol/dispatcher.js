@@ -1,13 +1,14 @@
 'use strict';
 
-var Class     = require('../util/class'),
-    URI       = require('../util/uri'),
-    cookies   = require('../util/cookies'),
-    extend    = require('../util/extend'),
-    Logging   = require('../mixins/logging'),
-    Publisher = require('../mixins/publisher'),
-    Transport = require('../transport'),
-    Scheduler = require('./scheduler');
+var Class      = require('../util/class'),
+    URI        = require('../util/uri'),
+    cookies    = require('../util/cookies'),
+    extend     = require('../util/extend'),
+    copyObject = require('../util/copy_object'),
+    Logging    = require('../mixins/logging'),
+    Publisher  = require('../mixins/publisher'),
+    Transport  = require('../transport'),
+    Scheduler  = require('./scheduler');
 
 var Dispatcher = Class({ className: 'Dispatcher',
   MAX_REQUEST_SIZE: 2048,
@@ -48,6 +49,9 @@ var Dispatcher = Class({ className: 'Dispatcher',
       this._alternates[type] = URI.parse(this._alternates[type]);
 
     this.maxRequestSize = this.MAX_REQUEST_SIZE;
+
+    this._selectTransportCallsActive = 0;
+    this._selectTransportCallbacks = [];
   },
 
   endpointFor: function(connectionType) {
@@ -77,6 +81,8 @@ var Dispatcher = Class({ className: 'Dispatcher',
   },
 
   selectTransport: function(transportTypes) {
+    this._selectTransportCallsActive++;
+
     Transport.get(this, transportTypes, this._disabled, function(transport) {
       this.debug('Selected ? transport for ?', transport.connectionType, URI.stringify(transport.endpoint));
 
@@ -85,10 +91,41 @@ var Dispatcher = Class({ className: 'Dispatcher',
 
       this._transport = transport;
       this.connectionType = transport.connectionType;
+
+      this._selectTransportCallsActive--;
+
+      // make a copy of the callbacks, in case the array is modified while we are invoking
+      var callbacks = copyObject(this._selectTransportCallbacks);
+      this._selectTransportCallbacks.splice(0, this._selectTransportCallbacks.length);
+
+      for(var i = 0; i < callbacks.length; i++) {
+        callbacks[i]();
+      }
     }, this);
   },
 
+  deselectTransport: function() {
+    if (this._transport) delete this['_transport'];
+  },
+
   sendMessage: function(message, timeout, options) {
+    if (this._transport) {
+      this._sendMessage(message, timeout, options);
+    } else if (this._selectTransportCallsActive > 0) {
+      this.debug('No transport selected, waiting');
+
+      var self = this;
+      this._selectTransportCallbacks.push(function() {
+        if ('connectionType' in message) {
+          // replace with the transport we ended up using
+          message['connectionType'] = self.connectionType;
+        }
+        self._sendMessage(message, timeout, options);
+      });
+    }
+  },
+
+  _sendMessage: function(message, timeout, options) {
     options = options || {};
 
     var id       = message.id,
