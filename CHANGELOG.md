@@ -1,3 +1,8 @@
+### 1.2.1 / 2016-06-29
+
+* Fix a missing variable error in `NodeAdapter`
+
+
 ### 1.2.0 / 2016-06-26
 
 * Add `client.subscribe().withChannel()` to yield the message channel for wildcard subscriptions
