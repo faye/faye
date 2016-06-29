@@ -207,8 +207,8 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
           if (ws) ws.send(toJSON(replies));
         });
       } catch (error) {
-        console.log(e.stack);
-        self.error(e.message + '\nBacktrace:\n' + e.stack);
+        console.log(error.stack);
+        self.error(error.message + '\nBacktrace:\n' + error.stack);
       }
     };
 
