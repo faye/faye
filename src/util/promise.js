@@ -17,7 +17,7 @@ var Promise = function(task) {
   if (typeof task !== 'function') return;
   var self = this;
 
-  task(function(value)  { fulfill(self, value) },
+  task(function(value)  { resolve(self, value) },
        function(reason) { reject(self, reason) });
 };
 
@@ -70,22 +70,22 @@ var _invoke = function(fn, value, next) {
   if (outcome === next) {
     reject(next, new TypeError('Recursive promise chain detected'));
   } else {
-    fulfill(next, outcome);
+    resolve(next, outcome);
   }
 };
 
-var fulfill = function(promise, value) {
+var resolve = function(promise, value) {
   var called = false, type, then;
 
   try {
     type = typeof value;
     then = value !== null && (type === 'function' || type === 'object') && value.then;
 
-    if (typeof then !== 'function') return _fulfill(promise, value);
+    if (typeof then !== 'function') return fulfill(promise, value);
 
     then.call(value, function(v) {
       if (!(called ^ (called = true))) return;
-      fulfill(promise, v);
+      resolve(promise, v);
     }, function(r) {
       if (!(called ^ (called = true))) return;
       reject(promise, r);
@@ -96,7 +96,7 @@ var fulfill = function(promise, value) {
   }
 };
 
-var _fulfill = function(promise, value) {
+var fulfill = function(promise, value) {
   if (promise._state !== PENDING) return;
 
   promise._state      = FULFILLED;
@@ -118,7 +118,7 @@ var reject = function(promise, reason) {
   while (fn = onRejected.shift()) fn(reason);
 };
 
-Promise.resolve = Promise.accept = Promise.fulfill = function(value) {
+Promise.resolve = function(value) {
   return new Promise(function(resolve, reject) { resolve(value) });
 };
 
@@ -152,7 +152,7 @@ Promise.deferred = Promise.pending = function() {
   var tuple = {};
 
   tuple.promise = new Promise(function(resolve, reject) {
-    tuple.fulfill = tuple.resolve = resolve;
+    tuple.resolve = resolve;
     tuple.reject  = reject;
   });
   return tuple;
