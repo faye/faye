@@ -1,3 +1,8 @@
+### 1.2.2 / 2016-07-18
+
+* Mitigate the HTTPoxy vulnerability: https://httpoxy.org/
+
+
 ### 1.2.1 / 2016-06-29
 
 * Fix a missing variable error in `NodeAdapter`
