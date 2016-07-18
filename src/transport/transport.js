@@ -11,9 +11,8 @@ var Class    = require('../util/class'),
     Channel  = require('../protocol/channel');
 
 var Transport = extend(Class({ className: 'Transport',
-  DEFAULT_PORTS:    {'http:': 80, 'https:': 443, 'ws:': 80, 'wss:': 443},
-  SECURE_PROTOCOLS: ['https:', 'wss:'],
-  MAX_DELAY:        0,
+  DEFAULT_PORTS: {'http:': 80, 'https:': 443, 'ws:': 80, 'wss:': 443},
+  MAX_DELAY:     0,
 
   batching:  true,
 
@@ -23,11 +22,8 @@ var Transport = extend(Class({ className: 'Transport',
     this._outbox     = [];
     this._proxy      = extend({}, this._dispatcher.proxy);
 
-    if (!this._proxy.origin && typeof process !== 'undefined') {
-      this._proxy.origin = array.indexOf(this.SECURE_PROTOCOLS, this.endpoint.protocol) >= 0
-                         ? (process.env.HTTPS_PROXY || process.env.https_proxy)
-                         : (process.env.HTTP_PROXY  || process.env.http_proxy);
-    }
+    if (!this._proxy.origin)
+      this._proxy.origin = this._findProxy();
   },
 
   close: function() {},
@@ -140,6 +136,35 @@ var Transport = extend(Class({ className: 'Transport',
       cookie = Cookie.parse(setCookie[i]);
       cookies.setCookieSync(cookie, url);
     }
+  },
+
+  _findProxy: function() {
+    if (typeof process === 'undefined') return undefined;
+
+    var protocol = this.endpoint.protocol;
+    if (!protocol) return undefined;
+
+    var name   = protocol.replace(/:$/, '').toLowerCase() + '_proxy',
+        upcase = name.toUpperCase(),
+        env    = process.env,
+        keys, proxy;
+
+    if (name === 'http_proxy' && env.REQUEST_METHOD) {
+      keys = Object.keys(env).filter(function(k) { return /^http_proxy$/i.test(k) });
+      if (keys.length === 1) {
+        if (keys[0] === name && env[upcase] === undefined)
+          proxy = env[name];
+      } else if (keys.length > 1) {
+        proxy = env[name];
+      }
+      proxy = proxy || env['CGI_' + upcase];
+    } else {
+      proxy = env[name] || env[upcase];
+      if (proxy && !env[name])
+        console.warn('The environment variable ' + upcase +
+                     ' is discouraged. Use ' + name + '.');
+    }
+    return proxy;
   }
 
 }), {

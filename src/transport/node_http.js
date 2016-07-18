@@ -11,6 +11,8 @@ var Class     = require('../util/class'),
     Transport = require('./transport');
 
 var NodeHttp = extend(Class(Transport, {
+  SECURE_PROTOCOLS: ['https:', 'wss:'],
+
   initialize: function() {
     Transport.prototype.initialize.apply(this, arguments);
 

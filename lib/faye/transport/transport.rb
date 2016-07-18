@@ -5,8 +5,7 @@ module Faye
     include Publisher
     include Timeouts
 
-    DEFAULT_PORTS    = {'http' => 80, 'https' => 433, 'ws' => 80, 'wss' => 443}
-    SECURE_PROTOCOLS = ['https', 'wss']
+    DEFAULT_PORTS = {'http' => 80, 'https' => 433, 'ws' => 80, 'wss' => 443}
 
     attr_reader :endpoint
 
@@ -17,11 +16,9 @@ module Faye
       @outbox     = []
       @proxy      = @dispatcher.proxy.dup
 
-      scheme = @endpoint.respond_to?(:scheme) ? @endpoint.scheme : nil
-
-      @proxy[:origin] ||= SECURE_PROTOCOLS.include?(scheme) ?
-                          (ENV['HTTPS_PROXY'] || ENV['https_proxy']) :
-                          (ENV['HTTP_PROXY']  || ENV['http_proxy'])
+      @proxy[:origin] ||= @endpoint.respond_to?(:find_proxy) ?
+                          @endpoint.find_proxy :
+                          nil
     end
 
     def batching?
