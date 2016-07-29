@@ -37,7 +37,7 @@ when 'rainbows'
 when 'thin'
   EM.run {
     thin = Rack::Handler.get('thin')
-    thin.run(App, :Port => port) do |server|
+    thin.run(App, :Host => '0.0.0.0', :Port => port) do |server|
       if secure
         server.ssl_options = {
           :private_key_file => shared + '/server.key',
