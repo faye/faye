@@ -54,7 +54,7 @@ module Faye
       }
 
       if @proxy[:origin]
-        uri = URI.parse(@proxy[:origin])
+        uri = URI(@proxy[:origin])
         options[:proxy] = {:host => uri.host, :port => uri.port}
         if uri.user
           options[:proxy][:authorization] = [uri.user, uri.password]

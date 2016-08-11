@@ -22,7 +22,7 @@ module Faye
       super()
 
       @client     = client
-      @endpoint   = Faye.parse_url(endpoint)
+      @endpoint   = URI(endpoint)
       @alternates = options[:endpoints] || {}
 
       @cookies       = CookieJar::Jar.new
@@ -43,7 +43,7 @@ module Faye
       end
 
       @alternates.each do |type, url|
-        @alternates[type] = Faye.parse_url(url)
+        @alternates[type] = URI(url)
       end
 
       @max_request_size = MAX_REQUEST_SIZE

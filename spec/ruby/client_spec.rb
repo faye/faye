@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Faye::Client do
   let :dispatcher do
-    uri = Faye.parse_url("http://localhost/bayeux")
+    uri = URI("http://localhost/bayeux")
 
     dispatcher = double(:dispatcher,
                         :endpoint         => uri,

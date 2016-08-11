@@ -81,10 +81,6 @@ module Faye
     end
   end
 
-  def self.parse_url(url)
-    String === url ? URI.parse(url) : url
-  end
-
   def self.to_json(value)
     case value
       when Hash, Array then MultiJson.dump(value)
