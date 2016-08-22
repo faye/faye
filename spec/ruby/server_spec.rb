@@ -32,11 +32,11 @@ describe Faye::Server do
       server.process([{}, {"channel" => "invalid"}], false) { |r| response = r }
       response.should == [
         { "successful"  => false,
-          "error"       => "405::Invalid channel"
+          "error"       => "402:data:Missing required parameter"
         },
         { "channel"     => "invalid",
           "successful"  => false,
-          "error"       => "405:invalid:Invalid channel"
+          "error"       => "402:data:Missing required parameter"
         }
       ]
     end

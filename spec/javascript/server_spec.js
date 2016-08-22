@@ -34,11 +34,11 @@ jstest.describe("Server", function() { with(this) {
       server.process([{}, {channel: "invalid"}], false, function(r) { response = r})
       assertEqual([
         { successful: false,
-          error:      "405::Invalid channel"
+          error:      "402:data:Missing required parameter"
         },
         { channel:    "invalid",
           successful: false,
-          error:      "405:invalid:Invalid channel"
+          error:      "402:data:Missing required parameter"
         }
       ], response)
     }})

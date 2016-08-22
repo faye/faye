@@ -52,6 +52,29 @@ jstest.describe("Server publish", function() { with(this) {
       }})
     }})
 
+    describe("with no data", function() { with(this) {
+      before(function() { with(this) {
+        delete message.data
+      }})
+
+      it("does not tell the engine to publish the message", function() { with(this) {
+        expect(engine, "publish").exactly(0)
+        server.process(message, false, function() {})
+      }})
+
+      it("returns an unsuccessful response", function() { with(this) {
+        stub(engine, "publish")
+        server.process(message, false, function(response) {
+          assertEqual([
+            { channel:    "/some/channel",
+              successful: false,
+              error:      "402:data:Missing required parameter"
+            }
+          ], response)
+        })
+      }})
+    }})
+
     describe("with an error", function() { with(this) {
       before(function() { with(this) {
         message.error = "invalid"

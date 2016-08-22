@@ -47,6 +47,28 @@ describe "server publish" do
       end
     end
 
+    describe "with no data" do
+      before { message.delete("data") }
+
+      it "does not tell the engine to publish the message" do
+        engine.should_not_receive(:publish)
+        server.process(message, false) {}
+      end
+
+      it "returns an unsuccessful response" do
+        engine.stub(:publish)
+        server.process(message, false) do |response|
+          response.should == [
+            { "channel"     => "/some/channel",
+              "successful"  => false,
+              "error"       => "402:data:Missing required parameter"
+            }
+          ]
+        end
+      end
+    end
+
+
     describe "with an error" do
       before { message["error"] = "invalid" }
 

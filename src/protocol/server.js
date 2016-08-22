@@ -108,6 +108,9 @@ var Server = Class({ className: 'Server',
     if (!Grammar.CHANNEL_NAME.test(channelName))
       error = Error.channelInvalid(channelName);
 
+    if (message.data === undefined)
+      error = Error.parameterMissing('data');
+
     if (!error) this._engine.publish(message);
 
     response = this._makeResponse(message);

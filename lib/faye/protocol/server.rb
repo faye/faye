@@ -94,6 +94,10 @@ module Faye
         error = Faye::Error.channel_invalid(channel_name)
       end
 
+      if message['data'].nil?
+        error = Faye::Error.parameter_missing('data')
+      end
+
       @engine.publish(message) unless error
 
       response = make_response(message)
