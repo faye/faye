@@ -1,3 +1,9 @@
+### 1.2.3 / 2016-10-11
+
+* Return an error if the `data` field is missing on published messages
+* Fix errors that occur in the new `websocket` util when the browser does not support WebSocket
+
+
 ### 1.2.2 / 2016-07-18
 
 * Mitigate the HTTPoxy vulnerability: https://httpoxy.org/
