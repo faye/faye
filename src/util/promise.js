@@ -28,7 +28,7 @@ Promise.prototype.then = function(onFulfilled, onRejected) {
   return next;
 };
 
-Promise.prototype.catch = function(onRejected) {
+Promise.prototype['catch'] = function(onRejected) {
   return this.then(null, onRejected);
 };
 
