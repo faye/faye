@@ -22,7 +22,7 @@ module Faye
       super()
 
       @client     = client
-      @endpoint   = URI(endpoint)
+      @endpoint   = String === endpoint ? URI(endpoint) : endpoint
       @alternates = options[:endpoints] || {}
 
       @cookies       = CookieJar::Jar.new
