@@ -34,7 +34,7 @@ IntegrationSteps = RSpec::EM.async_steps do
   def client(name, channels, &callback)
     @clients       ||= {}
     @inboxes       ||= {}
-    @clients[name]   = Faye::Client.new("http://localhost:#{@port}/bayeux")
+    @clients[name]   = Faye::Client.new("http://0.0.0.0:#{@port}/bayeux")
     @inboxes[name]   = {}
 
     n = channels.size
