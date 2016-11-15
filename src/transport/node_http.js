@@ -10,7 +10,7 @@ var Class     = require('../util/class'),
     toJSON    = require('../util/to_json'),
     Transport = require('./transport');
 
-var NodeHttp = extend(Class(Transport, {
+var NodeHttp = extend(Class(Transport, { className: 'NodeHttp',
   SECURE_PROTOCOLS: ['https:', 'wss:'],
 
   initialize: function() {
@@ -63,6 +63,7 @@ var NodeHttp = extend(Class(Transport, {
     });
 
     request.on('error', function(error) {
+      self.error('HTTP error: ' + error.message);
       self._handleError(messages);
     });
 
