@@ -22,7 +22,7 @@ var NodeHttp = extend(Class(Transport, { className: 'NodeHttp',
     var proxy = this._proxy;
     if (!proxy.origin) return;
 
-    this._proxyUri    = url.parse(proxy.origin);
+    this._proxyUri    = URI.parse(proxy.origin);
     this._proxySecure = (this.SECURE_PROTOCOLS.indexOf(this._proxyUri.protocol) >= 0);
 
     if (!this._endpointSecure) {
