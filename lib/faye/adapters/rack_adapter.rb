@@ -69,7 +69,7 @@ module Faye
     end
 
     def get_client
-      @client ||= Client.new(@server)
+      @client ||= Client.new(@endpoint)
     end
 
     def call(env)
