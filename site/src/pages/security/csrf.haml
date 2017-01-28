@@ -51,14 +51,14 @@
     you add an error to make the server reject them. You delete @csrfToken@ from
     the message so that it's not forwarded to subscribers.
 
-    <pre>class CsrfProtection
+    <pre>class CsrfProtection < ActionController::Base
       def incoming(message, request, callback)
-        session_token = request.session['_csrf_token']
         message_token = message['ext'] && message['ext'].delete('csrfToken')
 
-        unless session_token == message_token
+        unless valid_authenticity_token?(request.session, message_token)
           message['error'] = '401::Access denied'
         end
+
         callback.call(message)
       end
     end</pre>
@@ -106,6 +106,7 @@
         unless session_token == message_token
           message['error'] = '401::Access denied'
         end
+
         callback.call(message)
       end
     end</pre>
@@ -132,7 +133,7 @@
     You'll need to generate and render the CSRF token in your templates for the
     client to pick up:
 
-    <pre><% token = request.session['csrf'] ||= SecureRandom.hex(20) %>
+    <pre><% token = request.session['csrf'] ||= SecureRandom.base64(32) %>
     <meta name="csrf-token" content="<%= token %>"></pre>
 
     And finally, configure the client to attach this token to outgoing messages.
