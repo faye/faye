@@ -2,123 +2,132 @@
 
 var asap = require('asap');
 
-var PENDING   = 0,
-    FULFILLED = 1,
-    REJECTED  = 2;
-
-var RETURN = function(x) { return x },
-    THROW  = function(x) { throw  x };
+var PENDING   = -1,
+    FULFILLED =  0,
+    REJECTED  =  1;
 
 var Promise = function(task) {
-  this._state       = PENDING;
-  this._onFulfilled = [];
-  this._onRejected  = [];
+  this._state = PENDING;
+  this._value = null;
+  this._defer = [];
 
-  if (typeof task !== 'function') return;
-  var self = this;
-
-  task(function(value)  { resolve(self, value) },
-       function(reason) { reject(self, reason) });
+  execute(this, task);
 };
 
 Promise.prototype.then = function(onFulfilled, onRejected) {
-  var next = new Promise();
-  registerOnFulfilled(this, onFulfilled, next);
-  registerOnRejected(this, onRejected, next);
-  return next;
+  var promise = new Promise();
+
+  var deferred = {
+    promise:     promise,
+    onFulfilled: onFulfilled,
+    onRejected:  onRejected
+  };
+
+  if (this._state === PENDING)
+    this._defer.push(deferred);
+  else
+    propagate(this, deferred);
+
+  return promise;
 };
 
 Promise.prototype['catch'] = function(onRejected) {
   return this.then(null, onRejected);
 };
 
-var registerOnFulfilled = function(promise, onFulfilled, next) {
-  if (typeof onFulfilled !== 'function') onFulfilled = RETURN;
-  var handler = function(value) { invoke(onFulfilled, value, next) };
+var execute = function(promise, task) {
+  if (typeof task !== 'function') return;
 
-  if (promise._state === PENDING) {
-    promise._onFulfilled.push(handler);
-  } else if (promise._state === FULFILLED) {
-    handler(promise._value);
-  }
-};
+  var calls = 0;
 
-var registerOnRejected = function(promise, onRejected, next) {
-  if (typeof onRejected !== 'function') onRejected = THROW;
-  var handler = function(reason) { invoke(onRejected, reason, next) };
+  var resolvePromise = function(value) {
+    if (calls++ === 0) resolve(promise, value);
+  };
 
-  if (promise._state === PENDING) {
-    promise._onRejected.push(handler);
-  } else if (promise._state === REJECTED) {
-    handler(promise._reason);
-  }
-};
-
-var invoke = function(fn, value, next) {
-  asap(function() { _invoke(fn, value, next) });
-};
-
-var _invoke = function(fn, value, next) {
-  var outcome;
+  var rejectPromise = function(reason) {
+    if (calls++ === 0) reject(promise, reason);
+  };
 
   try {
-    outcome = fn(value);
+    task(resolvePromise, rejectPromise);
   } catch (error) {
-    return reject(next, error);
+    rejectPromise(error);
   }
+};
 
-  if (outcome === next) {
-    reject(next, new TypeError('Recursive promise chain detected'));
-  } else {
-    resolve(next, outcome);
-  }
+var propagate = function(promise, deferred) {
+  var state   = promise._state,
+      value   = promise._value,
+      next    = deferred.promise,
+      handler = [deferred.onFulfilled, deferred.onRejected][state],
+      pass    = [resolve, reject][state];
+
+  if (typeof handler !== 'function')
+    return pass(next, value);
+
+  asap(function() {
+    try {
+      resolve(next, handler(value));
+    } catch (error) {
+      reject(next, error);
+    }
+  });
 };
 
 var resolve = function(promise, value) {
-  var called = false, type, then;
+  if (promise === value)
+    return reject(promise, new TypeError('Recursive promise chain detected'));
+
+  var then;
 
   try {
-    type = typeof value;
-    then = value !== null && (type === 'function' || type === 'object') && value.then;
-
-    if (typeof then !== 'function') return fulfill(promise, value);
-
-    then.call(value, function(v) {
-      if (!(called ^ (called = true))) return;
-      resolve(promise, v);
-    }, function(r) {
-      if (!(called ^ (called = true))) return;
-      reject(promise, r);
-    });
+    then = getThen(value);
   } catch (error) {
-    if (!(called ^ (called = true))) return;
-    reject(promise, error);
+    return reject(promise, error);
   }
+
+  if (!then) return fulfill(promise, value);
+
+  execute(promise, function(resolvePromise, rejectPromise) {
+    then.call(value, resolvePromise, rejectPromise);
+  });
+};
+
+var getThen = function(value) {
+  var type = typeof value,
+      then = (type === 'object' || type === 'function') && value && value.then;
+
+  return (typeof then === 'function')
+         ? then
+         : null;
 };
 
 var fulfill = function(promise, value) {
-  if (promise._state !== PENDING) return;
-
-  promise._state      = FULFILLED;
-  promise._value      = value;
-  promise._onRejected = [];
-
-  var onFulfilled = promise._onFulfilled, fn;
-  while (fn = onFulfilled.shift()) fn(value);
+  settle(promise, FULFILLED, value);
 };
 
 var reject = function(promise, reason) {
-  if (promise._state !== PENDING) return;
+  settle(promise, REJECTED, reason);
+};
 
-  promise._state       = REJECTED;
-  promise._reason      = reason;
-  promise._onFulfilled = [];
+var settle = function(promise, state, value) {
+  var defer = promise._defer, i = 0;
 
-  var onRejected = promise._onRejected, fn;
-  while (fn = onRejected.shift()) fn(reason);
+  promise._state = state;
+  promise._value = value;
+  promise._defer = null;
+
+  if (defer.length === 0) return;
+  while (i < defer.length) propagate(promise, defer[i++]);
 };
 
 Promise.resolve = function(value) {
+  try {
+    if (getThen(value)) return value;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
   return new Promise(function(resolve, reject) { resolve(value) });
 };
 
@@ -132,12 +141,14 @@ Promise.all = function(promises) {
 
     if (n === 0) return resolve(list);
 
-    for (i = 0; i < n; i++) (function(promise, i) {
+    var push = function(promise, i) {
       Promise.resolve(promise).then(function(value) {
         list[i] = value;
         if (--n === 0) resolve(list);
       }, reject);
-    })(promises[i], i);
+    };
+
+    for (i = 0; i < n; i++) push(promises[i], i);
   });
 };
 
@@ -148,7 +159,7 @@ Promise.race = function(promises) {
   });
 };
 
-Promise.deferred = Promise.pending = function() {
+Promise.deferred = function() {
   var tuple = {};
 
   tuple.promise = new Promise(function(resolve, reject) {
