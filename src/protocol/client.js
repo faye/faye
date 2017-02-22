@@ -38,7 +38,7 @@ var Client = Class({ className: 'Client',
     this.info('New client created for ?', endpoint);
     options = options || {};
 
-    validateOptions(options, ['interval', 'timeout', 'endpoints', 'proxy', 'retry', 'scheduler', 'websocketExtensions', 'tls', 'ca']);
+    validateOptions(options, ['interval', 'timeout', 'endpoints', 'proxy', 'retry', 'scheduler', 'websocketExtensions', 'tls', 'ca', 'transportMode']);
 
     this._channels   = new Channel.Set();
     this._dispatcher = Dispatcher.create(this, endpoint || this.DEFAULT_ENDPOINT, options);
@@ -47,6 +47,8 @@ var Client = Class({ className: 'Client',
     this._state     = this.UNCONNECTED;
 
     this._responseCallbacks = {};
+
+    this._deselectTransportAfterHandshake = (options.transportMode === 'fallback');
 
     this._advice = {
       reconnect: this.RETRY,
@@ -115,6 +117,8 @@ var Client = Class({ className: 'Client',
       if (response.successful) {
         this._state = this.CONNECTED;
         this._dispatcher.clientId  = response.clientId;
+
+        if (this._deselectTransportAfterHandshake) this._dispatcher.deselectTransport();
 
         this._dispatcher.selectTransport(response.supportedConnectionTypes);
 
