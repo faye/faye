@@ -44,6 +44,13 @@ module Faye
     end
 
     # Request
+    # MUST include: * channel string name
+    # Easly check if a client has already subscribed to a channel
+    def has_subscription?(name)
+      @channels.has_subscription?(name)
+    end
+
+    # Request
     # MUST include:  * channel
     #                * version
     #                * supportedConnectionTypes
