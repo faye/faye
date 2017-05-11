@@ -18,6 +18,8 @@ module.exports = function(parent, methods) {
 
   klass.prototype = new bridge();
   extend(klass.prototype, methods);
+  
+  klass.prototype.constructor = klass;
 
   return klass;
 };
