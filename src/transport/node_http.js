@@ -2,7 +2,8 @@
 
 var http   = require('http'),
     https  = require('https'),
-    tunnel = require('tunnel-agent');
+    tunnel = require('tunnel-agent'),
+    url    = require('url');
 
 var Class     = require('../util/class'),
     URI       = require('../util/uri'),
@@ -22,7 +23,7 @@ var NodeHttp = extend(Class(Transport, { className: 'NodeHttp',
     var proxy = this._proxy;
     if (!proxy.origin) return;
 
-    this._proxyUri    = URI.parse(proxy.origin);
+    this._proxyUri    = url.parse(proxy.origin);
     this._proxySecure = (this.SECURE_PROTOCOLS.indexOf(this._proxyUri.protocol) >= 0);
 
     if (!this._endpointSecure) {
