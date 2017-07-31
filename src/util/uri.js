@@ -36,7 +36,12 @@ module.exports = {
     uri.protocol = uri.protocol || location.protocol;
 
     if (uri.host) {
-      uri.host     = uri.host.substr(2);
+      uri.host = uri.host.substr(2);
+
+      if (/@/.test(uri.host)) {
+        uri.auth = uri.host.split('@')[0];
+        uri.host = uri.host.split('@')[1];
+      }
       parts        = uri.host.split(':');
       uri.hostname = parts[0];
       uri.port     = parts[1] || '';
@@ -65,9 +70,12 @@ module.exports = {
   },
 
   stringify: function(uri) {
-    var string = uri.protocol + '//' + uri.hostname;
+    var auth   = uri.auth ? uri.auth + '@' : '',
+        string = uri.protocol + '//' + auth + uri.hostname;
+
     if (uri.port) string += ':' + uri.port;
     string += uri.pathname + this.queryString(uri.query) + (uri.hash || '');
+
     return string;
   },
 
