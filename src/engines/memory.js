@@ -1,7 +1,7 @@
 'use strict';
 
 var copyObject = require('../util/copy_object'),
-    extend     = require('../util/extend'),
+    assign     = require('../util/assign'),
     Namespace  = require('../util/namespace'),
     Set        = require('../util/set'),
     Timeouts   = require('../mixins/timeouts');
@@ -132,6 +132,6 @@ Memory.prototype = {
   }
 };
 
-extend(Memory.prototype, Timeouts);
+assign(Memory.prototype, Timeouts);
 
 module.exports = Memory;

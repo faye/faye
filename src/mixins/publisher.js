@@ -1,6 +1,6 @@
 'use strict';
 
-var extend       = require('../util/extend'),
+var assign       = require('../util/assign'),
     EventEmitter = require('../util/event_emitter');
 
 var Publisher = {
@@ -31,7 +31,7 @@ var Publisher = {
   }
 };
 
-extend(Publisher, EventEmitter.prototype);
+assign(Publisher, EventEmitter.prototype);
 Publisher.trigger = Publisher.emit;
 
 module.exports = Publisher;

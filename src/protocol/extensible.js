@@ -1,6 +1,6 @@
 'use strict';
 
-var extend  = require('../util/extend'),
+var assign  = require('../util/assign'),
     Logging = require('../mixins/logging');
 
 var Extensible = {
@@ -42,6 +42,6 @@ var Extensible = {
   }
 };
 
-extend(Extensible, Logging);
+assign(Extensible, Logging);
 
 module.exports = Extensible;

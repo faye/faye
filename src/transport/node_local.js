@@ -4,11 +4,11 @@ var asap       = require('asap'),
     Class      = require('../util/class'),
     URI        = require('../util/uri'),
     copyObject = require('../util/copy_object'),
-    extend     = require('../util/extend'),
+    assign     = require('../util/assign'),
     Server     = require('../protocol/server'),
     Transport  = require('./transport');
 
-var NodeLocal = extend(Class(Transport, {
+var NodeLocal = assign(Class(Transport, {
   batching: false,
 
   request: function(messages) {

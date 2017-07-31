@@ -6,7 +6,7 @@ var asap            = require('asap'),
     array           = require('../util/array'),
     browser         = require('../util/browser'),
     constants       = require('../util/constants'),
-    extend          = require('../util/extend'),
+    assign          = require('../util/assign'),
     validateOptions = require('../util/validate_options'),
     Deferrable      = require('../mixins/deferrable'),
     Logging         = require('../mixins/logging'),
@@ -351,7 +351,7 @@ var Client = Class({ className: 'Client',
   },
 
   _handleAdvice: function(advice) {
-    extend(this._advice, advice);
+    assign(this._advice, advice);
     this._dispatcher.timeout = this._advice.timeout / 1000;
 
     if (this._advice.reconnect === this.HANDSHAKE && this._state !== this.DISCONNECTED) {
@@ -377,9 +377,9 @@ var Client = Class({ className: 'Client',
   }
 });
 
-extend(Client.prototype, Deferrable);
-extend(Client.prototype, Publisher);
-extend(Client.prototype, Logging);
-extend(Client.prototype, Extensible);
+assign(Client.prototype, Deferrable);
+assign(Client.prototype, Publisher);
+assign(Client.prototype, Logging);
+assign(Client.prototype, Extensible);
 
 module.exports = Client;

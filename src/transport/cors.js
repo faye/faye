@@ -3,11 +3,11 @@
 var Class     = require('../util/class'),
     Set       = require('../util/set'),
     URI       = require('../util/uri'),
-    extend    = require('../util/extend'),
+    assign    = require('../util/assign'),
     toJSON    = require('../util/to_json'),
     Transport = require('./transport');
 
-var CORS = extend(Class(Transport, {
+var CORS = assign(Class(Transport, {
   encode: function(messages) {
     return 'message=' + encodeURIComponent(toJSON(messages));
   },

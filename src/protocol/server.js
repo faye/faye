@@ -2,7 +2,7 @@
 
 var Class      = require('../util/class'),
     array      = require('../util/array'),
-    extend     = require('../util/extend'),
+    assign     = require('../util/assign'),
     constants  = require('../util/constants'),
     Logging    = require('../mixins/logging'),
     Engine     = require('../engines/proxy'),
@@ -60,7 +60,7 @@ var Server = Class({ className: 'Server',
     };
 
     var handleReply = function(replies) {
-      var extended = 0, expected = replies.length;
+      var assigned = 0, expected = replies.length;
       if (expected === 0) gatherReplies(replies);
 
       for (var i = 0, n = replies.length; i < n; i++) {
@@ -68,8 +68,8 @@ var Server = Class({ className: 'Server',
         (function(index) {
           self.pipeThroughExtensions('outgoing', replies[index], request, function(message) {
             replies[index] = message;
-            extended += 1;
-            if (extended === expected) gatherReplies(replies);
+            assigned += 1;
+            if (assigned === expected) gatherReplies(replies);
           });
         })(i);
       }
@@ -152,9 +152,9 @@ var Server = Class({ className: 'Server',
 
     response.advice = response.advice || {};
     if (response.error) {
-      extend(response.advice, {reconnect:  'handshake'}, false);
+      assign(response.advice, {reconnect:  'handshake'}, false);
     } else {
-      extend(response.advice, {
+      assign(response.advice, {
         reconnect:  'retry',
         interval:   interval,
         timeout:    timeout
@@ -327,7 +327,7 @@ Server.create = function(options) {
   return new Server(options);
 };
 
-extend(Server.prototype, Logging);
-extend(Server.prototype, Extensible);
+assign(Server.prototype, Logging);
+assign(Server.prototype, Extensible);
 
 module.exports = Server;

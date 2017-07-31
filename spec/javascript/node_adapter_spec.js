@@ -4,7 +4,7 @@ var jstest      = require("jstest").Test,
 
 var NodeAdapter = require("../../src/adapters/node_adapter"),
     Server      = require("../../src/protocol/server"),
-    extend_     = require("../../src/util/extend")
+    assign      = require("../../src/util/assign")
 
 var NodeAdapterSteps = jstest.asyncSteps({
   start_server: function(port, resume) {
@@ -52,7 +52,7 @@ var NodeAdapterSteps = jstest.asyncSteps({
     var self = this,
         body = (typeof params === "string") ? params : querystring.stringify(params),
 
-        headers = extend_({
+        headers = assign({
           "Host":           "localhost",
           "Content-Length": body.length
         }, this._headers || {}),

@@ -1,9 +1,9 @@
 var jstest = require("jstest").Test,
     Set    = require("jstest").Set
 
-var Proxy   = require("../../src/engines/proxy"),
-    extend_ = require("../../src/util/extend"),
-    random  = require("../../src/util/random")
+var Proxy  = require("../../src/engines/proxy"),
+    assign = require("../../src/util/assign"),
+    random = require("../../src/util/random")
 
 var EngineSteps = jstest.asyncSteps({
   disconnect_engine: function(resume) {
@@ -68,14 +68,14 @@ var EngineSteps = jstest.asyncSteps({
   publish: function(messages, resume) {
     messages = [].concat(messages)
     for (var i = 0, n = messages.length; i < n; i++) {
-      var message = extend_({id: random()}, messages[i])
+      var message = assign({id: random()}, messages[i])
       this.engine.publish(message)
     }
     setTimeout(resume, 20)
   },
 
   publish_by: function(name, message, resume) {
-    message = extend_({clientId: this._clients[name], id: random()}, message)
+    message = assign({clientId: this._clients[name], id: random()}, message)
     this.engine.publish(message)
     setTimeout(resume, 10)
   },
@@ -145,7 +145,7 @@ jstest.describe("Pub/sub engines", function() { with(this) {
     include(EngineSteps)
 
     define("create_engine", function() { with(this) {
-      var opts = extend_(options(), engineOpts)
+      var opts = assign(options(), engineOpts)
       return new Proxy(opts)
     }})
 
@@ -420,7 +420,7 @@ jstest.describe("Pub/sub engines", function() { with(this) {
     include(EngineSteps)
 
     define("create_engine", function() { with(this) {
-      var opts = extend_(options(), engineOpts)
+      var opts = assign(options(), engineOpts)
       return new Proxy(opts)
     }})
 

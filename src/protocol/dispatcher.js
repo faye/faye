@@ -3,7 +3,7 @@
 var Class     = require('../util/class'),
     URI       = require('../util/uri'),
     cookies   = require('../util/cookies'),
-    extend    = require('../util/extend'),
+    assign    = require('../util/assign'),
     Logging   = require('../mixins/logging'),
     Publisher = require('../mixins/publisher'),
     Transport = require('../transport'),
@@ -179,7 +179,7 @@ Dispatcher.create = function(client, endpoint, options) {
   return new Dispatcher(client, endpoint, options);
 };
 
-extend(Dispatcher.prototype, Publisher);
-extend(Dispatcher.prototype, Logging);
+assign(Dispatcher.prototype, Publisher);
+assign(Dispatcher.prototype, Logging);
 
 module.exports = Dispatcher;

@@ -1,7 +1,7 @@
 'use strict';
 
 var asap       = require('asap'),
-    extend     = require('../util/extend'),
+    assign     = require('../util/assign'),
     random     = require('../util/random'),
     Class      = require('../util/class'),
     Promise    = require('../util/promise'),
@@ -11,7 +11,7 @@ var asap       = require('asap'),
     Connection = require('./connection'),
     Memory     = require('./memory');
 
-var Proxy = extend(Class({ className: 'Engine.Proxy',
+var Proxy = assign(Class({ className: 'Engine.Proxy',
   MAX_DELAY:  0,
   INTERVAL:   0,
   TIMEOUT:    60,
@@ -120,7 +120,7 @@ METHODS.forEach(function(method) {
   };
 });
 
-extend(Proxy.prototype, Publisher);
-extend(Proxy.prototype, Logging);
+assign(Proxy.prototype, Publisher);
+assign(Proxy.prototype, Logging);
 
 module.exports = Proxy;

@@ -1,6 +1,6 @@
 'use strict';
 
-var extend = require('../util/extend');
+var assign = require('../util/assign');
 
 var Scheduler = function(message, options) {
   this.message  = message;
@@ -8,7 +8,7 @@ var Scheduler = function(message, options) {
   this.attempts = 0;
 };
 
-extend(Scheduler.prototype, {
+assign(Scheduler.prototype, {
   getTimeout: function() {
     return this.options.timeout;
   },

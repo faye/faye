@@ -1,7 +1,7 @@
 'use strict';
 
 var Class      = require('../util/class'),
-    extend     = require('../util/extend'),
+    assign     = require('../util/assign'),
     Deferrable = require('../mixins/deferrable');
 
 var Subscription = Class({
@@ -39,6 +39,6 @@ var Subscription = Class({
   }
 });
 
-extend(Subscription.prototype, Deferrable);
+assign(Subscription.prototype, Deferrable);
 
 module.exports = Subscription;

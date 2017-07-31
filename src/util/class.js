@@ -1,6 +1,6 @@
 'use strict';
 
-var extend = require('./extend');
+var assign = require('./assign');
 
 module.exports = function(parent, methods) {
   if (typeof parent !== 'function') {
@@ -17,7 +17,7 @@ module.exports = function(parent, methods) {
   bridge.prototype = parent.prototype;
 
   klass.prototype = new bridge();
-  extend(klass.prototype, methods);
+  assign(klass.prototype, methods);
 
   return klass;
 };

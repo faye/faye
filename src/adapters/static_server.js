@@ -6,7 +6,7 @@ var crypto = require('crypto'),
     url    = require('url');
 
 var Class        = require('../util/class'),
-    extend       = require('../util/extend'),
+    assign       = require('../util/assign'),
     contenttypes = require('./content_types');
 
 var StaticServer = Class({
@@ -62,7 +62,7 @@ var StaticServer = Class({
     }
     else {
       headers['Content-Length'] = cache.content.length;
-      extend(headers, contenttypes[type]);
+      assign(headers, contenttypes[type]);
       response.writeHead(200, headers);
       response.end(cache.content);
     }

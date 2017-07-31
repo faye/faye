@@ -5,7 +5,7 @@ var asap         = require("asap"),
     Dispatcher   = require("../../src/protocol/dispatcher"),
     Publisher    = require("../../src/mixins/publisher"),
     Subscription = require("../../src/protocol/subscription"),
-    extend_      = require("../../src/util/extend"),
+    assign       = require("../../src/util/assign"),
     Promise      = require("../../src/util/promise"),
     URI          = require("../../src/util/uri")
 
@@ -18,7 +18,7 @@ jstest.describe("Client", function() { with(this) {
     stub(dispatcher, "selectTransport")
     stub(dispatcher, "sendMessage")
 
-    extend_(dispatcher, Publisher)
+    assign(dispatcher, Publisher)
     stub(Dispatcher, "create").returns(dispatcher)
 
     stub("setTimeout")
