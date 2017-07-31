@@ -3,7 +3,6 @@
 var Class    = require('../util/class'),
     Cookie   = require('../util/cookies').Cookie,
     Promise  = require('../util/promise'),
-    URI      = require('../util/uri'),
     array    = require('../util/array'),
     extend   = require('../util/extend'),
     Logging  = require('../mixins/logging'),
@@ -34,7 +33,7 @@ var Transport = extend(Class({ className: 'Transport',
 
   sendMessage: function(message) {
     this.debug('Client ? sending message to ?: ?',
-               this._dispatcher.clientId, URI.stringify(this.endpoint), message);
+               this._dispatcher.clientId, this.endpoint.href, message);
 
     if (!this.batching) return Promise.resolve(this.request([message]));
 
@@ -97,7 +96,7 @@ var Transport = extend(Class({ className: 'Transport',
     replies = [].concat(replies);
 
     this.debug('Client ? received from ? via ?: ?',
-               this._dispatcher.clientId, URI.stringify(this.endpoint), this.connectionType, replies);
+               this._dispatcher.clientId, this.endpoint.href, this.connectionType, replies);
 
     for (var i = 0, n = replies.length; i < n; i++)
       this._dispatcher.handleResponse(replies[i]);
@@ -107,7 +106,7 @@ var Transport = extend(Class({ className: 'Transport',
     messages = [].concat(messages);
 
     this.debug('Client ? failed to send to ? via ?: ?',
-               this._dispatcher.clientId, URI.stringify(this.endpoint), this.connectionType, messages);
+               this._dispatcher.clientId, this.endpoint.href, this.connectionType, messages);
 
     for (var i = 0, n = messages.length; i < n; i++)
       this._dispatcher.handleError(messages[i]);
@@ -115,7 +114,7 @@ var Transport = extend(Class({ className: 'Transport',
 
   _getCookies: function() {
     var cookies = this._dispatcher.cookies,
-        url     = URI.stringify(this.endpoint);
+        url     = this.endpoint.href;
 
     if (!cookies) return '';
 
@@ -126,7 +125,7 @@ var Transport = extend(Class({ className: 'Transport',
 
   _storeCookies: function(setCookie) {
     var cookies = this._dispatcher.cookies,
-        url     = URI.stringify(this.endpoint),
+        url     = this.endpoint.href,
         cookie;
 
     if (!setCookie || !cookies) return;
@@ -189,7 +188,7 @@ var Transport = extend(Class({ className: 'Transport',
         callback.call(context, transport);
       });
     }, function() {
-      throw new Error('Could not find a usable connection type for ' + URI.stringify(endpoint));
+      throw new Error('Could not find a usable connection type for ' + endpoint.href);
     });
   },
 

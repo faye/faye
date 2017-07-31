@@ -20,7 +20,7 @@ var CORS = extend(Class(Transport, {
         self     = this,
         key;
 
-    xhr.open('POST', URI.stringify(this.endpoint), true);
+    xhr.open('POST', this.endpoint.href, true);
 
     if (xhr.setRequestHeader) {
       xhr.setRequestHeader('Pragma', 'no-cache');

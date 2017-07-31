@@ -3,7 +3,6 @@
 var asap            = require('asap'),
     Class           = require('../util/class'),
     Promise         = require('../util/promise'),
-    URI             = require('../util/uri'),
     array           = require('../util/array'),
     browser         = require('../util/browser'),
     constants       = require('../util/constants'),
@@ -102,7 +101,7 @@ var Client = Class({ className: 'Client',
     this._state = this.CONNECTING;
     var self = this;
 
-    this.info('Initiating handshake with ?', URI.stringify(this._dispatcher.endpoint));
+    this.info('Initiating handshake with ?', this._dispatcher.endpoint.href);
     this._dispatcher.selectTransport(constants.MANDATORY_CONNECTION_TYPES);
 
     this._sendMessage({

@@ -78,7 +78,7 @@ var Dispatcher = Class({ className: 'Dispatcher',
 
   selectTransport: function(transportTypes) {
     Transport.get(this, transportTypes, this._disabled, function(transport) {
-      this.debug('Selected ? transport for ?', transport.connectionType, URI.stringify(transport.endpoint));
+      this.debug('Selected ? transport for ?', transport.connectionType, transport.endpoint.href);
 
       if (transport === this._transport) return;
       if (this._transport) this._transport.close();
