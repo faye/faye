@@ -76,16 +76,21 @@ var NodeHttp = extend(Class(Transport, { className: 'NodeHttp',
         proxy  = this._proxyUri,
         target = this._tunnel ? uri : (proxy || uri);
 
+    var headers = {
+      'Content-Length': content.length,
+      'Content-Type':   'application/json',
+      'Host':           uri.host
+    };
+
+    if (uri.auth)
+      headers['Authorization'] = 'Basic ' + new Buffer(uri.auth, 'utf8').toString('base64');
+
     var params = {
       method:   'POST',
       host:     target.hostname,
       port:     target.port || this.DEFAULT_PORTS[target.protocol],
       path:     uri.path,
-      headers:  extend({
-        'Content-Length': content.length,
-        'Content-Type':   'application/json',
-        'Host':           uri.host
-      }, this._dispatcher.headers)
+      headers:  extend(headers, this._dispatcher.headers)
     };
 
     var cookie = this._getCookies();
