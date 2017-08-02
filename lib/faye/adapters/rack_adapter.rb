@@ -121,9 +121,13 @@ module Faye
         return [400, TYPE_TEXT, ['Bad request']]
       end
 
-      headers['Access-Control-Allow-Origin'] = origin if origin
       headers['Cache-Control'] = 'no-cache, no-store'
       headers['X-Content-Type-Options'] = 'nosniff'
+
+      if origin
+        headers['Access-Control-Allow-Credentials'] = 'true'
+        headers['Access-Control-Allow-Origin'] = origin
+      end
 
       request.env['rack.hijack'].call if request.env['rack.hijack']
       hijack = request.env['rack.hijack_io']
@@ -235,7 +239,7 @@ module Faye
 
     def handle_options
       headers = {
-        'Access-Control-Allow-Credentials' => 'false',
+        'Access-Control-Allow-Credentials' => 'true',
         'Access-Control-Allow-Headers'     => 'Accept, Authorization, Content-Type, Pragma, X-Requested-With',
         'Access-Control-Allow-Methods'     => 'POST, GET',
         'Access-Control-Allow-Origin'      => '*',

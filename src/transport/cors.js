@@ -21,6 +21,7 @@ var CORS = assign(Class(Transport, {
         key;
 
     xhr.open('POST', this.endpoint.href, true);
+    xhr.withCredentials = true;
 
     if (xhr.setRequestHeader) {
       xhr.setRequestHeader('Pragma', 'no-cache');
