@@ -35,16 +35,14 @@ when 'rainbows'
   Rainbows::HttpServer.new(App, options).start.join
 
 when 'thin'
-  EM.run {
-    thin = Rack::Handler.get('thin')
-    thin.run(App, :Host => '0.0.0.0', :Port => port) do |server|
-      if secure
-        server.ssl_options = {
-          :private_key_file => shared + '/server.key',
-          :cert_chain_file  => shared + '/server.crt'
-        }
-        server.ssl = true
-      end
+  thin = Rack::Handler.get('thin')
+  thin.run(App, :Host => '0.0.0.0', :Port => port) do |server|
+    if secure
+      server.ssl_options = {
+        :private_key_file => shared + '/server.key',
+        :cert_chain_file  => shared + '/server.crt'
+      }
+      server.ssl = true
     end
-  }
+  end
 end
