@@ -177,10 +177,8 @@ var Transport = assign(Class({ className: 'Transport',
       if (array.indexOf(disabled, connType) >= 0)
         return resume();
 
-      if (array.indexOf(allowed, connType) < 0) {
-        klass.isUsable(dispatcher, connEndpoint, function() {});
+      if (array.indexOf(allowed, connType) < 0)
         return resume();
-      }
 
       klass.isUsable(dispatcher, connEndpoint, function(isUsable) {
         if (!isUsable) return resume();
