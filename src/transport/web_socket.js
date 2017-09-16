@@ -121,7 +121,11 @@ var WebSocket = assign(Class(Transport, {
 
     if (cookie !== '') options.headers['Cookie'] = cookie;
 
-    return ws.create(url, [], options);
+    try {
+      return ws.create(url, [], options);
+    } catch (e) {
+      // catch CSP error to allow transport to fallback to next connType
+    }
   },
 
   _ping: function() {
