@@ -42,9 +42,9 @@ module.exports = {
         uri.auth = uri.host.split('@')[0];
         uri.host = uri.host.split('@')[1];
       }
-      parts        = uri.host.split(':');
-      uri.hostname = parts[0];
-      uri.port     = parts[1] || '';
+      parts        = uri.host.match(/^\[([^\]]+)\]|^[^:]+/);
+      uri.hostname = parts[1] || parts[0];
+      uri.port     = (uri.host.match(/:(\d+)$/) || [])[1] || '';
     } else {
       uri.host     = location.host;
       uri.hostname = location.hostname;
