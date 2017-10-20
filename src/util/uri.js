@@ -71,9 +71,8 @@ module.exports = {
 
   stringify: function(uri) {
     var auth   = uri.auth ? uri.auth + '@' : '',
-        string = uri.protocol + '//' + auth + uri.hostname;
+        string = uri.protocol + '//' + auth + uri.host;
 
-    if (uri.port) string += ':' + uri.port;
     string += uri.pathname + this.queryString(uri.query) + (uri.hash || '');
 
     return string;
