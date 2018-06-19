@@ -40,13 +40,47 @@ var NodeAdapterSteps = jstest.asyncSteps({
     resume()
   },
 
-  options_request: function(path, params, resume) {
-    var request = http.request({
-      method:  "OPTIONS",
-      host:    "localhost",
-      port:    this._port,
-      path:    path,
-      headers: this._headers
+  optionsRequest: function(path, params, resume) {
+    var self    = this,
+        request = http.request({
+                    method: "OPTIONS",
+                    host:   "localhost",
+                    port:   this._port,
+                    path:   path,
+                    headers: this._headers
+                  })
+
+
+    request.on("response", function(response) {
+      self._response = response
+      var data = ""
+      response.on("data", function(c) { data += c })
+      response.on("end", function() {
+        self._responseBody = data
+        resume()
+      })
+    })
+    request.end()
+  },
+
+  get: function(path, params, resume) {
+    var self    = this,
+        body    = querystring.stringify(params),
+        request = http.request({
+                    method: "GET",
+                    host:   "localhost",
+                    port:   this._port,
+                    path:   path + (body ? "?" + body : "")
+                  })
+
+    request.on("response", function(response) {
+      self._response = response
+      var data = ""
+      response.on("data", function(c) { data += c })
+      response.on("end", function() {
+        self._responseBody = data
+        resume()
+      })
     })
 
     handleResponse(request, this, resume)
@@ -99,6 +133,36 @@ var NodeAdapterSteps = jstest.asyncSteps({
     resume()
   },
 
+  check_access_control_origin: function(origin, resume) {
+    this.assertEqual(origin, this._response.headers["access-control-allow-origin"])
+    resume()
+  },
+
+  check_access_control_credentials: function(resume) {
+    this.assertEqual("true", this._response.headers["access-control-allow-credentials"])
+    resume()
+  },
+
+  check_access_control_headers: function(resume) {
+    this.assertEqual("Accept, Authorization, Content-Type, Pragma, X-Requested-With", this._response.headers["access-control-allow-headers"])
+    resume()
+  },
+
+  check_access_control_methods: function(resume) {
+    this.assertEqual("POST, GET", this._response.headers["access-control-allow-methods"])
+    resume()
+  },
+
+  check_access_control_max_age: function(resume) {
+    this.assertEqual("86400", this._response.headers["access-control-max-age"])
+    resume()
+  },
+
+  check_cache_control: function(value, resume) {
+    this.assertEqual(value, this._response.headers["cache-control"])
+    resume()
+  },
+
   check_content_type: function(type, resume) {
     this.assertEqual(type + "; charset=utf-8", this._response.headers["content-type"])
     resume()
@@ -140,12 +204,12 @@ jstest.describe("NodeAdapter", function() { with(this) {
       }})
 
       it("returns a matching cross-origin access control header", function() { with(this) {
-        options_request("/bayeux")
-        check_header("access-control-allow-origin", "http://example.com")
-        check_header("access-control-allow-credentials", "true")
-        check_header("access-control-allow-headers", "Accept, Authorization, Content-Type, Pragma, X-Requested-With")
-        check_header("access-control-allow-methods", "POST, GET")
-        check_header("access-control-max-age", "86400")
+        optionsRequest("/bayeux")
+        check_access_control_origin("http://example.com")
+        check_access_control_credentials()
+        check_access_control_headers()
+        check_access_control_methods()
+        check_access_control_max_age()
       }})
     }})
 
@@ -155,23 +219,24 @@ jstest.describe("NodeAdapter", function() { with(this) {
       }})
 
       it("returns a matching cross-origin access control header", function() { with(this) {
-        options_request("/bayeux")
-        check_header("access-control-allow-origin", "http://example.com")
-        check_header("access-control-allow-credentials", "true")
-        check_header("access-control-allow-headers", "Accept, Authorization, Content-Type, Pragma, X-Requested-With")
-        check_header("access-control-allow-methods", "POST, GET")
-        check_header("access-control-max-age", "86400")
+        optionsRequest("/bayeux")
+        check_access_control_origin("http://example.com")
+        check_access_control_credentials()
+        check_access_control_headers()
+        check_access_control_methods()
+        check_access_control_max_age()
       }})
     }})
 
     describe("with no origin specified", function() { with(this) {
       it("returns a wildcard cross-origin access control header", function() { with(this) {
-        options_request("/bayeux")
-        check_header("access-control-allow-origin", "*")
-        check_header("access-control-allow-credentials", "true")
-        check_header("access-control-allow-headers", "Accept, Authorization, Content-Type, Pragma, X-Requested-With")
-        check_header("access-control-allow-methods", "POST, GET")
-        check_header("access-control-max-age", "86400")
+        stub(server, "process").yields([[]])
+        optionsRequest("/bayeux")
+        check_access_control_origin("*")
+        check_access_control_credentials()
+        check_access_control_headers()
+        check_access_control_methods()
+        check_access_control_max_age()
       }})
     }})
   }})
