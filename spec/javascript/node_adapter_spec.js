@@ -26,6 +26,29 @@ var NodeAdapterSteps = jstest.asyncSteps({
     resume()
   },
 
+  optionsRequest: function(path, params, resume) {
+    var self    = this,
+        request = http.request({
+                    method: "OPTIONS",
+                    host:   "localhost",
+                    port:   this._port,
+                    path:   path,
+                    headers: this._headers
+                  })
+
+
+    request.on("response", function(response) {
+      self._response = response
+      var data = ""
+      response.on("data", function(c) { data += c })
+      response.on("end", function() {
+        self._responseBody = data
+        resume()
+      })
+    })
+    request.end()
+  },
+
   get: function(path, params, resume) {
     var self    = this,
         body    = querystring.stringify(params),
@@ -88,6 +111,26 @@ var NodeAdapterSteps = jstest.asyncSteps({
     resume()
   },
 
+  check_access_control_credentials: function(resume) {
+    this.assertEqual("true", this._response.headers["access-control-allow-credentials"])
+    resume()
+  },
+
+  check_access_control_headers: function(resume) {
+    this.assertEqual("Accept, Authorization, Content-Type, Pragma, X-Requested-With", this._response.headers["access-control-allow-headers"])
+    resume()
+  },
+
+  check_access_control_methods: function(resume) {
+    this.assertEqual("POST, GET", this._response.headers["access-control-allow-methods"])
+    resume()
+  },
+
+  check_access_control_max_age: function(resume) {
+    this.assertEqual("86400", this._response.headers["access-control-max-age"])
+    resume()
+  },
+
   check_cache_control: function(value, resume) {
     this.assertEqual(value, this._response.headers["cache-control"])
     resume()
@@ -131,6 +174,50 @@ jstest.describe("NodeAdapter", function() { with(this) {
   }})
 
   after(function() { this.stop_server() })
+
+  describe("OPTIONS requests", function() { with(this) {
+    describe("with origin specified", function() { with(this) {
+      before(function() { with(this) {
+        header("Origin", "http://example.com")
+      }})
+
+      it("returns a matching cross-origin access control header", function() { with(this) {
+        optionsRequest("/bayeux")
+        check_access_control_origin("http://example.com")
+        check_access_control_credentials()
+        check_access_control_headers()
+        check_access_control_methods()
+        check_access_control_max_age()
+      }})
+    }})
+
+    describe("with referer specified", function() { with(this) {
+      before(function() { with(this) {
+        header("referer", "http://example.com")
+      }})
+
+      it("returns a matching cross-origin access control header", function() { with(this) {
+        optionsRequest("/bayeux")
+        check_access_control_origin("http://example.com")
+        check_access_control_credentials()
+        check_access_control_headers()
+        check_access_control_methods()
+        check_access_control_max_age()
+      }})
+    }})
+
+    describe("with no origin specified", function() { with(this) {
+      it("returns a wildcard cross-origin access control header", function() { with(this) {
+        stub(server, "process").yields([[]])
+        optionsRequest("/bayeux")
+        check_access_control_origin("*")
+        check_access_control_credentials()
+        check_access_control_headers()
+        check_access_control_methods()
+        check_access_control_max_age()
+      }})
+    }})
+  }})
 
   describe("POST requests", function() { with(this) {
     describe("with cross-origin access control", function() { with(this) {

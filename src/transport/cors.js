@@ -76,17 +76,7 @@ var CORS = assign(Class(Transport, {
 
     if (global.XMLHttpRequest) {
       var xhr = new XMLHttpRequest();
-
-      if (xhr.withCredentials !== undefined) {
-        xhr.open('POST', endpoint.href, true);
-        xhr.onload = function (e) {
-          callback.call(context, true);
-        };
-        xhr.onerror = function (e) {
-          callback.call(context, false);
-        };
-        xhr.send(null);
-      }
+      return callback.call(context, xhr.withCredentials !== undefined);
     } else {
       return callback.call(context, false);
     }
