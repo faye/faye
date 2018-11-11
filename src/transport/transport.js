@@ -118,7 +118,7 @@ var Transport = assign(Class({ className: 'Transport',
 
     if (!cookies) return '';
 
-    return array.map(cookies.getCookiesSync(url), function(cookie) {
+    return array.map(cookies.getCookiesSync(url, { allPaths: true }), function(cookie) {
       return cookie.cookieString();
     }).join('; ');
   },
