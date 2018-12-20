@@ -123,9 +123,7 @@ module Faye
     private :send_envelope
 
     def handle_response(reply)
-      envelope = @envelopes.delete(reply['id'])
-
-      if reply.has_key?('successful') and envelope
+      if reply.has_key?('successful') and envelope = @envelopes.delete(reply['id'])
         envelope.scheduler.succeed!
         EventMachine.cancel_timer(envelope.timer) if envelope.timer
       end

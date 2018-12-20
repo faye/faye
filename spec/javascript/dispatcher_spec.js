@@ -349,6 +349,12 @@ jstest.describe("Dispatcher", function() { with(this) {
         dispatcher.handleError({id: 1})
         dispatcher.handleResponse({id: 3})
       }})
+
+      it("handles id collisions from another client", function() { with(this) {
+        expect(client, "trigger").given("transport:down").exactly(1)
+        dispatcher.handleResponse({'id': 1})
+        dispatcher.handleError({'id': 1})
+      }})
     }})
   }})
 }})
