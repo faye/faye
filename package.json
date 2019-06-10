@@ -3,7 +3,7 @@
 , "homepage"        : "https://faye.jcoglan.com"
 , "author"          : "James Coglan <jcoglan@gmail.com> (http://jcoglan.com/)"
 , "keywords"        : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
-, "license"         : "MIT"
+, "license"         : "Apache-2.0"
 
 , "version"         : "1.2.4"
 , "engines"         : {"node": ">=0.6.0"}

@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.author            = 'James Coglan'
   s.email             = 'jcoglan@gmail.com'
   s.homepage          = 'https://faye.jcoglan.com'
-  s.license           = 'MIT'
+  s.license           = 'Apache-2.0'
 
   s.extra_rdoc_files  = %w[README.md]
   s.rdoc_options      = %w[--main README.md --markup markdown]
