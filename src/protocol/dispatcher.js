@@ -60,6 +60,7 @@ var Dispatcher = Class({ className: 'Dispatcher',
 
   disable: function(feature) {
     this._disabled.push(feature);
+    Transport.disable(feature);
   },
 
   setHeader: function(name, value) {

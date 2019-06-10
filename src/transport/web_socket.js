@@ -159,7 +159,11 @@ var WebSocket = assign(Class(Transport, {
 
 assign(WebSocket.prototype, Deferrable);
 
-if (browser.Event && global.onbeforeunload !== undefined)
-  browser.Event.on(global, 'beforeunload', function() { WebSocket._unloaded = true });
+if (browser.Event && global.onbeforeunload !== undefined) {
+  browser.Event.on(global, 'beforeunload', function() {
+    if (WebSocket._unloaded === undefined)
+      WebSocket._unloaded = true;
+  });
+}
 
 module.exports = WebSocket;

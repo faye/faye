@@ -201,6 +201,13 @@ var Transport = assign(Class({ className: 'Transport',
     return array.map(this._transports, function(t) { return t[0] });
   },
 
+  disable: function(feature) {
+    if (feature !== 'autodisconnect') return;
+
+    for (var i = 0; i < this._transports.length; i++)
+      this._transports[i][1]._unloaded = false;
+  },
+
   _transports: []
 });
 
