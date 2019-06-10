@@ -14,7 +14,7 @@
           "license": "Apache-2.0",
           "version": "1.2.4",
           "engines": {
-                    "node": ">=0.6.0"
+                    "node": ">=0.8.0"
           },
           "main": "src/faye_node",
           "browser": "src/faye_browser",
@@ -22,6 +22,7 @@
                     "asap": "*",
                     "csprng": "*",
                     "faye-websocket": ">=0.9.1",
+                    "safe-buffer": "*",
                     "tough-cookie": "*",
                     "tunnel-agent": "*"
           },
