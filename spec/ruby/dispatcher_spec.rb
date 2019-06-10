@@ -337,6 +337,12 @@ describe Faye::Dispatcher do
         @dispatcher.handle_error({'id' => 1})
         @dispatcher.handle_response({'id' => 3})
       end
+
+      it "handles id collisions from another client" do
+        expect(client).to receive(:trigger).with("transport:down").exactly(1)
+        @dispatcher.handle_response({'id' => 1})
+        @dispatcher.handle_error({'id' => 1})
+      end
     end
   end
 end
