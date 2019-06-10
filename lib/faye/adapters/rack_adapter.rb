@@ -86,7 +86,7 @@ module Faye
 
       # http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
       if env['REQUEST_METHOD'] == 'OPTIONS' or env['HTTP_ACCESS_CONTROL_REQUEST_METHOD'] == 'POST'
-        return handle_options
+        return handle_options(request)
       end
 
       return handle_websocket(request)   if Faye::WebSocket.websocket?(env)
@@ -237,12 +237,14 @@ module Faye
       es.rack_response
     end
 
-    def handle_options
+    def handle_options(request)
+      origin = request.env['HTTP_ORIGIN'] || request.env['HTTP_REFERER']
+
       headers = {
         'Access-Control-Allow-Credentials' => 'true',
         'Access-Control-Allow-Headers'     => 'Accept, Authorization, Content-Type, Pragma, X-Requested-With',
         'Access-Control-Allow-Methods'     => 'POST, GET',
-        'Access-Control-Allow-Origin'      => '*',
+        'Access-Control-Allow-Origin'      => origin || '*',
         'Access-Control-Max-Age'           => '86400'
       }
       [200, headers, []]
