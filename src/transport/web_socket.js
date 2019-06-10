@@ -63,7 +63,6 @@ var WebSocket = assign(Class(Transport, {
       self._socket = socket;
       self._state = self.CONNECTED;
       self._everConnected = true;
-      self._ping();
       self.setDeferredStatus('succeeded', socket);
     };
 
@@ -77,7 +76,6 @@ var WebSocket = assign(Class(Transport, {
 
       delete self._socket;
       self._state = self.UNCONNECTED;
-      self.removeTimeout('ping');
 
       var pending = self._pending ? self._pending.toArray() : [];
       delete self._pending;
@@ -126,12 +124,6 @@ var WebSocket = assign(Class(Transport, {
     } catch (e) {
       // catch CSP error to allow transport to fallback to next connType
     }
-  },
-
-  _ping: function() {
-    if (!this._socket || this._socket.readyState !== 1) return;
-    this._socket.send('[]');
-    this.addTimeout('ping', this._dispatcher.timeout / 2, this._ping, this);
   }
 
 }), {

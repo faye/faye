@@ -82,7 +82,6 @@ module Faye
         @socket = socket
         @state = CONNECTED
         @ever_connected = true
-        ping
         set_deferred_status(:succeeded, socket)
       end
 
@@ -96,7 +95,6 @@ module Faye
 
         @socket = nil
         @state = UNCONNECTED
-        remove_timeout(:ping)
 
         pending  = @pending ? @pending.to_a : []
         @pending = nil
@@ -126,14 +124,6 @@ module Faye
     def close
       return unless @socket
       @socket.close
-    end
-
-  private
-
-    def ping
-      return unless @socket and @socket.ready_state == 1
-      @socket.send('[]')
-      add_timeout(:ping, @dispatcher.timeout / 2) { ping }
     end
   end
 
