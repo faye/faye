@@ -31,11 +31,12 @@
                     "mime": "~1.2.0",
                     "permessage-deflate": ">=0.1.0",
                     "promises-aplus-tests": "~2.1.0",
-                    "uglify-js": "^2.0.0",
                     "webpack": "*",
+                    "webpack-cli": "*",
                     "imports-loader": "*"
           },
           "scripts": {
+                    "start": "webpack --watch",
                     "test": "find spec -name '*_spec.js' | xargs jstest",
                     "promise": "promises-aplus-tests src/util/promise.js"
           },
