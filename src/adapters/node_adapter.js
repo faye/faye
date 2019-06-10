@@ -119,7 +119,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
 
     // http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
     if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST')
-      return this._handleOptions(response);
+      return this._handleOptions(request, response);
 
     if (EventSource.isEventSource(request))
       return this.handleEventSource(request, response);
@@ -237,12 +237,13 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
     };
   },
 
-  _handleOptions: function(response) {
+  _handleOptions: function(request, response) {
+    var origin = request.headers.origin || request.headers.referer;
     var headers = {
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Headers':     'Accept, Authorization, Content-Type, Pragma, X-Requested-With',
       'Access-Control-Allow-Methods':     'POST, GET',
-      'Access-Control-Allow-Origin':      '*',
+      'Access-Control-Allow-Origin':      origin || '*',
       'Access-Control-Max-Age':           '86400'
     };
 
