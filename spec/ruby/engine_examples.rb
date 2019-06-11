@@ -75,14 +75,14 @@ EngineSteps = RSpec::EM.async_steps do
   def publish(messages, &resume)
     messages = [messages].flatten
     messages.each do |message|
-      message = {"id" => Faye::Engine.random}.merge(message)
+      message = { "id" => Faye::Engine.random }.merge(message)
       engine.publish(message)
     end
     EM.add_timer(0.1, &resume)
   end
 
   def publish_by(name, message, &resume)
-    message = {"clientId" => @clients[name], "id" => Faye::Engine.random}.merge(message)
+    message = { "clientId" => @clients[name], "id" => Faye::Engine.random }.merge(message)
     engine.publish(message)
     EM.add_timer(0.1, &resume)
   end
@@ -151,7 +151,7 @@ shared_examples_for "faye engine" do
     Faye::Engine::Proxy.new(opts)
   end
 
-  let(:options) { {:timeout => 1} }
+  let(:options) { { :timeout => 1 } }
   let(:engine) { create_engine }
 
   before do
@@ -168,7 +168,7 @@ shared_examples_for "faye engine" do
     end
 
     it "returns a different id every time" do
-      1.upto(7) { |i| create_client "client#{i}" }
+      1.upto(7) { |i| create_client "client#{ i }" }
       check_num_clients 10
     end
 
@@ -178,7 +178,7 @@ shared_examples_for "faye engine" do
     end
 
     describe :gc do
-      let(:options) { {:timeout => 0.3, :gc => 0.2} }
+      let(:options) { { :timeout => 0.3, :gc => 0.2 } }
 
       it "doesn't prematurely remove a client after creation" do
         clock_tick 0.25
@@ -198,7 +198,7 @@ shared_examples_for "faye engine" do
   end
 
   describe :ping do
-    let(:options) { {:timeout => 0.3, :gc => 0.08} }
+    let(:options) { { :timeout => 0.3, :gc => 0.08 } }
 
     it "removes a client if it does not ping often enough" do
       clock_tick 0.7
@@ -228,7 +228,7 @@ shared_examples_for "faye engine" do
 
     describe "when the client has subscriptions" do
       before do
-        @message = {"channel" => "/messages/foo", "data" => "ok"}
+        @message = { "channel" => "/messages/foo", "data" => "ok" }
         subscribe :alice, "/messages/foo"
       end
 
@@ -282,7 +282,7 @@ shared_examples_for "faye engine" do
 
   describe :publish do
     before do
-      @message = {"channel" => "/messages/foo", "data" => "ok", "blank" => nil}
+      @message = { "channel" => "/messages/foo", "data" => "ok", "blank" => nil }
       connect :alice, engine
       connect :bob,   engine
       connect :carol, engine
@@ -447,12 +447,12 @@ shared_examples_for "distributed engine" do
       expect_message :alice, ["channel" => "/foo", "data" => "first"]
       publish "channel" => "/foo", "data" => "second"
       connect :alice, right
-      expect_message :alice, [{"channel" => "/foo", "data" => "first"}, {"channel" => "/foo", "data" => "second"}]
+      expect_message :alice, [{ "channel" => "/foo", "data" => "first" }, { "channel" => "/foo", "data" => "second" }]
     end
   end
 
   describe :gc do
-    let(:options) { {:timeout => 0.3, :gc => 0.08} }
+    let(:options) { { :timeout => 0.3, :gc => 0.08 } }
 
     it "calls close in each engine when a client is removed" do
       expect_non_exclusive_event :alice, :close, [], left

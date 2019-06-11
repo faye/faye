@@ -10,9 +10,9 @@ describe "server disconnect" do
 
   describe :disconnect do
     let(:client_id) { "fakeclientid" }
-    let(:message) {{"channel" => "/meta/disconnect",
-                    "clientId" => "fakeclientid"
-                  }}
+    let(:message) { { "channel" => "/meta/disconnect",
+                      "clientId" => "fakeclientid"
+                  } }
 
     describe "with valid parameters" do
       before do

@@ -4,7 +4,7 @@ describe Faye::RackAdapter do
   include Rack::Test::Methods
   let(:adapter) { Faye::RackAdapter.new(options) { |ra| @yielded = ra } }
   let(:app)     { ServerProxy.new(adapter) }
-  let(:options) { {:mount => "/bayeux", :timeout => 30} }
+  let(:options) { { :mount => "/bayeux", :timeout => 30 } }
   let(:server)  { double "server" }
 
   after { app.stop }
@@ -42,7 +42,7 @@ describe Faye::RackAdapter do
         end
 
         it "forwards the message param onto the server" do
-          server.should_receive(:process).with({"channel" => "/plain"}, instance_of(Rack::Request)).and_yield []
+          server.should_receive(:process).with({ "channel" => "/plain" }, instance_of(Rack::Request)).and_yield []
           post "/bayeux", "message=%7B%22channel%22%3A%22%2Fplain%22%7D"
         end
 
@@ -100,8 +100,8 @@ describe Faye::RackAdapter do
       end
 
       it "forwards the POST body onto the server" do
-        server.should_receive(:process).with({"channel" => "/foo"}, instance_of(Rack::Request)).and_yield []
-        post "/bayeux", '{"channel":"/foo"}'
+        server.should_receive(:process).with({ "channel" => "/foo" }, instance_of(Rack::Request)).and_yield []
+        post "/bayeux", '{ "channel":"/foo" }'
       end
 
       it "returns the server's response as JSON" do
@@ -115,7 +115,7 @@ describe Faye::RackAdapter do
 
       it "returns a 400 response if malformed JSON is given" do
         server.should_not_receive(:process)
-        post "/bayeux", "[}"
+        post "/bayeux", "[ }"
         status.should == 400
         content_type.should == "text/plain; charset=utf-8"
       end
@@ -130,8 +130,8 @@ describe Faye::RackAdapter do
 
     describe "with no content type" do
       it "forwards the message param onto the server" do
-        server.should_receive(:process).with({"channel" => "/foo"}, instance_of(Rack::Request)).and_yield []
-        post "/bayeux", :message => '{"channel":"/foo"}'
+        server.should_receive(:process).with({ "channel" => "/foo" }, instance_of(Rack::Request)).and_yield []
+        post "/bayeux", :message => '{ "channel":"/foo" }'
       end
 
       it "returns the server's response as JSON" do
@@ -145,7 +145,7 @@ describe Faye::RackAdapter do
 
       it "returns a 400 response if malformed JSON is given" do
         server.should_not_receive(:process)
-        post "/bayeux", :message => "[}"
+        post "/bayeux", :message => "[ }"
         status.should == 400
         content_type.should == "text/plain; charset=utf-8"
       end
@@ -160,11 +160,11 @@ describe Faye::RackAdapter do
   end
 
   describe "GET requests" do
-    let(:params) {{:message => '{"channel":"/foo"}', :jsonp => "callback"}}
+    let(:params) { { :message => '{ "channel":"/foo" }', :jsonp => "callback" } }
 
     describe "with valid params" do
       it "forwards the message param onto the server" do
-        server.should_receive(:process).with({"channel" => "/foo"}, instance_of(Rack::Request)).and_yield []
+        server.should_receive(:process).with({ "channel" => "/foo" }, instance_of(Rack::Request)).and_yield []
         get "/bayeux", params
       end
 
@@ -222,7 +222,7 @@ describe Faye::RackAdapter do
     end
 
     describe "with malformed JSON" do
-      before { params[:message] = "[}" }
+      before { params[:message] = "[ }" }
       it_should_behave_like "bad GET request"
     end
 

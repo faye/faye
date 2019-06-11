@@ -68,14 +68,14 @@ var EngineSteps = jstest.asyncSteps({
   publish: function(messages, resume) {
     messages = [].concat(messages)
     for (var i = 0, n = messages.length; i < n; i++) {
-      var message = assign({id: random()}, messages[i])
+      var message = assign({ id: random() }, messages[i])
       this.engine.publish(message)
     }
     setTimeout(resume, 20)
   },
 
   publish_by: function(name, message, resume) {
-    message = assign({clientId: this._clients[name], id: random()}, message)
+    message = assign({ clientId: this._clients[name], id: random() }, message)
     this.engine.publish(message)
     setTimeout(resume, 10)
   },
@@ -149,7 +149,7 @@ jstest.describe("Pub/sub engines", function() { with(this) {
       return new Proxy(opts)
     }})
 
-    define("options", function() { return {timeout: 1} })
+    define("options", function() { return { timeout: 1 } })
 
     before(function() { with(this) {
       this.engine = create_engine()
@@ -175,7 +175,7 @@ jstest.describe("Pub/sub engines", function() { with(this) {
       }})
 
       describe("gc", function() { with(this) {
-        define("options", function() { return {timeout: 0.3, gc: 0.2} })
+        define("options", function() { return { timeout: 0.3, gc: 0.2 } })
 
         it("doesn't prematurely remove a client after creation", function() { with(this) {
           clock_tick(250)
@@ -195,7 +195,7 @@ jstest.describe("Pub/sub engines", function() { with(this) {
     }})
 
     describe("ping", function() { with(this) {
-      define("options", function() { return {timeout: 0.3, gc: 0.08} })
+      define("options", function() { return { timeout: 0.3, gc: 0.08 } })
 
       it("removes a client if it does not ping often enough", function() { with(this) {
         clock_tick(700)
@@ -225,7 +225,7 @@ jstest.describe("Pub/sub engines", function() { with(this) {
 
       describe("when the client has subscriptions", function() { with(this) {
         before(function() { with(this) {
-          this.message = {"channel": "/messages/foo", "data": "ok"}
+          this.message = { "channel": "/messages/foo", "data": "ok" }
           subscribe("alice", "/messages/foo")
         }})
 
@@ -280,7 +280,7 @@ jstest.describe("Pub/sub engines", function() { with(this) {
 
     describe("publish", function() { with(this) {
       before(function() { with(this) {
-        this.message = {"channel": "/messages/foo", "data": "ok", "blank": null}
+        this.message = { "channel": "/messages/foo", "data": "ok", "blank": null }
         connect("alice", engine)
         connect("bob", engine)
         connect("carol", engine)
@@ -424,7 +424,7 @@ jstest.describe("Pub/sub engines", function() { with(this) {
       return new Proxy(opts)
     }})
 
-    define("options", function() { return {timeout: 1} })
+    define("options", function() { return { timeout: 1 } })
 
     before(function() { with(this) {
       this.left   = create_engine()
@@ -440,19 +440,19 @@ jstest.describe("Pub/sub engines", function() { with(this) {
     describe("publish", function() { with(this) {
       before(function() { with(this) {
         subscribe("alice", "/foo")
-        publish({channel: "/foo", data: "first"})
+        publish({ channel: "/foo", data: "first" })
       }})
 
       it("only delivers each message once", function() { with(this) {
-        expect_message("alice", [{channel: "/foo", data: "first"}])
-        publish({channel: "/foo", data: "second"})
+        expect_message("alice", [{ channel: "/foo", data: "first" }])
+        publish({ channel: "/foo", data: "second" })
         connect("alice", right)
-        expect_message("alice", [{channel: "/foo", data: "first"}, {channel: "/foo", data: "second"}])
+        expect_message("alice", [{ channel: "/foo", data: "first" }, { channel: "/foo", data: "second" }])
       }})
     }})
 
     describe("gc", function() { with(this) {
-      define("options", function() { return {timeout: 0.3, gc: 0.08} })
+      define("options", function() { return { timeout: 0.3, gc: 0.08 } })
 
       it("calls close in each engine when a client is removed", function() { with(this) {
         expect_non_exclusive_event("alice", "close", [], this.left);

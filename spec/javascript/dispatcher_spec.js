@@ -19,7 +19,7 @@ jstest.describe("Dispatcher", function() { with(this) {
   before(function() { with(this) {
     this.client    = {}
     this.endpoint  = "http://localhost/"
-    this.transport = {endpoint: URI.parse(endpoint), connectionType: "long-polling"}
+    this.transport = { endpoint: URI.parse(endpoint), connectionType: "long-polling" }
 
     stub(client, "trigger")
     stub(Transport, "get").yields([transport])
@@ -40,7 +40,7 @@ jstest.describe("Dispatcher", function() { with(this) {
   describe("endpointFor", function() { with(this) {
     define("options", function() {
       return {
-        endpoints: {websocket: "http://sockets/"}
+        endpoints: { websocket: "http://sockets/" }
       }
     })
 
@@ -76,7 +76,7 @@ jstest.describe("Dispatcher", function() { with(this) {
     }})
 
     it("closes the existing transport if a new one is selected", function() { with(this) {
-      var oldTransport = {endpoint: URI.parse(endpoint)}
+      var oldTransport = { endpoint: URI.parse(endpoint) }
       stub(Transport, "get").given(dispatcher, ["long-polling"], []).yields([oldTransport])
       dispatcher.selectTransport(["long-polling"])
 
@@ -94,7 +94,7 @@ jstest.describe("Dispatcher", function() { with(this) {
 
   describe("messaging", function() { with(this) {
     before(function() { with(this) {
-      this.message    = {id: 1}
+      this.message    = { id: 1 }
       this.request    = {}
       this.reqPromise = Promise.resolve(request)
 
@@ -112,26 +112,26 @@ jstest.describe("Dispatcher", function() { with(this) {
       }})
 
       it("sends a message to the transport", function() { with(this) {
-        expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
+        expect(transport, "sendMessage").given({ id: 1 }).exactly(1).returning(reqPromise)
         dispatcher.sendMessage(message, 25)
       }})
 
       it("sends several different messages to the transport", function() { with(this) {
-        expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
-        expect(transport, "sendMessage").given({id: 2}).exactly(1).returning(reqPromise)
-        dispatcher.sendMessage({id: 1}, 25)
-        dispatcher.sendMessage({id: 2}, 25)
+        expect(transport, "sendMessage").given({ id: 1 }).exactly(1).returning(reqPromise)
+        expect(transport, "sendMessage").given({ id: 2 }).exactly(1).returning(reqPromise)
+        dispatcher.sendMessage({ id: 1 }, 25)
+        dispatcher.sendMessage({ id: 2 }, 25)
       }})
 
       it("does not resend a message if it's already being sent", function() { with(this) {
-        expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
+        expect(transport, "sendMessage").given({ id: 1 }).exactly(1).returning(reqPromise)
         dispatcher.sendMessage(message, 25)
         dispatcher.sendMessage(message, 25)
       }})
 
       it("sets a timeout to fail the message", function() { with(this) {
         dispatcher.sendMessage(message, 25)
-        expect(dispatcher, "handleError").given({id: 1}).exactly(1)
+        expect(dispatcher, "handleError").given({ id: 1 }).exactly(1)
         clock.tick(25000)
       }})
     }})
@@ -147,13 +147,13 @@ jstest.describe("Dispatcher", function() { with(this) {
       }})
 
       it("resends messages immediately if instructed", function() { with(this) {
-        expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
+        expect(transport, "sendMessage").given({ id: 1 }).exactly(1).returning(reqPromise)
         dispatcher.handleError(message, true)
       }})
 
       it("resends a message automatically after a timeout on error", function() { with(this) {
         dispatcher.handleError(message)
-        expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
+        expect(transport, "sendMessage").given({ id: 1 }).exactly(1).returning(reqPromise)
         clock.tick(5500)
       }})
 
@@ -172,7 +172,7 @@ jstest.describe("Dispatcher", function() { with(this) {
       }})
 
       it("does not resend a message with an ID it does not recognize", function() { with(this) {
-        dispatcher.handleError({id: 2})
+        dispatcher.handleError({ id: 2 })
         expect(transport, "sendMessage").exactly(0)
         clock.tick(5500)
       }})
@@ -185,7 +185,7 @@ jstest.describe("Dispatcher", function() { with(this) {
       }})
 
       it("does not schedule another resend if an error is reported while waiting to resend", function() { with(this) {
-        expect(transport, "sendMessage").given({id: 1}).exactly(1)
+        expect(transport, "sendMessage").given({ id: 1 }).exactly(1)
         dispatcher.handleError(message)
         clock.tick(2500)
         dispatcher.handleError(message)
@@ -193,26 +193,26 @@ jstest.describe("Dispatcher", function() { with(this) {
       }})
 
       it("does not schedule a resend if the number of attempts has been exhausted", function() { with(this) {
-        expect(transport, "sendMessage").given({id: 2}).exactly(2).returning(reqPromise)
-        dispatcher.sendMessage({id: 2}, 25, {attempts: 2})
-        dispatcher.handleError({id: 2}, true)
-        dispatcher.handleError({id: 2}, true)
+        expect(transport, "sendMessage").given({ id: 2 }).exactly(2).returning(reqPromise)
+        dispatcher.sendMessage({ id: 2 }, 25, { attempts: 2 })
+        dispatcher.handleError({ id: 2 }, true)
+        dispatcher.handleError({ id: 2 }, true)
       }})
 
       it("does not count down attempts when an error is reported while waiting to resend", function() { with(this) {
-        dispatcher.sendMessage({id: 2}, 25, {attempts: 3})
-        dispatcher.handleError({id: 2})
+        dispatcher.sendMessage({ id: 2 }, 25, { attempts: 3 })
+        dispatcher.handleError({ id: 2 })
         clock.tick(2500)
-        dispatcher.handleError({id: 2}, true)
+        dispatcher.handleError({ id: 2 }, true)
         clock.tick(5000)
-        expect(transport, "sendMessage").given({id: 2}).exactly(1).returning(reqPromise)
-        dispatcher.handleError({id: 2}, true)
+        expect(transport, "sendMessage").given({ id: 2 }).exactly(1).returning(reqPromise)
+        dispatcher.handleError({ id: 2 }, true)
       }})
 
       it("does not schedule a resend if the deadline has been reached", function() { with(this) {
-        dispatcher.handleResponse({id: 1, successful: true})
-        dispatcher.sendMessage({id: 2}, 25, {deadline: 60})
-        expect(transport, "sendMessage").given({id: 2}).exactly(2).returning(reqPromise)
+        dispatcher.handleResponse({ id: 1, successful: true })
+        dispatcher.sendMessage({ id: 2 }, 25, { deadline: 60 })
+        expect(transport, "sendMessage").given({ id: 2 }).exactly(2).returning(reqPromise)
         clock.tick(90000)
       }})
 
@@ -222,24 +222,24 @@ jstest.describe("Dispatcher", function() { with(this) {
       }})
 
       it("only emits transport:down once, when the first error is received", function() { with(this) {
-        dispatcher.sendMessage({id: 2}, 25)
+        dispatcher.sendMessage({ id: 2 }, 25)
         expect(client, "trigger").given("transport:down").exactly(1)
-        dispatcher.handleError({id: 1})
-        dispatcher.handleError({id: 2})
+        dispatcher.handleError({ id: 1 })
+        dispatcher.handleError({ id: 2 })
       }})
 
       it("emits transport:down again if there was a message since the last event", function() { with(this) {
-        dispatcher.sendMessage({id: 2}, 25)
+        dispatcher.sendMessage({ id: 2 }, 25)
         expect(client, "trigger").given("transport:down").exactly(2)
-        dispatcher.handleError({id: 1})
-        dispatcher.handleResponse({id: 3})
-        dispatcher.handleError({id: 2})
+        dispatcher.handleError({ id: 1 })
+        dispatcher.handleResponse({ id: 3 })
+        dispatcher.handleError({ id: 2 })
       }})
     }})
 
     describe("with a scheduler", function() { with(this) {
       define("options", function() {
-        return {scheduler: CustomScheduler}
+        return { scheduler: CustomScheduler }
       })
 
       before(function() { with(this) {
@@ -259,7 +259,7 @@ jstest.describe("Dispatcher", function() { with(this) {
       it("resends a message after the interval given by the scheduler", function() { with(this) {
         stub(CustomScheduler.instance, "getInterval").returns(3)
         dispatcher.handleError(message)
-        expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
+        expect(transport, "sendMessage").given({ id: 1 }).exactly(1).returning(reqPromise)
         clock.tick(3500)
       }})
 
@@ -271,7 +271,7 @@ jstest.describe("Dispatcher", function() { with(this) {
       it("waits the specified amount of time to fail the message", function() { with(this) {
         stub(CustomScheduler.instance, "getTimeout").returns(3)
         dispatcher.handleError(message, true)
-        expect(dispatcher, "handleError").given({id: 1}).exactly(1)
+        expect(dispatcher, "handleError").given({ id: 1 }).exactly(1)
         clock.tick(3000)
       }})
 
@@ -282,7 +282,7 @@ jstest.describe("Dispatcher", function() { with(this) {
 
       it("resends the message if it's deliverable", function() { with(this) {
         stub(CustomScheduler.instance, "isDeliverable").returns(true)
-        expect(transport, "sendMessage").given({id: 1}).exactly(1).returning(reqPromise)
+        expect(transport, "sendMessage").given({ id: 1 }).exactly(1).returning(reqPromise)
         dispatcher.handleError(message, true)
       }})
 
@@ -311,25 +311,25 @@ jstest.describe("Dispatcher", function() { with(this) {
 
       it("clears the timeout to resend the message if successful=true", function() { with(this) {
         expect(dispatcher, "handleError").exactly(0)
-        dispatcher.handleResponse({id: 1, successful: true})
+        dispatcher.handleResponse({ id: 1, successful: true })
         clock.tick(25000)
       }})
 
       it("clears the timeout to resend the message if successful=false", function() { with(this) {
         expect(dispatcher, "handleError").exactly(0)
-        dispatcher.handleResponse({id: 1, successful: false})
+        dispatcher.handleResponse({ id: 1, successful: false })
         clock.tick(25000)
       }})
 
       it("leaves the timeout to resend the message if successful is missing", function() { with(this) {
-        expect(dispatcher, "handleError").given({id: 1}).exactly(1)
+        expect(dispatcher, "handleError").given({ id: 1 }).exactly(1)
         dispatcher.handleResponse(message)
         clock.tick(25000)
       }})
 
       it("emits the message as an event", function() { with(this) {
-        expect(dispatcher, "trigger").given("message", {id: 3}).exactly(1)
-        dispatcher.handleResponse({id: 3})
+        expect(dispatcher, "trigger").given("message", { id: 3 }).exactly(1)
+        dispatcher.handleResponse({ id: 3 })
       }})
 
       it("emits the transport:up event via the client", function() { with(this) {
@@ -339,21 +339,21 @@ jstest.describe("Dispatcher", function() { with(this) {
 
       it("only emits transport:up once, when the first message is received", function() { with(this) {
         expect(client, "trigger").given("transport:up").exactly(1)
-        dispatcher.handleResponse({id: 1})
-        dispatcher.handleResponse({id: 2})
+        dispatcher.handleResponse({ id: 1 })
+        dispatcher.handleResponse({ id: 2 })
       }})
 
       it("emits transport:up again if there was an error since the last event", function() { with(this) {
         expect(client, "trigger").given("transport:up").exactly(2)
-        dispatcher.handleResponse({id: 2})
-        dispatcher.handleError({id: 1})
-        dispatcher.handleResponse({id: 3})
+        dispatcher.handleResponse({ id: 2 })
+        dispatcher.handleError({ id: 1 })
+        dispatcher.handleResponse({ id: 3 })
       }})
 
       it("handles id collisions from another client", function() { with(this) {
         expect(client, "trigger").given("transport:down").exactly(1)
-        dispatcher.handleResponse({'id': 1})
-        dispatcher.handleError({'id': 1})
+        dispatcher.handleResponse({ 'id': 1 })
+        dispatcher.handleError({ 'id': 1 })
       }})
     }})
   }})

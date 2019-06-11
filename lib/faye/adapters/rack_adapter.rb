@@ -11,9 +11,9 @@ module Faye
     DEFAULT_ENDPOINT  = '/bayeux'
     SCRIPT_PATH       = 'faye-browser-min.js'
 
-    TYPE_JSON   = {'Content-Type' => 'application/json; charset=utf-8'}
-    TYPE_SCRIPT = {'Content-Type' => 'text/javascript; charset=utf-8'}
-    TYPE_TEXT   = {'Content-Type' => 'text/plain; charset=utf-8'}
+    TYPE_JSON   = { 'Content-Type' => 'application/json; charset=utf-8' }
+    TYPE_SCRIPT = { 'Content-Type' => 'text/javascript; charset=utf-8' }
+    TYPE_TEXT   = { 'Content-Type' => 'text/plain; charset=utf-8' }
 
     VALID_JSONP_CALLBACK = /^[a-z_\$][a-z0-9_\$]*(\.[a-z_\$][a-z0-9_\$]*)*$/i
 
@@ -79,7 +79,7 @@ module Faye
       unless request.path_info =~ @endpoint_re
         env['faye.client'] = get_client
         return @app ? @app.call(env) :
-                      [404, TYPE_TEXT, ["Sure you're not looking for #{@endpoint} ?"]]
+                      [404, TYPE_TEXT, ["Sure you're not looking for #{ @endpoint } ?"]]
       end
 
       return @static.call(env) if @static =~ request.path_info
@@ -108,7 +108,7 @@ module Faye
         return [400, TYPE_TEXT, ['Bad request']]
       end
 
-      debug("Received message via HTTP #{request.request_method}: ?", json_msg)
+      debug("Received message via HTTP #{ request.request_method }: ?", json_msg)
 
       message  = parse_json(json_msg)
       jsonp    = request.params['jsonp'] || JSONP_CALLBACK
@@ -149,7 +149,7 @@ module Faye
 
       ASYNC_RESPONSE
     rescue => e
-      error "#{e.message}\nBacktrace:\n#{e.backtrace * "\n"}"
+      error "#{ e.message }\nBacktrace:\n#{ e.backtrace * "\n" }"
       [400, TYPE_TEXT, ['Bad request']]
     end
 
@@ -176,9 +176,9 @@ module Faye
     def send_response(response, hijack, callback)
       return callback.call(response) if callback
 
-      buffer = "HTTP/1.1 #{response[0]} OK\r\n"
+      buffer = "HTTP/1.1 #{ response[0] } OK\r\n"
       response[1].each do |name, value|
-        buffer << "#{name}: #{value}\r\n"
+        buffer << "#{ name }: #{ value }\r\n"
       end
       buffer << "\r\n"
       response[2].each do |chunk|
@@ -191,13 +191,13 @@ module Faye
     end
 
     def handle_websocket(request)
-      options   = {:extensions => @extensions, :ping => @options[:ping]}
+      options   = { :extensions => @extensions, :ping => @options[:ping] }
       ws        = Faye::WebSocket.new(request.env, [], options)
       client_id = nil
 
       ws.onmessage = lambda do |event|
         begin
-          debug("Received message via WebSocket[#{ws.version}]: ?", event.data)
+          debug("Received message via WebSocket[#{ ws.version }]: ?", event.data)
 
           message = parse_json(event.data)
           cid     = Faye.client_id_from_messages(message)
@@ -210,7 +210,7 @@ module Faye
             ws.send(Faye.to_json(replies)) if ws
           end
         rescue => e
-          error "#{e.message}\nBacktrace:\n#{e.backtrace * "\n"}"
+          error "#{ e.message }\nBacktrace:\n#{ e.backtrace * "\n" }"
         end
       end
 
@@ -258,11 +258,11 @@ module Faye
 
     def format_request(request)
       request.body.rewind
-      string = "curl -X #{request.request_method.upcase}"
-      string << " '#{request.url}'"
+      string = "curl -X #{ request.request_method.upcase }"
+      string << " '#{ request.url }'"
       if request.post?
-        string << " -H 'Content-Type: #{request.env['CONTENT_TYPE']}'"
-        string << " -d '#{request.body.read}'"
+        string << " -H 'Content-Type: #{ request.env['CONTENT_TYPE'] }'"
+        string << " -d '#{ request.body.read }'"
       end
       string
     end

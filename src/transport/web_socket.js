@@ -115,7 +115,7 @@ var WebSocket = assign(Class(Transport, {
         extensions = this._dispatcher.wsExtensions,
         cookie     = this._getCookies(),
         tls        = this._dispatcher.tls,
-        options    = {extensions: extensions, headers: headers, proxy: this._proxy, tls: tls};
+        options    = { extensions: extensions, headers: headers, proxy: this._proxy, tls: tls };
 
     if (cookie !== '') options.headers['Cookie'] = cookie;
 

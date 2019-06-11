@@ -13,8 +13,8 @@ jstest.describe("Server disconnect", function() { with(this) {
   describe("#disconnect", function() { with(this) {
     before(function() { with(this) {
       this.clientId = "fakeclientid"
-      this.message = {channel: "/meta/disconnect",
-                      clientId: "fakeclientid"}
+      this.message = { channel: "/meta/disconnect",
+                       clientId: "fakeclientid" }
     }})
 
     describe("with valid parameters", function() { with(this) {

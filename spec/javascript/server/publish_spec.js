@@ -9,7 +9,7 @@ jstest.describe("Server publish", function() { with(this) {
     stub(Engine, "get").returns(engine)
     this.server = new Server()
 
-    this.message = {channel: "/some/channel",     data: "publish"}
+    this.message = { channel: "/some/channel", data: "publish" }
   }})
 
   describe("publishing a message", function() { with(this) {

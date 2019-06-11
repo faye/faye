@@ -152,7 +152,7 @@ var Server = Class({ className: 'Server',
 
     response.advice = response.advice || {};
     if (response.error) {
-      assign(response.advice, {reconnect:  'handshake'}, false);
+      assign(response.advice, { reconnect:  'handshake' }, false);
     } else {
       assign(response.advice, {
         reconnect:  'retry',

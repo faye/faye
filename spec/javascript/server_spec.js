@@ -12,12 +12,12 @@ jstest.describe("Server", function() { with(this) {
 
   describe("#process", function() { with(this) {
     before(function() { with(this) {
-      this.handshake   = {channel: "/meta/handshake",   data: "handshake"}
-      this.connect     = {channel: "/meta/connect",     data: "connect"}
-      this.disconnect  = {channel: "/meta/disconnect",  data: "disconnect"}
-      this.subscribe   = {channel: "/meta/subscribe",   data: "subscribe"}
-      this.unsubscribe = {channel: "/meta/unsubscribe", data: "unsubscribe"}
-      this.publish     = {channel: "/some/channel",     data: "publish"}
+      this.handshake   = { channel: "/meta/handshake",   data: "handshake" }
+      this.connect     = { channel: "/meta/connect",     data: "connect" }
+      this.disconnect  = { channel: "/meta/disconnect",  data: "disconnect" }
+      this.subscribe   = { channel: "/meta/subscribe",   data: "subscribe" }
+      this.unsubscribe = { channel: "/meta/unsubscribe", data: "unsubscribe" }
+      this.publish     = { channel: "/some/channel",     data: "publish" }
 
       stub(engine, "interval", 0)
       stub(engine, "timeout", 60)
@@ -25,13 +25,13 @@ jstest.describe("Server", function() { with(this) {
 
     it("returns an empty response for no messages", function() { with(this) {
       var response = null
-      server.process([], false, function(r) { response = r})
+      server.process([], false, function(r) { response = r })
       assertEqual( [], response )
     }})
 
     it("ignores invalid messages", function() { with(this) {
       var response = null
-      server.process([{}, {channel: "invalid"}], false, function(r) { response = r})
+      server.process([{}, { channel: "invalid" }], false, function(r) { response = r })
       assertEqual([
         { successful: false,
           error:      "402:data:Missing required parameter"
@@ -45,7 +45,7 @@ jstest.describe("Server", function() { with(this) {
 
     it("rejects unknown meta channels", function() { with(this) {
       var response = null
-      server.process([{channel: "/meta/p"}], false, function(r) { response = r })
+      server.process([{ channel: "/meta/p" }], false, function(r) { response = r })
       assertEqual([
         { channel:    "/meta/p",
           successful: false,
@@ -79,7 +79,7 @@ jstest.describe("Server", function() { with(this) {
 
     describe("handshaking", function() { with(this) {
       before(function() { with(this) {
-        expect(server, "handshake").given(handshake, false).yielding([{channel: "/meta/handshake", successful: true}])
+        expect(server, "handshake").given(handshake, false).yielding([{ channel: "/meta/handshake", successful: true }])
       }})
 
       it("returns the handshake response with advice", function() { with(this) {
@@ -87,7 +87,7 @@ jstest.describe("Server", function() { with(this) {
           assertEqual([
               { channel: "/meta/handshake",
                 successful: true,
-                advice: {reconnect: "retry", interval: 0, timeout: 60000}
+                advice: { reconnect: "retry", interval: 0, timeout: 60000 }
               }
             ], response)
         })
@@ -96,7 +96,7 @@ jstest.describe("Server", function() { with(this) {
 
     describe("connecting for messages", function() { with(this) {
       before(function() { with(this) {
-        this.messages = [{channel: "/a"}, {channel: "/b"}]
+        this.messages = [{ channel: "/a" }, { channel: "/b" }]
         expect(server, "connect").given(connect, false).yielding([messages])
       }})
 

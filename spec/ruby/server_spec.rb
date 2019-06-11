@@ -9,12 +9,12 @@ describe Faye::Server do
   end
 
   describe :process do
-    let(:handshake)   {{"channel" => "/meta/handshake",   "data" => "handshake"  }}
-    let(:connect)     {{"channel" => "/meta/connect",     "data" => "connect"    }}
-    let(:disconnect)  {{"channel" => "/meta/disconnect",  "data" => "disconnect" }}
-    let(:subscribe)   {{"channel" => "/meta/subscribe",   "data" => "subscribe"  }}
-    let(:unsubscribe) {{"channel" => "/meta/unsubscribe", "data" => "unsubscribe"}}
-    let(:publish)     {{"channel" => "/some/channel",     "data" => "publish"    }}
+    let(:handshake)   { { "channel" => "/meta/handshake",   "data" => "handshake"   } }
+    let(:connect)     { { "channel" => "/meta/connect",     "data" => "connect"     } }
+    let(:disconnect)  { { "channel" => "/meta/disconnect",  "data" => "disconnect"  } }
+    let(:subscribe)   { { "channel" => "/meta/subscribe",   "data" => "subscribe"   } }
+    let(:unsubscribe) { { "channel" => "/meta/unsubscribe", "data" => "unsubscribe" } }
+    let(:publish)     { { "channel" => "/some/channel",     "data" => "publish"     } }
 
     before do
       engine.stub(:interval).and_return(0)
@@ -29,7 +29,7 @@ describe Faye::Server do
 
     it "ignores invalid messages" do
       response = nil
-      server.process([{}, {"channel" => "invalid"}], false) { |r| response = r }
+      server.process([{}, { "channel" => "invalid" }], false) { |r| response = r }
       response.should == [
         { "successful"  => false,
           "error"       => "402:data:Missing required parameter"
@@ -43,7 +43,7 @@ describe Faye::Server do
 
     it "rejects unknown meta channels" do
       response = nil
-      server.process([{"channel" => "/meta/p"}], false) { |r| response = r }
+      server.process([{ "channel" => "/meta/p" }], false) { |r| response = r }
       response.should == [
         { "channel"     => "/meta/p",
           "successful"  => false,
@@ -76,7 +76,7 @@ describe Faye::Server do
 
     describe "handshaking" do
       before do
-        response = {"channel" => "/meta/handshake", "successful" => true}
+        response = { "channel" => "/meta/handshake", "successful" => true }
         server.should_receive(:handshake).with(handshake, false).and_yield(response)
       end
 
@@ -85,7 +85,7 @@ describe Faye::Server do
           response.should == [
             { "channel" => "/meta/handshake",
               "successful" => true,
-              "advice" => {"reconnect" => "retry", "interval" => 0, "timeout" => 60000}
+              "advice" => { "reconnect" => "retry", "interval" => 0, "timeout" => 60000 }
             }
           ]
         end
@@ -93,7 +93,7 @@ describe Faye::Server do
     end
 
     describe "connecting for messages" do
-      let(:messages) { [{"channel" => "/a"}, {"channel" => "/b"}] }
+      let(:messages) { [{ "channel" => "/a" }, { "channel" => "/b" }] }
 
       before do
         server.should_receive(:connect).with(connect, false).and_yield(messages)

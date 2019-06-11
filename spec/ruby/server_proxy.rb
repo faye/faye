@@ -10,7 +10,7 @@ class ServerProxy < Rack::Proxy
     def listen(port)
       events = Puma::Events.new($stdout, $stderr)
       binder = Puma::Binder.new(events)
-      binder.parse(["tcp://0.0.0.0:#{PORT}"], self)
+      binder.parse(["tcp://0.0.0.0:#{ PORT }"], self)
 
       @server = Puma::Server.new(self, events)
       @server.binder = binder

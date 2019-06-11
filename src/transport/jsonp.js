@@ -46,7 +46,7 @@ var JSONP = assign(Class(Transport, {
       self._handleError(messages);
     };
 
-    return {abort: cleanup};
+    return { abort: cleanup };
   }
 }), {
   _cbCount: 0,

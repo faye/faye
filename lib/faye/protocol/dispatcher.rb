@@ -36,7 +36,7 @@ module Faye
       @ws_extensions = []
 
       @proxy = options[:proxy] || {}
-      @proxy = {:origin => @proxy} if String === @proxy
+      @proxy = { :origin => @proxy } if String === @proxy
 
       [*options[:websocket_extensions]].each do |extension|
         add_websocket_extension(extension)

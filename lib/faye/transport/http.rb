@@ -33,7 +33,7 @@ module Faye
         :head => {
           'Content-Length' => content.bytesize,
           'Content-Type'   => 'application/json',
-          'Host'           => @endpoint.host + (@endpoint.port ? ":#{@endpoint.port}" : '')
+          'Host'           => @endpoint.host + (@endpoint.port ? ":#{ @endpoint.port }" : '')
         }.merge(@dispatcher.headers),
 
         :body    => content,
@@ -50,12 +50,12 @@ module Faye
       version = EventMachine::HttpRequest::VERSION.split('.')[0].to_i
       options = {
         :inactivity_timeout => 0,
-        :tls => {:sni_hostname => @endpoint.hostname}
+        :tls => { :sni_hostname => @endpoint.hostname }
       }
 
       if @proxy[:origin]
         uri = URI(@proxy[:origin])
-        options[:proxy] = {:host => uri.host, :port => uri.port}
+        options[:proxy] = { :host => uri.host, :port => uri.port }
         if uri.user
           options[:proxy][:authorization] = [uri.user, uri.password]
         end

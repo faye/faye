@@ -13,24 +13,24 @@ jstest.describe("Server connect", function() { with(this) {
   describe("#connect", function() { with(this) {
     before(function() { with(this) {
       this.clientId = "fakeclientid"
-      this.message = {channel:  "/meta/connect",
-                      clientId: "fakeclientid",
-                      connectionType: "long-polling"}
+      this.message = { channel:  "/meta/connect",
+                       clientId: "fakeclientid",
+                       connectionType: "long-polling" }
     }})
 
     describe("with valid parameters", function() { with(this) {
       before(function() { with(this) {
-        message.advice = {timeout: 60}
+        message.advice = { timeout: 60 }
         expect(engine, "clientExists").given(clientId).yielding([true])
       }})
 
       it("connects to the engine to wait for new messages", function() { with(this) {
-        expect(engine, "connect").given(clientId, {timeout: 60}).yielding([[]])
+        expect(engine, "connect").given(clientId, { timeout: 60 }).yielding([[]])
         server.connect(message, false, function() {})
       }})
 
       it("returns a successful response and any queued messages", function() { with(this) {
-        stub(engine, "connect").yields([{channel: "/x", data: "hello"}])
+        stub(engine, "connect").yields([{ channel: "/x", data: "hello" }])
         server.connect(message, false, function(response) {
           assertEqual([
             { channel:    "/meta/connect",

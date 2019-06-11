@@ -32,7 +32,7 @@ var Dispatcher = Class({ className: 'Dispatcher',
     this.wsExtensions = [];
 
     this.proxy = options.proxy || {};
-    if (typeof this._proxy === 'string') this._proxy = {origin: this._proxy};
+    if (typeof this._proxy === 'string') this._proxy = { origin: this._proxy };
 
     var exts = options.websocketExtensions;
     if (exts) {
@@ -99,8 +99,8 @@ var Dispatcher = Class({ className: 'Dispatcher',
         scheduler;
 
     if (!envelope) {
-      scheduler = new this._scheduler(message, {timeout: timeout, interval: this.retry, attempts: attempts, deadline: deadline});
-      envelope  = this._envelopes[id] = {message: message, scheduler: scheduler};
+      scheduler = new this._scheduler(message, { timeout: timeout, interval: this.retry, attempts: attempts, deadline: deadline });
+      envelope  = this._envelopes[id] = { message: message, scheduler: scheduler };
     }
 
     this._sendEnvelope(envelope);

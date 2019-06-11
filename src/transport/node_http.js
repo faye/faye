@@ -36,7 +36,7 @@ var NodeHttp = assign(Class(Transport, { className: 'NodeHttp',
         host:       this._proxyUri.hostname,
         port:       this._proxyUri.port || this.DEFAULT_PORTS[this._proxyUri.protocol],
         proxyAuth:  this._proxyUri.auth,
-        headers:    assign({host: this.endpoint.host}, proxy.headers)
+        headers:    assign({ host: this.endpoint.host }, proxy.headers)
       }
     }, this._dispatcher.tls);
 

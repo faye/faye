@@ -30,7 +30,7 @@ describe Faye::Dispatcher do
   end
 
   describe :endpoint_for do
-    let(:options) { {:endpoints => {"websocket" => "http://sockets/"}} }
+    let(:options) { { :endpoints => { "websocket" => "http://sockets/" } } }
 
     it "returns the main endpoint for unspecified connection types" do
       expect(@dispatcher.endpoint_for("long-polling").to_s).to eq("http://localhost/")
@@ -79,7 +79,7 @@ describe Faye::Dispatcher do
   end
 
   describe :messaging do
-    let(:message) { {'id' => 1} }
+    let(:message) { { 'id' => 1 } }
     let(:request) { double(:request) }
 
     let :req_promise do
@@ -103,26 +103,26 @@ describe Faye::Dispatcher do
       end
 
       it "sends a message to the transport" do
-        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1).and_return(req_promise)
+        expect(transport).to receive(:send_message).with({ 'id' => 1 }).exactly(1).and_return(req_promise)
         @dispatcher.send_message(message, 25)
       end
 
       it "sends several different messages to the transport" do
-        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1).and_return(req_promise)
-        expect(transport).to receive(:send_message).with({'id' => 2}).exactly(1).and_return(req_promise)
-        @dispatcher.send_message({'id' => 1}, 25)
-        @dispatcher.send_message({'id' => 2}, 25)
+        expect(transport).to receive(:send_message).with({ 'id' => 1 }).exactly(1).and_return(req_promise)
+        expect(transport).to receive(:send_message).with({ 'id' => 2 }).exactly(1).and_return(req_promise)
+        @dispatcher.send_message({ 'id' => 1 }, 25)
+        @dispatcher.send_message({ 'id' => 2 }, 25)
       end
 
       it "does not resend a message if it's already being sent" do
-        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1).and_return(req_promise)
+        expect(transport).to receive(:send_message).with({ 'id' => 1 }).exactly(1).and_return(req_promise)
         @dispatcher.send_message(message, 25)
         @dispatcher.send_message(message, 25)
       end
 
       it "sets a timeout to fail the message" do
         @dispatcher.send_message(message, 25)
-        expect(@dispatcher).to receive(:handle_error).with({'id' => 1}).exactly(1)
+        expect(@dispatcher).to receive(:handle_error).with({ 'id' => 1 }).exactly(1)
         clock.tick(25)
       end
     end
@@ -138,13 +138,13 @@ describe Faye::Dispatcher do
       end
 
       it "resends messages immediately if instructed" do
-        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1).and_return(req_promise)
+        expect(transport).to receive(:send_message).with({ 'id' => 1 }).exactly(1).and_return(req_promise)
         @dispatcher.handle_error(message, true)
       end
 
       it "resends a message automatically after a timeout on error" do
         @dispatcher.handle_error(message)
-        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1).and_return(req_promise)
+        expect(transport).to receive(:send_message).with({ 'id' => 1 }).exactly(1).and_return(req_promise)
         clock.tick(5.5)
       end
 
@@ -162,7 +162,7 @@ describe Faye::Dispatcher do
       end
 
       it "does not resend a message with an ID it does not recognize" do
-        @dispatcher.handle_error({'id' => 2})
+        @dispatcher.handle_error({ 'id' => 2 })
         expect(transport).not_to receive(:send_message)
         clock.tick(5.5)
       end
@@ -175,7 +175,7 @@ describe Faye::Dispatcher do
       end
 
       it "does not schedule another resend if an error is reported while waiting to resend" do
-        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1)
+        expect(transport).to receive(:send_message).with({ 'id' => 1 }).exactly(1)
         @dispatcher.handle_error(message)
         clock.tick(2.5)
         @dispatcher.handle_error(message)
@@ -183,26 +183,26 @@ describe Faye::Dispatcher do
       end
 
       it "does not schedule a resend if the number of attempts has been exhausted" do
-        expect(transport).to receive(:send_message).with({'id' => 2}).exactly(2).and_return(req_promise)
-        @dispatcher.send_message({'id' => 2}, 25, :attempts => 2)
-        @dispatcher.handle_error({'id' => 2}, true)
-        @dispatcher.handle_error({'id' => 2}, true)
+        expect(transport).to receive(:send_message).with({ 'id' => 2 }).exactly(2).and_return(req_promise)
+        @dispatcher.send_message({ 'id' => 2 }, 25, :attempts => 2)
+        @dispatcher.handle_error({ 'id' => 2 }, true)
+        @dispatcher.handle_error({ 'id' => 2 }, true)
       end
 
       it "does not count down attempts when an error is reported while waiting to resend" do
-        @dispatcher.send_message({'id' => 2}, 25, :attempts => 3)
-        @dispatcher.handle_error({'id' => 2})
+        @dispatcher.send_message({ 'id' => 2 }, 25, :attempts => 3)
+        @dispatcher.handle_error({ 'id' => 2 })
         clock.tick(2.5)
-        @dispatcher.handle_error({'id' => 2}, true)
+        @dispatcher.handle_error({ 'id' => 2 }, true)
         clock.tick(2.5)
-        expect(transport).to receive(:send_message).with({'id' => 2}).exactly(1).and_return(req_promise)
-        @dispatcher.handle_error({'id' => 2}, true)
+        expect(transport).to receive(:send_message).with({ 'id' => 2 }).exactly(1).and_return(req_promise)
+        @dispatcher.handle_error({ 'id' => 2 }, true)
       end
 
       it "does not schedule a resend if the deadline has been reached" do
-        @dispatcher.handle_response({'id' => 1, 'successful' => true})
-        @dispatcher.send_message({'id' => 2}, 25, :deadline => 60)
-        expect(transport).to receive(:send_message).with({'id' => 2}).exactly(2).and_return(req_promise)
+        @dispatcher.handle_response({ 'id' => 1, 'successful' => true })
+        @dispatcher.send_message({ 'id' => 2 }, 25, :deadline => 60)
+        expect(transport).to receive(:send_message).with({ 'id' => 2 }).exactly(2).and_return(req_promise)
         clock.tick(90)
       end
 
@@ -212,23 +212,23 @@ describe Faye::Dispatcher do
       end
 
       it "only emits transport:down once, when the first error is received" do
-        @dispatcher.send_message({'id' => 2}, 25)
+        @dispatcher.send_message({ 'id' => 2 }, 25)
         expect(client).to receive(:trigger).with("transport:down").exactly(1)
-        @dispatcher.handle_error({'id' => 1})
-        @dispatcher.handle_error({'id' => 2})
+        @dispatcher.handle_error({ 'id' => 1 })
+        @dispatcher.handle_error({ 'id' => 2 })
       end
 
       it "emits transport:down again if there was a message since the last event" do
-        @dispatcher.send_message({'id' => 2}, 25)
+        @dispatcher.send_message({ 'id' => 2 }, 25)
         expect(client).to receive(:trigger).with("transport:down").exactly(2)
-        @dispatcher.handle_error({'id' => 1})
-        @dispatcher.handle_response({'id' => 3})
-        @dispatcher.handle_error({'id' => 2})
+        @dispatcher.handle_error({ 'id' => 1 })
+        @dispatcher.handle_response({ 'id' => 3 })
+        @dispatcher.handle_error({ 'id' => 2 })
       end
     end
 
     describe "with a scheduler" do
-      let(:options) { {:scheduler => Scheduler} }
+      let(:options) { { :scheduler => Scheduler } }
 
       before do
         @dispatcher.send_message(message, 25)
@@ -247,7 +247,7 @@ describe Faye::Dispatcher do
       it "resends a message after the interval given by the scheduler" do
         allow(Scheduler.instance).to receive(:interval).and_return(3)
         @dispatcher.handle_error(message)
-        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1).and_return(req_promise)
+        expect(transport).to receive(:send_message).with({ 'id' => 1 }).exactly(1).and_return(req_promise)
         clock.tick(3.5)
       end
 
@@ -259,7 +259,7 @@ describe Faye::Dispatcher do
       it "waits the specified amount of time to fail the message" do
         allow(Scheduler.instance).to receive(:timeout).and_return(3)
         @dispatcher.handle_error(message, true)
-        expect(@dispatcher).to receive(:handle_error).with({'id' => 1}).exactly(1)
+        expect(@dispatcher).to receive(:handle_error).with({ 'id' => 1 }).exactly(1)
         clock.tick(3)
       end
 
@@ -270,7 +270,7 @@ describe Faye::Dispatcher do
 
       it "resends the message if it's deliverable" do
         allow(Scheduler.instance).to receive(:deliverable?).and_return(true)
-        expect(transport).to receive(:send_message).with({'id' => 1}).exactly(1)
+        expect(transport).to receive(:send_message).with({ 'id' => 1 }).exactly(1)
         @dispatcher.handle_error(message, true)
       end
 
@@ -299,25 +299,25 @@ describe Faye::Dispatcher do
 
       it "clears the timeout to resend the message if successful=true" do
         expect(@dispatcher).to receive(:handle_error).exactly(0)
-        @dispatcher.handle_response({'id' => 1, 'successful' => true})
+        @dispatcher.handle_response({ 'id' => 1, 'successful' => true })
         clock.tick(25)
       end
 
       it "clears the timeout to resend the message if successful=false" do
         expect(@dispatcher).to receive(:handle_error).exactly(0)
-        @dispatcher.handle_response({'id' => 1, 'successful' => false})
+        @dispatcher.handle_response({ 'id' => 1, 'successful' => false })
         clock.tick(25)
       end
 
       it "leaves the timeout to resend the message if successful is missing" do
-        expect(@dispatcher).to receive(:handle_error).with({'id' => 1}).exactly(1)
+        expect(@dispatcher).to receive(:handle_error).with({ 'id' => 1 }).exactly(1)
         @dispatcher.handle_response(message)
         clock.tick(25)
       end
 
       it "emits the message as an event" do
-        expect(@dispatcher).to receive(:trigger).with(:message, {'id' => 3}).exactly(1)
-        @dispatcher.handle_response({'id' => 3})
+        expect(@dispatcher).to receive(:trigger).with(:message, { 'id' => 3 }).exactly(1)
+        @dispatcher.handle_response({ 'id' => 3 })
       end
 
       it "emits the transport:up event via the client" do
@@ -327,21 +327,21 @@ describe Faye::Dispatcher do
 
       it "only emits transport:up once, when the first message is received" do
         expect(client).to receive(:trigger).with("transport:up").exactly(1)
-        @dispatcher.handle_response({'id' => 1})
-        @dispatcher.handle_response({'id' => 2})
+        @dispatcher.handle_response({ 'id' => 1 })
+        @dispatcher.handle_response({ 'id' => 2 })
       end
 
       it "emits transport:up again if there was an error since the last event" do
         expect(client).to receive(:trigger).with("transport:up").exactly(2)
-        @dispatcher.handle_response({'id' => 2})
-        @dispatcher.handle_error({'id' => 1})
-        @dispatcher.handle_response({'id' => 3})
+        @dispatcher.handle_response({ 'id' => 2 })
+        @dispatcher.handle_error({ 'id' => 1 })
+        @dispatcher.handle_response({ 'id' => 3 })
       end
 
       it "handles id collisions from another client" do
         expect(client).to receive(:trigger).with("transport:down").exactly(1)
-        @dispatcher.handle_response({'id' => 1})
-        @dispatcher.handle_error({'id' => 1})
+        @dispatcher.handle_response({ 'id' => 1 })
+        @dispatcher.handle_error({ 'id' => 1 })
       end
     end
   end

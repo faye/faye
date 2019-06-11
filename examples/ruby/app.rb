@@ -29,13 +29,13 @@ def App.log(message)
 end
 
 App.on(:subscribe) do |client_id, channel|
-  puts "[  SUBSCRIBE] #{client_id} -> #{channel}"
+  puts "[  SUBSCRIBE] #{ client_id } -> #{ channel }"
 end
 
 App.on(:unsubscribe) do |client_id, channel|
-  puts "[UNSUBSCRIBE] #{client_id} -> #{channel}"
+  puts "[UNSUBSCRIBE] #{ client_id } -> #{ channel }"
 end
 
 App.on(:disconnect) do |client_id|
-  puts "[ DISCONNECT] #{client_id}"
+  puts "[ DISCONNECT] #{ client_id }"
 end

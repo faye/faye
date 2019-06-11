@@ -131,19 +131,19 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
       return this._concatStream(request, function(data) {
         var type   = (request.headers['content-type'] || '').split(';')[0],
             params = (type === 'application/json')
-                   ? {message: data}
+                   ? { message: data }
                    : querystring.parse(data);
 
         request.body = data;
         this._callWithParams(request, response, params);
       }, this);
 
-    this._returnError(response, {message: 'Unrecognized request type'});
+    this._returnError(response, { message: 'Unrecognized request type' });
   },
 
   _callWithParams: function(request, response, params) {
     if (!params.message)
-      return this._returnError(response, {message: 'Received request with no message: ' + this._formatRequest(request)});
+      return this._returnError(response, { message: 'Received request with no message: ' + this._formatRequest(request) });
 
     try {
       this.debug('Received message via HTTP ' + request.method + ': ?', params.message);
@@ -156,7 +156,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
           origin  = request.headers.origin;
 
       if (!this.VALID_JSONP_CALLBACK.test(jsonp))
-        return this._returnError(response, {message: 'Invalid JSON-P callback: ' + jsonp});
+        return this._returnError(response, { message: 'Invalid JSON-P callback: ' + jsonp });
 
       headers['Cache-Control'] = 'no-cache, no-store';
       headers['X-Content-Type-Options'] = 'nosniff';
@@ -190,7 +190,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
   },
 
   handleUpgrade: function(request, socket, head) {
-    var options  = {extensions: this._extensions, ping: this._options.ping},
+    var options  = { extensions: this._extensions, ping: this._options.ping },
         ws       = new WebSocket(request, socket, head, [], options),
         clientId = null,
         self     = this;
@@ -224,7 +224,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
   },
 
   handleEventSource: function(request, response) {
-    var es       = new EventSource(request, response, {ping: this._options.ping}),
+    var es       = new EventSource(request, response, { ping: this._options.ping }),
         clientId = es.url.split('/').pop(),
         self     = this;
 
