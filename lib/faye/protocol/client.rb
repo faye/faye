@@ -6,14 +6,14 @@ module Faye
     include Logging
     include Extensible
 
-    UNCONNECTED        = 1
-    CONNECTING         = 2
-    CONNECTED          = 3
-    DISCONNECTED       = 4
+    UNCONNECTED  = 1
+    CONNECTING   = 2
+    CONNECTED    = 3
+    DISCONNECTED = 4
 
-    HANDSHAKE          = 'handshake'
-    RETRY              = 'retry'
-    NONE               = 'none'
+    HANDSHAKE = 'handshake'
+    RETRY     = 'retry'
+    NONE      = 'none'
 
     CONNECTION_TIMEOUT = 60.0
 
