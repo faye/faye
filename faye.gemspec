@@ -1,15 +1,15 @@
 Gem::Specification.new do |s|
-  s.name              = 'faye'
-  s.version           = '1.2.4'
-  s.summary           = 'Simple pub/sub messaging for the web'
-  s.author            = 'James Coglan'
-  s.email             = 'jcoglan@gmail.com'
-  s.homepage          = 'https://faye.jcoglan.com'
-  s.license           = 'Apache-2.0'
+  s.name     = 'faye'
+  s.version  = '1.2.4'
+  s.summary  = 'Simple pub/sub messaging for the web'
+  s.author   = 'James Coglan'
+  s.email    = 'jcoglan@gmail.com'
+  s.homepage = 'https://faye.jcoglan.com'
+  s.license  = 'Apache-2.0'
 
-  s.extra_rdoc_files  = %w[README.md]
-  s.rdoc_options      = %w[--main README.md --markup markdown]
-  s.require_paths     = %w[lib]
+  s.extra_rdoc_files = %w[README.md]
+  s.rdoc_options     = %w[--main README.md --markup markdown]
+  s.require_paths    = %w[lib]
 
   # It is important that the JavaScript files listed here are not removed: they
   # contain the browser client and the gem should fail to build without them.
@@ -33,11 +33,11 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rack-proxy', '~> 0.4.0'
   s.add_development_dependency 'rack-test'
   s.add_development_dependency 'rake'
+  s.add_development_dependency 'RedCloth', '~> 3.0.0'
   s.add_development_dependency 'rspec', '~> 2.99.0'
   s.add_development_dependency 'rspec-eventmachine', '>= 0.2.0'
-  s.add_development_dependency 'RedCloth', '~> 3.0.0'
-  s.add_development_dependency 'sinatra'
   s.add_development_dependency 'sass', '~> 3.2.0'
+  s.add_development_dependency 'sinatra'
   s.add_development_dependency 'staticmatic'
 
   jruby = RUBY_PLATFORM =~ /java/
