@@ -187,7 +187,8 @@ module Faye
 
       hijack.write(buffer)
       hijack.flush
-      hijack.close_write
+      hijack.close_write if hijack.respond_to? :close_write
+      hijack.close if hijack.respond_to? :close
     end
 
     def handle_websocket(request)
