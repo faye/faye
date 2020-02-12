@@ -169,6 +169,42 @@ var Client = Class({ className: 'Client',
   // Request                              Response
   // MUST include:  * channel             MUST include:  * channel
   //                * clientId                           * successful
+  //                * connectionType                     * clientId
+  // MAY include:   * ext                 MAY include:   * error
+  //                * id                                 * advice
+  //                                                     * ext
+  //                                                     * id
+  //                                                     * timestamp
+  lazyConnect: function(callback, context) {
+    if (this._advice.reconnect === this.NONE) return;
+    if (this._state === this.DISCONNECTED) return;
+
+    if (this._state === this.UNCONNECTED)
+      return this.handshake(function() { this.lazyConnect(callback, context) }, this);
+
+    this.callback(callback, context);
+    if (this._state !== this.CONNECTED) return;
+
+    this.info('Calling deferred actions for ?', this._dispatcher.clientId);
+    this.setDeferredStatus('succeeded');
+    this.setDeferredStatus('unknown');
+
+    if (this._connectRequest) return;
+    this._connectRequest = true;
+
+    this.info('Initiating connection for ?', this._dispatcher.clientId);
+
+    this._sendMessage({
+      channel:        Channel.CONNECT,
+      clientId:       this._dispatcher.clientId,
+      connectionType: this._dispatcher.connectionType
+
+    }, {}, this._lazyCycleConnection, this);
+  },
+
+  // Request                              Response
+  // MUST include:  * channel             MUST include:  * channel
+  //                * clientId                           * successful
   // MAY include:   * ext                                * clientId
   //                * id                  MAY include:   * error
   //                                                     * ext
@@ -226,6 +262,59 @@ var Client = Class({ className: 'Client',
     }
 
     this.connect(function() {
+      this.info('Client ? attempting to subscribe to ?', this._dispatcher.clientId, channel);
+      if (!force) this._channels.subscribe([channel], subscription);
+
+      this._sendMessage({
+        channel:      Channel.SUBSCRIBE,
+        clientId:     this._dispatcher.clientId,
+        subscription: channel
+
+      }, {}, function(response) {
+        if (!response.successful) {
+          subscription.setDeferredStatus('failed', Error.parse(response.error));
+          return this._channels.unsubscribe(channel, subscription);
+        }
+
+        var channels = [].concat(response.subscription);
+        this.info('Subscription acknowledged for ? to ?', this._dispatcher.clientId, channels);
+        subscription.setDeferredStatus('succeeded');
+      }, this);
+    }, this);
+
+    return subscription;
+  },
+
+  // Request                              Response
+  // MUST include:  * onReceiveConnect    MUST include:  * channel
+  //                * channel                            * successful
+  //                * clientId                           * clientId
+  //                * subscription
+  // MAY include:   * ext                                * subscription
+  //                * id                  MAY include:   * error
+  //                                                     * advice
+  //                                                     * ext
+  //                                                     * id
+  //                                                     * timestamp
+  subscribeWithLazyConnect: function(onReceiveConnect, channel, callback, context) {
+    this.onReceiveConnect = onReceiveConnect;
+
+    if (channel instanceof Array)
+      return array.map(channel, function(c) {
+        return this.subscribe(c, callback, context);
+      }, this);
+
+    var subscription = new Subscription(this, channel, callback, context),
+        force        = (callback === true),
+        hasSubscribe = this._channels.hasSubscription(channel);
+
+    if (hasSubscribe && !force) {
+      this._channels.subscribe([channel], subscription);
+      subscription.setDeferredStatus('succeeded');
+      return subscription;
+    }
+
+    this.lazyConnect(function() {
       this.info('Client ? attempting to subscribe to ?', this._dispatcher.clientId, channel);
       if (!force) this._channels.subscribe([channel], subscription);
 
@@ -374,6 +463,16 @@ var Client = Class({ className: 'Client',
     }
     var self = this;
     global.setTimeout(function() { self.connect() }, this._advice.interval);
+  },
+
+  _lazyCycleConnection: function() {
+    if (this._connectRequest) {
+      this._connectRequest = null;
+      this.info('Closed connection for ?', this._dispatcher.clientId);
+    }
+    var self = this;
+    var boundLazyConnect = function() { self.lazyConnect(); };
+    global.setTimeout(function() { self.onReceiveConnect(boundLazyConnect); }, this._advice.interval);
   }
 });
 

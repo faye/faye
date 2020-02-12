@@ -499,6 +499,209 @@ jstest.describe("Client", function() { with(this) {
     }})
   }})
 
+  describe("subscribeWithLazyConnect", function() { with(this) {
+    before(function() { with(this) {
+      createConnectedClient()
+      this.subscribeMessage = {
+        channel:      "/meta/subscribe",
+        clientId:     "fakeid",
+        subscription: "/foo",
+        id:           instanceOf("string")
+      }
+    }})
+
+    describe("with no prior subscriptions", function() { with(this) {
+      it("sends a subscribe message to the server", function(resume) { with(this) {
+        expect(dispatcher, "sendMessage").given(subscribeMessage, 72, {})
+        client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/foo")
+        client.connect(resume)
+      }})
+
+      // The Bayeux spec says the server should accept a list of subscriptions
+      // in one message but the cometD server doesn't actually support this
+      describe("with an array of subscriptions", function() { with(this) {
+        it("sends multiple subscribe messages", function(resume) { with(this) {
+          expect(dispatcher, "sendMessage").given({
+            channel:      "/meta/subscribe",
+            clientId:     "fakeid",
+            subscription: "/foo",
+            id:           instanceOf("string")
+          }, 72, {})
+          expect(dispatcher, "sendMessage").given({
+            channel:      "/meta/subscribe",
+            clientId:     "fakeid",
+            subscription: "/bar",
+            id:           instanceOf("string")
+          }, 72, {})
+          client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), ["/foo", "/bar"])
+          client.connect(resume)
+        }})
+
+        it("returns an array of subscriptions", function() { with(this) {
+          var subs = client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(),["/foo", "/bar"])
+          assertEqual( 2, subs.length )
+          assertKindOf( Subscription, subs[0] )
+        }})
+      }})
+
+      describe("on successful response", function() { with(this) {
+        before(function() { with(this) {
+          stubResponse({ channel:      "/meta/subscribe",
+            successful:   true,
+            clientId:     "fakeid",
+            subscription: "/foo/*" })
+        }})
+
+        it("sets up a listener for the subscribed channel", function(resume) { with(this) {
+          var message
+          client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/foo/*", function(m) { message = m }).then(function() {
+            resume(function() {
+              client._receiveMessage({ channel: "/foo/bar", data: "hi" })
+              assertEqual( "hi", message )
+            })
+          })
+        }})
+
+        it("yields the channel when requested", function(resume) { with(this) {
+          var message
+          client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/foo/*").withChannel(function(c, m) { message = [c, m] }).then(function() {
+            resume(function() {
+              client._receiveMessage({ channel: "/foo/bar", data: "hi" })
+              assertEqual( ["/foo/bar", "hi"], message )
+            })
+          })
+        }})
+
+        it("does not call the listener for non-matching channels", function() { with(this) {
+          var message
+          client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/foo/*", function(m) { message = m })
+          client._receiveMessage({ channel: "/bar", data: "hi" })
+          assertEqual( undefined, message )
+        }})
+
+        it("activates the subscription", function(resume) { with(this) {
+          client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/foo/*").callback(resume)
+        }})
+
+        describe("with an incoming extension installed", function() { with(this) {
+          before(function(resume) { with(this) {
+            var extension = {
+              incoming: function(message, callback) {
+                if (message.data) message.data.changed = true
+                callback(message)
+              }
+            }
+            client.addExtension(extension)
+            this.message = null
+            client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/foo/*", function(m) { message = m }).then(resume)
+          }})
+
+          it("passes delivered messages through the extension", function() { with(this) {
+            client._receiveMessage({ channel: "/foo/bar", data: { hello: "there" }})
+            assertEqual( { hello: "there", changed: true }, message )
+          }})
+        }})
+
+        describe("with an outgoing extension installed", function() { with(this) {
+          before(function(resume) { with(this) {
+            var extension = {
+              outgoing: function(message, callback) {
+                if (message.data) message.data.changed = true
+                callback(message)
+              }
+            }
+            client.addExtension(extension)
+            this.message = null
+            client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/foo/*", function(m) { message = m }).then(resume)
+          }})
+
+          it("leaves messages unchanged", function() { with(this) {
+            client._receiveMessage({ channel: "/foo/bar", data: { hello: "there" }})
+            assertEqual( { hello: "there" }, message )
+          }})
+        }})
+
+        describe("with an incoming extension that invalidates the response", function() { with(this) {
+          before(function() { with(this) {
+            var extension = {
+              incoming: function(message, callback) {
+                if (message.channel === "/meta/subscribe") message.successful = false
+                callback(message)
+              }
+            }
+            client.addExtension(extension)
+          }})
+
+          it("does not set up a listener for the subscribed channel", function() { with(this) {
+            var message
+            client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/foo/*", function(m) { message = m })
+            client._receiveMessage({ channel: "/foo/bar", data: "hi" })
+            assertEqual( undefined, message )
+          }})
+
+          it("does not activate the subscription", function() { with(this) {
+            var active = false
+            client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/foo/*").callback(function() { active = true })
+            assert( !active )
+          }})
+        }})
+      }})
+
+      describe("on unsuccessful response", function() { with(this) {
+        before(function() { with(this) {
+          stubResponse({ channel:      "/meta/subscribe",
+            successful:   false,
+            error:        "403:/meta/foo:Forbidden channel",
+            clientId:     "fakeid",
+            subscription: "/meta/foo" })
+        }})
+
+        it("does not set up a listener for the subscribed channel", function() { with(this) {
+          var message
+          client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/meta/foo", function(m) { message = m })
+          client._receiveMessage({ channel: "/meta/foo", data: "hi" })
+          assertEqual( undefined, message )
+        }})
+
+        it("does not activate the subscription", function(resume) { with(this) {
+          client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/meta/foo").errback(function() { resume() })
+        }})
+
+        it("reports the error through an errback", function(resume) { with(this) {
+          client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/meta/foo").errback(function(error) {
+            resume(function() {
+              assertEqual( objectIncluding({ code: 403, params: ["/meta/foo"], message: "Forbidden channel" }), error )
+            })
+          })
+        }})
+      }})
+    }})
+
+    describe("with an existing subscription", function() { with(this) {
+      before(function() { with(this) {
+        subscribe(client, "/lazyfoo/*")
+      }})
+
+      it("does not send another subscribe message to the server", function() { with(this) {
+        expect(dispatcher, "sendMessage").given(subscribeMessage, 72, {}).exactly(0)
+        client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/lazyfoo/*")
+      }})
+
+      it("sets up another listener on the channel", function(resume) { with(this) {
+        client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/lazyfoo/*", function() { subsCalled += 1 }).then(function() {
+          resume(function() {
+            client._receiveMessage({ channel: "/lazyfoo/bar", data: "hi" })
+            assertEqual( 2, subsCalled )
+          })
+        })
+      }})
+
+      it("activates the subscription", function(resume) { with(this) {
+        client.subscribeWithLazyConnect((lazyConnect) => lazyConnect(), "/foo/*").callback(resume)
+      }})
+    }})
+  }})
+
   describe("unsubscribe", function() { with(this) {
     before(function() { with(this) {
       createConnectedClient()
