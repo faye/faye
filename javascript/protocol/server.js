@@ -1,6 +1,4 @@
 Faye.Server = Faye.Class({
-  META_METHODS: ['handshake', 'connect', 'disconnect', 'subscribe', 'unsubscribe'],
-
   initialize: function(options) {
     this._options  = options || {};
     var engineOpts = this._options.engine || {};
@@ -104,11 +102,11 @@ Faye.Server = Faye.Class({
   },
 
   _handleMeta: function(message, local, callback, context) {
-    var method   = Faye.Channel.parse(message.channel)[1],
+    var method   = this._methodFor(message),
         clientId = message.clientId,
         response;
 
-    if (Faye.indexOf(this.META_METHODS, method) < 0) {
+    if (method === null) {
       response = this._makeResponse(message);
       response.error = Faye.Error.channelForbidden(message.channel);
       response.successful = false;
@@ -120,6 +118,18 @@ Faye.Server = Faye.Class({
       for (var i = 0, n = responses.length; i < n; i++) this._advize(responses[i], message.connectionType);
       callback.call(context, responses);
     }, this);
+  },
+
+  _methodFor: function(message) {
+    var channel = message.channel;
+
+    if (channel === Faye.Channel.HANDSHAKE)   return 'handshake';
+    if (channel === Faye.Channel.CONNECT)     return 'connect';
+    if (channel === Faye.Channel.SUBSCRIBE)   return 'subscribe';
+    if (channel === Faye.Channel.UNSUBSCRIBE) return 'unsubscribe';
+    if (channel === Faye.Channel.DISCONNECT)  return 'disconnect';
+
+    return null;
   },
 
   _advize: function(response, connectionType) {

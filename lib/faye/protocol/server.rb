@@ -6,8 +6,6 @@ module Faye
     include Logging
     include Extensible
 
-    META_METHODS = %w[handshake connect disconnect subscribe unsubscribe]
-
     attr_reader :engine
 
     def initialize(options = {})
@@ -104,10 +102,10 @@ module Faye
     end
 
     def handle_meta(message, local, &callback)
-      method    = Channel.parse(message['channel'])[1]
+      method    = method_for(message)
       client_id = message['clientId']
 
-      unless META_METHODS.include?(method)
+      unless method
         response = make_response(message)
         response['error'] = Faye::Error.channel_forbidden(message['channel'])
         response['successful'] = false
@@ -118,6 +116,16 @@ module Faye
         responses = [responses].flatten
         responses.each { |r| advize(r, message['connectionType']) }
         callback.call(responses)
+      end
+    end
+
+    def method_for(message)
+      case message['channel']
+      when Channel::HANDSHAKE   then :handshake
+      when Channel::CONNECT     then :connect
+      when Channel::SUBSCRIBE   then :subscribe
+      when Channel::UNSUBSCRIBE then :unsubscribe
+      when Channel::DISCONNECT  then :disconnect
       end
     end
 
