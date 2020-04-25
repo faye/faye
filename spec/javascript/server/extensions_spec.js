@@ -31,6 +31,42 @@ JS.ENV.Server.ExtensionsSpec = JS.Test.describe("Server extensions", function() 
     }})
   }})
 
+  describe("with subscription auth installed", function() { with(this) {
+    before(function() { with(this) {
+      var extension = {
+        incoming: function(message, callback) {
+          if (message.channel === "/meta/subscribe" && !message.auth) {
+            message.error = "Invalid auth"
+          }
+          callback(message)
+        }
+      }
+      server.addExtension(extension)
+    }})
+
+    it("does not subscribe using the intended channel", function() { with(this) {
+      var message = {
+        channel: "/meta/subscribe",
+        clientId: "fakeclientid",
+        subscription: "/foo"
+      }
+      stub(engine, "clientExists").yields([true])
+      expect(engine, "subscribe").exactly(0)
+      server.process(message, false, function() {})
+    }})
+
+    it("does not subscribe using an extended channel", function() { with(this) {
+      var message = {
+        channel: "/meta/subscribe/x",
+        clientId: "fakeclientid",
+        subscription: "/foo"
+      }
+      stub(engine, "clientExists").yields([true])
+      expect(engine, "subscribe").exactly(0)
+      server.process(message, false, function() {})
+    }})
+  }})
+
   describe("with an outgoing extension installed", function() { with(this) {
     before(function() { with(this) {
       var extension = {
