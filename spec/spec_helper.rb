@@ -1,9 +1,12 @@
 require 'rubygems'
 require 'bundler/setup'
-require 'puma'
 require 'rack/proxy'
 require 'rack/test'
 require 'rspec/em'
+
+require 'puma'
+require 'puma/binder'
+require 'puma/events'
 
 require File.expand_path('../../lib/faye', __FILE__)
 
