@@ -5,7 +5,7 @@
 , "keywords"        : ["comet", "websocket", "pubsub", "bayeux", "ajax", "http"]
 , "license"         : "MIT"
 
-, "version"         : "1.1.2"
+, "version"         : "1.1.3"
 , "engines"         : {"node": ">=0.6.0"}
 , "main"            : "./node/faye-node"
 , "browserify"      : "./browser/faye-browser"

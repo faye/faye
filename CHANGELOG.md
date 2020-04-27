@@ -1,3 +1,9 @@
+### 1.1.3 / 2020-04-28
+
+* Fix `/meta/*` channel recognition bug in the server that enables authentication bypass
+* https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
+
+
 ### 1.1.2 / 2015-07-19
 
 * Allow the `Authorization` header to be used on CORS requests
