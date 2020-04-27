@@ -1,3 +1,9 @@
+### 1.0.4 / 2020-04-28
+
+* Fix `/meta/*` channel recognition bug in the server that enables authentication bypass
+* https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
+
+
 ### 1.0.3 / 2014-07-08
 
 * Make some changes to JSON-P responses to mitigate the Rosetta Flash attack
