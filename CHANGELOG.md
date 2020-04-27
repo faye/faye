@@ -1,8 +1,15 @@
+### 1.2.5 / 2020-04-28
+
+* Fix `/meta/*` channel recognition bug in the server that enables authentication bypass
+* https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
+
+
 ### 1.2.4 / 2017-01-28
 
 * Fix `RackAdapter#get_client` that was failing due to a URI error
 * Define `Promise#catch` in a safe way for old browsers
 * Log errors in the Node HTTP transport
+
 
 ### 1.2.3 / 2016-10-11
 
