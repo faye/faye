@@ -6,6 +6,20 @@ var NodeAdapter = require("../../src/adapters/node_adapter"),
     Server      = require("../../src/protocol/server"),
     assign      = require("../../src/util/assign")
 
+function handleResponse(request, self, resume) {
+  request.on("response", function(response) {
+    self._response = response
+
+    var data = ""
+    response.on("data", function(c) { data += c })
+
+    response.on("end", function() {
+      self._responseBody = data
+      resume()
+    })
+  })
+}
+
 var NodeAdapterSteps = jstest.asyncSteps({
   start_server: function(port, resume) {
     this._port = port
@@ -26,77 +40,51 @@ var NodeAdapterSteps = jstest.asyncSteps({
     resume()
   },
 
-  optionsRequest: function(path, params, resume) {
-    var self    = this,
-        request = http.request({
-                    method: "OPTIONS",
-                    host:   "localhost",
-                    port:   this._port,
-                    path:   path,
-                    headers: this._headers
-                  })
-
-
-    request.on("response", function(response) {
-      self._response = response
-      var data = ""
-      response.on("data", function(c) { data += c })
-      response.on("end", function() {
-        self._responseBody = data
-        resume()
-      })
+  options_request: function(path, params, resume) {
+    var request = http.request({
+      method:  "OPTIONS",
+      host:    "localhost",
+      port:    this._port,
+      path:    path,
+      headers: this._headers
     })
+
+    handleResponse(request, this, resume)
     request.end()
   },
 
   get: function(path, params, resume) {
-    var self    = this,
-        body    = querystring.stringify(params),
-        request = http.request({
-                    method: "GET",
-                    host:   "localhost",
-                    port:   this._port,
-                    path:   path + (body ? "?" + body : "")
-                  })
+    var body = querystring.stringify(params)
 
-    request.on("response", function(response) {
-      self._response = response
-      var data = ""
-      response.on("data", function(c) { data += c })
-      response.on("end", function() {
-        self._responseBody = data
-        resume()
-      })
+    var request = http.request({
+      method: "GET",
+      host:   "localhost",
+      port:   this._port,
+      path:   path + (body ? "?" + body : "")
     })
+
+    handleResponse(request, this, resume)
     request.end()
   },
 
   post: function(path, params, resume) {
-    var self = this,
-        body = (typeof params === "string") ? params : querystring.stringify(params),
+    var body = (typeof params === "string") ? params : querystring.stringify(params)
 
-        headers = assign({
-          "Host":           "localhost",
-          "Content-Length": body.length
-        }, this._headers || {}),
-
-        request = http.request({
-                    method:   "POST",
-                    host:     "localhost",
-                    port:     this._port,
-                    path:     path,
-                    headers:  headers
-                  })
-
-    request.on("response", function(response) {
-      self._response = response
-      var data = ""
-      response.on("data", function(c) { data += c })
-      response.on("end", function() {
-        self._responseBody = data
-        resume()
-      })
+    var headers = assign({}, this._headers, {
+      "Host":           "localhost",
+      "Content-Length": body.length
     })
+
+    var request = http.request({
+      method:   "POST",
+      host:     "localhost",
+      port:     this._port,
+      path:     path,
+      headers:  headers
+    })
+
+    handleResponse(request, this, resume)
+
     request.write(body)
     request.end()
   },
@@ -106,43 +94,13 @@ var NodeAdapterSteps = jstest.asyncSteps({
     resume()
   },
 
-  check_access_control_origin: function(origin, resume) {
-    this.assertEqual(origin, this._response.headers["access-control-allow-origin"])
-    resume()
-  },
-
-  check_access_control_credentials: function(resume) {
-    this.assertEqual("true", this._response.headers["access-control-allow-credentials"])
-    resume()
-  },
-
-  check_access_control_headers: function(resume) {
-    this.assertEqual("Accept, Authorization, Content-Type, Pragma, X-Requested-With", this._response.headers["access-control-allow-headers"])
-    resume()
-  },
-
-  check_access_control_methods: function(resume) {
-    this.assertEqual("POST, GET", this._response.headers["access-control-allow-methods"])
-    resume()
-  },
-
-  check_access_control_max_age: function(resume) {
-    this.assertEqual("86400", this._response.headers["access-control-max-age"])
-    resume()
-  },
-
-  check_cache_control: function(value, resume) {
-    this.assertEqual(value, this._response.headers["cache-control"])
+  check_header(name, value, resume) {
+    this.assertEqual(value, this._response.headers[name])
     resume()
   },
 
   check_content_type: function(type, resume) {
     this.assertEqual(type + "; charset=utf-8", this._response.headers["content-type"])
-    resume()
-  },
-
-  check_content_length: function(length, resume) {
-    this.assertEqual(length, this._response.headers["content-length"])
     resume()
   },
 
@@ -182,12 +140,12 @@ jstest.describe("NodeAdapter", function() { with(this) {
       }})
 
       it("returns a matching cross-origin access control header", function() { with(this) {
-        optionsRequest("/bayeux")
-        check_access_control_origin("http://example.com")
-        check_access_control_credentials()
-        check_access_control_headers()
-        check_access_control_methods()
-        check_access_control_max_age()
+        options_request("/bayeux")
+        check_header("access-control-allow-origin", "http://example.com")
+        check_header("access-control-allow-credentials", "true")
+        check_header("access-control-allow-headers", "Accept, Authorization, Content-Type, Pragma, X-Requested-With")
+        check_header("access-control-allow-methods", "POST, GET")
+        check_header("access-control-max-age", "86400")
       }})
     }})
 
@@ -197,24 +155,23 @@ jstest.describe("NodeAdapter", function() { with(this) {
       }})
 
       it("returns a matching cross-origin access control header", function() { with(this) {
-        optionsRequest("/bayeux")
-        check_access_control_origin("http://example.com")
-        check_access_control_credentials()
-        check_access_control_headers()
-        check_access_control_methods()
-        check_access_control_max_age()
+        options_request("/bayeux")
+        check_header("access-control-allow-origin", "http://example.com")
+        check_header("access-control-allow-credentials", "true")
+        check_header("access-control-allow-headers", "Accept, Authorization, Content-Type, Pragma, X-Requested-With")
+        check_header("access-control-allow-methods", "POST, GET")
+        check_header("access-control-max-age", "86400")
       }})
     }})
 
     describe("with no origin specified", function() { with(this) {
       it("returns a wildcard cross-origin access control header", function() { with(this) {
-        stub(server, "process").yields([[]])
-        optionsRequest("/bayeux")
-        check_access_control_origin("*")
-        check_access_control_credentials()
-        check_access_control_headers()
-        check_access_control_methods()
-        check_access_control_max_age()
+        options_request("/bayeux")
+        check_header("access-control-allow-origin", "*")
+        check_header("access-control-allow-credentials", "true")
+        check_header("access-control-allow-headers", "Accept, Authorization, Content-Type, Pragma, X-Requested-With")
+        check_header("access-control-allow-methods", "POST, GET")
+        check_header("access-control-max-age", "86400")
       }})
     }})
   }})
@@ -229,7 +186,7 @@ jstest.describe("NodeAdapter", function() { with(this) {
         it("returns a matching cross-origin access control header", function() { with(this) {
           stub(server, "process").yields([[]])
           post("/bayeux", { message: "[]" })
-          check_access_control_origin("http://example.com")
+          check_header("access-control-allow-origin", "http://example.com")
         }})
 
         it("forwards the message param onto the server", function() { with(this) {
@@ -242,7 +199,7 @@ jstest.describe("NodeAdapter", function() { with(this) {
           post("/bayeux", "message=%5B%5D")
           check_status(200)
           check_content_type("application/json")
-          check_content_length("31")
+          check_header("content-length", "31")
           check_json([{ channel: "/meta/handshake" }])
         }})
 
@@ -280,7 +237,7 @@ jstest.describe("NodeAdapter", function() { with(this) {
       it("does not return an access control header", function() { with(this) {
         stub(server, "process").yields([[]])
         post("/bayeux", "[]")
-        check_access_control_origin(undefined)
+        check_header("access-control-allow-origin", undefined)
       }})
 
       it("forwards the POST body onto the server", function() { with(this) {
@@ -293,7 +250,7 @@ jstest.describe("NodeAdapter", function() { with(this) {
         post("/bayeux", "[]")
         check_status(200)
         check_content_type("application/json")
-        check_content_length("31")
+        check_header("content-length", "31")
         check_json([{ channel: "/meta/handshake" }])
       }})
 
@@ -316,7 +273,7 @@ jstest.describe("NodeAdapter", function() { with(this) {
         post("/bayeux", { message: "[]" })
         check_status(200)
         check_content_type("application/json")
-        check_content_length("31")
+        check_header("content-length", "31")
         check_json([{ channel: "/meta/handshake" }])
       }})
 
@@ -345,14 +302,14 @@ jstest.describe("NodeAdapter", function() { with(this) {
         get("/bayeux", params)
         check_status(200)
         check_content_type("text/javascript")
-        check_content_length("46")
+        check_header("content-length", "46")
         check_body('/**/callback([{"channel":"/meta/handshake"}]);')
       }})
 
       it("does not let the client cache the response", function() { with(this) {
         stub(server, "process").yields([[{ channel: "/meta/handshake" }]])
         get("/bayeux", params)
-        check_cache_control("no-cache, no-store")
+        check_header("cache-control", "no-cache, no-store")
       }})
     }})
 
@@ -366,7 +323,7 @@ jstest.describe("NodeAdapter", function() { with(this) {
         get("/bayeux", params)
         check_status(200)
         check_content_type("text/javascript")
-        check_content_length("51")
+        check_header("content-length", "51")
         check_body('/**/jsonpcallback([{"channel":"/meta/handshake"}]);')
       }})
     }})
