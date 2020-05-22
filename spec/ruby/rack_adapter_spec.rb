@@ -30,6 +30,45 @@ describe Faye::RackAdapter do
     end
   end
 
+  describe "OPTIONS requests" do
+    describe "with origin specified" do
+      before { header "Origin", "http://example.com" }
+
+      it "returns a matching cross-origin access control header" do
+        options "/bayeux"
+        headers("Access-Control-Allow-Origin").should == "http://example.com"
+        headers("Access-Control-Allow-Credentials").should == "true"
+        headers("Access-Control-Allow-Headers").should == "Accept, Authorization, Content-Type, Pragma, X-Requested-With"
+        headers("Access-Control-Allow-Methods").should == "POST, GET"
+        headers("Access-Control-Max-Age").should == "86400"
+      end
+    end
+
+    describe "with referer specified" do
+      before { header "Referer", "http://example.com" }
+
+      it "returns a matching cross-origin access control header" do
+        options "/bayeux"
+        headers("Access-Control-Allow-Origin").should == "http://example.com"
+        headers("Access-Control-Allow-Credentials").should == "true"
+        headers("Access-Control-Allow-Headers").should == "Accept, Authorization, Content-Type, Pragma, X-Requested-With"
+        headers("Access-Control-Allow-Methods").should == "POST, GET"
+        headers("Access-Control-Max-Age").should == "86400"
+      end
+    end
+
+    describe "with no origin specified" do
+      it "returns a wildcard cross-origin access control header" do
+        options "/bayeux"
+        headers("Access-Control-Allow-Origin").should == "*"
+        headers("Access-Control-Allow-Credentials").should == "true"
+        headers("Access-Control-Allow-Headers").should == "Accept, Authorization, Content-Type, Pragma, X-Requested-With"
+        headers("Access-Control-Allow-Methods").should == "POST, GET"
+        headers("Access-Control-Max-Age").should == "86400"
+      end
+    end
+  end
+
   describe "POST requests" do
     describe "with cross-origin access control" do
       shared_examples_for "cross-origin request" do
