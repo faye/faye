@@ -1,8 +1,15 @@
+### 1.2.5 / 2020-04-28
+
+- Fix `/meta/*` channel recognition bug in the server that enables authentication bypass
+- https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
+
+
 ### 1.2.4 / 2017-01-28
 
 - Fix `RackAdapter#get_client` that was failing due to a URI error
 - Define `Promise#catch` in a safe way for old browsers
 - Log errors in the Node HTTP transport
+
 
 ### 1.2.3 / 2016-10-11
 
@@ -39,6 +46,12 @@
 - Remove `Connection: Close` from HTTP responses to allow use of keep-alive
 - Use `XMLHttpRequest` in preference to the ActiveX API in IE10
 - Fix bug where flushing large message batches puts promises in an invalid state
+
+
+### 1.1.3 / 2020-04-28
+
+- Fix `/meta/*` channel recognition bug in the server that enables authentication bypass
+- https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
 
 
 ### 1.1.2 / 2015-07-19
@@ -80,6 +93,12 @@
 - Don't close WebSockets when the client recovers from an error and sends a new
   `clientId`
 - Replace `cookiejar` with `tough-cookie` to avoid global variable leaks
+
+
+### 1.0.4 / 2020-04-28
+
+- Fix `/meta/*` channel recognition bug in the server that enables authentication bypass
+- https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
 
 
 ### 1.0.3 / 2014-07-08
@@ -137,6 +156,15 @@
 - Miscellaneous:
   - Support Browserify by returning the client module
   - `Faye.logger` can now be a logger object rather than a function
+
+
+### 0.8.11 / 2014-07-08
+
+- Make some changes to JSON-P responses to mitigate the Rosetta Flash attack
+- http://miki.it/blog/2014/7/8/abusing-jsonp-with-rosetta-flash/
+
+
+### 0.8.10 -- removed due to error while publishing
 
 
 ### 0.8.9 / 2013-02-26
@@ -249,6 +277,11 @@
 - Switch from JSON to Yajl for JSON parsing in Ruby
 
 
+### 0.7.2 / 2013-01-10
+
+- Patch security hole allowing remote execution of arbitrary Server methods
+
+
 ### 0.7.1 / 2011-12-22
 
 - Extension `added()` and `removed()` methods now receive the extended object
@@ -264,6 +297,11 @@
 - Allow clients to disable selected transports and autodisconnection
 - Add callback/errback API to `Client#publish()` interface
 - Add `socket` setting for the Redis engine for connecting through a Unix socket
+
+
+### 0.6.8 / 2013-01-10
+
+- Patch security hole allowing remote execution of arbitrary Server methods
 
 
 ### 0.6.7 / 2011-10-20
