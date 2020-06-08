@@ -1,7 +1,32 @@
+### 1.3.0 / 2020-06-08
+
+- Support `user:pass@` authorization in URIs and send `Authorization` headers
+  from the Node HTTP transport
+- Support IPv6 hostnames in URIs
+- Allow credentials (cookies and `Authorization` headers) in cross-origin
+  requests, by:
+  - setting `Access-Control-Allow-Origin` to the value of the `Origin` header
+    (not `*`)
+  - enabling `Access-Control-Allow-Credentials`
+- Enable credentials when sending cross-origin requests
+- Don't disconnect WebSocket on page unload if `autodisconnect` is turned off
+- Catch errors when creating a WebSocket, which happens when Content Security
+  Policy blocks it, allowing other transports to be tried
+- Fix a bug in the client where it handles messages from other clients as though
+  they're the server's response to its own messages, based on the `id` field;
+  now we only treat messages as server responses if they contain `successful:
+  true`
+- Stop sending an empty message list `[]` from the WebSocket client as a
+  keep-alive mechanism since CometD does not accept this message
+- Fix deprecation warnings for using the `new Buffer()` constructor
+- Switch to the Apache 2.0 license
+
+
 ### 1.2.5 / 2020-04-28
 
-- Fix `/meta/*` channel recognition bug in the server that enables authentication bypass
-- https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
+- Fix `/meta/*` channel recognition bug in the server that enables
+  authentication bypass
+  - https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
 
 
 ### 1.2.4 / 2017-01-28
@@ -50,8 +75,9 @@
 
 ### 1.1.3 / 2020-04-28
 
-- Fix `/meta/*` channel recognition bug in the server that enables authentication bypass
-- https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
+- Fix `/meta/*` channel recognition bug in the server that enables
+  authentication bypass
+  - https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
 
 
 ### 1.1.2 / 2015-07-19
@@ -97,8 +123,9 @@
 
 ### 1.0.4 / 2020-04-28
 
-- Fix `/meta/*` channel recognition bug in the server that enables authentication bypass
-- https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
+- Fix `/meta/*` channel recognition bug in the server that enables
+  authentication bypass
+  - https://blog.jcoglan.com/2020/04/28/authentication-bypass-in-faye/
 
 
 ### 1.0.3 / 2014-07-08
