@@ -10,7 +10,7 @@ bundles        := $(name).js $(name)-min.js
 
 client_dir     := build/client
 client_bundles := $(bundles:%=$(client_dir)/%)
-top_files      := CHANGELOG.md README.md package.json src
+top_files      := CHANGELOG.md LICENSE.md README.md package.json src
 top_level      := $(top_files:%=build/%)
 
 .PHONY: all gem clean
