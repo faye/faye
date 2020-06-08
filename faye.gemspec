@@ -14,9 +14,12 @@ Gem::Specification.new do |s|
   # It is important that the JavaScript files listed here are not removed: they
   # contain the browser client and the gem should fail to build without them.
   # You should generate them by running `make` in the project root.
-  s.files = %w[CHANGELOG.md README.md] +
-            %w[.js .js.map -min.js -min.js.map].map { |ext| "build/client/faye-browser#{ext}" } +
-            Dir.glob('lib/**/*.rb')
+  client_suffix = %w[.js .js.map -min.js -min.js.map]
+  client_files  = client_suffix.map { |ext| "build/client/faye-browser#{ext}" }
+
+  s.files = %w[CHANGELOG.md LICENSE.md README.md] +
+            Dir.glob('lib/**/*.rb') +
+            client_files
   
   s.add_dependency 'cookiejar', '>= 0.3.0'
   s.add_dependency 'em-http-request', '>= 0.3.0'
