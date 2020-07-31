@@ -33,7 +33,7 @@
                     "promises-aplus-tests": "~2.1.0",
                     "webpack": "*",
                     "webpack-cli": "*",
-                    "imports-loader": "*"
+                    "imports-loader": "<1.0.0"
           },
           "scripts": {
                     "start": "webpack --watch",
