@@ -1,3 +1,12 @@
+### 1.4.0 / 2020-07-31
+
+- Implement TLS certificate verification and enable it by default in the Ruby
+  client class `Faye::Client`
+- Add a `:tls` option to the Ruby client with sub-field `:verify_peer` for
+  configuring TLS verification
+- Officially support the `tls` option in the Node.js client, whose contents are
+  forward to the `https` and `tls` modules as appropriate
+
 ### 1.3.0 / 2020-06-08
 
 - Support `user:pass@` authorization in URIs and send `Authorization` headers

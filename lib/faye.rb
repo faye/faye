@@ -14,7 +14,7 @@ require 'time'
 require 'uri'
 
 module Faye
-  VERSION = '1.3.0'
+  VERSION = '1.4.0'
 
   ROOT = File.expand_path(File.dirname(__FILE__))
 
