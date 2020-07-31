@@ -64,6 +64,17 @@
     added using the @client.set_header@ method will be added to WebSocket
     connections, not just regular HTTP requests.
 
+    From version 1.4.0 onwards, @Faye::Client@ uses the underlying transport
+    libraries ("em-http-request":https://rubygems.org/gems/em-http-request and
+    "faye-websocket":https://rubygems.org/gems/em-http-request, both based on
+    "EventMachine":https://rubygems.org/gems/eventmachine) to perform TLS
+    certificate validation by default for HTTPS endpoints. If you don't want
+    this behaviour, you can turn it off via the @:tls@ option:
+
+    <pre>client = Faye::Client.new(url, {
+      :tls => { :verify_peer => false }
+    })</pre>
+
     You can also request that all connections go via an HTTP proxy:
 
     <pre>client = Faye::Client.new(url, {
