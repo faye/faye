@@ -21,7 +21,7 @@ module Faye
     def_delegators :@dispatcher, :add_websocket_extension, :disable, :set_header
 
     def initialize(endpoint = nil, options = {})
-      ::WebSocket::Driver.validate_options(options, [:interval, :timeout, :endpoints, :proxy, :retry, :scheduler, :websocket_extensions])
+      ::WebSocket::Driver.validate_options(options, [:interval, :timeout, :endpoints, :proxy, :retry, :scheduler, :websocket_extensions, :tls])
       super()
       info('New client created for ?', endpoint)
 

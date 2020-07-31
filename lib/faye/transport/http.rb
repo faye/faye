@@ -49,7 +49,7 @@ module Faye
     def create_request(params)
       options = {
         :inactivity_timeout => 0,
-        :tls => { :sni_hostname => @endpoint.hostname }
+        :tls => @dispatcher.tls
       }
 
       if @proxy[:origin]

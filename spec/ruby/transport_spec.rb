@@ -12,6 +12,7 @@ describe Faye::Transport do
                         :cookies          => CookieJar::Jar.new,
                         :headers          => {},
                         :proxy            => {},
+                        :tls              => { :verify_peer => true },
                         :transports       => {},
                         :ws_extensions    => [])
   end
