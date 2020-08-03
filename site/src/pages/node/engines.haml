@@ -148,23 +148,23 @@
     the given @clientId@. You can use this as a heartbeat to check clients are
     still alive. No return value is expected.
 
-    h4. @engine.subscribe(clientId, channel, function(successful) {})@
+    h4. @engine.subscribe(clientId, channel, function(context, err) {}, context)@
 
     Should store a subscription for the given @clientId@ to the given @channel@,
-    both of which are strings. If a callback is given, it must be called with
-    @true@ or @false@ to indicate whether the subscription was registered
-    successfully.
+    both of which are strings. If a callback is given, it is always going to be
+    called with the @context@ as a first argument and if an error occured it's
+    going to have @err@ as a second argument.
 
     The engine should call @proxy.trigger('subscribe', clientId, channel)@ iff
     the subscription was successful _and_ the client was not previously
     subscribed to the channel.
 
-    h4. @engine.unsubscribe(clientId, channel, function(successful) {})@
+    h4. @engine.unsubscribe(clientId, channel, function(context, err) {}, context)@
 
     Should delete a subscription for the given @clientId@ to the given
-    @channel@, both of which are strings. If a callback is given, it must be
-    called with @true@ or @false@ to indicate whether the subscription was
-    destroyed successfully.
+    @channel@, both of which are strings. If a callback is given, it is always going
+    to be called with the @context@ as a first argument and if an error occured it's
+    going to have @err@ as a second argument.
 
     The engine should call @proxy.trigger('unsubscribe', clientId, channel)@ iff
     the subscription was destroyed _and_ the client was actually subscribed to
