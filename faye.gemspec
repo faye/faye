@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name     = 'faye'
-  s.version  = '1.4.0'
+  s.version  = '1.4.1'
   s.summary  = 'Simple pub/sub messaging for the web'
   s.author   = 'James Coglan'
   s.email    = 'jcoglan@gmail.com'
@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
   
   s.add_dependency 'cookiejar', '>= 0.3.0'
   s.add_dependency 'em-http-request', '>= 1.1.6'
-  s.add_dependency 'eventmachine', '>= 0.12.0'
+  s.add_dependency 'eventmachine', '>= 1.2.7'
   s.add_dependency 'faye-websocket', '>= 0.11.0'
   s.add_dependency 'multi_json', '>= 1.0.0'
   s.add_dependency 'rack', '>= 1.0.0'

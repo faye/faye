@@ -19,21 +19,22 @@
           "main": "src/faye_node",
           "browser": "src/faye_browser",
           "dependencies": {
+                    "4": "0.0.0",
                     "asap": "*",
                     "csprng": "*",
                     "faye-websocket": ">=0.9.1",
                     "safe-buffer": "*",
                     "tough-cookie": "*",
-                    "tunnel-agent": "*"
+                    "tunnel-agent": "*",
+                    "webpack": "^4.46.0"
           },
           "devDependencies": {
+                    "imports-loader": "<1.0.0",
                     "jstest": "~1.0.0",
                     "mime": "~1.2.0",
                     "permessage-deflate": ">=0.1.0",
                     "promises-aplus-tests": "~2.1.0",
-                    "webpack": "*",
-                    "webpack-cli": "*",
-                    "imports-loader": "<1.0.0"
+                    "webpack-cli": "*"
           },
           "scripts": {
                     "start": "webpack --watch",
