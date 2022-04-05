@@ -17,11 +17,6 @@ module Faye
 
     VALID_JSONP_CALLBACK = /^[a-z_\$][a-z0-9_\$]*(\.[a-z_\$][a-z0-9_\$]*)*$/i
 
-    # This header is passed by Rack::Proxy during testing. Rack::Proxy seems to
-    # set content-length for you, and setting it in here really slows the tests
-    # down. Better suggestions welcome.
-    HTTP_X_NO_CONTENT_LENGTH = 'HTTP_X_NO_CONTENT_LENGTH'
-
     def initialize(app = nil, options = nil, &block)
       @app     = app if app.respond_to?(:call)
       @options = [app, options].grep(Hash).first || {}
@@ -141,7 +136,6 @@ module Faye
             headers['Content-Disposition'] = 'attachment; filename=f.txt'
           end
 
-          headers['Content-Length'] = response.bytesize.to_s unless request.env[HTTP_X_NO_CONTENT_LENGTH]
           debug('HTTP response: ?', response)
           send_response([200, headers, [response]], hijack, callback)
         end

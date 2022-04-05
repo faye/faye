@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name     = 'faye'
-  s.version  = '1.4.0'
+  s.version  = '1.4.1'
   s.summary  = 'Simple pub/sub messaging for the web'
   s.author   = 'James Coglan'
   s.email    = 'jcoglan@gmail.com'
@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.files = %w[CHANGELOG.md LICENSE.md README.md] +
             Dir.glob('lib/**/*.rb') +
             client_files
-  
+
   s.add_dependency 'cookiejar', '>= 0.3.0'
   s.add_dependency 'em-http-request', '>= 1.1.6'
   s.add_dependency 'eventmachine', '>= 0.12.0'
