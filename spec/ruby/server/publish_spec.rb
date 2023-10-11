@@ -3,7 +3,7 @@ require "spec_helper"
 describe "server publish" do
   let(:engine)  { double "engine" }
   let(:server)  { Faye::Server.new }
-  let(:message) {{ "channel" => "/some/channel", "data" => "publish" }}
+  let(:message) { { "channel" => "/some/channel", "data" => "publish" } }
 
   before do
     Faye::Engine.stub(:get).and_return engine

@@ -7,8 +7,8 @@ path   = ARGV[1] || 'bayeux'
 scheme = ARGV[2] == 'tls' ? 'https' : 'http'
 
 EM.run {
-  A = Faye::Client.new("#{scheme}://localhost:#{port}/#{path}")
-  B = Faye::Client.new("#{scheme}://localhost:#{port}/#{path}")
+  A = Faye::Client.new("#{ scheme }://0.0.0.0:#{ port }/#{ path }")
+  B = Faye::Client.new("#{ scheme }://0.0.0.0:#{ port }/#{ path }")
 
   A.connect do
     B.connect do

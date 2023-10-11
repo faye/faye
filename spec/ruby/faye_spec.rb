@@ -13,10 +13,10 @@ describe Faye do
   end
 
   describe :copy_obect do
-    let(:object) { {"foo" => "bar", "qux" => 42, "hey" => nil, "obj" => {"bar" => 67}} }
+    let(:object) { { "foo" => "bar", "qux" => 42, "hey" => nil, "obj" => { "bar" => 67 } } }
 
     it "returns an equal object" do
-      Faye.copy_object(object).should == {"foo" => "bar", "qux" => 42, "hey" => nil, "obj" => {"bar" => 67}}
+      Faye.copy_object(object).should == { "foo" => "bar", "qux" => 42, "hey" => nil, "obj" => { "bar" => 67 }}
     end
 
     it "does not return the same object" do

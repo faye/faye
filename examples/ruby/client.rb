@@ -15,11 +15,11 @@ require 'permessage_deflate'
 port     = ARGV[0] || 9292
 path     = ARGV[1] || 'bayeux'
 scheme   = ARGV[2] == 'tls' ? 'https' : 'http'
-endpoint = "#{scheme}://localhost:#{port}/#{path}"
-proxy    = {:headers => {'User-Agent' => 'Faye'}}
+endpoint = "#{ scheme }://user:pass@0.0.0.0:#{ port }/#{ path }"
+proxy    = { :headers => { 'User-Agent' => 'Faye' }}
 
 EM.run {
-  puts "Connecting to #{endpoint}"
+  puts "Connecting to #{ endpoint }"
 
   client = Faye::Client.new(endpoint, :proxy => proxy)
   client.add_websocket_extension(PermessageDeflate)
@@ -35,7 +35,7 @@ EM.run {
       puts "[PUBLISH SUCCEEDED]"
     end
     publication.errback do |error|
-      puts "[PUBLISH FAILED] #{error.inspect}"
+      puts "[PUBLISH FAILED] #{ error.inspect }"
     end
   end
 
@@ -43,7 +43,7 @@ EM.run {
     puts "[SUBSCRIBE SUCCEEDED]"
   end
   subscription.errback do |error|
-    puts "[SUBSCRIBE FAILED] #{error.inspect}"
+    puts "[SUBSCRIBE FAILED] #{ error.inspect }"
   end
 
   client.bind 'transport:down' do

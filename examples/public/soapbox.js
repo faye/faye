@@ -93,7 +93,7 @@ Soapbox = {
     });
 
     // Message object to transmit over Bayeux channels
-    message = {user: this._username, message: message};
+    message = { user: this._username, message: message };
 
     // Publish to this user's 'from' channel, and to channels for any @replies
     // found in the message

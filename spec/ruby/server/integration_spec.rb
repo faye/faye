@@ -34,7 +34,7 @@ IntegrationSteps = RSpec::EM.async_steps do
   def client(name, channels, &callback)
     @clients       ||= {}
     @inboxes       ||= {}
-    @clients[name]   = Faye::Client.new("http://0.0.0.0:#{@port}/bayeux")
+    @clients[name]   = Faye::Client.new("http://0.0.0.0:#{ @port }/bayeux")
     @inboxes[name]   = {}
 
     n = channels.size
@@ -80,24 +80,24 @@ describe "server integration" do
 
   shared_examples_for "message bus" do
     it "delivers a message between clients" do
-      publish :alice, "/foo", {"hello" => "world", "extra" => nil}
-      check_inbox :bob, "/foo", [{"hello" => "world", "extra" => nil, "tagged" => true, "url" => "/bayeux"}]
+      publish :alice, "/foo", { "hello" => "world", "extra" => nil }
+      check_inbox :bob, "/foo", [{ "hello" => "world", "extra" => nil, "tagged" => true, "url" => "/bayeux" }]
     end
 
     it "does not deliver messages for unsubscribed channels" do
-      publish :alice, "/bar", {"hello" => "world"}
+      publish :alice, "/bar", { "hello" => "world" }
       check_inbox :bob, "/foo", []
     end
 
     it "delivers multiple messages" do
-      publish :alice, "/foo", {"hello" => "world"}
-      publish :alice, "/foo", {"hello" => "world"}
-      check_inbox :bob, "/foo", [{"hello" => "world", "tagged" => true, "url" => "/bayeux"}, {"hello" => "world", "tagged" => true, "url" => "/bayeux"}]
+      publish :alice, "/foo", { "hello" => "world" }
+      publish :alice, "/foo", { "hello" => "world" }
+      check_inbox :bob, "/foo", [{ "hello" => "world", "tagged" => true, "url" => "/bayeux" }, { "hello" => "world", "tagged" => true, "url" => "/bayeux" }]
     end
 
     it "delivers multibyte strings" do
-      publish :alice, "/foo", {"hello" => encode("Apple = "), "tagged" => true, "url" => "/bayeux"}
-      check_inbox :bob, "/foo", [{"hello" => encode("Apple = "), "tagged" => true, "url" => "/bayeux"}]
+      publish :alice, "/foo", { "hello" => encode("Apple = "), "tagged" => true, "url" => "/bayeux" }
+      check_inbox :bob, "/foo", [{ "hello" => encode("Apple = "), "tagged" => true, "url" => "/bayeux" }]
     end
   end
 
@@ -120,7 +120,7 @@ describe "server integration" do
   end
 
   describe "with HTTP server" do
-    let(:server_options) { {:ssl => false} }
+    let(:server_options) { { :ssl => false } }
     it_should_behave_like "network transports"
   end
 end

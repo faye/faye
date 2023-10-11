@@ -94,7 +94,7 @@ describe Faye::Client do
       before do
         extension = Class.new do
           def outgoing(message, callback)
-            message["ext"] = {"auth" => "password"}
+            message["ext"] = { "auth" => "password" }
             callback.call(message)
           end
         end
@@ -107,7 +107,7 @@ describe Faye::Client do
           "version" => "1.0",
           "supportedConnectionTypes" => ["fake-transport", "another-transport"],
           "id"      => instance_of(String),
-          "ext"     => {"auth" => "password"}
+          "ext"     => { "auth" => "password" }
         }, 72, {})
         @client.handshake
       end
@@ -169,7 +169,7 @@ describe Faye::Client do
         @message = nil
         subscribe @client, "/messages/foo", lambda { |m| @message = m }
 
-        @client.__send__(:receive_message, "advice" => {"reconnect" => "handshake"})
+        @client.__send__(:receive_message, "advice" => { "reconnect" => "handshake" })
 
         stub_response "channel"    => "/meta/handshake",
                       "successful" => true,
@@ -388,8 +388,8 @@ describe Faye::Client do
           end
 
           it "passes delivered messages through the extension" do
-            @client.__send__(:receive_message, "channel" => "/foo/bar", "data" => {"hello" => "there"})
-            @message.should == {"hello" => "there", "changed" => true}
+            @client.__send__(:receive_message, "channel" => "/foo/bar", "data" => { "hello" => "there" })
+            @message.should == { "hello" => "there", "changed" => true }
           end
         end
 
@@ -407,8 +407,8 @@ describe Faye::Client do
           end
 
           it "leaves messages unchanged" do
-            @client.__send__(:receive_message, "channel" => "/foo/bar", "data" => {"hello" => "there"})
-            @message.should == {"hello" => "there"}
+            @client.__send__(:receive_message, "channel" => "/foo/bar", "data" => { "hello" => "there" })
+            @message.should == { "hello" => "there" }
           end
         end
 
@@ -539,9 +539,9 @@ describe Faye::Client do
       end
 
       it "removes one of the listeners from the channel" do
-        @client.__send__(:receive_message, "channel" => "/foo/bar", "data" => {"text" => "you"})
+        @client.__send__(:receive_message, "channel" => "/foo/bar", "data" => { "text" => "you" })
         @client.unsubscribe("/foo/*", @hey)
-        @client.__send__(:receive_message, "channel" => "/foo/bar", "data" => {"text" => "you"})
+        @client.__send__(:receive_message, "channel" => "/foo/bar", "data" => { "text" => "you" })
         @messages.should == ["hey you", "bye you", "bye you"]
       end
 
@@ -593,7 +593,7 @@ describe Faye::Client do
       dispatcher.should_receive(:send_message).with({
         "channel"  => "/messages/foo",
         "clientId" => "fakeid",
-        "data"     => {"hello" => "world"},
+        "data"     => { "hello" => "world" },
         "id"       => instance_of(String)
       }, 72, {})
       @client.publish("/messages/foo", "hello" => "world")
@@ -630,7 +630,7 @@ describe Faye::Client do
     describe "on receipt of the published message" do
       before do
         stub_response "channel"      => "/messages/foo",
-                      "data"         => {"text" => "hi"},
+                      "data"         => { "text" => "hi" },
                       "clientId"     => "fakeid"
       end
 
@@ -647,7 +647,7 @@ describe Faye::Client do
       before do
         extension = Class.new do
           def outgoing(message, callback)
-            message["ext"] = {"auth" => "password"}
+            message["ext"] = { "auth" => "password" }
             callback.call(message)
           end
         end
@@ -658,9 +658,9 @@ describe Faye::Client do
         dispatcher.should_receive(:send_message).with({
           "channel"  => "/messages/foo",
           "clientId" => "fakeid",
-          "data"     => {"hello" => "world"},
+          "data"     => { "hello" => "world" },
           "id"       => instance_of(String),
-          "ext"      => {"auth" => "password"}
+          "ext"      => { "auth" => "password" }
         }, 72, {})
         @client.publish("/messages/foo", "hello" => "world")
       end
@@ -670,7 +670,7 @@ describe Faye::Client do
       before do
         extension = Class.new do
           def incoming(message, callback)
-            message["ext"] = {"auth" => "password"}
+            message["ext"] = { "auth" => "password" }
             callback.call(message)
           end
         end
@@ -681,7 +681,7 @@ describe Faye::Client do
         dispatcher.should_receive(:send_message).with({
           "channel"  => "/messages/foo",
           "clientId" => "fakeid",
-          "data"     => {"hello" => "world"},
+          "data"     => { "hello" => "world" },
           "id"       => instance_of(String)
         }, 72, {})
         @client.publish("/messages/foo", "hello" => "world")

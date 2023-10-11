@@ -16,9 +16,9 @@ jstest.describe("Server handshake", function() { with(this) {
 
   describe("#handshake", function() { with(this) {
     before(function() { with(this) {
-      this.message = {channel: "/meta/handshake",
-                      version: "1.0",
-                      supportedConnectionTypes: ["long-polling"]}
+      this.message = { channel: "/meta/handshake",
+                       version: "1.0",
+                       supportedConnectionTypes: ["long-polling"] }
     }})
 
     describe("with valid parameters", function() { with(this) {

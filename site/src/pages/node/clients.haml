@@ -33,6 +33,21 @@
     added using the @client.setHeader()@ method will be added to WebSocket
     connections, not just regular HTTP requests.
 
+    For the transport layer, the server-side client uses the Node.js
+    "https":https://nodejs.org/api/https.html and
+    "tls":https://nodejs.org/api/tls.html modules to handle HTTPS endpoints. If
+    you need to configure anything about the TLS connection, use the `tls`
+    option which is passed through to
+    "@tls.connect()@":https://nodejs.org/api/tls.html#tls_tls_connect_options_callback.
+    For example, to set your own root certificate instead of using the system
+    defaults:
+
+    <pre>var client = new faye.Client(url, {
+      tls: {
+        ca: fs.readFileSync('path/to/certificate.pem')
+      }
+    });</pre>
+
     You can also request that all connections go via an HTTP proxy:
 
     <pre>var client = new faye.Client(url, {

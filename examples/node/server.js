@@ -9,7 +9,7 @@ var fs      = require('fs'),
 var SHARED_DIR = __dirname + '/..',
     PUBLIC_DIR = SHARED_DIR + '/public',
 
-    bayeux     = new faye.NodeAdapter({mount: '/bayeux', timeout: 20}),
+    bayeux     = new faye.NodeAdapter({ mount: '/bayeux', timeout: 20 }),
     port       = process.argv[2] || '8000',
     secure     = process.argv[3] === 'tls',
     key        = fs.readFileSync(SHARED_DIR + '/server.key'),
@@ -23,14 +23,14 @@ var handleRequest = function(request, response) {
   fs.readFile(PUBLIC_DIR + path, function(err, content) {
     var status = err ? 404 : 200;
     try {
-      response.writeHead(status, {'Content-Type': mime.lookup(path)});
+      response.writeHead(status, { 'Content-Type': mime.lookup(path) });
       response.end(content || 'Not found');
     } catch (e) {}
   });
 };
 
 var server = secure
-           ? https.createServer({cert: cert, key: key}, handleRequest)
+           ? https.createServer({ cert: cert, key: key }, handleRequest)
            : http.createServer(handleRequest);
 
 bayeux.attach(server);

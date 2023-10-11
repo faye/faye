@@ -6,14 +6,14 @@ module Faye
     include Logging
     include Extensible
 
-    UNCONNECTED        = 1
-    CONNECTING         = 2
-    CONNECTED          = 3
-    DISCONNECTED       = 4
+    UNCONNECTED  = 1
+    CONNECTING   = 2
+    CONNECTED    = 3
+    DISCONNECTED = 4
 
-    HANDSHAKE          = 'handshake'
-    RETRY              = 'retry'
-    NONE               = 'none'
+    HANDSHAKE = 'handshake'
+    RETRY     = 'retry'
+    NONE      = 'none'
 
     CONNECTION_TIMEOUT = 60.0
 
@@ -21,7 +21,7 @@ module Faye
     def_delegators :@dispatcher, :add_websocket_extension, :disable, :set_header
 
     def initialize(endpoint = nil, options = {})
-      ::WebSocket::Driver.validate_options(options, [:interval, :timeout, :endpoints, :proxy, :retry, :scheduler, :websocket_extensions])
+      ::WebSocket::Driver.validate_options(options, [:interval, :timeout, :endpoints, :proxy, :retry, :scheduler, :websocket_extensions, :tls])
       super()
       info('New client created for ?', endpoint)
 

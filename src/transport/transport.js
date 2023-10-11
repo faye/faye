@@ -10,7 +10,7 @@ var Class    = require('../util/class'),
     Channel  = require('../protocol/channel');
 
 var Transport = assign(Class({ className: 'Transport',
-  DEFAULT_PORTS: {'http:': 80, 'https:': 443, 'ws:': 80, 'wss:': 443},
+  DEFAULT_PORTS: { 'http:': 80, 'https:': 443, 'ws:': 80, 'wss:': 443 },
   MAX_DELAY:     0,
 
   batching:  true,
@@ -72,7 +72,7 @@ var Transport = assign(Class({ className: 'Transport',
     this.removeTimeout('publish');
 
     if (this._outbox.length > 1 && this._connectMessage)
-      this._connectMessage.advice = {timeout: 0};
+      this._connectMessage.advice = { timeout: 0 };
 
     this._resolvePromise(this.request(this._outbox));
 
@@ -197,6 +197,13 @@ var Transport = assign(Class({ className: 'Transport',
 
   getConnectionTypes: function() {
     return array.map(this._transports, function(t) { return t[0] });
+  },
+
+  disable: function(feature) {
+    if (feature !== 'autodisconnect') return;
+
+    for (var i = 0; i < this._transports.length; i++)
+      this._transports[i][1]._unloaded = false;
   },
 
   _transports: []

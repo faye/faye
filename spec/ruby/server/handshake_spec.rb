@@ -13,10 +13,10 @@ describe "server handshake" do
   end
 
   describe :handshake do
-    let(:message) {{"channel" => "/meta/handshake",
-                    "version" => "1.0",
-                    "supportedConnectionTypes" => ["long-polling"]
-                  }}
+    let(:message) { { "channel" => "/meta/handshake",
+                      "version" => "1.0",
+                      "supportedConnectionTypes" => ["long-polling"]
+                  } }
 
     describe "with valid parameters" do
       it "creates a client" do

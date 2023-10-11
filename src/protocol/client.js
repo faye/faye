@@ -19,19 +19,19 @@ var asap            = require('asap'),
     Subscription    = require('./subscription');
 
 var Client = Class({ className: 'Client',
-  UNCONNECTED:        1,
-  CONNECTING:         2,
-  CONNECTED:          3,
-  DISCONNECTED:       4,
+  UNCONNECTED:  1,
+  CONNECTING:   2,
+  CONNECTED:    3,
+  DISCONNECTED: 4,
 
-  HANDSHAKE:          'handshake',
-  RETRY:              'retry',
-  NONE:               'none',
+  HANDSHAKE: 'handshake',
+  RETRY:     'retry',
+  NONE:      'none',
 
   CONNECTION_TIMEOUT: 60,
 
-  DEFAULT_ENDPOINT:   '/bayeux',
-  INTERVAL:           0,
+  DEFAULT_ENDPOINT: '/bayeux',
+  INTERVAL:         0,
 
   initialize: function(endpoint, options) {
     this.info('New client created for ?', endpoint);

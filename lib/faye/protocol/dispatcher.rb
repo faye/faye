@@ -16,7 +16,8 @@ module Faye
     def_delegators :@transport, :connection_type
 
     attr_accessor :client_id, :timeout
-    attr_reader   :cookies, :endpoint, :headers, :max_request_size, :proxy, :retry, :transports, :ws_extensions
+    attr_reader   :endpoint, :tls, :headers, :cookies, :proxy, :retry
+    attr_reader   :max_request_size, :transports, :ws_extensions
 
     def initialize(client, endpoint, options)
       super()
@@ -36,11 +37,13 @@ module Faye
       @ws_extensions = []
 
       @proxy = options[:proxy] || {}
-      @proxy = {:origin => @proxy} if String === @proxy
+      @proxy = { :origin => @proxy } if String === @proxy
 
       [*options[:websocket_extensions]].each do |extension|
         add_websocket_extension(extension)
       end
+
+      @tls = { :verify_peer => true }.merge(options[:tls] || {})
 
       @alternates.each do |type, url|
         @alternates[type] = URI(url)
@@ -123,9 +126,7 @@ module Faye
     private :send_envelope
 
     def handle_response(reply)
-      envelope = @envelopes.delete(reply['id'])
-
-      if reply.has_key?('successful') and envelope
+      if reply.has_key?('successful') and envelope = @envelopes.delete(reply['id'])
         envelope.scheduler.succeed!
         EventMachine.cancel_timer(envelope.timer) if envelope.timer
       end

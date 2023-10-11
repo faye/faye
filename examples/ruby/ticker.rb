@@ -3,7 +3,7 @@ require 'bundler/setup'
 require 'faye'
 
 EM.run {
-  endpoint = ARGV.first || 'http://localhost:9292/bayeux'
+  endpoint = ARGV.first || 'http://0.0.0.0:9292/bayeux'
   client   = Faye::Client.new(endpoint)
   n        = 0
 

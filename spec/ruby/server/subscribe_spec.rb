@@ -10,10 +10,10 @@ describe "server subscribe" do
 
   describe :subscribe do
     let(:client_id) { "fakeclientid" }
-    let(:message) {{"channel" => "/meta/subscribe",
-                    "clientId" => "fakeclientid",
-                    "subscription" => "/foo"
-                  }}
+    let(:message) { { "channel" => "/meta/subscribe",
+                      "clientId" => "fakeclientid",
+                      "subscription" => "/foo"
+                  } }
 
     describe "with valid parameters" do
       before do

@@ -58,7 +58,7 @@ var CORS = assign(Class(Transport, {
     xhr.onprogress = function() {};
 
     if (xhrClass === global.XDomainRequest)
-      CORS._pending.add({id: id, xhr: xhr});
+      CORS._pending.add({ id: id, xhr: xhr });
 
     xhr.send(this.encode(messages));
     return xhr;

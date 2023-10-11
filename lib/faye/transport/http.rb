@@ -29,15 +29,15 @@ module Faye
   private
 
     def build_params(content)
-      params = {
-        :head => {
-          'Content-Length' => content.bytesize,
-          'Content-Type'   => 'application/json',
-          'Host'           => @endpoint.host + (@endpoint.port ? ":#{@endpoint.port}" : '')
-        }.merge(@dispatcher.headers),
+      headers = {
+        'Content-Length' => content.bytesize,
+        'Content-Type'   => 'application/json',
+        'Host'           => @endpoint.host + (@endpoint.port ? ":#{ @endpoint.port }" : '')
+      }
 
-        :body    => content,
-        :timeout => -1  # for em-http-request < 1.0
+      params = {
+        :head => headers.merge(@dispatcher.headers),
+        :body => content
       }
 
       cookie = get_cookies
@@ -47,26 +47,20 @@ module Faye
     end
 
     def create_request(params)
-      version = EventMachine::HttpRequest::VERSION.split('.')[0].to_i
       options = {
         :inactivity_timeout => 0,
-        :tls => {:sni_hostname => @endpoint.hostname}
+        :tls => @dispatcher.tls
       }
 
       if @proxy[:origin]
         uri = URI(@proxy[:origin])
-        options[:proxy] = {:host => uri.host, :port => uri.port}
+        options[:proxy] = { :host => uri.host, :port => uri.port }
         if uri.user
           options[:proxy][:authorization] = [uri.user, uri.password]
         end
       end
 
-      if version >= 1
-        client = EventMachine::HttpRequest.new(@endpoint.to_s, options)
-      else
-        client = EventMachine::HttpRequest.new(@endpoint.to_s)
-      end
-
+      client = EventMachine::HttpRequest.new(@endpoint.to_s, options)
       client.post(params)
     end
 

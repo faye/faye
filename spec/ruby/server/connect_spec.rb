@@ -10,24 +10,24 @@ describe "server connect" do
 
   describe :connect do
     let(:client_id) { "fakeclientid" }
-    let(:message) {{"channel" => "/meta/connect",
-                    "clientId" => "fakeclientid",
-                    "connectionType" => "long-polling"
-                  }}
+    let(:message) { { "channel" => "/meta/connect",
+                      "clientId" => "fakeclientid",
+                      "connectionType" => "long-polling"
+                  } }
 
     describe "with valid paramters" do
       before do
-        message["advice"] = {"timeout" => 60}
+        message["advice"] = { "timeout" => 60 }
         engine.should_receive(:client_exists).with(client_id).and_yield true
       end
 
       it "connects to the engine to wait for new messages" do
-        engine.should_receive(:connect).with(client_id, {"timeout" => 60})
+        engine.should_receive(:connect).with(client_id, { "timeout" => 60 })
         server.connect(message) {}
       end
 
       it "returns a successful response and any queued messages" do
-        engine.stub(:connect).and_yield([{"channel" => "/x", "data" => "hello"}])
+        engine.stub(:connect).and_yield([{ "channel" => "/x", "data" => "hello" }])
         server.connect(message) do |response|
           response.should == [
             { "channel"    => "/meta/connect",

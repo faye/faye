@@ -13,7 +13,7 @@ jstest.describe("Client", function() { with(this) {
   before(function() { with(this) {
     var uri = URI.parse("http://localhost/bayeux")
 
-    this.dispatcher = {endpoint: uri, connectionType: "fake-transport", retry: 5}
+    this.dispatcher = { endpoint: uri, connectionType: "fake-transport", retry: 5 }
     stub(dispatcher, "getConnectionTypes").returns(["fake-transport", "another-transport"])
     stub(dispatcher, "selectTransport")
     stub(dispatcher, "sendMessage")
@@ -37,20 +37,20 @@ jstest.describe("Client", function() { with(this) {
 
   define("createConnectedClient", function() { with(this) {
     createClient()
-    stubResponse({channel:    "/meta/handshake",
-                  successful: true,
-                  version:    "1.0",
-                  supportedConnectionTypes: ["websocket"],
-                  clientId:   "fakeid" })
+    stubResponse({ channel:    "/meta/handshake",
+                   successful: true,
+                   version:    "1.0",
+                   supportedConnectionTypes: ["websocket"],
+                   clientId:   "fakeid" })
 
     client.handshake()
   }})
 
   define("subscribe", function(client, channel, callback) { with(this) {
-    stubResponse({channel:      "/meta/subscribe",
-                  successful:   true,
-                  clientId:     "fakeid",
-                  subscription: channel })
+    stubResponse({ channel:      "/meta/subscribe",
+                   successful:   true,
+                   clientId:     "fakeid",
+                   subscription: channel })
 
     this.subsCalled = 0
     callback = callback || function() { subsCalled += 1 }
@@ -91,7 +91,7 @@ jstest.describe("Client", function() { with(this) {
       before(function() { with(this) {
         var extension = {
           outgoing: function(message, callback) {
-            message.ext = {auth: "password"}
+            message.ext = { auth: "password" }
             callback(message)
           }
         }
@@ -104,7 +104,7 @@ jstest.describe("Client", function() { with(this) {
           version:  "1.0",
           supportedConnectionTypes: ["fake-transport", "another-transport"],
           id:       instanceOf("string"),
-          ext:      {auth: "password"}
+          ext:      { auth: "password" }
         }, 72, {})
         client.handshake()
       }})
@@ -112,11 +112,11 @@ jstest.describe("Client", function() { with(this) {
 
     describe("on successful response", function() { with(this) {
       before(function() { with(this) {
-        stubResponse({channel:    "/meta/handshake",
-                      successful: true,
-                      version:    "1.0",
-                      supportedConnectionTypes: ["long-polling", "websocket"],
-                      clientId:   "handshakeid" })
+        stubResponse({ channel:    "/meta/handshake",
+                       successful: true,
+                       version:    "1.0",
+                       supportedConnectionTypes: ["long-polling", "websocket"],
+                       clientId:   "handshakeid" })
       }})
 
       it("stores the clientId", function() { with(this) {
@@ -142,10 +142,10 @@ jstest.describe("Client", function() { with(this) {
 
     describe("on unsuccessful response", function() { with(this) {
       before(function() { with(this) {
-        stubResponse({channel:    "/meta/handshake",
-                      successful: false,
-                      version:    "1.0",
-                      supportedConnectionTypes: ["websocket"] })
+        stubResponse({ channel:    "/meta/handshake",
+                       successful: false,
+                       version:    "1.0",
+                       supportedConnectionTypes: ["websocket"] })
       }})
 
       it("schedules a retry", function() { with(this) {
@@ -165,14 +165,14 @@ jstest.describe("Client", function() { with(this) {
         this.message = null
 
         subscribe(client, "/messages/foo", function(m) { message = m }).then(function() {
-          client._receiveMessage({advice: {reconnect: "handshake"}})
+          client._receiveMessage({ advice: { reconnect: "handshake" }})
 
-          stubResponse({channel:      "/meta/handshake",
-                        successful:   true,
-                        version:      "1.0",
-                        supportedConnectionTypes: ["websocket"],
-                        clientId:     "reconnectid",
-                        subscription: "/messages/foo" })  // tacked on to trigger subscribe() callback
+          stubResponse({ channel:      "/meta/handshake",
+                         successful:   true,
+                         version:      "1.0",
+                         supportedConnectionTypes: ["websocket"],
+                         clientId:     "reconnectid",
+                         subscription: "/messages/foo" })  // tacked on to trigger subscribe() callback
 
           resume()
         })
@@ -190,7 +190,7 @@ jstest.describe("Client", function() { with(this) {
 
       it("retains the listeners for the subscriptions", function() { with(this) {
         client.handshake()
-        client._receiveMessage({channel: "/messages/foo", "data": "ok"})
+        client._receiveMessage({ channel: "/messages/foo", "data": "ok" })
         assertEqual( "ok", message )
       }})
     }})
@@ -215,11 +215,11 @@ jstest.describe("Client", function() { with(this) {
   describe("connect", function() { with(this) {
     describe("with an unconnected client", function() { with(this) {
       before(function() { with(this) {
-        stubResponse({channel:    "/meta/handshake",
-                      successful: true,
-                      version:    "1.0",
-                      supportedConnectionTypes: ["websocket"],
-                      clientId:   "handshakeid" })
+        stubResponse({ channel:    "/meta/handshake",
+                       successful: true,
+                       version:    "1.0",
+                       supportedConnectionTypes: ["websocket"],
+                       clientId:   "handshakeid" })
 
         createClient()
       }})
@@ -284,9 +284,9 @@ jstest.describe("Client", function() { with(this) {
 
     describe("on successful response", function() { with(this) {
       before(function() { with(this) {
-        stubResponse({channel:      "/meta/disconnect",
-                      successful:   true,
-                      clientId:     "fakeid" })
+        stubResponse({ channel:      "/meta/disconnect",
+                       successful:   true,
+                       clientId:     "fakeid" })
       }})
 
       it("closes the dispatcher", function() { with(this) {
@@ -343,17 +343,17 @@ jstest.describe("Client", function() { with(this) {
 
       describe("on successful response", function() { with(this) {
         before(function() { with(this) {
-          stubResponse({channel:      "/meta/subscribe",
-                        successful:   true,
-                        clientId:     "fakeid",
-                        subscription: "/foo/*" })
+          stubResponse({ channel:      "/meta/subscribe",
+                         successful:   true,
+                         clientId:     "fakeid",
+                         subscription: "/foo/*" })
         }})
 
         it("sets up a listener for the subscribed channel", function(resume) { with(this) {
           var message
           client.subscribe("/foo/*", function(m) { message = m }).then(function() {
             resume(function() {
-              client._receiveMessage({channel: "/foo/bar", data: "hi"})
+              client._receiveMessage({ channel: "/foo/bar", data: "hi" })
               assertEqual( "hi", message )
             })
           })
@@ -363,7 +363,7 @@ jstest.describe("Client", function() { with(this) {
           var message
           client.subscribe("/foo/*").withChannel(function(c, m) { message = [c, m] }).then(function() {
             resume(function() {
-              client._receiveMessage({channel: "/foo/bar", data: "hi"})
+              client._receiveMessage({ channel: "/foo/bar", data: "hi" })
               assertEqual( ["/foo/bar", "hi"], message )
             })
           })
@@ -372,7 +372,7 @@ jstest.describe("Client", function() { with(this) {
         it("does not call the listener for non-matching channels", function() { with(this) {
           var message
           client.subscribe("/foo/*", function(m) { message = m })
-          client._receiveMessage({channel: "/bar", data: "hi"})
+          client._receiveMessage({ channel: "/bar", data: "hi" })
           assertEqual( undefined, message )
         }})
 
@@ -394,8 +394,8 @@ jstest.describe("Client", function() { with(this) {
           }})
 
           it("passes delivered messages through the extension", function() { with(this) {
-            client._receiveMessage({channel: "/foo/bar", data: {hello: "there"}})
-            assertEqual( {hello: "there", changed: true}, message )
+            client._receiveMessage({ channel: "/foo/bar", data: { hello: "there" }})
+            assertEqual( { hello: "there", changed: true }, message )
           }})
         }})
 
@@ -413,8 +413,8 @@ jstest.describe("Client", function() { with(this) {
           }})
 
           it("leaves messages unchanged", function() { with(this) {
-            client._receiveMessage({channel: "/foo/bar", data: {hello: "there"}})
-            assertEqual( {hello: "there"}, message )
+            client._receiveMessage({ channel: "/foo/bar", data: { hello: "there" }})
+            assertEqual( { hello: "there" }, message )
           }})
         }})
 
@@ -432,7 +432,7 @@ jstest.describe("Client", function() { with(this) {
           it("does not set up a listener for the subscribed channel", function() { with(this) {
             var message
             client.subscribe("/foo/*", function(m) { message = m })
-            client._receiveMessage({channel: "/foo/bar", data: "hi"})
+            client._receiveMessage({ channel: "/foo/bar", data: "hi" })
             assertEqual( undefined, message )
           }})
 
@@ -446,17 +446,17 @@ jstest.describe("Client", function() { with(this) {
 
       describe("on unsuccessful response", function() { with(this) {
         before(function() { with(this) {
-          stubResponse({channel:      "/meta/subscribe",
-                        successful:   false,
-                        error:        "403:/meta/foo:Forbidden channel",
-                        clientId:     "fakeid",
-                        subscription: "/meta/foo" })
+          stubResponse({ channel:      "/meta/subscribe",
+                         successful:   false,
+                         error:        "403:/meta/foo:Forbidden channel",
+                         clientId:     "fakeid",
+                         subscription: "/meta/foo" })
         }})
 
         it("does not set up a listener for the subscribed channel", function() { with(this) {
           var message
           client.subscribe("/meta/foo", function(m) { message = m })
-          client._receiveMessage({channel: "/meta/foo", data: "hi"})
+          client._receiveMessage({ channel: "/meta/foo", data: "hi" })
           assertEqual( undefined, message )
         }})
 
@@ -467,7 +467,7 @@ jstest.describe("Client", function() { with(this) {
         it("reports the error through an errback", function(resume) { with(this) {
           client.subscribe("/meta/foo").errback(function(error) {
             resume(function() {
-              assertEqual( objectIncluding({code: 403, params: ["/meta/foo"], message: "Forbidden channel"}), error )
+              assertEqual( objectIncluding({ code: 403, params: ["/meta/foo"], message: "Forbidden channel" }), error )
             })
           })
         }})
@@ -487,7 +487,7 @@ jstest.describe("Client", function() { with(this) {
       it("sets up another listener on the channel", function(resume) { with(this) {
         client.subscribe("/foo/*", function() { subsCalled += 1 }).then(function() {
           resume(function() {
-            client._receiveMessage({channel: "/foo/bar", data: "hi"})
+            client._receiveMessage({ channel: "/foo/bar", data: "hi" })
             assertEqual( 2, subsCalled )
           })
         })
@@ -531,9 +531,9 @@ jstest.describe("Client", function() { with(this) {
       }})
 
       it("removes the listener from the channel", function() { with(this) {
-        client._receiveMessage({channel: "/foo/bar", data: "first"})
+        client._receiveMessage({ channel: "/foo/bar", data: "first" })
         client.unsubscribe("/foo/*", subscription)
-        client._receiveMessage({channel: "/foo/bar", data: "second"})
+        client._receiveMessage({ channel: "/foo/bar", data: "second" })
         assertEqual( "first", message )
       }})
     }})
@@ -548,9 +548,9 @@ jstest.describe("Client", function() { with(this) {
       }})
 
       it("removes one of the listeners from the channel", function() { with(this) {
-        client._receiveMessage({channel: "/foo/bar", data: {text: "you"}})
+        client._receiveMessage({ channel: "/foo/bar", data: { text: "you" }})
         client.unsubscribe("/foo/*", hey)
-        client._receiveMessage({channel: "/foo/bar", data: {text: "you"}})
+        client._receiveMessage({ channel: "/foo/bar", data: { text: "you" }})
         assertEqual( ["hey you", "bye you", "bye you"], messages)
       }})
 
@@ -606,29 +606,29 @@ jstest.describe("Client", function() { with(this) {
       expect(dispatcher, "sendMessage").given({
         channel:  "/messages/foo",
         clientId: "fakeid",
-        data:     {hello: "world"},
+        data:     { hello: "world" },
         id:       instanceOf("string")
       }, 72, {})
-      client.publish("/messages/foo", {hello: "world"})
+      client.publish("/messages/foo", { hello: "world" })
       client.connect(resume)
     }})
 
     describe("on publish failure", function() { with(this) {
       before(function() { with(this) {
-        stubResponse({channel:    "/messages/foo",
-                      error:      "407:/messages/foo:Failed to publish",
-                      successful: false,
-                      clientId:   "fakeid" })
+        stubResponse({ channel:    "/messages/foo",
+                       error:      "407:/messages/foo:Failed to publish",
+                       successful: false,
+                       clientId:   "fakeid" })
       }})
 
       it("should not be published", function() { with(this) {
         var published = false
-        client.publish("/messages/foo", {text: "hi"}).callback(function() { published = true })
+        client.publish("/messages/foo", { text: "hi" }).callback(function() { published = true })
         assert( !published )
       }})
 
       it("reports the error through an errback", function(resume) { with(this) {
-        client.publish("/messages/foo", {text: "hi"}).errback(function(error) {
+        client.publish("/messages/foo", { text: "hi" }).errback(function(error) {
           resume(function() {
             assertEqual( 407, error.code )
             assertEqual( ["/messages/foo"], error.params )
@@ -640,14 +640,14 @@ jstest.describe("Client", function() { with(this) {
 
     describe("on receipt of the published message", function() { with(this) {
       before(function() { with(this) {
-        stubResponse({channel:    "/messages/foo",
-                      data:       {text: "hi"},
-                      clientId:   "fakeid" })
+        stubResponse({ channel:    "/messages/foo",
+                       data:       { text: "hi" },
+                       clientId:   "fakeid" })
       }})
 
       it("does not trigger the callbacks", function() { with(this) {
         var published = false
-        var publication = client.publish("/messages/foo", {text: "hi"})
+        var publication = client.publish("/messages/foo", { text: "hi" })
         publication.callback(function() { published = true })
         publication.errback(function() { published = true })
         assert( !published )
@@ -658,7 +658,7 @@ jstest.describe("Client", function() { with(this) {
       before(function() { with(this) {
         var extension = {
           outgoing: function(message, callback) {
-            message.ext = {auth: "password"}
+            message.ext = { auth: "password" }
             callback(message)
           }
         }
@@ -669,11 +669,11 @@ jstest.describe("Client", function() { with(this) {
         expect(dispatcher, "sendMessage").given({
           channel:  "/messages/foo",
           clientId: "fakeid",
-          data:     {hello: "world"},
+          data:     { hello: "world" },
           id:       instanceOf("string"),
-          ext:      {auth: "password"}
+          ext:      { auth: "password" }
         }, 72, {})
-        client.publish("/messages/foo", {hello: "world"})
+        client.publish("/messages/foo", { hello: "world" })
         client.connect(resume)
       }})
     }})
@@ -682,7 +682,7 @@ jstest.describe("Client", function() { with(this) {
       before(function() { with(this) {
         var extension = {
           incoming: function(message, callback) {
-            message.ext = {auth: "password"}
+            message.ext = { auth: "password" }
             callback(message)
           }
         }
@@ -693,10 +693,10 @@ jstest.describe("Client", function() { with(this) {
         expect(dispatcher, "sendMessage").given({
           channel:  "/messages/foo",
           clientId: "fakeid",
-          data:     {hello: "world"},
+          data:     { hello: "world" },
           id:       instanceOf("string")
         }, 72, {})
-        client.publish("/messages/foo", {hello: "world"})
+        client.publish("/messages/foo", { hello: "world" })
         client.connect(resume)
       }})
     }})

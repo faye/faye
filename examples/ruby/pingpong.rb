@@ -3,7 +3,7 @@ require 'bundler/setup'
 require 'faye'
 
 EM.run {
-  ENDPOINT = 'http://localhost:9292/bayeux'
+  ENDPOINT = 'http://0.0.0.0:9292/bayeux'
   puts 'Connecting to ' + ENDPOINT
 
   ping = Faye::Client.new(ENDPOINT)

@@ -5,7 +5,7 @@ module Faye
     include Publisher
     include Timeouts
 
-    DEFAULT_PORTS = {'http' => 80, 'https' => 433, 'ws' => 80, 'wss' => 443}
+    DEFAULT_PORTS = { 'http' => 80, 'https' => 433, 'ws' => 80, 'wss' => 443 }
 
     attr_reader :endpoint
 
@@ -76,7 +76,7 @@ module Faye
       remove_timeout(:publish)
 
       if @outbox.size > 1 and @connection_message
-        @connection_message['advice'] = {'timeout' => 0}
+        @connection_message['advice'] = { 'timeout' => 0 }
       end
 
       @promise.succeed(request(@outbox))

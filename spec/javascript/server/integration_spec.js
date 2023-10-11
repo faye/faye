@@ -12,7 +12,7 @@ var NodeAdapter        = require("../../../src/adapters/node_adapter"),
 
 var IntegrationSteps = jstest.asyncSteps({
   server: function(ssl, callback) {
-    this._adapter = new NodeAdapter({mount: "/bayeux", timeout: 2})
+    this._adapter = new NodeAdapter({ mount: "/bayeux", timeout: 2 })
 
     this._adapter.addExtension({
       incoming: function(message, callback) {
@@ -29,7 +29,7 @@ var IntegrationSteps = jstest.asyncSteps({
     this._secure = ssl
 
     this._http = ssl
-               ? https.createServer({cert: cert, key: key})
+               ? https.createServer({ cert: cert, key: key })
                : http.createServer()
 
     this._adapter.attach(this._http)
@@ -50,7 +50,7 @@ var IntegrationSteps = jstest.asyncSteps({
     var scheme          = this._secure ? "https" : "http"
     this._clients       = this._clients || {}
     this._inboxes       = this._inboxes || {}
-    this._clients[name] = new Client(scheme + "://localhost:" + this._port  + "/bayeux", {ca: cert})
+    this._clients[name] = new Client(scheme + "://localhost:" + this._port  + "/bayeux", { ca: cert })
     this._inboxes[name] = {}
 
     var n = channels.length
@@ -94,24 +94,24 @@ jstest.describe("Server integration", function() { with(this) {
     after(function() { this.stop() })
 
     it("delivers a message between clients", function() { with(this) {
-      publish("alice", "/foo", {hello: "world", extra: null})
-      check_inbox("bob", "/foo", [{hello: "world", extra: null, tagged: true, url: "/bayeux"}])
+      publish("alice", "/foo", { hello: "world", extra: null })
+      check_inbox("bob", "/foo", [{ hello: "world", extra: null, tagged: true, url: "/bayeux" }])
     }})
 
     it("does not deliver messages for unsubscribed channels", function() { with(this) {
-      publish("alice", "/bar", {hello: "world"})
+      publish("alice", "/bar", { hello: "world" })
       check_inbox("bob", "/foo", [])
     }})
 
     it("delivers multiple messages", function() { with(this) {
-      publish("alice", "/foo", {hello: "world"})
-      publish("alice", "/foo", {hello: "world"})
-      check_inbox("bob", "/foo", [{hello: "world", tagged: true, url: "/bayeux"}, {hello: "world", tagged: true, url: "/bayeux"}])
+      publish("alice", "/foo", { hello: "world" })
+      publish("alice", "/foo", { hello: "world" })
+      check_inbox("bob", "/foo", [{ hello: "world", tagged: true, url: "/bayeux" }, { hello: "world", tagged: true, url: "/bayeux" }])
     }})
 
     it("delivers multibyte strings", function() { with(this) {
-      publish("alice", "/foo", {hello: "Apple = "})
-      check_inbox("bob", "/foo", [{hello: "Apple = ", tagged: true, url: "/bayeux"}])
+      publish("alice", "/foo", { hello: "Apple = " })
+      check_inbox("bob", "/foo", [{ hello: "Apple = ", tagged: true, url: "/bayeux" }])
     }})
   }})
 
@@ -135,7 +135,7 @@ jstest.describe("Server integration", function() { with(this) {
 
   describe("with HTTP server", function() { with(this) {
     before(function() { with(this) {
-      this.serverOptions = {ssl: false}
+      this.serverOptions = { ssl: false }
     }})
 
     itShouldBehaveLike("network transports")
@@ -143,7 +143,7 @@ jstest.describe("Server integration", function() { with(this) {
 
   describe("with HTTPS server", function() { with(this) {
     before(function() { with(this) {
-      this.serverOptions = {ssl: true}
+      this.serverOptions = { ssl: true }
     }})
 
     itShouldBehaveLike("network transports")

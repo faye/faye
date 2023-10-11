@@ -14,7 +14,7 @@ Terminus.ensure_browsers 5
 
 Terminus.browsers.each_with_index do |browser, i|
   name = NAMES[i]
-  puts "#{name} is using #{browser}"
+  puts "#{ name } is using #{ browser }"
   BROWSERS[name] = browser
   Terminus.browser = browser
   visit '/'
@@ -31,13 +31,13 @@ BROWSERS.each do |name, sender|
     next if at == name
 
     Terminus.browser = sender
-    fill_in 'message', :with => "@#{at} Hello, world!"
+    fill_in 'message', :with => "@#{ at } Hello, world!"
     click_button 'Send'
 
     Terminus.browser = target
-    unless page.has_content?("#{name}: @#{at} Hello, world!")
+    unless page.has_content?("#{ name }: @#{ at } Hello, world!")
       Terminus.return_to_dock
-      raise "Message did not make it from #{sender} to #{target}"
+      raise "Message did not make it from #{ sender } to #{ target }"
     end
   end
 end

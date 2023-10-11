@@ -3,5 +3,6 @@ build
 Gemfile.lock
 lib/client
 node_modules
+package-lock.json
 spec/*_bundle.js
 spec/*.map

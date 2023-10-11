@@ -10,10 +10,10 @@ describe "server unsubscribe" do
 
   describe :unsubscribe do
     let(:client_id) { "fakeclientid" }
-    let(:message) {{"channel" => "/meta/unsubscribe",
-                    "clientId" => "fakeclientid",
-                    "subscription" => "/foo"
-                  }}
+    let(:message) { { "channel" => "/meta/unsubscribe",
+                      "clientId" => "fakeclientid",
+                      "subscription" => "/foo"
+                  } }
 
     describe "with valid parameters" do
       before do

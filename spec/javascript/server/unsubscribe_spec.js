@@ -13,9 +13,9 @@ jstest.describe("Server unsubscribe", function() { with(this) {
   describe("#unsubscribe", function() { with(this) {
     before(function() { with(this) {
       this.clientId = "fakeclientid"
-      this.message = {channel: "/meta/unsubscribe",
-                      clientId: "fakeclientid",
-                      subscription: "/foo"}
+      this.message = { channel: "/meta/unsubscribe",
+                       clientId: "fakeclientid",
+                       subscription: "/foo" }
     }})
 
     describe("with valid parameters", function() { with(this) {
