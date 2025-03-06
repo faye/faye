@@ -42,8 +42,8 @@ var Event = {
   }
 };
 
-if (global.onunload !== undefined)
-  Event.on(global, 'unload', Event.detach, Event);
+if (global.onbeforeunload !== undefined)
+  Event.on(global, 'beforeunload', Event.detach, Event);
 
 module.exports = {
   Event: Event
