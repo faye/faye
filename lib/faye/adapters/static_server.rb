@@ -34,8 +34,6 @@ module Faye
       type = /\.js$/ =~ fullpath ? RackAdapter::TYPE_SCRIPT : RackAdapter::TYPE_JSON
       ims  = env['HTTP_IF_MODIFIED_SINCE']
 
-      no_content_length = env[RackAdapter::HTTP_X_NO_CONTENT_LENGTH]
-
       headers = {
         'ETag'          => cache[:digest],
         'Last-Modified' => cache[:mtime].httpdate
@@ -46,7 +44,6 @@ module Faye
       elsif ims and cache[:mtime] <= Time.httpdate(ims)
         [304, headers, ['']]
       else
-        headers['Content-Length'] = cache[:content].bytesize.to_s unless no_content_length
         headers.update(type)
         [200, headers, [cache[:content]]]
       end

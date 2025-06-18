@@ -1,3 +1,4 @@
+
 module Faye
   class Client
 
@@ -67,7 +68,6 @@ module Faye
       return if @state != UNCONNECTED
 
       @state = CONNECTING
-
       info('Initiating handshake with ?', @dispatcher.endpoint.to_s)
       @dispatcher.select_transport(MANDATORY_CONNECTION_TYPES)
 

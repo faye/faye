@@ -30,7 +30,6 @@ module Faye
 
     def build_params(content)
       headers = {
-        'Content-Length' => content.bytesize,
         'Content-Type'   => 'application/json',
         'Host'           => @endpoint.host + (@endpoint.port ? ":#{ @endpoint.port }" : '')
       }

@@ -43,7 +43,6 @@ class ServerProxy < Rack::Proxy
   def rewrite_env(env)
     env['HTTP_HOST'] = HOST
     env['SERVER_PORT'] = PORT
-    env[Faye::RackAdapter::HTTP_X_NO_CONTENT_LENGTH] = '1'
     env
   end
 end
