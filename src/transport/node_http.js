@@ -64,7 +64,7 @@ var NodeHttp = assign(Class(Transport, { className: 'NodeHttp',
     });
 
     request.on('error', function(error) {
-      self.error('HTTP error: ' + error.message);
+      self.warn('HTTP error: ' + error.message);
       self._handleError(messages);
     });
 
