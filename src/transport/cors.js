@@ -16,17 +16,15 @@ var CORS = Object.assign(Class(Transport, {
         xhr      = new xhrClass(),
         id       = ++CORS._id,
         headers  = this._dispatcher.headers,
-        self     = this,
-        key;
+        self     = this;
 
     xhr.open('POST', this.endpoint.href, true);
     xhr.withCredentials = true;
 
     if (xhr.setRequestHeader) {
       xhr.setRequestHeader('Pragma', 'no-cache');
-      for (key in headers) {
-        if (!headers.hasOwnProperty(key)) continue;
-        xhr.setRequestHeader(key, headers[key]);
+      for (let [key, value] of Object.entries(headers)) {
+        xhr.setRequestHeader(key, value);
       }
     }
 

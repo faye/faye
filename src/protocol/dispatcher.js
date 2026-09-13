@@ -42,8 +42,8 @@ var Dispatcher = Class({ className: 'Dispatcher',
     this.tls = options.tls || {};
     this.tls.ca = this.tls.ca || options.ca;
 
-    for (var type in this._alternates) {
-      this._alternates[type] = URI.parse(this._alternates[type]);
+    for (let [type, alt] of Object.entries(this._alternates)) {
+      this._alternates[type] = URI.parse(alt);
     }
 
     this.maxRequestSize = this.MAX_REQUEST_SIZE;

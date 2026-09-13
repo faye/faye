@@ -31,9 +31,8 @@ var XHR = Object.assign(Class(Transport, {
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
     var headers = this._dispatcher.headers;
-    for (var key in headers) {
-      if (!headers.hasOwnProperty(key)) continue;
-      xhr.setRequestHeader(key, headers[key]);
+    for (let [key, value] of Object.entries(headers)) {
+      xhr.setRequestHeader(key, value);
     }
 
     var abort = function() { xhr.abort() };

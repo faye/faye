@@ -38,7 +38,7 @@ var Logging = {
   }
 };
 
-for (let level in Logging.LOG_LEVELS) {
+for (let level of Object.keys(Logging.LOG_LEVELS)) {
   Logging[level] = function() {
     this.writeLog(arguments, level);
   };

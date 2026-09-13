@@ -306,11 +306,11 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
   }
 });
 
-for (var method in Publisher) (function(method) {
+for (let method of Object.keys(Publisher)) {
   NodeAdapter.prototype[method] = function() {
     return this._server._engine[method].apply(this._server._engine, arguments);
   };
-})(method);
+}
 
 Object.assign(NodeAdapter.prototype, Logging);
 

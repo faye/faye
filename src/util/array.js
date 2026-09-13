@@ -28,9 +28,8 @@ module.exports = {
         result.push(callback.call(context || null, object[i], i));
       }
     } else {
-      for (var key in object) {
-        if (!object.hasOwnProperty(key)) continue;
-        result.push(callback.call(context || null, key, object[key]));
+      for (let [key, value] of Object.entries(object)) {
+        result.push(callback.call(context || null, key, value));
       }
     }
     return result;
