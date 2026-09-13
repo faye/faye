@@ -1,7 +1,6 @@
 'use strict';
 
-var Buffer      = require('safe-buffer').Buffer,
-    path        = require('path'),
+var path        = require('path'),
     WebSocket   = require('faye-websocket'),
     EventSource = WebSocket.EventSource;
 

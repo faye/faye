@@ -21,7 +21,6 @@
           "dependencies": {
                     "csprng": "*",
                     "faye-websocket": ">=0.9.1",
-                    "safe-buffer": "*",
                     "tough-cookie": "*",
                     "tunnel-agent": "*"
           },

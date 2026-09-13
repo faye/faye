@@ -1,7 +1,6 @@
 'use strict';
 
-var Buffer = require('safe-buffer').Buffer,
-    http   = require('http'),
+var http   = require('http'),
     https  = require('https'),
     tunnel = require('tunnel-agent');
 
