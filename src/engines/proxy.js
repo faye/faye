@@ -1,10 +1,8 @@
 'use strict';
 
-var asap       = require('asap'),
-    assign     = require('../util/assign'),
+var assign     = require('../util/assign'),
     random     = require('../util/random'),
     Class      = require('../util/class'),
-    Promise    = require('../util/promise'),
     Logging    = require('../mixins/logging'),
     Publisher  = require('../mixins/publisher'),
     Channel    = require('../protocol/channel'),
@@ -27,7 +25,7 @@ var Proxy = assign(Class({ className: 'Engine.Proxy',
 
     this.bind('close', function(clientId) {
       var self = this;
-      asap(function() { self.flushConnection(clientId) });
+      Promise.resolve().then(function() { self.flushConnection(clientId) });
     }, this);
 
     this.debug('Created new engine: ?', this._options);

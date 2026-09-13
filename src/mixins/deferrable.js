@@ -1,7 +1,5 @@
 'use strict';
 
-var Promise   = require('../util/promise');
-
 module.exports = {
   then: function(callback, errback) {
     var self = this;
@@ -18,10 +16,12 @@ module.exports = {
   },
 
   callback: function(callback, context) {
+    if (!callback) return;
     return this.then(function(value) { callback.call(context, value) });
   },
 
   errback: function(callback, context) {
+    if (!callback) return;
     return this.then(null, function(reason) { callback.call(context, reason) });
   },
 

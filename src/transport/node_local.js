@@ -1,7 +1,6 @@
 'use strict';
 
-var asap       = require('asap'),
-    Class      = require('../util/class'),
+var Class      = require('../util/class'),
     URI        = require('../util/uri'),
     copyObject = require('../util/copy_object'),
     assign     = require('../util/assign'),
@@ -15,7 +14,7 @@ var NodeLocal = assign(Class(Transport, {
     messages = copyObject(messages);
     var self = this;
 
-    asap(function() {
+    Promise.resolve().then(function() {
       self.endpoint.process(messages, null, function(replies) {
         self._receive(copyObject(replies));
       });

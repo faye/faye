@@ -2,7 +2,6 @@
 
 var Class    = require('../util/class'),
     Cookie   = require('../util/cookies').Cookie,
-    Promise  = require('../util/promise'),
     array    = require('../util/array'),
     assign   = require('../util/assign'),
     Logging  = require('../mixins/logging'),

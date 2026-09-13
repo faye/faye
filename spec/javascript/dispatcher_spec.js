@@ -1,10 +1,8 @@
 var jstest = require("jstest").Test
 
-var asap       = require("asap"),
-    Dispatcher = require("../../src/protocol/dispatcher"),
+var Dispatcher = require("../../src/protocol/dispatcher"),
     Scheduler  = require("../../src/protocol/scheduler"),
     Transport  = require("../../src/transport"),
-    Promise    = require("../../src/util/promise"),
     URI        = require("../../src/util/uri")
 
 var CustomScheduler = function() {
@@ -168,7 +166,7 @@ jstest.describe("Dispatcher", function() { with(this) {
       it("aborts the request used to send the message", function(resume) { with(this) {
         expect(request, "abort").exactly(1)
         dispatcher.handleError(message)
-        asap(resume)
+        Promise.resolve().then(resume)
       }})
 
       it("does not resend a message with an ID it does not recognize", function() { with(this) {

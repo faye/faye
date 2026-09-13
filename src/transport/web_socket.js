@@ -1,7 +1,6 @@
 'use strict';
 
 var Class      = require('../util/class'),
-    Promise    = require('../util/promise'),
     Set        = require('../util/set'),
     URI        = require('../util/uri'),
     browser    = require('../util/browser'),
