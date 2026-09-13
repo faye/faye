@@ -7,11 +7,10 @@ var Buffer = require('safe-buffer').Buffer,
 
 var Class     = require('../util/class'),
     URI       = require('../util/uri'),
-    assign    = require('../util/assign'),
     toJSON    = require('../util/to_json'),
     Transport = require('./transport');
 
-var NodeHttp = assign(Class(Transport, { className: 'NodeHttp',
+var NodeHttp = Object.assign(Class(Transport, { className: 'NodeHttp',
   SECURE_PROTOCOLS: ['https:', 'wss:'],
 
   initialize: function() {
@@ -31,17 +30,17 @@ var NodeHttp = assign(Class(Transport, { className: 'NodeHttp',
       return;
     }
 
-    var options = assign({
+    var options = Object.assign({
       proxy: {
         host:       this._proxyUri.hostname,
         port:       this._proxyUri.port || this.DEFAULT_PORTS[this._proxyUri.protocol],
         proxyAuth:  this._proxyUri.auth,
-        headers:    assign({ host: this.endpoint.host }, proxy.headers)
+        headers:    Object.assign({ host: this.endpoint.host }, proxy.headers)
       }
     }, this._dispatcher.tls);
 
     if (this._proxySecure) {
-      assign(options.proxy, proxy.tls);
+      Object.assign(options.proxy, proxy.tls);
       this._tunnel = tunnel.httpsOverHttps(options);
     } else {
       this._tunnel = tunnel.httpsOverHttp(options);
@@ -91,7 +90,7 @@ var NodeHttp = assign(Class(Transport, { className: 'NodeHttp',
       host:     target.hostname,
       port:     target.port || this.DEFAULT_PORTS[target.protocol],
       path:     uri.path,
-      headers:  assign(headers, this._dispatcher.headers)
+      headers:  Object.assign(headers, this._dispatcher.headers)
     };
 
     var cookie = this._getCookies();
@@ -100,10 +99,10 @@ var NodeHttp = assign(Class(Transport, { className: 'NodeHttp',
     if (this._tunnel) {
       params.agent = this._tunnel;
     } else if (this._endpointSecure) {
-      assign(params, this._dispatcher.tls);
+      Object.assign(params, this._dispatcher.tls);
     } else if (proxy) {
       params.path = this.endpoint.href;
-      assign(params, this._proxy.tls);
+      Object.assign(params, this._proxy.tls);
       if (proxy.auth)
         params.headers['Proxy-Authorization'] = Buffer.from(proxy.auth, 'utf8').toString('base64');
     }

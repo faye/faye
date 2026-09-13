@@ -3,12 +3,11 @@
 var Class    = require('../util/class'),
     Cookie   = require('../util/cookies').Cookie,
     array    = require('../util/array'),
-    assign   = require('../util/assign'),
     Logging  = require('../mixins/logging'),
     Timeouts = require('../mixins/timeouts'),
     Channel  = require('../protocol/channel');
 
-var Transport = assign(Class({ className: 'Transport',
+var Transport = Object.assign(Class({ className: 'Transport',
   DEFAULT_PORTS: { 'http:': 80, 'https:': 443, 'ws:': 80, 'wss:': 443 },
   MAX_DELAY:     0,
 
@@ -18,7 +17,7 @@ var Transport = assign(Class({ className: 'Transport',
     this._dispatcher = dispatcher;
     this.endpoint    = endpoint;
     this._outbox     = [];
-    this._proxy      = assign({}, this._dispatcher.proxy);
+    this._proxy      = Object.assign({}, this._dispatcher.proxy);
 
     if (!this._proxy.origin)
       this._proxy.origin = this._findProxy();
@@ -210,7 +209,7 @@ var Transport = assign(Class({ className: 'Transport',
   _transports: []
 });
 
-assign(Transport.prototype, Logging);
-assign(Transport.prototype, Timeouts);
+Object.assign(Transport.prototype, Logging);
+Object.assign(Transport.prototype, Timeouts);
 
 module.exports = Transport;

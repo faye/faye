@@ -8,7 +8,6 @@ var Buffer = require('safe-buffer').Buffer,
     EventSource = WebSocket.EventSource;
 
 var constants       = require('../util/constants'),
-    assign          = require('../util/assign'),
     idFromMessages  = require('../util/id_from_messages'),
     toJSON          = require('../util/to_json'),
     validateOptions = require('../util/validate_options'),
@@ -152,7 +151,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
           jsonp   = params.jsonp || constants.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
           type    = isGet ? contenttypes.TYPE_SCRIPT : contenttypes.TYPE_JSON,
-          headers = assign({}, type),
+          headers = Object.assign({}, type),
           origin  = request.headers.origin;
 
       if (!this.VALID_JSONP_CALLBACK.test(jsonp))
@@ -308,6 +307,6 @@ for (var method in Publisher) (function(method) {
   };
 })(method);
 
-assign(NodeAdapter.prototype, Logging);
+Object.assign(NodeAdapter.prototype, Logging);
 
 module.exports = NodeAdapter;

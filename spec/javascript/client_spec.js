@@ -4,7 +4,6 @@ var Client       = require("../../src/protocol/client"),
     Dispatcher   = require("../../src/protocol/dispatcher"),
     Publisher    = require("../../src/mixins/publisher"),
     Subscription = require("../../src/protocol/subscription"),
-    assign       = require("../../src/util/assign"),
     URI          = require("../../src/util/uri")
 
 jstest.describe("Client", function() { with(this) {
@@ -16,7 +15,7 @@ jstest.describe("Client", function() { with(this) {
     stub(dispatcher, "selectTransport")
     stub(dispatcher, "sendMessage")
 
-    assign(dispatcher, Publisher)
+    Object.assign(dispatcher, Publisher)
     stub(Dispatcher, "create").returns(dispatcher)
 
     stub("setTimeout")

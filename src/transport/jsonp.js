@@ -3,11 +3,10 @@
 var Class      = require('../util/class'),
     URI        = require('../util/uri'),
     copyObject = require('../util/copy_object'),
-    assign     = require('../util/assign'),
     toJSON     = require('../util/to_json'),
     Transport  = require('./transport');
 
-var JSONP = assign(Class(Transport, {
+var JSONP = Object.assign(Class(Transport, {
  encode: function(messages) {
     var url = copyObject(this.endpoint);
     url.query.message = toJSON(messages);

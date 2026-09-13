@@ -2,7 +2,6 @@
 
 var Class      = require('../util/class'),
     array      = require('../util/array'),
-    assign     = require('../util/assign'),
     constants  = require('../util/constants'),
     Logging    = require('../mixins/logging'),
     Engine     = require('../engines/proxy'),
@@ -162,9 +161,9 @@ var Server = Class({ className: 'Server',
 
     response.advice = response.advice || {};
     if (response.error) {
-      assign(response.advice, { reconnect:  'handshake' }, false);
+      Object.assign(response.advice, { reconnect:  'handshake' }, false);
     } else {
-      assign(response.advice, {
+      Object.assign(response.advice, {
         reconnect:  'retry',
         interval:   interval,
         timeout:    timeout
@@ -337,7 +336,7 @@ Server.create = function(options) {
   return new Server(options);
 };
 
-assign(Server.prototype, Logging);
-assign(Server.prototype, Extensible);
+Object.assign(Server.prototype, Logging);
+Object.assign(Server.prototype, Extensible);
 
 module.exports = Server;

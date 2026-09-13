@@ -3,8 +3,7 @@ var jstest      = require("jstest").Test,
     querystring = require("querystring")
 
 var NodeAdapter = require("../../src/adapters/node_adapter"),
-    Server      = require("../../src/protocol/server"),
-    assign      = require("../../src/util/assign")
+    Server      = require("../../src/protocol/server")
 
 function handleResponse(request, self, resume) {
   request.on("response", function(response) {
@@ -70,7 +69,7 @@ var NodeAdapterSteps = jstest.asyncSteps({
   post: function(path, params, resume) {
     var body = (typeof params === "string") ? params : querystring.stringify(params)
 
-    var headers = assign({}, this._headers, {
+    var headers = Object.assign({}, this._headers, {
       "Host":           "localhost",
       "Content-Length": body.length
     })

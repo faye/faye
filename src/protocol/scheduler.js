@@ -1,14 +1,12 @@
 'use strict';
 
-var assign = require('../util/assign');
-
 var Scheduler = function(message, options) {
   this.message  = message;
   this.options  = options;
   this.attempts = 0;
 };
 
-assign(Scheduler.prototype, {
+Object.assign(Scheduler.prototype, {
   getTimeout: function() {
     return this.options.timeout;
   },

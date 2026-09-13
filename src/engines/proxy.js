@@ -1,7 +1,6 @@
 'use strict';
 
-var assign     = require('../util/assign'),
-    random     = require('../util/random'),
+var random     = require('../util/random'),
     Class      = require('../util/class'),
     Logging    = require('../mixins/logging'),
     Publisher  = require('../mixins/publisher'),
@@ -9,7 +8,7 @@ var assign     = require('../util/assign'),
     Connection = require('./connection'),
     Memory     = require('./memory');
 
-var Proxy = assign(Class({ className: 'Engine.Proxy',
+var Proxy = Object.assign(Class({ className: 'Engine.Proxy',
   MAX_DELAY:  0,
   INTERVAL:   0,
   TIMEOUT:    60,
@@ -118,7 +117,7 @@ METHODS.forEach(function(method) {
   };
 });
 
-assign(Proxy.prototype, Publisher);
-assign(Proxy.prototype, Logging);
+Object.assign(Proxy.prototype, Publisher);
+Object.assign(Proxy.prototype, Logging);
 
 module.exports = Proxy;

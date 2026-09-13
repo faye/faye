@@ -1,7 +1,6 @@
 'use strict';
 
 var Class     = require('../util/class'),
-    assign    = require('../util/assign'),
     Publisher = require('../mixins/publisher'),
     Grammar   = require('./grammar');
 
@@ -19,9 +18,9 @@ var Channel = Class({
   }
 });
 
-assign(Channel.prototype, Publisher);
+Object.assign(Channel.prototype, Publisher);
 
-assign(Channel, {
+Object.assign(Channel, {
   HANDSHAKE:    '/meta/handshake',
   CONNECT:      '/meta/connect',
   SUBSCRIBE:    '/meta/subscribe',

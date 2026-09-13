@@ -3,12 +3,11 @@
 var Class      = require('../util/class'),
     URI        = require('../util/uri'),
     copyObject = require('../util/copy_object'),
-    assign     = require('../util/assign'),
     Deferrable = require('../mixins/deferrable'),
     Transport  = require('./transport'),
     XHR        = require('./xhr');
 
-var EventSource = assign(Class(Transport, {
+var EventSource = Object.assign(Class(Transport, {
   initialize: function(dispatcher, endpoint) {
     Transport.prototype.initialize.call(this, dispatcher, endpoint);
     if (!global.EventSource) return this.setDeferredStatus('failed');
@@ -92,6 +91,6 @@ var EventSource = assign(Class(Transport, {
   }
 });
 
-assign(EventSource.prototype, Deferrable);
+Object.assign(EventSource.prototype, Deferrable);
 
 module.exports = EventSource;

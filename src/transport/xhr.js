@@ -3,11 +3,10 @@
 var Class     = require('../util/class'),
     URI       = require('../util/uri'),
     browser   = require('../util/browser'),
-    assign    = require('../util/assign'),
     toJSON    = require('../util/to_json'),
     Transport = require('./transport');
 
-var XHR = assign(Class(Transport, {
+var XHR = Object.assign(Class(Transport, {
   encode: function(messages) {
     return toJSON(messages);
   },
