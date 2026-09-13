@@ -40,8 +40,11 @@ Memory.prototype = {
     if (!this._namespace.exists(clientId)) return;
     var clients = this._clients;
 
-    if (clients[clientId])
-      clients[clientId].forEach(function(channel) { this.unsubscribe(clientId, channel) }, this);
+    if (clients[clientId]) {
+      for (let channel of clients[clientId]) {
+        this.unsubscribe(clientId, channel);
+      }
+    }
 
     this.removeTimeout(clientId);
     this._namespace.release(clientId);
@@ -108,18 +111,21 @@ Memory.prototype = {
         clients  = new Set(),
         subs;
 
-    for (var i = 0, n = channels.length; i < n; i++) {
-      subs = this._channels[channels[i]];
+    for (let channel of channels) {
+      subs = this._channels[channel];
       if (!subs) continue;
-      subs.forEach(clients.add, clients);
+
+      for (let sub of subs) {
+        clients.add(sub);
+      }
     }
 
-    clients.forEach(function(clientId) {
+    for (let clientId of clients) {
       this._server.debug('Queueing for client ?: ?', clientId, message);
       messages[clientId] = messages[clientId] || [];
       messages[clientId].push(copyObject(message));
       this.emptyQueue(clientId);
-    }, this);
+    }
 
     this._server.trigger('publish', message.clientId, message.channel, message.data);
   },

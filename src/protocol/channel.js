@@ -96,9 +96,7 @@ Object.assign(Channel, {
     },
 
     subscribe: function(names, subscription) {
-      var name;
-      for (var i = 0, n = names.length; i < n; i++) {
-        name = names[i];
+      for (let name of names) {
         var channel = this._channels[name] = this._channels[name] || new Channel(name);
         channel.bind('message', subscription);
       }
@@ -120,8 +118,8 @@ Object.assign(Channel, {
     distributeMessage: function(message) {
       var channels = Channel.expand(message.channel);
 
-      for (var i = 0, n = channels.length; i < n; i++) {
-        var channel = this._channels[channels[i]];
+      for (let chan of channels) {
+        var channel = this._channels[chan];
         if (channel) channel.trigger('message', message);
       }
     }

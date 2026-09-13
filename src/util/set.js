@@ -14,10 +14,10 @@ module.exports = Class({
     return true;
   },
 
-  forEach: function(block, context) {
+  [Symbol.iterator]: function*() {
     for (var key in this._index) {
       if (this._index.hasOwnProperty(key))
-        block.call(context, this._index[key]);
+        yield this._index[key];
     }
   },
 
@@ -40,11 +40,5 @@ module.exports = Class({
     var removed = this._index[key];
     delete this._index[key];
     return removed;
-  },
-
-  toArray: function() {
-    var array = [];
-    this.forEach(function(item) { array.push(item) });
-    return array;
   }
 });

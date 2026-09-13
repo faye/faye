@@ -44,14 +44,14 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
 
     if (extensions) {
       extensions = [].concat(extensions);
-      for (i = 0, n = extensions.length; i < n; i++)
-        this.addExtension(extensions[i]);
+      for (let ext of extensions)
+        this.addExtension(ext);
     }
 
     if (websocketExtensions) {
       websocketExtensions = [].concat(websocketExtensions);
-      for (i = 0, n = websocketExtensions.length; i < n; i++)
-        this.addWebsocketExtension(websocketExtensions[i]);
+      for (let wsExt of websocketExtensions)
+        this.addWebsocketExtension(wsExt);
     }
   },
 
@@ -93,8 +93,8 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
     httpServer.on(event, function(request) {
       if (self.check(request)) return self[method].apply(self, arguments);
 
-      for (var i = 0, n = listeners.length; i < n; i++)
-        listeners[i].apply(this, arguments);
+      for (let listener of listeners)
+        listener.apply(this, arguments);
     });
   },
 
@@ -263,9 +263,9 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
       var buffer = Buffer.alloc(length),
           offset = 0;
 
-      for (var i = 0, n = chunks.length; i < n; i++) {
-        chunks[i].copy(buffer, offset);
-        offset += chunks[i].length;
+      for (let chunk of chunks) {
+        chunk.copy(buffer, offset);
+        offset += chunk.length;
       }
       callback.call(context, buffer.toString('utf8'));
     });

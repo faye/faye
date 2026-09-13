@@ -25,7 +25,7 @@ var WebSocket = Object.assign(Class(Transport, {
 
   request: function(messages) {
     this._pending = this._pending || new Set();
-    for (var i = 0, n = messages.length; i < n; i++) this._pending.add(messages[i]);
+    for (let message of messages) this._pending.add(message);
 
     var self = this;
 
@@ -75,7 +75,7 @@ var WebSocket = Object.assign(Class(Transport, {
       delete self._socket;
       self._state = self.UNCONNECTED;
 
-      var pending = self._pending ? self._pending.toArray() : [];
+      var pending = self._pending ? [...self._pending] : [];
       delete self._pending;
 
       if (wasConnected || self._everConnected) {
@@ -94,9 +94,9 @@ var WebSocket = Object.assign(Class(Transport, {
 
       replies = [].concat(replies);
 
-      for (var i = 0, n = replies.length; i < n; i++) {
-        if (replies[i].successful === undefined) continue;
-        self._pending.remove(replies[i]);
+      for (let reply of replies) {
+        if (reply.successful === undefined) continue;
+        self._pending.remove(reply);
       }
       self._receive(replies);
     };

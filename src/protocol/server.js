@@ -72,8 +72,8 @@ var Server = Class({ className: 'Server',
       }
     };
 
-    for (var i = 0, n = messages.length; i < n; i++) {
-      this.pipeThroughExtensions('incoming', messages[i], request, function(pipedMessage) {
+    for (let message of messages) {
+      this.pipeThroughExtensions('incoming', message, request, function(pipedMessage) {
         this._handle(pipedMessage, local, handleReply, this);
       }, this);
     }
@@ -129,7 +129,7 @@ var Server = Class({ className: 'Server',
 
     this[method](message, local, function(responses) {
       responses = [].concat(responses);
-      for (var i = 0, n = responses.length; i < n; i++) this._advize(responses[i], message.connectionType);
+      for (let response of responses) this._advize(response, message.connectionType);
       callback.call(context, responses);
     }, this);
   },
@@ -268,8 +268,7 @@ var Server = Class({ className: 'Server',
   subscribe: function(message, local, callback, context) {
     var response     = this._makeResponse(message),
         clientId     = message.clientId,
-        subscription = message.subscription,
-        channel;
+        subscription = message.subscription;
 
     subscription = subscription ? [].concat(subscription) : [];
 
@@ -280,9 +279,7 @@ var Server = Class({ className: 'Server',
 
       response.subscription = message.subscription || [];
 
-      for (var i = 0, n = subscription.length; i < n; i++) {
-        channel = subscription[i];
-
+      for (let channel of subscription) {
         if (response.error) break;
         if (!local && !Channel.isSubscribable(channel)) response.error = Error.channelForbidden(channel);
         if (!Channel.isValid(channel))                  response.error = Error.channelInvalid(channel);
@@ -303,8 +300,7 @@ var Server = Class({ className: 'Server',
   unsubscribe: function(message, local, callback, context) {
     var response     = this._makeResponse(message),
         clientId     = message.clientId,
-        subscription = message.subscription,
-        channel;
+        subscription = message.subscription;
 
     subscription = subscription ? [].concat(subscription) : [];
 
@@ -315,9 +311,7 @@ var Server = Class({ className: 'Server',
 
       response.subscription = message.subscription || [];
 
-      for (var i = 0, n = subscription.length; i < n; i++) {
-        channel = subscription[i];
-
+      for (let channel of subscription) {
         if (response.error) break;
         if (!local && !Channel.isSubscribable(channel)) response.error = Error.channelForbidden(channel);
         if (!Channel.isValid(channel))                  response.error = Error.channelInvalid(channel);

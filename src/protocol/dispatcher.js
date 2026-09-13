@@ -36,8 +36,8 @@ var Dispatcher = Class({ className: 'Dispatcher',
     var exts = options.websocketExtensions;
     if (exts) {
       exts = [].concat(exts);
-      for (var i = 0, n = exts.length; i < n; i++)
-        this.addWebsocketExtension(exts[i]);
+      for (let ext of exts)
+        this.addWebsocketExtension(ext);
     }
 
     this.tls = options.tls || {};

@@ -24,9 +24,9 @@ var EngineSteps = jstest.asyncSteps({
     var clientId = this._clients[name]
     var inboxes  = this._inboxes
     engine.connect(clientId, {}, function(messages) {
-      for (var i = 0, n = messages.length; i < n; i++) {
-        delete messages[i].id
-        inboxes[name].push(messages[i])
+      for (let message of messages) {
+        delete message.id
+        inboxes[name].push(message)
       }
     })
     setTimeout(resume, 10)
@@ -66,8 +66,8 @@ var EngineSteps = jstest.asyncSteps({
 
   publish: function(messages, resume) {
     messages = [].concat(messages)
-    for (var i = 0, n = messages.length; i < n; i++) {
-      var message = Object.assign({ id: random() }, messages[i])
+    for (let msg of messages) {
+      var message = Object.assign({ id: random() }, msg)
       this.engine.publish(message)
     }
     setTimeout(resume, 20)

@@ -70,8 +70,8 @@ var Proxy = Object.assign(Class({ className: 'Engine.Proxy',
     var conn = this.connection(clientId, false);
     if (!conn) return false;
 
-    for (var i = 0, n = messages.length; i < n; i++) {
-      conn.deliver(messages[i]);
+    for (let message of messages) {
+      conn.deliver(message);
     }
     return true;
   },
@@ -111,11 +111,11 @@ var Proxy = Object.assign(Class({ className: 'Engine.Proxy',
 
 var METHODS = ['createClient', 'clientExists', 'destroyClient', 'ping', 'subscribe', 'unsubscribe'];
 
-METHODS.forEach(function(method) {
+for (let method of METHODS) {
   Proxy.prototype[method] = function() {
     return this._engine[method].apply(this._engine, arguments);
   };
-});
+}
 
 Object.assign(Proxy.prototype, Publisher);
 Object.assign(Proxy.prototype, Logging);

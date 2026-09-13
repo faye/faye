@@ -96,8 +96,8 @@ var Transport = Object.assign(Class({ className: 'Transport',
     this.debug('Client ? received from ? via ?: ?',
                this._dispatcher.clientId, this.endpoint.href, this.connectionType, replies);
 
-    for (var i = 0, n = replies.length; i < n; i++)
-      this._dispatcher.handleResponse(replies[i]);
+    for (let reply of replies)
+      this._dispatcher.handleResponse(reply);
   },
 
   _handleError: function(messages, immediate) {
@@ -106,8 +106,8 @@ var Transport = Object.assign(Class({ className: 'Transport',
     this.debug('Client ? failed to send to ? via ?: ?',
                this._dispatcher.clientId, this.endpoint.href, this.connectionType, messages);
 
-    for (var i = 0, n = messages.length; i < n; i++)
-      this._dispatcher.handleError(messages[i]);
+    for (let message of messages)
+      this._dispatcher.handleError(message);
   },
 
   _getCookies: function() {
@@ -129,8 +129,8 @@ var Transport = Object.assign(Class({ className: 'Transport',
     if (!setCookie || !cookies) return;
     setCookie = [].concat(setCookie);
 
-    for (var i = 0, n = setCookie.length; i < n; i++) {
-      cookie = Cookie.parse(setCookie[i]);
+    for (let cookieStr of setCookie) {
+      cookie = Cookie.parse(cookieStr);
       cookies.setCookieSync(cookie, url);
     }
   },
@@ -202,8 +202,8 @@ var Transport = Object.assign(Class({ className: 'Transport',
   disable: function(feature) {
     if (feature !== 'autodisconnect') return;
 
-    for (var i = 0; i < this._transports.length; i++)
-      this._transports[i][1]._unloaded = false;
+    for (let transport of this._transports)
+      transport[1]._unloaded = false;
   },
 
   _transports: []

@@ -58,8 +58,8 @@ module.exports = {
     pairs = query ? query.split('&') : [];
     data  = {};
 
-    for (i = 0, n = pairs.length; i < n; i++) {
-      parts = pairs[i].split('=');
+    for (let pair of pairs) {
+      parts = pair.split('=');
       data[decodeURIComponent(parts[0] || '')] = decodeURIComponent(parts[1] || '');
     }
 
