@@ -78,17 +78,15 @@ Object.assign(Channel, {
 
   Set: Class({
     initialize: function() {
-      this._channels = {};
+      this._channels = new Map();
     },
 
     getKeys: function() {
-      var keys = [];
-      for (var key in this._channels) keys.push(key);
-      return keys;
+      return [...this._channels.keys()];
     },
 
     remove: function(name) {
-      delete this._channels[name];
+      this._channels.delete(name);
     },
 
     hasSubscription: function(name) {
@@ -97,13 +95,13 @@ Object.assign(Channel, {
 
     subscribe: function(names, subscription) {
       for (let name of names) {
-        var channel = this._channels[name] = this._channels[name] || new Channel(name);
-        channel.bind('message', subscription);
+        if (!this._channels.has(name)) this._channels.set(name, new Channel(name));
+        this._channels.get(name).bind('message', subscription);
       }
     },
 
     unsubscribe: function(name, subscription) {
-      var channel = this._channels[name];
+      var channel = this._channels.get(name);
       if (!channel) return false;
       channel.unbind('message', subscription);
 
@@ -119,7 +117,7 @@ Object.assign(Channel, {
       var channels = Channel.expand(message.channel);
 
       for (let chan of channels) {
-        var channel = this._channels[chan];
+        var channel = this._channels.get(chan);
         if (channel) channel.trigger('message', message);
       }
     }

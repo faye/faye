@@ -42,7 +42,7 @@ var Client = Class({ className: 'Client',
     this._messageId = 0;
     this._state     = this.UNCONNECTED;
 
-    this._responseCallbacks = {};
+    this._responseCallbacks = new Map();
 
     this._advice = {
       reconnect: this.RETRY,
@@ -320,7 +320,7 @@ var Client = Class({ className: 'Client',
 
     this.pipeThroughExtensions('outgoing', message, null, function(message) {
       if (!message) return;
-      if (callback) this._responseCallbacks[message.id] = [callback, context];
+      if (callback) this._responseCallbacks.set(message.id, [callback, context]);
       this._dispatcher.sendMessage(message, timeout, options || {});
     }, this);
   },
@@ -335,8 +335,8 @@ var Client = Class({ className: 'Client',
     var id = message.id, callback;
 
     if (message.successful !== undefined) {
-      callback = this._responseCallbacks[id];
-      delete this._responseCallbacks[id];
+      callback = this._responseCallbacks.get(id);
+      this._responseCallbacks.delete(id);
     }
 
     this.pipeThroughExtensions('incoming', message, null, function(message) {

@@ -79,15 +79,16 @@ var EventSource = Object.assign(Class(Transport, {
   },
 
   create: function(dispatcher, endpoint) {
-    var sockets = dispatcher.transports.eventsource = dispatcher.transports.eventsource || {},
-        id      = dispatcher.clientId;
+    var transports = dispatcher.transports,
+        sockets    = transports.eventsource = transports.eventsource || new Map(),
+        id         = dispatcher.clientId;
 
     var url = copyObject(endpoint);
     url.pathname += '/' + (id || '');
     url = URI.stringify(url);
 
-    sockets[url] = sockets[url] || new this(dispatcher, endpoint);
-    return sockets[url];
+    if (!sockets.has(url)) sockets.set(url, new this(dispatcher, endpoint));
+    return sockets.get(url);
   }
 });
 

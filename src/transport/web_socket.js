@@ -131,9 +131,12 @@ var WebSocket = Object.assign(Class(Transport, {
   },
 
   create: function(dispatcher, endpoint) {
-    var sockets = dispatcher.transports.websocket = dispatcher.transports.websocket || {};
-    sockets[endpoint.href] = sockets[endpoint.href] || new this(dispatcher, endpoint);
-    return sockets[endpoint.href];
+    var transports = dispatcher.transports,
+        sockets    = transports.websocket = transports.websocket || new Map();
+
+    if (!sockets.has(endpoint.href)) sockets.set(endpoint.href, new this(dispatcher, endpoint));
+
+    return sockets.get(endpoint.href);
   },
 
   getSocketUrl: function(endpoint) {

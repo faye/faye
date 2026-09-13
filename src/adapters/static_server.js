@@ -12,12 +12,12 @@ var StaticServer = Class({
   initialize: function(directory, pathRegex) {
     this._directory = directory;
     this._pathRegex = pathRegex;
-    this._pathMap   = {};
-    this._index     = {};
+    this._pathMap   = new Map();
+    this._index     = new Map();
   },
 
   map: function(requestPath, filename) {
-    this._pathMap[requestPath] = filename;
+    this._pathMap.set(requestPath, filename);
   },
 
   test: function(pathname) {
@@ -28,10 +28,10 @@ var StaticServer = Class({
     var pathname = url.parse(request.url, true).pathname,
         filename = path.basename(pathname);
 
-    filename = this._pathMap[filename] || filename;
-    this._index[filename] = this._index[filename] || {};
+    filename = this._pathMap.get(filename) || filename;
+    this._index.set(filename, this._index.get(filename) || {});
 
-    var cache    = this._index[filename],
+    var cache    = this._index.get(filename),
         fullpath = path.join(this._directory, filename);
 
     try {

@@ -15,7 +15,7 @@ var Proxy = Object.assign(Class({ className: 'Engine.Proxy',
 
   initialize: function(options) {
     this._options     = options || {};
-    this._connections = {};
+    this._connections = new Map();
     this.interval     = this._options.interval || this.INTERVAL;
     this.timeout      = this._options.timeout  || this.TIMEOUT;
 
@@ -39,24 +39,24 @@ var Proxy = Object.assign(Class({ className: 'Engine.Proxy',
   },
 
   hasConnection: function(clientId) {
-    return this._connections.hasOwnProperty(clientId);
+    return this._connections.has(clientId);
   },
 
   connection: function(clientId, create) {
-    var conn = this._connections[clientId];
+    var conn = this._connections.get(clientId);
     if (conn || !create) return conn;
-    this._connections[clientId] = new Connection(this, clientId);
+    this._connections.set(clientId, new Connection(this, clientId));
     this.trigger('connection:open', clientId);
-    return this._connections[clientId];
+    return this._connections.get(clientId);
   },
 
   closeConnection: function(clientId) {
     this.debug('Closing connection for ?', clientId);
-    var conn = this._connections[clientId];
+    var conn = this._connections.get(clientId);
     if (!conn) return;
     if (conn.socket) conn.socket.close();
     this.trigger('connection:close', clientId);
-    delete this._connections[clientId];
+    this._connections.delete(clientId);
   },
 
   openSocket: function(clientId, socket) {
@@ -91,7 +91,9 @@ var Proxy = Object.assign(Class({ className: 'Engine.Proxy',
   },
 
   close: function() {
-    for (var clientId in this._connections) this.flushConnection(clientId);
+    for (let clientId of this._connections.keys()) {
+      this.flushConnection(clientId);
+    }
     this._engine.disconnect();
   },
 
