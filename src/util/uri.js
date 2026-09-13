@@ -14,10 +14,11 @@ module.exports = {
   parse: function(url, base) {
     if (typeof url !== 'string') return url;
 
-    if (typeof location === 'undefined')
+    if (typeof location === 'undefined') {
       return new URL(url, base);
-    else
+    } else {
       return new URL(url, base || location.href);
+    }
   },
 
   stringify: function(uri) {

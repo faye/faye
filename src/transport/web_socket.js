@@ -153,8 +153,9 @@ Object.assign(WebSocket.prototype, Deferrable);
 
 if (browser.Event && global.onbeforeunload !== undefined) {
   browser.Event.on(global, 'beforeunload', function() {
-    if (WebSocket._unloaded === undefined)
+    if (WebSocket._unloaded === undefined) {
       WebSocket._unloaded = true;
+    }
   });
 }
 

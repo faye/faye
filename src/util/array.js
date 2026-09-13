@@ -3,8 +3,9 @@
 module.exports = {
   commonElement: function(lista, listb) {
     for (var i = 0, n = lista.length; i < n; i++) {
-      if (this.indexOf(listb, lista[i]) !== -1)
+      if (this.indexOf(listb, lista[i]) !== -1) {
         return lista[i];
+      }
     }
     return null;
   },
@@ -39,8 +40,9 @@ module.exports = {
     if (array.filter) return array.filter(callback, context);
     var result = [];
     for (var i = 0, n = array.length; i < n; i++) {
-      if (callback.call(context || null, array[i], i))
+      if (callback.call(context || null, array[i], i)) {
         result.push(array[i]);
+      }
     }
     return result;
   },

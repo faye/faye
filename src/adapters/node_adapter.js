@@ -43,14 +43,12 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
 
     if (extensions) {
       extensions = [].concat(extensions);
-      for (let ext of extensions)
-        this.addExtension(ext);
+      for (let ext of extensions) this.addExtension(ext);
     }
 
     if (websocketExtensions) {
       websocketExtensions = [].concat(websocketExtensions);
-      for (let wsExt of websocketExtensions)
-        this.addWebsocketExtension(wsExt);
+      for (let wsExt of websocketExtensions) this.addWebsocketExtension(wsExt);
     }
   },
 
@@ -92,8 +90,9 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
     httpServer.on(event, function(request) {
       if (self.check(request)) return self[method].apply(self, arguments);
 
-      for (let listener of listeners)
+      for (let listener of listeners) {
         listener.apply(this, arguments);
+      }
     });
   },
 
@@ -112,20 +111,24 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
     request.on('error', function(error) { self._returnError(response, error) });
     response.on('error', function(error) { self._returnError(null, error) });
 
-    if (this._static.test(requestUrl.pathname))
+    if (this._static.test(requestUrl.pathname)) {
       return this._static.call(request, response);
+    }
 
     // http://groups.google.com/group/faye-users/browse_thread/thread/4a01bb7d25d3636a
-    if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST')
+    if (requestMethod === 'OPTIONS' || request.headers['access-control-request-method'] === 'POST') {
       return this._handleOptions(request, response);
+    }
 
-    if (EventSource.isEventSource(request))
+    if (EventSource.isEventSource(request)) {
       return this.handleEventSource(request, response);
+    }
 
-    if (requestMethod === 'GET')
+    if (requestMethod === 'GET') {
       return this._callWithParams(request, response, requestUrl.searchParams);
+    }
 
-    if (requestMethod === 'POST')
+    if (requestMethod === 'POST') {
       return this._concatStream(request, function(data) {
         var type   = (request.headers['content-type'] || '').split(';')[0],
             params = (type === 'application/json')
@@ -135,13 +138,15 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
         request.body = data;
         this._callWithParams(request, response, params);
       }, this);
+    }
 
     this._returnError(response, { message: 'Unrecognized request type' });
   },
 
   _callWithParams: function(request, response, params) {
-    if (!params.has('message'))
+    if (!params.has('message')) {
       return this._returnError(response, { message: 'Received request with no message: ' + this._formatRequest(request) });
+    }
 
     try {
       this.debug('Received message via HTTP ' + request.method + ': ?', params.get('message'));
@@ -153,8 +158,9 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
           headers = Object.assign({}, type),
           origin  = request.headers.origin;
 
-      if (!this.VALID_JSONP_CALLBACK.test(jsonp))
+      if (!this.VALID_JSONP_CALLBACK.test(jsonp)) {
         return this._returnError(response, { message: 'Invalid JSON-P callback: ' + jsonp });
+      }
 
       headers['Cache-Control'] = 'no-cache, no-store';
       headers['X-Content-Type-Options'] = 'nosniff';

@@ -21,11 +21,12 @@ Object.assign(Scheduler.prototype, {
         deadline = this.options.deadline,
         now      = new Date().getTime();
 
-    if (attempts !== undefined && made >= attempts)
+    if (attempts !== undefined && made >= attempts) {
       return false;
-
-    if (deadline !== undefined && now > deadline)
+    }
+    if (deadline !== undefined && now > deadline) {
       return false;
+    }
 
     return true;
   },

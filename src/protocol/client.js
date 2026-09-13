@@ -53,11 +53,13 @@ var Client = Class({ className: 'Client',
 
     this._dispatcher.bind('message', this._receiveMessage, this);
 
-    if (browser.Event && global.onbeforeunload !== undefined)
+    if (browser.Event && global.onbeforeunload !== undefined) {
       browser.Event.on(global, 'beforeunload', function() {
-        if (array.indexOf(this._dispatcher._disabled, 'autodisconnect') < 0)
+        if (array.indexOf(this._dispatcher._disabled, 'autodisconnect') < 0) {
           this.disconnect();
+        }
       }, this);
+    }
   },
 
   addWebsocketExtension: function(extension) {
@@ -140,8 +142,9 @@ var Client = Class({ className: 'Client',
     if (this._advice.reconnect === this.NONE) return;
     if (this._state === this.DISCONNECTED) return;
 
-    if (this._state === this.UNCONNECTED)
+    if (this._state === this.UNCONNECTED) {
       return this.handshake(function() { this.connect(callback, context) }, this);
+    }
 
     this.callback(callback, context);
     if (this._state !== this.CONNECTED) return;
@@ -207,10 +210,11 @@ var Client = Class({ className: 'Client',
   //                                                     * id
   //                                                     * timestamp
   subscribe: function(channel, callback, context) {
-    if (channel instanceof Array)
+    if (channel instanceof Array) {
       return array.map(channel, function(c) {
         return this.subscribe(c, callback, context);
       }, this);
+    }
 
     var subscription = new Subscription(this, channel, callback, context),
         force        = (callback === true),
@@ -257,10 +261,11 @@ var Client = Class({ className: 'Client',
   //                                                     * id
   //                                                     * timestamp
   unsubscribe: function(channel, subscription) {
-    if (channel instanceof Array)
+    if (channel instanceof Array) {
       return array.map(channel, function(c) {
         return this.unsubscribe(c, subscription);
       }, this);
+    }
 
     var dead = this._channels.unsubscribe(channel, subscription);
     if (!dead) return;
@@ -301,10 +306,11 @@ var Client = Class({ className: 'Client',
         clientId: this._dispatcher.clientId
 
       }, options, function(response) {
-        if (response.successful)
+        if (response.successful) {
           publication.setDeferredStatus('succeeded');
-        else
+        } else {
           publication.setDeferredStatus('failed', Error.parse(response.error));
+        }
       }, this);
     }, this);
 

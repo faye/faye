@@ -99,14 +99,15 @@ var Server = Class({ className: 'Server',
         error       = message.error,
         response;
 
-    if (Channel.isMeta(channelName))
+    if (Channel.isMeta(channelName)) {
       return this._handleMeta(message, local, callback, context);
-
-    if (!Grammar.CHANNEL_NAME.test(channelName))
+    }
+    if (!Grammar.CHANNEL_NAME.test(channelName)) {
       error = Error.channelInvalid(channelName);
-
-    if (message.data === undefined)
+    }
+    if (message.data === undefined) {
       error = Error.parameterMissing('data');
+    }
 
     if (!error) this._engine.publish(message);
 
@@ -147,8 +148,9 @@ var Server = Class({ className: 'Server',
   },
 
   _advize: function(response, connectionType) {
-    if (array.indexOf([Channel.HANDSHAKE, Channel.CONNECT], response.channel) < 0)
+    if (array.indexOf([Channel.HANDSHAKE, Channel.CONNECT], response.channel) < 0) {
       return;
+    }
 
     var interval, timeout;
     if (connectionType === 'eventsource') {
@@ -180,8 +182,9 @@ var Server = Class({ className: 'Server',
     var response = this._makeResponse(message);
     response.version = constants.BAYEUX_VERSION;
 
-    if (!message.version)
+    if (!message.version) {
       response.error = Error.parameterMissing('version');
+    }
 
     var clientConns = message.supportedConnectionTypes,
         commonConns;
@@ -192,8 +195,9 @@ var Server = Class({ className: 'Server',
       commonConns = array.filter(clientConns, function(conn) {
         return array.indexOf(constants.CONNECTION_TYPES, conn) >= 0;
       });
-      if (commonConns.length === 0)
+      if (commonConns.length === 0) {
         response.error = Error.conntypeMismatch(clientConns);
+      }
     } else {
       response.error = Error.parameterMissing('supportedConnectionTypes');
     }
@@ -220,8 +224,9 @@ var Server = Class({ className: 'Server',
       if (!exists)         response.error = Error.clientUnknown(clientId);
       if (!clientId)       response.error = Error.parameterMissing('clientId');
 
-      if (array.indexOf(constants.CONNECTION_TYPES, connectionType) < 0)
+      if (array.indexOf(constants.CONNECTION_TYPES, connectionType) < 0) {
         response.error = Error.conntypeMismatch(connectionType);
+      }
 
       if (!connectionType) response.error = Error.parameterMissing('connectionType');
 

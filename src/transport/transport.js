@@ -19,8 +19,9 @@ var Transport = Object.assign(Class({ className: 'Transport',
     this._outbox     = [];
     this._proxy      = Object.assign({}, this._dispatcher.proxy);
 
-    if (!this._proxy.origin)
+    if (!this._proxy.origin) {
       this._proxy.origin = this._findProxy();
+    }
   },
 
   close: function() {},
@@ -38,11 +39,12 @@ var Transport = Object.assign(Class({ className: 'Transport',
     this._outbox.push(message);
     this._flushLargeBatch();
 
-    if (message.channel === Channel.HANDSHAKE)
+    if (message.channel === Channel.HANDSHAKE) {
       return this._publish(0.01);
-
-    if (message.channel === Channel.CONNECT)
+    }
+    if (message.channel === Channel.CONNECT) {
       this._connectMessage = message;
+    }
 
     return this._publish(this.MAX_DELAY);
   },
@@ -69,8 +71,9 @@ var Transport = Object.assign(Class({ className: 'Transport',
   _flush: function() {
     this.removeTimeout('publish');
 
-    if (this._outbox.length > 1 && this._connectMessage)
+    if (this._outbox.length > 1 && this._connectMessage) {
       this._connectMessage.advice = { timeout: 0 };
+    }
 
     this._resolvePromise(this.request(this._outbox));
 
@@ -96,8 +99,9 @@ var Transport = Object.assign(Class({ className: 'Transport',
     this.debug('Client ? received from ? via ?: ?',
                this._dispatcher.clientId, this.endpoint.href, this.connectionType, replies);
 
-    for (let reply of replies)
+    for (let reply of replies) {
       this._dispatcher.handleResponse(reply);
+    }
   },
 
   _handleError: function(messages, immediate) {
@@ -106,8 +110,9 @@ var Transport = Object.assign(Class({ className: 'Transport',
     this.debug('Client ? failed to send to ? via ?: ?',
                this._dispatcher.clientId, this.endpoint.href, this.connectionType, messages);
 
-    for (let message of messages)
+    for (let message of messages) {
       this._dispatcher.handleError(message);
+    }
   },
 
   _getCookies: function() {
@@ -149,17 +154,19 @@ var Transport = Object.assign(Class({ className: 'Transport',
     if (name === 'http_proxy' && env.REQUEST_METHOD) {
       keys = Object.keys(env).filter(function(k) { return /^http_proxy$/i.test(k) });
       if (keys.length === 1) {
-        if (keys[0] === name && env[upcase] === undefined)
+        if (keys[0] === name && env[upcase] === undefined) {
           proxy = env[name];
+        }
       } else if (keys.length > 1) {
         proxy = env[name];
       }
       proxy = proxy || env['CGI_' + upcase];
     } else {
       proxy = env[name] || env[upcase];
-      if (proxy && !env[name])
+      if (proxy && !env[name]) {
         console.warn('The environment variable ' + upcase +
                      ' is discouraged. Use ' + name + '.');
+      }
     }
     return proxy;
   }
@@ -172,9 +179,9 @@ var Transport = Object.assign(Class({ className: 'Transport',
       var connType     = pair[0], klass = pair[1],
           connEndpoint = dispatcher.endpointFor(connType);
 
-      if (array.indexOf(disabled, connType) >= 0)
+      if (array.indexOf(disabled, connType) >= 0) {
         return resume();
-
+      }
       if (array.indexOf(allowed, connType) < 0) {
         klass.isUsable(dispatcher, connEndpoint, function() {});
         return resume();
@@ -202,8 +209,9 @@ var Transport = Object.assign(Class({ className: 'Transport',
   disable: function(feature) {
     if (feature !== 'autodisconnect') return;
 
-    for (let transport of this._transports)
+    for (let transport of this._transports) {
       transport[1]._unloaded = false;
+    }
   },
 
   _transports: []

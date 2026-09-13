@@ -37,10 +37,11 @@ var EventSource = Object.assign(Class(Transport, {
       var replies;
       try { replies = JSON.parse(event.data) } catch (error) {}
 
-      if (replies)
+      if (replies) {
         self._receive(replies);
-      else
+      } else {
         self._handleError([]);
+      }
     };
 
     this._socket = socket;

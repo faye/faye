@@ -43,10 +43,11 @@ var CORS = Object.assign(Class(Transport, {
 
       cleanUp();
 
-      if (replies)
+      if (replies) {
         self._receive(replies);
-      else
+      } else {
         self._handleError(messages);
+      }
     };
 
     xhr.onerror = xhr.ontimeout = function() {
@@ -56,8 +57,9 @@ var CORS = Object.assign(Class(Transport, {
 
     xhr.onprogress = function() {};
 
-    if (xhrClass === global.XDomainRequest)
+    if (xhrClass === global.XDomainRequest) {
       CORS._pending.add({ id: id, xhr: xhr });
+    }
 
     xhr.send(this.encode(messages));
     return xhr;
@@ -67,12 +69,12 @@ var CORS = Object.assign(Class(Transport, {
   _pending: new Set(),
 
   isUsable: function(dispatcher, endpoint, callback, context) {
-    if (URI.isSameOrigin(endpoint))
+    if (URI.isSameOrigin(endpoint)) {
       return callback.call(context, false);
-
-    if (global.XDomainRequest)
+    }
+    if (global.XDomainRequest) {
       return callback.call(context, endpoint.protocol === location.protocol);
-
+    }
     if (global.XMLHttpRequest) {
       var xhr = new XMLHttpRequest();
       return callback.call(context, xhr.withCredentials !== undefined);

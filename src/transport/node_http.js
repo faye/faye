@@ -129,10 +129,11 @@ var NodeHttp = Object.assign(Class(Transport, { className: 'NodeHttp',
       var replies;
       try { replies = JSON.parse(body) } catch (error) {}
 
-      if (replies)
+      if (replies) {
         self._receive(replies);
-      else
+      } else {
         self._handleError(messages);
+      }
     });
   }
 
