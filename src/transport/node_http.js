@@ -30,11 +30,15 @@ var NodeHttp = Object.assign(Class(Transport, { className: 'NodeHttp',
       return;
     }
 
+    var proxyAuth = this._proxyUri.username
+                  ? [this._proxyUri.username, this._proxyUri.password].join(':')
+                  : undefined;
+
     var options = Object.assign({
       proxy: {
         host:       this._proxyUri.hostname,
         port:       this._proxyUri.port || this.DEFAULT_PORTS[this._proxyUri.protocol],
-        proxyAuth:  this._proxyUri.auth,
+        proxyAuth:  proxyAuth,
         headers:    Object.assign({ host: this.endpoint.host }, proxy.headers)
       }
     }, this._dispatcher.tls);
@@ -74,7 +78,8 @@ var NodeHttp = Object.assign(Class(Transport, { className: 'NodeHttp',
   _buildParams: function(content) {
     var uri    = this.endpoint,
         proxy  = this._proxyUri,
-        target = this._tunnel ? uri : (proxy || uri);
+        target = this._tunnel ? uri : (proxy || uri),
+        auth;
 
     var headers = {
       'Content-Length': content.length,
@@ -82,14 +87,16 @@ var NodeHttp = Object.assign(Class(Transport, { className: 'NodeHttp',
       'Host':           uri.host
     };
 
-    if (uri.auth)
-      headers['Authorization'] = 'Basic ' + Buffer.from(uri.auth, 'utf8').toString('base64');
+    if (uri.username) {
+      auth = [uri.username, uri.password].join(':');
+      headers['Authorization'] = 'Basic ' + Buffer.from(auth, 'utf8').toString('base64');
+    }
 
     var params = {
       method:   'POST',
       host:     target.hostname,
       port:     target.port || this.DEFAULT_PORTS[target.protocol],
-      path:     uri.path,
+      path:     uri.pathname + uri.search,
       headers:  Object.assign(headers, this._dispatcher.headers)
     };
 
@@ -103,8 +110,10 @@ var NodeHttp = Object.assign(Class(Transport, { className: 'NodeHttp',
     } else if (proxy) {
       params.path = this.endpoint.href;
       Object.assign(params, this._proxy.tls);
-      if (proxy.auth)
-        params.headers['Proxy-Authorization'] = Buffer.from(proxy.auth, 'utf8').toString('base64');
+      if (proxy.username) {
+        auth = [proxy.username, proxy.password].join(':');
+        params.headers['Proxy-Authorization'] = Buffer.from(auth, 'utf8').toString('base64');
+      }
     }
 
     return params;

@@ -1,16 +1,15 @@
 'use strict';
 
-var Class      = require('../util/class'),
-    URI        = require('../util/uri'),
-    copyObject = require('../util/copy_object'),
-    toJSON     = require('../util/to_json'),
-    Transport  = require('./transport');
+var Class     = require('../util/class'),
+    URI       = require('../util/uri'),
+    toJSON    = require('../util/to_json'),
+    Transport = require('./transport');
 
 var JSONP = Object.assign(Class(Transport, {
- encode: function(messages) {
-    var url = copyObject(this.endpoint);
-    url.query.message = toJSON(messages);
-    url.query.jsonp   = '__jsonp' + JSONP._cbCount + '__';
+  encode: function(messages) {
+    var url = URI.clone(this.endpoint);
+    url.searchParams.set('message', toJSON(messages));
+    url.searchParams.set('jsonp', '__jsonp' + JSONP._cbCount + '__');
     return URI.stringify(url);
   },
 
@@ -18,11 +17,11 @@ var JSONP = Object.assign(Class(Transport, {
     var head         = document.getElementsByTagName('head')[0],
         script       = document.createElement('script'),
         callbackName = JSONP.getCallbackName(),
-        endpoint     = copyObject(this.endpoint),
+        endpoint     = URI.clone(this.endpoint),
         self         = this;
 
-    endpoint.query.message = toJSON(messages);
-    endpoint.query.jsonp   = callbackName;
+    endpoint.searchParams.set('message', toJSON(messages));
+    endpoint.searchParams.set('jsonp', callbackName);
 
     var cleanup = function() {
       if (!global[callbackName]) return false;

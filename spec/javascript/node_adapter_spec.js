@@ -1,6 +1,5 @@
-var jstest      = require("jstest").Test,
-    http        = require("http"),
-    querystring = require("querystring")
+var jstest = require("jstest").Test,
+    http   = require("http")
 
 var NodeAdapter = require("../../src/adapters/node_adapter"),
     Server      = require("../../src/protocol/server")
@@ -53,7 +52,7 @@ var NodeAdapterSteps = jstest.asyncSteps({
   },
 
   get: function(path, params, resume) {
-    var body = querystring.stringify(params)
+    var body = new URLSearchParams(params).toString()
 
     var request = http.request({
       method: "GET",
@@ -67,7 +66,7 @@ var NodeAdapterSteps = jstest.asyncSteps({
   },
 
   post: function(path, params, resume) {
-    var body = (typeof params === "string") ? params : querystring.stringify(params)
+    var body = (typeof params === "string") ? params : new URLSearchParams(params).toString()
 
     var headers = Object.assign({}, this._headers, {
       "Host":           "localhost",

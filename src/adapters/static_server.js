@@ -2,13 +2,15 @@
 
 var crypto = require('crypto'),
     fs     = require('fs'),
-    path   = require('path'),
-    url    = require('url');
+    path   = require('path');
 
 var Class        = require('../util/class'),
+    URI          = require('../util/uri'),
     contenttypes = require('./content_types');
 
 var StaticServer = Class({
+  URL_BASE: 'http://localhost',
+
   initialize: function(directory, pathRegex) {
     this._directory = directory;
     this._pathRegex = pathRegex;
@@ -25,7 +27,7 @@ var StaticServer = Class({
   },
 
   call: function(request, response) {
-    var pathname = url.parse(request.url, true).pathname,
+    var pathname = URI.parse(request.url, this.URL_BASE).pathname,
         filename = path.basename(pathname);
 
     filename = this._pathMap.get(filename) || filename;

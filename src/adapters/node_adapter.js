@@ -1,15 +1,14 @@
 'use strict';
 
-var Buffer = require('safe-buffer').Buffer,
+var Buffer      = require('safe-buffer').Buffer,
     path        = require('path'),
-    querystring = require('querystring'),
-    url         = require('url'),
     WebSocket   = require('faye-websocket'),
     EventSource = WebSocket.EventSource;
 
 var constants       = require('../util/constants'),
     idFromMessages  = require('../util/id_from_messages'),
     toJSON          = require('../util/to_json'),
+    URI             = require('../util/uri'),
     validateOptions = require('../util/validate_options'),
     Class           = require('../util/class'),
     Logging         = require('../mixins/logging'),
@@ -20,6 +19,7 @@ var constants       = require('../util/constants'),
     StaticServer    = require('./static_server');
 
 var NodeAdapter = Class({ className: 'NodeAdapter',
+  URL_BASE:         'http://localhost',
   DEFAULT_ENDPOINT: '/bayeux',
   SCRIPT_PATH:      'faye-browser-min.js',
 
@@ -99,12 +99,12 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
   },
 
   check: function(request) {
-    var path = url.parse(request.url, true).pathname;
+    var path = URI.parse(request.url, this.URL_BASE).pathname;
     return !!this._endpointRe.test(path);
   },
 
   handle: function(request, response) {
-    var requestUrl    = url.parse(request.url, true),
+    var requestUrl    = URI.parse(request.url, this.URL_BASE),
         requestMethod = request.method,
         self          = this;
 
@@ -124,14 +124,14 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
       return this.handleEventSource(request, response);
 
     if (requestMethod === 'GET')
-      return this._callWithParams(request, response, requestUrl.query);
+      return this._callWithParams(request, response, requestUrl.searchParams);
 
     if (requestMethod === 'POST')
       return this._concatStream(request, function(data) {
         var type   = (request.headers['content-type'] || '').split(';')[0],
             params = (type === 'application/json')
-                   ? { message: data }
-                   : querystring.parse(data);
+                   ? new URLSearchParams({ message: data })
+                   : new URLSearchParams(data);
 
         request.body = data;
         this._callWithParams(request, response, params);
@@ -141,14 +141,14 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
   },
 
   _callWithParams: function(request, response, params) {
-    if (!params.message)
+    if (!params.has('message'))
       return this._returnError(response, { message: 'Received request with no message: ' + this._formatRequest(request) });
 
     try {
-      this.debug('Received message via HTTP ' + request.method + ': ?', params.message);
+      this.debug('Received message via HTTP ' + request.method + ': ?', params.get('message'));
 
-      var message = this._parseJSON(params.message),
-          jsonp   = params.jsonp || constants.JSONP_CALLBACK,
+      var message = this._parseJSON(params.get('message')),
+          jsonp   = params.get('jsonp') || constants.JSONP_CALLBACK,
           isGet   = (request.method === 'GET'),
           type    = isGet ? contenttypes.TYPE_SCRIPT : contenttypes.TYPE_JSON,
           headers = Object.assign({}, type),

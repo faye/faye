@@ -2,7 +2,6 @@
 
 var Class      = require('../util/class'),
     URI        = require('../util/uri'),
-    copyObject = require('../util/copy_object'),
     Deferrable = require('../mixins/deferrable'),
     Transport  = require('./transport'),
     XHR        = require('./xhr');
@@ -14,7 +13,7 @@ var EventSource = Object.assign(Class(Transport, {
 
     this._xhr = new XHR(dispatcher, endpoint);
 
-    endpoint = copyObject(endpoint);
+    endpoint = URI.clone(endpoint);
     endpoint.pathname += '/' + dispatcher.clientId;
 
     var socket = new global.EventSource(URI.stringify(endpoint)),
@@ -83,7 +82,7 @@ var EventSource = Object.assign(Class(Transport, {
         sockets    = transports.eventsource = transports.eventsource || new Map(),
         id         = dispatcher.clientId;
 
-    var url = copyObject(endpoint);
+    var url = URI.clone(endpoint);
     url.pathname += '/' + (id || '');
     url = URI.stringify(url);
 

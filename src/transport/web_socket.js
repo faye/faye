@@ -4,7 +4,6 @@ var Class      = require('../util/class'),
     Set        = require('../util/set'),
     URI        = require('../util/uri'),
     browser    = require('../util/browser'),
-    copyObject = require('../util/copy_object'),
     toJSON     = require('../util/to_json'),
     ws         = require('../util/websocket'),
     Deferrable = require('../mixins/deferrable'),
@@ -140,7 +139,7 @@ var WebSocket = Object.assign(Class(Transport, {
   },
 
   getSocketUrl: function(endpoint) {
-    endpoint = copyObject(endpoint);
+    endpoint = URI.clone(endpoint);
     endpoint.protocol = this.PROTOCOLS[endpoint.protocol];
     return URI.stringify(endpoint);
   },
