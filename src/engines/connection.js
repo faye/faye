@@ -1,7 +1,6 @@
 'use strict';
 
 var Class      = require('../util/class'),
-    assign     = require('../util/assign'),
     Deferrable = require('../mixins/deferrable'),
     Timeouts   = require('../mixins/timeouts');
 
@@ -51,7 +50,7 @@ var Connection = Class({
   }
 });
 
-assign(Connection.prototype, Deferrable);
-assign(Connection.prototype, Timeouts);
+Object.assign(Connection.prototype, Deferrable);
+Object.assign(Connection.prototype, Timeouts);
 
 module.exports = Connection;

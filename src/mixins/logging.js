@@ -30,18 +30,18 @@ var Logging = {
     if (klass) banner += '.' + klass;
     banner += '] ';
 
-    if (typeof logger[level] === 'function')
+    if (typeof logger[level] === 'function') {
       logger[level](banner + message);
-    else if (typeof logger === 'function')
+    } else if (typeof logger === 'function') {
       logger(banner + message);
+    }
   }
 };
 
-for (var key in Logging.LOG_LEVELS)
-  (function(level) {
-    Logging[level] = function() {
-      this.writeLog(arguments, level);
-    };
-  })(key);
+for (let level of Object.keys(Logging.LOG_LEVELS)) {
+  Logging[level] = function() {
+    this.writeLog(arguments, level);
+  };
+}
 
 module.exports = Logging;

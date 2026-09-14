@@ -1,12 +1,9 @@
 'use strict';
 
-var asap            = require('asap'),
-    Class           = require('../util/class'),
-    Promise         = require('../util/promise'),
+var Class           = require('../util/class'),
     array           = require('../util/array'),
     browser         = require('../util/browser'),
     constants       = require('../util/constants'),
-    assign          = require('../util/assign'),
     validateOptions = require('../util/validate_options'),
     Deferrable      = require('../mixins/deferrable'),
     Logging         = require('../mixins/logging'),
@@ -45,7 +42,7 @@ var Client = Class({ className: 'Client',
     this._messageId = 0;
     this._state     = this.UNCONNECTED;
 
-    this._responseCallbacks = {};
+    this._responseCallbacks = new Map();
 
     this._advice = {
       reconnect: this.RETRY,
@@ -56,11 +53,13 @@ var Client = Class({ className: 'Client',
 
     this._dispatcher.bind('message', this._receiveMessage, this);
 
-    if (browser.Event && global.onbeforeunload !== undefined)
+    if (browser.Event && global.onbeforeunload !== undefined) {
       browser.Event.on(global, 'beforeunload', function() {
-        if (array.indexOf(this._dispatcher._disabled, 'autodisconnect') < 0)
+        if (array.indexOf(this._dispatcher._disabled, 'autodisconnect') < 0) {
           this.disconnect();
+        }
       }, this);
+    }
   },
 
   addWebsocketExtension: function(extension) {
@@ -120,7 +119,7 @@ var Client = Class({ className: 'Client',
         this.info('Handshake successful: ?', this._dispatcher.clientId);
 
         this.subscribe(this._channels.getKeys(), true);
-        if (callback) asap(function() { callback.call(context) });
+        if (callback) Promise.resolve().then(function() { callback.call(context) });
 
       } else {
         this.info('Handshake unsuccessful');
@@ -143,8 +142,9 @@ var Client = Class({ className: 'Client',
     if (this._advice.reconnect === this.NONE) return;
     if (this._state === this.DISCONNECTED) return;
 
-    if (this._state === this.UNCONNECTED)
+    if (this._state === this.UNCONNECTED) {
       return this.handshake(function() { this.connect(callback, context) }, this);
+    }
 
     this.callback(callback, context);
     if (this._state !== this.CONNECTED) return;
@@ -210,10 +210,11 @@ var Client = Class({ className: 'Client',
   //                                                     * id
   //                                                     * timestamp
   subscribe: function(channel, callback, context) {
-    if (channel instanceof Array)
+    if (channel instanceof Array) {
       return array.map(channel, function(c) {
         return this.subscribe(c, callback, context);
       }, this);
+    }
 
     var subscription = new Subscription(this, channel, callback, context),
         force        = (callback === true),
@@ -260,10 +261,11 @@ var Client = Class({ className: 'Client',
   //                                                     * id
   //                                                     * timestamp
   unsubscribe: function(channel, subscription) {
-    if (channel instanceof Array)
+    if (channel instanceof Array) {
       return array.map(channel, function(c) {
         return this.unsubscribe(c, subscription);
       }, this);
+    }
 
     var dead = this._channels.unsubscribe(channel, subscription);
     if (!dead) return;
@@ -304,10 +306,11 @@ var Client = Class({ className: 'Client',
         clientId: this._dispatcher.clientId
 
       }, options, function(response) {
-        if (response.successful)
+        if (response.successful) {
           publication.setDeferredStatus('succeeded');
-        else
+        } else {
           publication.setDeferredStatus('failed', Error.parse(response.error));
+        }
       }, this);
     }, this);
 
@@ -323,7 +326,7 @@ var Client = Class({ className: 'Client',
 
     this.pipeThroughExtensions('outgoing', message, null, function(message) {
       if (!message) return;
-      if (callback) this._responseCallbacks[message.id] = [callback, context];
+      if (callback) this._responseCallbacks.set(message.id, [callback, context]);
       this._dispatcher.sendMessage(message, timeout, options || {});
     }, this);
   },
@@ -338,8 +341,8 @@ var Client = Class({ className: 'Client',
     var id = message.id, callback;
 
     if (message.successful !== undefined) {
-      callback = this._responseCallbacks[id];
-      delete this._responseCallbacks[id];
+      callback = this._responseCallbacks.get(id);
+      this._responseCallbacks.delete(id);
     }
 
     this.pipeThroughExtensions('incoming', message, null, function(message) {
@@ -351,7 +354,7 @@ var Client = Class({ className: 'Client',
   },
 
   _handleAdvice: function(advice) {
-    assign(this._advice, advice);
+    Object.assign(this._advice, advice);
     this._dispatcher.timeout = this._advice.timeout / 1000;
 
     if (this._advice.reconnect === this.HANDSHAKE && this._state !== this.DISCONNECTED) {
@@ -377,9 +380,9 @@ var Client = Class({ className: 'Client',
   }
 });
 
-assign(Client.prototype, Deferrable);
-assign(Client.prototype, Publisher);
-assign(Client.prototype, Logging);
-assign(Client.prototype, Extensible);
+Object.assign(Client.prototype, Deferrable);
+Object.assign(Client.prototype, Publisher);
+Object.assign(Client.prototype, Logging);
+Object.assign(Client.prototype, Extensible);
 
 module.exports = Client;

@@ -1,21 +1,19 @@
 'use strict';
 
-var asap       = require('asap'),
-    Class      = require('../util/class'),
+var Class      = require('../util/class'),
     URI        = require('../util/uri'),
     copyObject = require('../util/copy_object'),
-    assign     = require('../util/assign'),
     Server     = require('../protocol/server'),
     Transport  = require('./transport');
 
-var NodeLocal = assign(Class(Transport, {
+var NodeLocal = Object.assign(Class(Transport, {
   batching: false,
 
   request: function(messages) {
     messages = copyObject(messages);
     var self = this;
 
-    asap(function() {
+    Promise.resolve().then(function() {
       self.endpoint.process(messages, null, function(replies) {
         self._receive(copyObject(replies));
       });

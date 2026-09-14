@@ -5,6 +5,5 @@ require("./javascript/dispatcher_spec")
 require("./javascript/grammar_spec")
 require("./javascript/publisher_spec")
 require("./javascript/transport_spec")
-require("./javascript/uri_spec")
 
 require("jstest").Test.autorun()

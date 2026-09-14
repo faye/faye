@@ -3,11 +3,10 @@
 var Class     = require('../util/class'),
     Set       = require('../util/set'),
     URI       = require('../util/uri'),
-    assign    = require('../util/assign'),
     toJSON    = require('../util/to_json'),
     Transport = require('./transport');
 
-var CORS = assign(Class(Transport, {
+var CORS = Object.assign(Class(Transport, {
   encode: function(messages) {
     return 'message=' + encodeURIComponent(toJSON(messages));
   },
@@ -17,17 +16,15 @@ var CORS = assign(Class(Transport, {
         xhr      = new xhrClass(),
         id       = ++CORS._id,
         headers  = this._dispatcher.headers,
-        self     = this,
-        key;
+        self     = this;
 
     xhr.open('POST', this.endpoint.href, true);
     xhr.withCredentials = true;
 
     if (xhr.setRequestHeader) {
       xhr.setRequestHeader('Pragma', 'no-cache');
-      for (key in headers) {
-        if (!headers.hasOwnProperty(key)) continue;
-        xhr.setRequestHeader(key, headers[key]);
+      for (let [key, value] of Object.entries(headers)) {
+        xhr.setRequestHeader(key, value);
       }
     }
 
@@ -44,10 +41,11 @@ var CORS = assign(Class(Transport, {
 
       cleanUp();
 
-      if (replies)
+      if (replies) {
         self._receive(replies);
-      else
+      } else {
         self._handleError(messages);
+      }
     };
 
     xhr.onerror = xhr.ontimeout = function() {
@@ -57,8 +55,9 @@ var CORS = assign(Class(Transport, {
 
     xhr.onprogress = function() {};
 
-    if (xhrClass === global.XDomainRequest)
+    if (xhrClass === global.XDomainRequest) {
       CORS._pending.add({ id: id, xhr: xhr });
+    }
 
     xhr.send(this.encode(messages));
     return xhr;
@@ -68,12 +67,12 @@ var CORS = assign(Class(Transport, {
   _pending: new Set(),
 
   isUsable: function(dispatcher, endpoint, callback, context) {
-    if (URI.isSameOrigin(endpoint))
+    if (URI.isSameOrigin(endpoint)) {
       return callback.call(context, false);
-
-    if (global.XDomainRequest)
+    }
+    if (global.XDomainRequest) {
       return callback.call(context, endpoint.protocol === location.protocol);
-
+    }
     if (global.XMLHttpRequest) {
       var xhr = new XMLHttpRequest();
       return callback.call(context, xhr.withCredentials !== undefined);

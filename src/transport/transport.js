@@ -2,14 +2,12 @@
 
 var Class    = require('../util/class'),
     Cookie   = require('../util/cookies').Cookie,
-    Promise  = require('../util/promise'),
     array    = require('../util/array'),
-    assign   = require('../util/assign'),
     Logging  = require('../mixins/logging'),
     Timeouts = require('../mixins/timeouts'),
     Channel  = require('../protocol/channel');
 
-var Transport = assign(Class({ className: 'Transport',
+var Transport = Object.assign(Class({ className: 'Transport',
   DEFAULT_PORTS: { 'http:': 80, 'https:': 443, 'ws:': 80, 'wss:': 443 },
   MAX_DELAY:     0,
 
@@ -19,10 +17,11 @@ var Transport = assign(Class({ className: 'Transport',
     this._dispatcher = dispatcher;
     this.endpoint    = endpoint;
     this._outbox     = [];
-    this._proxy      = assign({}, this._dispatcher.proxy);
+    this._proxy      = Object.assign({}, this._dispatcher.proxy);
 
-    if (!this._proxy.origin)
+    if (!this._proxy.origin) {
       this._proxy.origin = this._findProxy();
+    }
   },
 
   close: function() {},
@@ -40,11 +39,12 @@ var Transport = assign(Class({ className: 'Transport',
     this._outbox.push(message);
     this._flushLargeBatch();
 
-    if (message.channel === Channel.HANDSHAKE)
+    if (message.channel === Channel.HANDSHAKE) {
       return this._publish(0.01);
-
-    if (message.channel === Channel.CONNECT)
+    }
+    if (message.channel === Channel.CONNECT) {
       this._connectMessage = message;
+    }
 
     return this._publish(this.MAX_DELAY);
   },
@@ -71,8 +71,9 @@ var Transport = assign(Class({ className: 'Transport',
   _flush: function() {
     this.removeTimeout('publish');
 
-    if (this._outbox.length > 1 && this._connectMessage)
+    if (this._outbox.length > 1 && this._connectMessage) {
       this._connectMessage.advice = { timeout: 0 };
+    }
 
     this._resolvePromise(this.request(this._outbox));
 
@@ -98,8 +99,9 @@ var Transport = assign(Class({ className: 'Transport',
     this.debug('Client ? received from ? via ?: ?',
                this._dispatcher.clientId, this.endpoint.href, this.connectionType, replies);
 
-    for (var i = 0, n = replies.length; i < n; i++)
-      this._dispatcher.handleResponse(replies[i]);
+    for (let reply of replies) {
+      this._dispatcher.handleResponse(reply);
+    }
   },
 
   _handleError: function(messages, immediate) {
@@ -108,8 +110,9 @@ var Transport = assign(Class({ className: 'Transport',
     this.debug('Client ? failed to send to ? via ?: ?',
                this._dispatcher.clientId, this.endpoint.href, this.connectionType, messages);
 
-    for (var i = 0, n = messages.length; i < n; i++)
-      this._dispatcher.handleError(messages[i]);
+    for (let message of messages) {
+      this._dispatcher.handleError(message);
+    }
   },
 
   _getCookies: function() {
@@ -131,8 +134,8 @@ var Transport = assign(Class({ className: 'Transport',
     if (!setCookie || !cookies) return;
     setCookie = [].concat(setCookie);
 
-    for (var i = 0, n = setCookie.length; i < n; i++) {
-      cookie = Cookie.parse(setCookie[i]);
+    for (let cookieStr of setCookie) {
+      cookie = Cookie.parse(cookieStr);
       cookies.setCookieSync(cookie, url);
     }
   },
@@ -151,17 +154,19 @@ var Transport = assign(Class({ className: 'Transport',
     if (name === 'http_proxy' && env.REQUEST_METHOD) {
       keys = Object.keys(env).filter(function(k) { return /^http_proxy$/i.test(k) });
       if (keys.length === 1) {
-        if (keys[0] === name && env[upcase] === undefined)
+        if (keys[0] === name && env[upcase] === undefined) {
           proxy = env[name];
+        }
       } else if (keys.length > 1) {
         proxy = env[name];
       }
       proxy = proxy || env['CGI_' + upcase];
     } else {
       proxy = env[name] || env[upcase];
-      if (proxy && !env[name])
+      if (proxy && !env[name]) {
         console.warn('The environment variable ' + upcase +
                      ' is discouraged. Use ' + name + '.');
+      }
     }
     return proxy;
   }
@@ -174,9 +179,9 @@ var Transport = assign(Class({ className: 'Transport',
       var connType     = pair[0], klass = pair[1],
           connEndpoint = dispatcher.endpointFor(connType);
 
-      if (array.indexOf(disabled, connType) >= 0)
+      if (array.indexOf(disabled, connType) >= 0) {
         return resume();
-
+      }
       if (array.indexOf(allowed, connType) < 0) {
         klass.isUsable(dispatcher, connEndpoint, function() {});
         return resume();
@@ -204,14 +209,15 @@ var Transport = assign(Class({ className: 'Transport',
   disable: function(feature) {
     if (feature !== 'autodisconnect') return;
 
-    for (var i = 0; i < this._transports.length; i++)
-      this._transports[i][1]._unloaded = false;
+    for (let transport of this._transports) {
+      transport[1]._unloaded = false;
+    }
   },
 
   _transports: []
 });
 
-assign(Transport.prototype, Logging);
-assign(Transport.prototype, Timeouts);
+Object.assign(Transport.prototype, Logging);
+Object.assign(Transport.prototype, Timeouts);
 
 module.exports = Transport;

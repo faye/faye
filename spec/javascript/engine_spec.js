@@ -2,7 +2,6 @@ var jstest = require("jstest").Test,
     Set    = require("jstest").Set
 
 var Proxy  = require("../../src/engines/proxy"),
-    assign = require("../../src/util/assign"),
     random = require("../../src/util/random")
 
 var EngineSteps = jstest.asyncSteps({
@@ -25,9 +24,9 @@ var EngineSteps = jstest.asyncSteps({
     var clientId = this._clients[name]
     var inboxes  = this._inboxes
     engine.connect(clientId, {}, function(messages) {
-      for (var i = 0, n = messages.length; i < n; i++) {
-        delete messages[i].id
-        inboxes[name].push(messages[i])
+      for (let message of messages) {
+        delete message.id
+        inboxes[name].push(message)
       }
     })
     setTimeout(resume, 10)
@@ -67,15 +66,15 @@ var EngineSteps = jstest.asyncSteps({
 
   publish: function(messages, resume) {
     messages = [].concat(messages)
-    for (var i = 0, n = messages.length; i < n; i++) {
-      var message = assign({ id: random() }, messages[i])
+    for (let msg of messages) {
+      var message = Object.assign({ id: random() }, msg)
       this.engine.publish(message)
     }
     setTimeout(resume, 20)
   },
 
   publish_by: function(name, message, resume) {
-    message = assign({ clientId: this._clients[name], id: random() }, message)
+    message = Object.assign({ clientId: this._clients[name], id: random() }, message)
     this.engine.publish(message)
     setTimeout(resume, 10)
   },
@@ -145,7 +144,7 @@ jstest.describe("Pub/sub engines", function() { with(this) {
     include(EngineSteps)
 
     define("create_engine", function() { with(this) {
-      var opts = assign(options(), engineOpts)
+      var opts = Object.assign(options(), engineOpts)
       return new Proxy(opts)
     }})
 
@@ -420,7 +419,7 @@ jstest.describe("Pub/sub engines", function() { with(this) {
     include(EngineSteps)
 
     define("create_engine", function() { with(this) {
-      var opts = assign(options(), engineOpts)
+      var opts = Object.assign(options(), engineOpts)
       return new Proxy(opts)
     }})
 

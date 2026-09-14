@@ -1,7 +1,6 @@
 'use strict';
 
 var Class     = require('../util/class'),
-    assign    = require('../util/assign'),
     Publisher = require('../mixins/publisher'),
     Grammar   = require('./grammar');
 
@@ -19,9 +18,9 @@ var Channel = Class({
   }
 });
 
-assign(Channel.prototype, Publisher);
+Object.assign(Channel.prototype, Publisher);
 
-assign(Channel, {
+Object.assign(Channel, {
   HANDSHAKE:    '/meta/handshake',
   CONNECT:      '/meta/connect',
   SUBSCRIBE:    '/meta/subscribe',
@@ -79,17 +78,15 @@ assign(Channel, {
 
   Set: Class({
     initialize: function() {
-      this._channels = {};
+      this._channels = new Map();
     },
 
     getKeys: function() {
-      var keys = [];
-      for (var key in this._channels) keys.push(key);
-      return keys;
+      return [...this._channels.keys()];
     },
 
     remove: function(name) {
-      delete this._channels[name];
+      this._channels.delete(name);
     },
 
     hasSubscription: function(name) {
@@ -97,16 +94,14 @@ assign(Channel, {
     },
 
     subscribe: function(names, subscription) {
-      var name;
-      for (var i = 0, n = names.length; i < n; i++) {
-        name = names[i];
-        var channel = this._channels[name] = this._channels[name] || new Channel(name);
-        channel.bind('message', subscription);
+      for (let name of names) {
+        if (!this._channels.has(name)) this._channels.set(name, new Channel(name));
+        this._channels.get(name).bind('message', subscription);
       }
     },
 
     unsubscribe: function(name, subscription) {
-      var channel = this._channels[name];
+      var channel = this._channels.get(name);
       if (!channel) return false;
       channel.unbind('message', subscription);
 
@@ -121,8 +116,8 @@ assign(Channel, {
     distributeMessage: function(message) {
       var channels = Channel.expand(message.channel);
 
-      for (var i = 0, n = channels.length; i < n; i++) {
-        var channel = this._channels[channels[i]];
+      for (let chan of channels) {
+        var channel = this._channels.get(chan);
         if (channel) channel.trigger('message', message);
       }
     }

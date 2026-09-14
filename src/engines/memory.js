@@ -1,7 +1,6 @@
 'use strict';
 
 var copyObject = require('../util/copy_object'),
-    assign     = require('../util/assign'),
     Namespace  = require('../util/namespace'),
     Set        = require('../util/set'),
     Timeouts   = require('../mixins/timeouts');
@@ -24,9 +23,9 @@ Memory.prototype = {
 
   reset: function() {
     this._namespace = new Namespace();
-    this._clients   = {};
-    this._channels  = {};
-    this._messages  = {};
+    this._clients   = new Map();
+    this._channels  = new Map();
+    this._messages  = new Map();
   },
 
   createClient: function(callback, context) {
@@ -41,12 +40,15 @@ Memory.prototype = {
     if (!this._namespace.exists(clientId)) return;
     var clients = this._clients;
 
-    if (clients[clientId])
-      clients[clientId].forEach(function(channel) { this.unsubscribe(clientId, channel) }, this);
+    if (this._clients.has(clientId)) {
+      for (let channel of this._clients.get(clientId)) {
+        this.unsubscribe(clientId, channel);
+      }
+    }
 
     this.removeTimeout(clientId);
     this._namespace.release(clientId);
-    delete this._messages[clientId];
+    this._messages.delete(clientId);
     this._server.debug('Destroyed client ?', clientId);
     this._server.trigger('disconnect', clientId);
     this._server.trigger('close', clientId);
@@ -71,11 +73,11 @@ Memory.prototype = {
   subscribe: function(clientId, channel, callback, context) {
     var clients = this._clients, channels = this._channels;
 
-    clients[clientId] = clients[clientId] || new Set();
-    var trigger = clients[clientId].add(channel);
+    if (!clients.has(clientId)) clients.set(clientId, new Set());
+    var trigger = clients.get(clientId).add(channel);
 
-    channels[channel] = channels[channel] || new Set();
-    channels[channel].add(clientId);
+    if (!channels.has(channel)) channels.set(channel, new Set());
+    channels.get(channel).add(clientId);
 
     this._server.debug('Subscribed client ? to channel ?', clientId, channel);
     if (trigger) this._server.trigger('subscribe', clientId, channel);
@@ -87,14 +89,14 @@ Memory.prototype = {
         channels = this._channels,
         trigger  = false;
 
-    if (clients[clientId]) {
-      trigger = clients[clientId].remove(channel);
-      if (clients[clientId].isEmpty()) delete clients[clientId];
+    if (clients.has(clientId)) {
+      trigger = clients.get(clientId).remove(channel);
+      if (clients.get(clientId).isEmpty()) clients.delete(clientId);
     }
 
-    if (channels[channel]) {
-      channels[channel].remove(clientId);
-      if (channels[channel].isEmpty()) delete channels[channel];
+    if (channels.has(channel)) {
+      channels.get(channel).remove(clientId);
+      if (channels.get(channel).isEmpty()) channels.delete(channel);
     }
 
     this._server.debug('Unsubscribed client ? from channel ?', clientId, channel);
@@ -109,29 +111,32 @@ Memory.prototype = {
         clients  = new Set(),
         subs;
 
-    for (var i = 0, n = channels.length; i < n; i++) {
-      subs = this._channels[channels[i]];
+    for (let channel of channels) {
+      subs = this._channels.get(channel);
       if (!subs) continue;
-      subs.forEach(clients.add, clients);
+
+      for (let sub of subs) {
+        clients.add(sub);
+      }
     }
 
-    clients.forEach(function(clientId) {
+    for (let clientId of clients) {
       this._server.debug('Queueing for client ?: ?', clientId, message);
-      messages[clientId] = messages[clientId] || [];
-      messages[clientId].push(copyObject(message));
+      if (!messages.has(clientId)) messages.set(clientId, []);
+      messages.get(clientId).push(copyObject(message));
       this.emptyQueue(clientId);
-    }, this);
+    }
 
     this._server.trigger('publish', message.clientId, message.channel, message.data);
   },
 
   emptyQueue: function(clientId) {
     if (!this._server.hasConnection(clientId)) return;
-    this._server.deliver(clientId, this._messages[clientId]);
-    delete this._messages[clientId];
+    this._server.deliver(clientId, this._messages.get(clientId));
+    this._messages.delete(clientId);
   }
 };
 
-assign(Memory.prototype, Timeouts);
+Object.assign(Memory.prototype, Timeouts);
 
 module.exports = Memory;

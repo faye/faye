@@ -2,7 +2,6 @@
 
 var Class      = require('../util/class'),
     array      = require('../util/array'),
-    assign     = require('../util/assign'),
     constants  = require('../util/constants'),
     Logging    = require('../mixins/logging'),
     Engine     = require('../engines/proxy'),
@@ -73,8 +72,8 @@ var Server = Class({ className: 'Server',
       }
     };
 
-    for (var i = 0, n = messages.length; i < n; i++) {
-      this.pipeThroughExtensions('incoming', messages[i], request, function(pipedMessage) {
+    for (let message of messages) {
+      this.pipeThroughExtensions('incoming', message, request, function(pipedMessage) {
         this._handle(pipedMessage, local, handleReply, this);
       }, this);
     }
@@ -100,14 +99,15 @@ var Server = Class({ className: 'Server',
         error       = message.error,
         response;
 
-    if (Channel.isMeta(channelName))
+    if (Channel.isMeta(channelName)) {
       return this._handleMeta(message, local, callback, context);
-
-    if (!Grammar.CHANNEL_NAME.test(channelName))
+    }
+    if (!Grammar.CHANNEL_NAME.test(channelName)) {
       error = Error.channelInvalid(channelName);
-
-    if (message.data === undefined)
+    }
+    if (message.data === undefined) {
       error = Error.parameterMissing('data');
+    }
 
     if (!error) this._engine.publish(message);
 
@@ -130,7 +130,7 @@ var Server = Class({ className: 'Server',
 
     this[method](message, local, function(responses) {
       responses = [].concat(responses);
-      for (var i = 0, n = responses.length; i < n; i++) this._advize(responses[i], message.connectionType);
+      for (let response of responses) this._advize(response, message.connectionType);
       callback.call(context, responses);
     }, this);
   },
@@ -148,8 +148,9 @@ var Server = Class({ className: 'Server',
   },
 
   _advize: function(response, connectionType) {
-    if (array.indexOf([Channel.HANDSHAKE, Channel.CONNECT], response.channel) < 0)
+    if (array.indexOf([Channel.HANDSHAKE, Channel.CONNECT], response.channel) < 0) {
       return;
+    }
 
     var interval, timeout;
     if (connectionType === 'eventsource') {
@@ -162,9 +163,9 @@ var Server = Class({ className: 'Server',
 
     response.advice = response.advice || {};
     if (response.error) {
-      assign(response.advice, { reconnect:  'handshake' }, false);
+      Object.assign(response.advice, { reconnect:  'handshake' }, false);
     } else {
-      assign(response.advice, {
+      Object.assign(response.advice, {
         reconnect:  'retry',
         interval:   interval,
         timeout:    timeout
@@ -181,8 +182,9 @@ var Server = Class({ className: 'Server',
     var response = this._makeResponse(message);
     response.version = constants.BAYEUX_VERSION;
 
-    if (!message.version)
+    if (!message.version) {
       response.error = Error.parameterMissing('version');
+    }
 
     var clientConns = message.supportedConnectionTypes,
         commonConns;
@@ -193,8 +195,9 @@ var Server = Class({ className: 'Server',
       commonConns = array.filter(clientConns, function(conn) {
         return array.indexOf(constants.CONNECTION_TYPES, conn) >= 0;
       });
-      if (commonConns.length === 0)
+      if (commonConns.length === 0) {
         response.error = Error.conntypeMismatch(clientConns);
+      }
     } else {
       response.error = Error.parameterMissing('supportedConnectionTypes');
     }
@@ -221,8 +224,9 @@ var Server = Class({ className: 'Server',
       if (!exists)         response.error = Error.clientUnknown(clientId);
       if (!clientId)       response.error = Error.parameterMissing('clientId');
 
-      if (array.indexOf(constants.CONNECTION_TYPES, connectionType) < 0)
+      if (array.indexOf(constants.CONNECTION_TYPES, connectionType) < 0) {
         response.error = Error.conntypeMismatch(connectionType);
+      }
 
       if (!connectionType) response.error = Error.parameterMissing('connectionType');
 
@@ -269,8 +273,7 @@ var Server = Class({ className: 'Server',
   subscribe: function(message, local, callback, context) {
     var response     = this._makeResponse(message),
         clientId     = message.clientId,
-        subscription = message.subscription,
-        channel;
+        subscription = message.subscription;
 
     subscription = subscription ? [].concat(subscription) : [];
 
@@ -281,9 +284,7 @@ var Server = Class({ className: 'Server',
 
       response.subscription = message.subscription || [];
 
-      for (var i = 0, n = subscription.length; i < n; i++) {
-        channel = subscription[i];
-
+      for (let channel of subscription) {
         if (response.error) break;
         if (!local && !Channel.isSubscribable(channel)) response.error = Error.channelForbidden(channel);
         if (!Channel.isValid(channel))                  response.error = Error.channelInvalid(channel);
@@ -304,8 +305,7 @@ var Server = Class({ className: 'Server',
   unsubscribe: function(message, local, callback, context) {
     var response     = this._makeResponse(message),
         clientId     = message.clientId,
-        subscription = message.subscription,
-        channel;
+        subscription = message.subscription;
 
     subscription = subscription ? [].concat(subscription) : [];
 
@@ -316,9 +316,7 @@ var Server = Class({ className: 'Server',
 
       response.subscription = message.subscription || [];
 
-      for (var i = 0, n = subscription.length; i < n; i++) {
-        channel = subscription[i];
-
+      for (let channel of subscription) {
         if (response.error) break;
         if (!local && !Channel.isSubscribable(channel)) response.error = Error.channelForbidden(channel);
         if (!Channel.isValid(channel))                  response.error = Error.channelInvalid(channel);
@@ -337,7 +335,7 @@ Server.create = function(options) {
   return new Server(options);
 };
 
-assign(Server.prototype, Logging);
-assign(Server.prototype, Extensible);
+Object.assign(Server.prototype, Logging);
+Object.assign(Server.prototype, Extensible);
 
 module.exports = Server;

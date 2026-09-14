@@ -1,7 +1,6 @@
 'use strict';
 
-var assign       = require('../util/assign'),
-    EventEmitter = require('../util/event_emitter');
+var EventEmitter = require('../util/event_emitter');
 
 var Publisher = {
   countListeners: function(eventType) {
@@ -31,7 +30,7 @@ var Publisher = {
   }
 };
 
-assign(Publisher, EventEmitter.prototype);
+Object.assign(Publisher, EventEmitter.prototype);
 Publisher.trigger = Publisher.emit;
 
 module.exports = Publisher;

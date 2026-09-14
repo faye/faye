@@ -2,23 +2,24 @@
 
 var crypto = require('crypto'),
     fs     = require('fs'),
-    path   = require('path'),
-    url    = require('url');
+    path   = require('path');
 
 var Class        = require('../util/class'),
-    assign       = require('../util/assign'),
+    URI          = require('../util/uri'),
     contenttypes = require('./content_types');
 
 var StaticServer = Class({
+  URL_BASE: 'http://localhost',
+
   initialize: function(directory, pathRegex) {
     this._directory = directory;
     this._pathRegex = pathRegex;
-    this._pathMap   = {};
-    this._index     = {};
+    this._pathMap   = new Map();
+    this._index     = new Map();
   },
 
   map: function(requestPath, filename) {
-    this._pathMap[requestPath] = filename;
+    this._pathMap.set(requestPath, filename);
   },
 
   test: function(pathname) {
@@ -26,13 +27,13 @@ var StaticServer = Class({
   },
 
   call: function(request, response) {
-    var pathname = url.parse(request.url, true).pathname,
+    var pathname = URI.parse(request.url, this.URL_BASE).pathname,
         filename = path.basename(pathname);
 
-    filename = this._pathMap[filename] || filename;
-    this._index[filename] = this._index[filename] || {};
+    filename = this._pathMap.get(filename) || filename;
+    this._index.set(filename, this._index.get(filename) || {});
 
-    var cache    = this._index[filename],
+    var cache    = this._index.get(filename),
         fullpath = path.join(this._directory, filename);
 
     try {
@@ -62,7 +63,7 @@ var StaticServer = Class({
     }
     else {
       headers['Content-Length'] = cache.content.length;
-      assign(headers, contenttypes[type]);
+      Object.assign(headers, contenttypes[type]);
       response.writeHead(200, headers);
       response.end(cache.content);
     }

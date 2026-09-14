@@ -1,24 +1,21 @@
 var jstest = require("jstest").Test
 
-var asap         = require("asap"),
-    Client       = require("../../src/protocol/client"),
+var Client       = require("../../src/protocol/client"),
     Dispatcher   = require("../../src/protocol/dispatcher"),
     Publisher    = require("../../src/mixins/publisher"),
     Subscription = require("../../src/protocol/subscription"),
-    assign       = require("../../src/util/assign"),
-    Promise      = require("../../src/util/promise"),
     URI          = require("../../src/util/uri")
 
 jstest.describe("Client", function() { with(this) {
   before(function() { with(this) {
     var uri = URI.parse("http://localhost/bayeux")
 
-    this.dispatcher = { endpoint: uri, connectionType: "fake-transport", retry: 5 }
+    this.dispatcher = { endpoint: uri, connectionType: "fake-transport", retry: 5, sendMessage: function () {} }
     stub(dispatcher, "getConnectionTypes").returns(["fake-transport", "another-transport"])
     stub(dispatcher, "selectTransport")
     stub(dispatcher, "sendMessage")
 
-    assign(dispatcher, Publisher)
+    Object.assign(dispatcher, Publisher)
     stub(Dispatcher, "create").returns(dispatcher)
 
     stub("setTimeout")
@@ -232,7 +229,7 @@ jstest.describe("Client", function() { with(this) {
           id:             instanceOf("string")
         }, 72, {})
         client.connect()
-        asap(resume)
+        Promise.resolve().then(resume)
       }})
     }})
 

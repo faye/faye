@@ -1,24 +1,21 @@
 'use strict';
 
-var asap       = require('asap'),
-    assign     = require('../util/assign'),
-    random     = require('../util/random'),
+var random     = require('../util/random'),
     Class      = require('../util/class'),
-    Promise    = require('../util/promise'),
     Logging    = require('../mixins/logging'),
     Publisher  = require('../mixins/publisher'),
     Channel    = require('../protocol/channel'),
     Connection = require('./connection'),
     Memory     = require('./memory');
 
-var Proxy = assign(Class({ className: 'Engine.Proxy',
+var Proxy = Object.assign(Class({ className: 'Engine.Proxy',
   MAX_DELAY:  0,
   INTERVAL:   0,
   TIMEOUT:    60,
 
   initialize: function(options) {
     this._options     = options || {};
-    this._connections = {};
+    this._connections = new Map();
     this.interval     = this._options.interval || this.INTERVAL;
     this.timeout      = this._options.timeout  || this.TIMEOUT;
 
@@ -27,7 +24,7 @@ var Proxy = assign(Class({ className: 'Engine.Proxy',
 
     this.bind('close', function(clientId) {
       var self = this;
-      asap(function() { self.flushConnection(clientId) });
+      Promise.resolve().then(function() { self.flushConnection(clientId) });
     }, this);
 
     this.debug('Created new engine: ?', this._options);
@@ -42,24 +39,24 @@ var Proxy = assign(Class({ className: 'Engine.Proxy',
   },
 
   hasConnection: function(clientId) {
-    return this._connections.hasOwnProperty(clientId);
+    return this._connections.has(clientId);
   },
 
   connection: function(clientId, create) {
-    var conn = this._connections[clientId];
+    var conn = this._connections.get(clientId);
     if (conn || !create) return conn;
-    this._connections[clientId] = new Connection(this, clientId);
+    this._connections.set(clientId, new Connection(this, clientId));
     this.trigger('connection:open', clientId);
-    return this._connections[clientId];
+    return this._connections.get(clientId);
   },
 
   closeConnection: function(clientId) {
     this.debug('Closing connection for ?', clientId);
-    var conn = this._connections[clientId];
+    var conn = this._connections.get(clientId);
     if (!conn) return;
     if (conn.socket) conn.socket.close();
     this.trigger('connection:close', clientId);
-    delete this._connections[clientId];
+    this._connections.delete(clientId);
   },
 
   openSocket: function(clientId, socket) {
@@ -73,8 +70,8 @@ var Proxy = assign(Class({ className: 'Engine.Proxy',
     var conn = this.connection(clientId, false);
     if (!conn) return false;
 
-    for (var i = 0, n = messages.length; i < n; i++) {
-      conn.deliver(messages[i]);
+    for (let message of messages) {
+      conn.deliver(message);
     }
     return true;
   },
@@ -94,7 +91,9 @@ var Proxy = assign(Class({ className: 'Engine.Proxy',
   },
 
   close: function() {
-    for (var clientId in this._connections) this.flushConnection(clientId);
+    for (let clientId of this._connections.keys()) {
+      this.flushConnection(clientId);
+    }
     this._engine.disconnect();
   },
 
@@ -114,13 +113,13 @@ var Proxy = assign(Class({ className: 'Engine.Proxy',
 
 var METHODS = ['createClient', 'clientExists', 'destroyClient', 'ping', 'subscribe', 'unsubscribe'];
 
-METHODS.forEach(function(method) {
+for (let method of METHODS) {
   Proxy.prototype[method] = function() {
     return this._engine[method].apply(this._engine, arguments);
   };
-});
+}
 
-assign(Proxy.prototype, Publisher);
-assign(Proxy.prototype, Logging);
+Object.assign(Proxy.prototype, Publisher);
+Object.assign(Proxy.prototype, Logging);
 
 module.exports = Proxy;

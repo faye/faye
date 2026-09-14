@@ -1,18 +1,15 @@
 'use strict';
 
 var Class      = require('../util/class'),
-    Promise    = require('../util/promise'),
     Set        = require('../util/set'),
     URI        = require('../util/uri'),
     browser    = require('../util/browser'),
-    copyObject = require('../util/copy_object'),
-    assign     = require('../util/assign'),
     toJSON     = require('../util/to_json'),
     ws         = require('../util/websocket'),
     Deferrable = require('../mixins/deferrable'),
     Transport  = require('./transport');
 
-var WebSocket = assign(Class(Transport, {
+var WebSocket = Object.assign(Class(Transport, {
   UNCONNECTED:  1,
   CONNECTING:   2,
   CONNECTED:    3,
@@ -27,7 +24,7 @@ var WebSocket = assign(Class(Transport, {
 
   request: function(messages) {
     this._pending = this._pending || new Set();
-    for (var i = 0, n = messages.length; i < n; i++) this._pending.add(messages[i]);
+    for (let message of messages) this._pending.add(message);
 
     var self = this;
 
@@ -77,7 +74,7 @@ var WebSocket = assign(Class(Transport, {
       delete self._socket;
       self._state = self.UNCONNECTED;
 
-      var pending = self._pending ? self._pending.toArray() : [];
+      var pending = self._pending ? [...self._pending] : [];
       delete self._pending;
 
       if (wasConnected || self._everConnected) {
@@ -96,9 +93,9 @@ var WebSocket = assign(Class(Transport, {
 
       replies = [].concat(replies);
 
-      for (var i = 0, n = replies.length; i < n; i++) {
-        if (replies[i].successful === undefined) continue;
-        self._pending.remove(replies[i]);
+      for (let reply of replies) {
+        if (reply.successful === undefined) continue;
+        self._pending.remove(reply);
       }
       self._receive(replies);
     };
@@ -133,13 +130,16 @@ var WebSocket = assign(Class(Transport, {
   },
 
   create: function(dispatcher, endpoint) {
-    var sockets = dispatcher.transports.websocket = dispatcher.transports.websocket || {};
-    sockets[endpoint.href] = sockets[endpoint.href] || new this(dispatcher, endpoint);
-    return sockets[endpoint.href];
+    var transports = dispatcher.transports,
+        sockets    = transports.websocket = transports.websocket || new Map();
+
+    if (!sockets.has(endpoint.href)) sockets.set(endpoint.href, new this(dispatcher, endpoint));
+
+    return sockets.get(endpoint.href);
   },
 
   getSocketUrl: function(endpoint) {
-    endpoint = copyObject(endpoint);
+    endpoint = URI.clone(endpoint);
     endpoint.protocol = this.PROTOCOLS[endpoint.protocol];
     return URI.stringify(endpoint);
   },
@@ -149,12 +149,13 @@ var WebSocket = assign(Class(Transport, {
   }
 });
 
-assign(WebSocket.prototype, Deferrable);
+Object.assign(WebSocket.prototype, Deferrable);
 
 if (browser.Event && global.onbeforeunload !== undefined) {
   browser.Event.on(global, 'beforeunload', function() {
-    if (WebSocket._unloaded === undefined)
+    if (WebSocket._unloaded === undefined) {
       WebSocket._unloaded = true;
+    }
   });
 }
 

@@ -1,11 +1,10 @@
 var jstest = require("jstest").Test
 
-var Publisher = require("../../src/mixins/publisher"),
-    assign    = require("../../src/util/assign")
+var Publisher = require("../../src/mixins/publisher")
 
 jstest.describe("Publisher", function() { with(this) {
   before(function() { with(this) {
-    this.publisher = assign({}, Publisher)
+    this.publisher = Object.assign({}, Publisher)
   }})
 
   describe("with subscribers that remove themselves", function() { with(this) {

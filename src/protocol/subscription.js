@@ -1,7 +1,6 @@
 'use strict';
 
 var Class      = require('../util/class'),
-    assign     = require('../util/assign'),
     Deferrable = require('../mixins/deferrable');
 
 var Subscription = Class({
@@ -21,11 +20,12 @@ var Subscription = Class({
   apply: function(context, args) {
     var message = args[0];
 
-    if (this._callback)
+    if (this._callback) {
       this._callback.call(this._context, message.data);
-
-    if (this._withChannel)
+    }
+    if (this._withChannel) {
       this._withChannel[0].call(this._withChannel[1], message.channel, message.data);
+    }
   },
 
   cancel: function() {
@@ -39,6 +39,6 @@ var Subscription = Class({
   }
 });
 
-assign(Subscription.prototype, Deferrable);
+Object.assign(Subscription.prototype, Deferrable);
 
 module.exports = Subscription;

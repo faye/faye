@@ -1,27 +1,30 @@
 'use strict';
 
-var Promise   = require('../util/promise');
-
 module.exports = {
   then: function(callback, errback) {
     var self = this;
-    if (!this._promise)
+
+    if (!this._promise) {
       this._promise = new Promise(function(resolve, reject) {
         self._resolve = resolve;
         self._reject  = reject;
       });
+    }
 
-    if (arguments.length === 0)
+    if (arguments.length === 0) {
       return this._promise;
-    else
+    } else {
       return this._promise.then(callback, errback);
+    }
   },
 
   callback: function(callback, context) {
+    if (!callback) return;
     return this.then(function(value) { callback.call(context, value) });
   },
 
   errback: function(callback, context) {
+    if (!callback) return;
     return this.then(null, function(reason) { callback.call(context, reason) });
   },
 
@@ -38,11 +41,12 @@ module.exports = {
 
     this.then();
 
-    if (status === 'succeeded')
+    if (status === 'succeeded') {
       this._resolve(value);
-    else if (status === 'failed')
+    } else if (status === 'failed') {
       this._reject(value);
-    else
+    } else {
       delete this._promise;
+    }
   }
 };

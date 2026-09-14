@@ -12,8 +12,9 @@ module.exports = Class({
 
   send: function(message) {
     this._server.pipeThroughExtensions('outgoing', message, this._request, function(pipedMessage) {
-      if (this._socket)
+      if (this._socket) {
         this._socket.send(toJSON([pipedMessage]));
+      }
     }, this);
   },
 

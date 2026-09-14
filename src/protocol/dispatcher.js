@@ -3,7 +3,6 @@
 var Class     = require('../util/class'),
     URI       = require('../util/uri'),
     cookies   = require('../util/cookies'),
-    assign    = require('../util/assign'),
     Logging   = require('../mixins/logging'),
     Publisher = require('../mixins/publisher'),
     Transport = require('../transport'),
@@ -23,7 +22,7 @@ var Dispatcher = Class({ className: 'Dispatcher',
 
     this.cookies      = cookies.CookieJar && new cookies.CookieJar();
     this._disabled    = [];
-    this._envelopes   = {};
+    this._envelopes   = new Map();
     this.headers      = {};
     this.retry        = options.retry || this.DEFAULT_RETRY;
     this._scheduler   = options.scheduler || Scheduler;
@@ -37,15 +36,15 @@ var Dispatcher = Class({ className: 'Dispatcher',
     var exts = options.websocketExtensions;
     if (exts) {
       exts = [].concat(exts);
-      for (var i = 0, n = exts.length; i < n; i++)
-        this.addWebsocketExtension(exts[i]);
+      for (let ext of exts) this.addWebsocketExtension(ext);
     }
 
     this.tls = options.tls || {};
     this.tls.ca = this.tls.ca || options.ca;
 
-    for (var type in this._alternates)
-      this._alternates[type] = URI.parse(this._alternates[type]);
+    for (let [type, alt] of Object.entries(this._alternates)) {
+      this._alternates[type] = URI.parse(alt);
+    }
 
     this.maxRequestSize = this.MAX_REQUEST_SIZE;
   },
@@ -95,12 +94,13 @@ var Dispatcher = Class({ className: 'Dispatcher',
     var id       = message.id,
         attempts = options.attempts,
         deadline = options.deadline && new Date().getTime() + (options.deadline * 1000),
-        envelope = this._envelopes[id],
+        envelope = this._envelopes.get(id),
         scheduler;
 
     if (!envelope) {
       scheduler = new this._scheduler(message, { timeout: timeout, interval: this.retry, attempts: attempts, deadline: deadline });
-      envelope  = this._envelopes[id] = { message: message, scheduler: scheduler };
+      envelope = { message: message, scheduler: scheduler };
+      this._envelopes.set(id, envelope);
     }
 
     this._sendEnvelope(envelope);
@@ -116,7 +116,7 @@ var Dispatcher = Class({ className: 'Dispatcher',
 
     if (!scheduler.isDeliverable()) {
       scheduler.abort();
-      delete this._envelopes[message.id];
+      this._envelopes.delete(message.id);
       return;
     }
 
@@ -129,11 +129,11 @@ var Dispatcher = Class({ className: 'Dispatcher',
   },
 
   handleResponse: function(reply) {
-    var envelope = this._envelopes[reply.id];
+    var envelope = this._envelopes.get(reply.id);
 
     if (reply.successful !== undefined && envelope) {
       envelope.scheduler.succeed();
-      delete this._envelopes[reply.id];
+      this._envelopes.delete(reply.id);
       global.clearTimeout(envelope.timer);
     }
 
@@ -145,7 +145,7 @@ var Dispatcher = Class({ className: 'Dispatcher',
   },
 
   handleError: function(message, immediate) {
-    var envelope = this._envelopes[message.id],
+    var envelope = this._envelopes.get(message.id),
         request  = envelope && envelope.request,
         self     = this;
 
@@ -180,7 +180,7 @@ Dispatcher.create = function(client, endpoint, options) {
   return new Dispatcher(client, endpoint, options);
 };
 
-assign(Dispatcher.prototype, Publisher);
-assign(Dispatcher.prototype, Logging);
+Object.assign(Dispatcher.prototype, Publisher);
+Object.assign(Dispatcher.prototype, Logging);
 
 module.exports = Dispatcher;

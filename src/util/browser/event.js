@@ -6,10 +6,11 @@ var Event = {
   on: function(element, eventName, callback, context) {
     var wrapped = function() { callback.call(context) };
 
-    if (element.addEventListener)
+    if (element.addEventListener) {
       element.addEventListener(eventName, wrapped, false);
-    else
+    } else {
       element.attachEvent('on' + eventName, wrapped);
+    }
 
     this._registry.push({
       _element:   element,
@@ -31,10 +32,11 @@ var Event = {
           (context    && context    !== register._context))
         continue;
 
-      if (register._element.removeEventListener)
+      if (register._element.removeEventListener) {
         register._element.removeEventListener(register._type, register._handler, false);
-      else
+      } else {
         register._element.detachEvent('on' + register._type, register._handler);
+      }
 
       this._registry.splice(i,1);
       register = null;

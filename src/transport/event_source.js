@@ -2,20 +2,18 @@
 
 var Class      = require('../util/class'),
     URI        = require('../util/uri'),
-    copyObject = require('../util/copy_object'),
-    assign     = require('../util/assign'),
     Deferrable = require('../mixins/deferrable'),
     Transport  = require('./transport'),
     XHR        = require('./xhr');
 
-var EventSource = assign(Class(Transport, {
+var EventSource = Object.assign(Class(Transport, {
   initialize: function(dispatcher, endpoint) {
     Transport.prototype.initialize.call(this, dispatcher, endpoint);
     if (!global.EventSource) return this.setDeferredStatus('failed');
 
     this._xhr = new XHR(dispatcher, endpoint);
 
-    endpoint = copyObject(endpoint);
+    endpoint = URI.clone(endpoint);
     endpoint.pathname += '/' + dispatcher.clientId;
 
     var socket = new global.EventSource(URI.stringify(endpoint)),
@@ -39,10 +37,11 @@ var EventSource = assign(Class(Transport, {
       var replies;
       try { replies = JSON.parse(event.data) } catch (error) {}
 
-      if (replies)
+      if (replies) {
         self._receive(replies);
-      else
+      } else {
         self._handleError([]);
+      }
     };
 
     this._socket = socket;
@@ -80,18 +79,19 @@ var EventSource = assign(Class(Transport, {
   },
 
   create: function(dispatcher, endpoint) {
-    var sockets = dispatcher.transports.eventsource = dispatcher.transports.eventsource || {},
-        id      = dispatcher.clientId;
+    var transports = dispatcher.transports,
+        sockets    = transports.eventsource = transports.eventsource || new Map(),
+        id         = dispatcher.clientId;
 
-    var url = copyObject(endpoint);
+    var url = URI.clone(endpoint);
     url.pathname += '/' + (id || '');
     url = URI.stringify(url);
 
-    sockets[url] = sockets[url] || new this(dispatcher, endpoint);
-    return sockets[url];
+    if (!sockets.has(url)) sockets.set(url, new this(dispatcher, endpoint));
+    return sockets.get(url);
   }
 });
 
-assign(EventSource.prototype, Deferrable);
+Object.assign(EventSource.prototype, Deferrable);
 
 module.exports = EventSource;

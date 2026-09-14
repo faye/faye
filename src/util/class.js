@@ -1,7 +1,5 @@
 'use strict';
 
-var assign = require('./assign');
-
 module.exports = function(parent, methods) {
   if (typeof parent !== 'function') {
     methods = parent;
@@ -17,7 +15,7 @@ module.exports = function(parent, methods) {
   bridge.prototype = parent.prototype;
 
   klass.prototype = new bridge();
-  assign(klass.prototype, methods);
+  Object.assign(klass.prototype, methods);
 
   return klass;
 };

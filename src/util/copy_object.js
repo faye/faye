@@ -1,7 +1,9 @@
 'use strict';
 
 var copyObject = function(object) {
-  var clone, i, key;
+  var clone, i;
+  if (!object) return object;
+
   if (object instanceof Array) {
     clone = [];
     i = object.length;
@@ -9,7 +11,9 @@ var copyObject = function(object) {
     return clone;
   } else if (typeof object === 'object') {
     clone = (object === null) ? null : {};
-    for (key in object) clone[key] = copyObject(object[key]);
+    for (let [key, value] of Object.entries(object)) {
+      clone[key] = copyObject(value);
+    }
     return clone;
   } else {
     return object;

@@ -3,11 +3,10 @@
 var Class     = require('../util/class'),
     URI       = require('../util/uri'),
     browser   = require('../util/browser'),
-    assign    = require('../util/assign'),
     toJSON    = require('../util/to_json'),
     Transport = require('./transport');
 
-var XHR = assign(Class(Transport, {
+var XHR = Object.assign(Class(Transport, {
   encode: function(messages) {
     return toJSON(messages);
   },
@@ -32,14 +31,14 @@ var XHR = assign(Class(Transport, {
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
     var headers = this._dispatcher.headers;
-    for (var key in headers) {
-      if (!headers.hasOwnProperty(key)) continue;
-      xhr.setRequestHeader(key, headers[key]);
+    for (let [key, value] of Object.entries(headers)) {
+      xhr.setRequestHeader(key, value);
     }
 
     var abort = function() { xhr.abort() };
-    if (global.onbeforeunload !== undefined)
+    if (global.onbeforeunload !== undefined) {
       browser.Event.on(global, 'beforeunload', abort);
+    }
 
     xhr.onreadystatechange = function() {
       if (!xhr || xhr.readyState !== 4) return;
@@ -49,8 +48,9 @@ var XHR = assign(Class(Transport, {
           text       = xhr.responseText,
           successful = (status >= 200 && status < 300) || status === 304 || status === 1223;
 
-      if (global.onbeforeunload !== undefined)
+      if (global.onbeforeunload !== undefined) {
         browser.Event.detach(global, 'beforeunload', abort);
+      }
 
       xhr.onreadystatechange = function() {};
       xhr = null;
@@ -61,10 +61,11 @@ var XHR = assign(Class(Transport, {
         replies = JSON.parse(text);
       } catch (error) {}
 
-      if (replies)
+      if (replies) {
         self._receive(replies);
-      else
+      } else {
         self._handleError(messages);
+      }
     };
 
     xhr.send(this.encode(messages));

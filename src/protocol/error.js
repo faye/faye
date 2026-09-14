@@ -45,11 +45,10 @@ var errors = {
   serverError:      [500, 'Internal server error']
 };
 
-for (var name in errors)
-  (function(name) {
-    Error[name] = function() {
-      return new Error(errors[name][0], arguments, errors[name][1]).toString();
-    };
-  })(name);
+for (let [name, [status, msg]] of Object.entries(errors)) {
+  Error[name] = function() {
+    return new Error(status, arguments, msg).toString();
+  };
+}
 
 module.exports = Error;
