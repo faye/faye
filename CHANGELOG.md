@@ -1,3 +1,13 @@
+### 1.4.2 / 2026-09-14
+
+- Mitigate denial of service and potential message stealing attack against the
+  Node server
+- Use the native `Promise` implementation instead of a shim
+- Use the native `Buffer` class instead of the `safe-buffer` module
+- Replace use of the `url` and `querystring` modules, or our own parse with the
+  `URL` and `URLSearchParams` classes
+- Other JS modernisation and hygiene changes
+
 ### 1.4.1 / 2025-06-17
 
 - Remove binding to the deprecated `unload` event
