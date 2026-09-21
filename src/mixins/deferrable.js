@@ -9,6 +9,11 @@ module.exports = {
         self._resolve = resolve;
         self._reject  = reject;
       });
+
+      // Deferrables are consumed through callback()/errback(), so a deferrable that fails
+      // with nobody listening must not reach the platform as an unhandled rejection. This
+      // handler does not stop any other one from observing the rejection.
+      this._promise.catch(function() {});
     }
 
     if (arguments.length === 0) {
@@ -20,7 +25,9 @@ module.exports = {
 
   callback: function(callback, context) {
     if (!callback) return;
-    return this.then(function(value) { callback.call(context, value) });
+    // the rejection handler keeps the derived promise from becoming an unhandled rejection
+    // of its own when the deferrable fails
+    return this.then(function(value) { callback.call(context, value) }, function() {});
   },
 
   errback: function(callback, context) {
