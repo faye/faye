@@ -3,6 +3,7 @@
 module.exports = {
   then: function(callback, errback) {
     var self = this;
+    var noop = function() {};
 
     if (!this._promise) {
       this._promise = new Promise(function(resolve, reject) {
@@ -11,21 +12,20 @@ module.exports = {
       });
     }
 
-    if (arguments.length === 0) {
-      return this._promise;
-    } else {
-      return this._promise.then(callback, errback);
-    }
+    return this._promise.then(
+      callback || noop,
+      errback || noop
+    );
   },
 
   callback: function(callback, context) {
     if (!callback) return;
-    return this.then(function(value) { callback.call(context, value) });
+    this.then(function(value) { callback.call(context, value) });
   },
 
   errback: function(callback, context) {
     if (!callback) return;
-    return this.then(null, function(reason) { callback.call(context, reason) });
+    this.then(null, function(reason) { callback.call(context, reason) });
   },
 
   timeout: function(seconds, message) {
