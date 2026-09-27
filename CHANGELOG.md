@@ -1,3 +1,7 @@
+### 1.4.3 / 2026-09-27
+
+- Prevent 'unhandled rejection' errors when a transport fails to connect
+
 ### 1.4.2 / 2026-09-14
 
 - Mitigate denial of service and potential message stealing attack against the

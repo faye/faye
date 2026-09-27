@@ -1,5 +1,5 @@
 module.exports = {
-  VERSION:          '1.4.2',
+  VERSION:          '1.4.3',
 
   BAYEUX_VERSION:   '1.0',
   ID_LENGTH:        160,
