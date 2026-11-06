@@ -135,6 +135,65 @@ describe Faye::Transport do
       end
     end
 
+    describe "for HTTP batches" do
+      before do
+        @transport = Faye::Transport::Http.new(dispatcher, dispatcher.endpoint)
+      end
+
+      it "does not request or cancel a scheduled publish when flushing an empty outbox" do
+        @transport.should_not_receive(:request)
+        @transport.should_not_receive(:remove_timeout)
+        @transport.send(:flush)
+      end
+
+      [0, 1].each do |excess|
+        it "schedules a sole message #{excess == 0 ? 'at' : 'above'} the size limit without an empty request" do
+          message = { "channel" => "/test", "data" => "payload" }
+          size = @transport.encode([message]).size
+          dispatcher.stub(:max_request_size).and_return(size - excess)
+          requests = []
+          @transport.stub(:request) { |messages| requests << messages; :request }
+
+          promise = send_message(message)
+          result = nil
+          promise.callback { |request| result = request }
+          requests.should == []
+          result.should be_nil
+
+          clock.tick(0.01)
+          requests.should == [[message]]
+          result.should == :request
+
+          next_message = { "id" => 2 }
+          send_message(next_message).should_not equal(promise)
+          requests.should == [[message]]
+          clock.tick(0.01)
+          requests.should == [[message], [next_message]]
+        end
+      end
+
+      it "flushes an ordinary prefix and schedules the oversized message in payload order" do
+        connect = { "channel" => "/meta/connect" }
+        ordinary = { "channel" => "/test", "data" => "small" }
+        oversized = { "channel" => "/test", "data" => "x" * 2048 }
+        requests = []
+        @transport.stub(:request) { |messages| requests << messages }
+
+        send_message(connect)
+        send_message(ordinary)
+        requests.should == []
+        send_message(oversized)
+        requests.should == [[connect, ordinary]]
+        connect["advice"].should == { "timeout" => 0 }
+
+        clock.tick(0.01)
+        requests.should == [[connect, ordinary], [oversized]]
+        oversized.should == { "channel" => "/test", "data" => "x" * 2048 }
+        clock.tick(0.01)
+        requests.size.should == 2
+      end
+    end
+
     describe "for non-batching transports" do
       before do
         transport_klass = Class.new(Faye::Transport) do

@@ -73,6 +73,8 @@ module Faye
     end
 
     def flush
+      return if @outbox.empty?
+
       remove_timeout(:publish)
 
       if @outbox.size > 1 and @connection_message
