@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'compass', '~> 0.11.0'
   s.add_development_dependency 'haml', '~> 3.1.0'
   s.add_development_dependency 'permessage_deflate', '>= 0.1.0'
-  s.add_development_dependency 'puma', '>= 2.0.0'
+  s.add_development_dependency 'puma', '>= 2.0.0', '< 6.0.0'
   s.add_development_dependency 'rack-proxy', '~> 0.4.0'
   s.add_development_dependency 'rack-test'
   s.add_development_dependency 'rake'
@@ -41,6 +41,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec-eventmachine', '>= 0.2.0'
   s.add_development_dependency 'sass', '~> 3.2.0'
   s.add_development_dependency 'sinatra'
+  s.add_development_dependency 'sorted_set'
   s.add_development_dependency 'staticmatic'
 
   jruby = RUBY_PLATFORM =~ /java/
