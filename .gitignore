@@ -1,8 +1,10 @@
 *.gem
-build
 Gemfile.lock
+build
 lib/client
 node_modules
 package-lock.json
-spec/*_bundle.js
+site/**/*.html
+site/site/stylesheets/screen.css
 spec/*.map
+spec/*_bundle.js
