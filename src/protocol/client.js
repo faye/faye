@@ -32,9 +32,8 @@ var Client = Class({ className: 'Client',
 
   initialize: function(endpoint, options) {
     this.info('New client created for ?', endpoint);
-    options = options || {};
 
-    validateOptions(options, ['interval', 'timeout', 'endpoints', 'proxy', 'retry', 'scheduler', 'websocketExtensions', 'tls', 'ca']);
+    options = validateOptions(options, ['interval', 'timeout', 'endpoints', 'proxy', 'retry', 'scheduler', 'websocketExtensions', 'tls', 'ca']);
 
     this._channels   = new Channel.Set();
     this._dispatcher = Dispatcher.create(this, endpoint || this.DEFAULT_ENDPOINT, options);
@@ -294,7 +293,7 @@ var Client = Class({ className: 'Client',
   //                * id                                 * error
   //                * ext                                * ext
   publish: function(channel, data, options) {
-    validateOptions(options || {}, ['attempts', 'deadline']);
+    options = validateOptions(options, ['attempts', 'deadline']);
     var publication = new Publication();
 
     this.connect(function() {

@@ -3,9 +3,13 @@
 var array = require('./array');
 
 module.exports = function(options, validKeys) {
+  options = options || {};
+
   for (let key of Object.keys(options)) {
     if (array.indexOf(validKeys, key) < 0) {
       throw new Error('Unrecognized option: ' + key);
     }
   }
+
+  return options;
 };

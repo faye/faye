@@ -26,7 +26,7 @@ module Faye
       @app     = app if app.respond_to?(:call)
       @options = [app, options].grep(Hash).first || {}
 
-      ::WebSocket::Driver.validate_options(@options, [:engine, :mount, :ping, :timeout, :extensions, :websocket_extensions])
+      @options = Faye::WebSocket.validate_options(@options, [:engine, :mount, :max_length, :ping, :timeout, :extensions, :websocket_extensions])
 
       @endpoint    = @options[:mount] || DEFAULT_ENDPOINT
       @extensions  = []

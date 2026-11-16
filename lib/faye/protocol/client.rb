@@ -21,7 +21,7 @@ module Faye
     def_delegators :@dispatcher, :add_websocket_extension, :disable, :set_header
 
     def initialize(endpoint = nil, options = {})
-      ::WebSocket::Driver.validate_options(options, [:interval, :timeout, :endpoints, :proxy, :retry, :scheduler, :websocket_extensions, :tls])
+      options = Faye::WebSocket.validate_options(options, [:interval, :timeout, :endpoints, :proxy, :retry, :scheduler, :websocket_extensions, :tls])
       super()
       info('New client created for ?', endpoint)
 
@@ -258,7 +258,7 @@ module Faye
     #                * id                                 * error
     #                * ext                                * ext
     def publish(channel, data, options = {})
-      ::WebSocket::Driver.validate_options(options, [:attempts, :deadline])
+      options = Faye::WebSocket.validate_options(options, [:attempts, :deadline])
 
       publication = Publication.new
       connect {

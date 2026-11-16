@@ -25,8 +25,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
   VALID_JSONP_CALLBACK: /^[a-z_\$][a-z0-9_\$]*(\.[a-z_\$][a-z0-9_\$]*)*$/i,
 
   initialize: function(options) {
-    this._options = options || {};
-    validateOptions(this._options, ['engine', 'mount', 'ping', 'timeout', 'extensions', 'websocketExtensions']);
+    this._options = validateOptions(options, ['engine', 'mount', 'maxLength', 'ping', 'timeout', 'extensions', 'websocketExtensions']);
 
     this._extensions = [];
     this._endpoint   = this._options.mount || this.DEFAULT_ENDPOINT;
