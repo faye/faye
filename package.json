@@ -12,7 +12,7 @@
                     "http"
           ],
           "license": "Apache-2.0",
-          "version": "1.4.3",
+          "version": "1.5.0",
           "engines": {
                     "node": ">=14"
           },
@@ -20,7 +20,7 @@
           "browser": "src/faye_browser",
           "dependencies": {
                     "csprng": "*",
-                    "faye-websocket": ">=0.9.1",
+                    "faye-websocket": ">=0.12.0",
                     "tough-cookie": "*",
                     "tunnel-agent": "*"
           },
