@@ -23,6 +23,7 @@ var Connection = Class({
     options = options || {};
     var timeout = (options.timeout !== undefined) ? options.timeout / 1000 : this._engine.timeout;
 
+    this.setDeferredStatus('succeeded', []);
     this.setDeferredStatus('unknown');
     this.callback(callback, context);
 

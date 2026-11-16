@@ -11,8 +11,10 @@ var EngineSteps = jstest.asyncSteps({
   },
 
   create_client: function(name, resume) {
-    var inboxes = this._inboxes = this._inboxes || {}
-    var clients = this._clients = this._clients || {}
+    var inboxes  = this._inboxes  = this._inboxes || {}
+    var clients  = this._clients  = this._clients || {}
+    var counters = this._counters = this._counters || {}
+
     this.engine.createClient(function(clientId) {
       clients[name] = clientId
       inboxes[name] = inboxes[name] || []
@@ -23,13 +25,22 @@ var EngineSteps = jstest.asyncSteps({
   connect: function(name, engine, resume) {
     var clientId = this._clients[name]
     var inboxes  = this._inboxes
+    var counters = this._counters
+
     engine.connect(clientId, {}, function(messages) {
+      counters[name] = (counters[name] || 0) + 1
+
       for (let message of messages) {
         delete message.id
         inboxes[name].push(message)
       }
     })
     setTimeout(resume, 10)
+  },
+
+  check_connect_completions: function(name, n, resume) {
+    this.assertEqual(n, this._counters[name])
+    resume()
   },
 
   destroy_client: function(name, resume) {
@@ -323,6 +334,22 @@ jstest.describe("Pub/sub engines", function() { with(this) {
         it("publishes a :publish event with a clientId", function() { with(this) {
           expect_event("bob", "publish", ["/messages/foo", "ok"])
           publish_by("bob", message)
+        }})
+
+        describe("concurrent connect() calls", function() { with(this) {
+          before(function() { with(this) {
+            connect("alice", engine)
+          }})
+
+          it("resolves all pending requests", function() { with(this) {
+            publish(message)
+            check_connect_completions("alice", 2)
+          }})
+
+          it("only delivers each message once", function() { with(this) {
+            publish(message)
+            expect_message("alice", [message])
+          }})
         }})
       }})
 

@@ -180,8 +180,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
         headers['Content-Length'] = Buffer.from(body, 'utf8').length.toString();
 
         this.debug('HTTP response: ?', body);
-        response.writeHead(200, headers);
-        response.end(body);
+        this._returnResponse(response, 200, headers, body);
       }, this);
     } catch (error) {
       this._returnError(response, error);
@@ -250,8 +249,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
       'Access-Control-Max-Age':           '86400'
     };
 
-    response.writeHead(200, headers);
-    response.end('');
+    this._returnResponse(response, 200, headers, '');
   },
 
   _concatStream: function(stream, callback, context) {
@@ -293,15 +291,19 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
     return string;
   },
 
+  _returnResponse: function(response, status, headers, body) {
+    if (!response || response.writableEnded) return;
+
+    response.writeHead(status, headers);
+    response.end(body);
+  },
+
   _returnError: function(response, error) {
     var message = error.message;
     if (error.stack) message += '\nBacktrace:\n' + error.stack;
     this.error(message);
 
-    if (!response) return;
-
-    response.writeHead(400, contenttypes.TYPE_TEXT);
-    response.end('Bad request');
+    this._returnResponse(response, 400, contenttypes.TYPE_TEXT, 'Bad request');
   }
 });
 
