@@ -11,14 +11,9 @@ module.exports = {
            uri.port     === location.port;
   },
 
-  parse: function(url, base) {
+  parse: function(url) {
     if (typeof url !== 'string') return url;
-
-    if (typeof location === 'undefined') {
-      return new URL(url, base);
-    } else {
-      return new URL(url, base || location.href);
-    }
+    return new URL(url);
   },
 
   stringify: function(uri) {

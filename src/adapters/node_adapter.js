@@ -96,12 +96,16 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
   },
 
   check: function(request) {
-    var path = URI.parse(request.url, this.URL_BASE).pathname;
-    return !!this._endpointRe.test(path);
+    try {
+      var path = URI.parse(this.URL_BASE + request.url).pathname;
+      return !!this._endpointRe.test(path);
+    } catch (error) {
+      return false;
+    }
   },
 
   handle: function(request, response) {
-    var requestUrl    = URI.parse(request.url, this.URL_BASE),
+    var requestUrl    = URI.parse(this.URL_BASE + request.url),
         requestMethod = request.method,
         self          = this;
 

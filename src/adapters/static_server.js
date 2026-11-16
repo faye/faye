@@ -27,7 +27,7 @@ var StaticServer = Class({
   },
 
   call: function(request, response) {
-    var pathname = URI.parse(request.url, this.URL_BASE).pathname,
+    var pathname = URI.parse(this.URL_BASE + request.url).pathname,
         filename = path.basename(pathname);
 
     filename = this._pathMap.get(filename) || filename;
