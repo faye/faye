@@ -13,7 +13,7 @@ client_bundles := $(bundles:%=$(client_dir)/%)
 top_files      := CHANGELOG.md LICENSE.md README.md package.json src
 top_level      := $(top_files:%=build/%)
 
-.PHONY: all gem clean
+.PHONY: all gem clean test-js test-rb
 
 all: $(client_bundles) $(top_level)
 
@@ -37,3 +37,9 @@ build/%: % build
 
 build:
 	mkdir -p $@
+
+test-js: all
+	npm test
+
+test-rb: all
+	RUBYOPT='-r ./spec/file_exists' bundle exec rspec
