@@ -18,9 +18,10 @@ var constants       = require('../util/constants'),
     StaticServer    = require('./static_server');
 
 var NodeAdapter = Class({ className: 'NodeAdapter',
-  URL_BASE:         'http://localhost',
-  DEFAULT_ENDPOINT: '/bayeux',
-  SCRIPT_PATH:      'faye-browser-min.js',
+  URL_BASE:           'http://localhost',
+  DEFAULT_ENDPOINT:   '/bayeux',
+  SCRIPT_PATH:        'faye-browser-min.js',
+  DEFAULT_MAX_LENGTH: 0x3ffffff, // 64 MB
 
   VALID_JSONP_CALLBACK: /^[a-z_\$][a-z0-9_\$]*(\.[a-z_\$][a-z0-9_\$]*)*$/i,
 
@@ -132,7 +133,10 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
     }
 
     if (requestMethod === 'POST') {
-      return this._concatStream(request, function(data) {
+      return this._concatStream(request, function(error, data) {
+        if (error)
+          return this._returnResponse(response, 413, contenttypes.TYPE_TEXT, error.message);
+
         var type   = (request.headers['content-type'] || '').split(';')[0],
             params = (type === 'application/json')
                    ? new URLSearchParams({ message: data })
@@ -195,8 +199,12 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
     return json.replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
   },
 
+  _getMaxLength: function() {
+    return this._options.maxLength || this.DEFAULT_MAX_LENGTH;
+  },
+
   handleUpgrade: function(request, socket, head) {
-    var options  = { extensions: this._extensions, ping: this._options.ping },
+    var options  = { maxLength: this._getMaxLength(), extensions: this._extensions, ping: this._options.ping },
         ws       = new WebSocket(request, socket, head, [], options),
         clientId = null,
         self     = this;
@@ -256,16 +264,31 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
     this._returnResponse(response, 200, headers, '');
   },
 
-  _concatStream: function(stream, callback, context) {
-    var chunks = [],
-        length = 0;
+  _concatStream: function(request, callback, context) {
+    var chunks    = [],
+        length    = 0,
+        maxLength = this._getMaxLength(),
+        failed    = false;
 
-    stream.on('data', function(chunk) {
+    var contentLength = parseInt(request.headers['content-length'] || '0', 10);
+    if (contentLength > maxLength)
+      return callback.call(context, new Error('Content too large'));
+
+    request.on('data', function(chunk) {
+      if (failed) return;
+
       chunks.push(chunk);
       length += chunk.length;
+
+      if (length > maxLength) {
+        failed = true;
+        callback.call(context, new Error('Content too large'));
+      }
     });
 
-    stream.on('end', function() {
+    request.on('end', function() {
+      if (failed) return;
+
       var buffer = Buffer.alloc(length),
           offset = 0;
 
@@ -273,7 +296,7 @@ var NodeAdapter = Class({ className: 'NodeAdapter',
         chunk.copy(buffer, offset);
         offset += chunk.length;
       }
-      callback.call(context, buffer.toString('utf8'));
+      callback.call(context, null, buffer.toString('utf8'));
     });
   },
 

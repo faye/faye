@@ -8,8 +8,9 @@ module Faye
 
     ASYNC_RESPONSE = [-1, {}, []].freeze
 
-    DEFAULT_ENDPOINT  = '/bayeux'
-    SCRIPT_PATH       = 'faye-browser-min.js'
+    DEFAULT_ENDPOINT   = '/bayeux'
+    SCRIPT_PATH        = 'faye-browser-min.js'
+    DEFAULT_MAX_LENGTH = 0x3ffffff # 64 MB
 
     TYPE_JSON   = { 'Content-Type' => 'application/json; charset=utf-8' }
     TYPE_SCRIPT = { 'Content-Type' => 'text/javascript; charset=utf-8' }
@@ -191,9 +192,10 @@ module Faye
     end
 
     def handle_websocket(request)
-      options   = { :extensions => @extensions, :ping => @options[:ping] }
-      ws        = Faye::WebSocket.new(request.env, [], options)
-      client_id = nil
+      max_length = @options[:max_length] || DEFAULT_MAX_LENGTH
+      options    = { :max_length => max_length, :extensions => @extensions, :ping => @options[:ping] }
+      ws         = Faye::WebSocket.new(request.env, [], options)
+      client_id  = nil
 
       ws.onmessage = lambda do |event|
         begin
