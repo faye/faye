@@ -1,6 +1,17 @@
+### 1.5.0 / 2026-11-17
+
+- Fix bug where a client making concurrent `/meta/connect` calls would result in
+  requests hanging
+- Fix exceptions thrown by the request handler on invalid request paths
+- Fix a memory leak in the static file server
+- Enforce a maximum length for POST request bodies and WebSocket messages; this
+  can be configued via the `maxLength` option
+
+
 ### 1.4.3 / 2026-09-27
 
 - Prevent 'unhandled rejection' errors when a transport fails to connect
+
 
 ### 1.4.2 / 2026-09-14
 
@@ -12,9 +23,11 @@
   `URL` and `URLSearchParams` classes
 - Other JS modernisation and hygiene changes
 
+
 ### 1.4.1 / 2025-06-17
 
 - Remove binding to the deprecated `unload` event
+
 
 ### 1.4.0 / 2020-07-31
 
@@ -24,6 +37,7 @@
   configuring TLS verification
 - Officially support the `tls` option in the Node.js client, whose contents are
   forward to the `https` and `tls` modules as appropriate
+
 
 ### 1.3.0 / 2020-06-08
 
