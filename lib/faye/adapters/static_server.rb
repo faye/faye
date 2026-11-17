@@ -6,6 +6,8 @@ module Faye
       @path_regex = path_regex
       @path_map   = {}
       @index      = {}
+
+      fill_cache
     end
 
     def map(request_path, filename)
@@ -20,19 +22,11 @@ module Faye
       filename = File.basename(env['PATH_INFO'])
       filename = @path_map[filename] || filename
 
-      cache = @index[filename] ||= {}
-      fullpath = File.join(@directory, filename)
+      return [404, {}, []] unless @index.has_key?(filename)
 
-      begin
-        cache[:content] ||= File.read(fullpath)
-        cache[:digest]  ||= Digest::SHA1.hexdigest(cache[:content])
-        cache[:mtime]   ||= File.mtime(fullpath)
-      rescue
-        return [404, {}, []]
-      end
-
-      type = /\.js$/ =~ fullpath ? RackAdapter::TYPE_SCRIPT : RackAdapter::TYPE_JSON
-      ims  = env['HTTP_IF_MODIFIED_SINCE']
+      cache = @index[filename]
+      type  = /\.js$/ =~ filename ? RackAdapter::TYPE_SCRIPT : RackAdapter::TYPE_JSON
+      ims   = env['HTTP_IF_MODIFIED_SINCE']
 
       no_content_length = env[RackAdapter::HTTP_X_NO_CONTENT_LENGTH]
 
@@ -49,6 +43,25 @@ module Faye
         headers['Content-Length'] = cache[:content].bytesize.to_s unless no_content_length
         headers.update(type)
         [200, headers, [cache[:content]]]
+      end
+    end
+
+  private
+
+    def fill_cache
+      entries = Dir.entries(@directory) - ['.', '..']
+
+      entries.each do |entry|
+        fullpath = File.join(@directory, entry)
+        content  = File.read(fullpath)
+        digest   = Digest::SHA1.hexdigest(content)
+        mtime    = File.mtime(fullpath)
+
+        @index[entry] = {
+          :content => content,
+          :digest  => digest,
+          :mtime   => mtime
+        }
       end
     end
 

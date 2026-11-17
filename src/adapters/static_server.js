@@ -16,6 +16,10 @@ var StaticServer = Class({
     this._pathRegex = pathRegex;
     this._pathMap   = new Map();
     this._index     = new Map();
+
+    try {
+      this._fillCache();
+    } catch (error) {}
   },
 
   map: function(requestPath, filename) {
@@ -31,22 +35,15 @@ var StaticServer = Class({
         filename = path.basename(pathname);
 
     filename = this._pathMap.get(filename) || filename;
-    this._index.set(filename, this._index.get(filename) || {});
 
-    var cache    = this._index.get(filename),
-        fullpath = path.join(this._directory, filename);
-
-    try {
-      cache.content = cache.content || fs.readFileSync(fullpath);
-      cache.digest  = cache.digest  || crypto.createHash('sha1').update(cache.content).digest('hex');
-      cache.mtime   = cache.mtime   || fs.statSync(fullpath).mtime;
-    } catch (error) {
+    if (!this._index.has(filename)) {
       response.writeHead(404, {});
       return response.end();
     }
 
-    var type = /\.js$/.test(pathname) ? 'TYPE_SCRIPT' : 'TYPE_JSON',
-        ims  = request.headers['if-modified-since'];
+    var cache = this._index.get(filename),
+        type  = /\.js$/.test(filename) ? 'TYPE_SCRIPT' : 'TYPE_JSON',
+        ims   = request.headers['if-modified-since'];
 
     var headers = {
       'ETag':          cache.digest,
@@ -66,6 +63,23 @@ var StaticServer = Class({
       Object.assign(headers, contenttypes[type]);
       response.writeHead(200, headers);
       response.end(cache.content);
+    }
+  },
+
+  _fillCache: function() {
+    var entries = fs.readdirSync(this._directory);
+
+    for (let entry of entries) {
+      var fullpath = path.join(this._directory, entry);
+      var content  = fs.readFileSync(fullpath);
+      var digest   = crypto.createHash('sha1').update(content).digest('hex');
+      var mtime    = fs.statSync(fullpath).mtime;
+
+      this._index.set(entry, {
+        content: content,
+        digest:  digest,
+        mtime:   mtime
+      });
     }
   }
 });
