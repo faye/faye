@@ -1,3 +1,8 @@
+### 1.5.1 / 2026-11-17
+
+- Fix a bug when parsing relative URLs in the browser
+
+
 ### 1.5.0 / 2026-11-17
 
 - Fix bug where a client making concurrent `/meta/connect` calls would result in
