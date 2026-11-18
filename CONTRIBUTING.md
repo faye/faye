@@ -9,7 +9,7 @@ To get the code:
     git clone git://github.com/faye/faye.git
     cd faye
 
-## Working on the JavaScript codebase
+## Working on the JavaScript codebase
 
 To install the dependencies (you will need to do this if you need to build the
 Ruby gem as well):
@@ -31,7 +31,7 @@ To build the package that we release to npm, run:
 
     make
 
-## Working on the Ruby codebase
+## Working on the Ruby codebase
 
 To install the dependencies:
 
