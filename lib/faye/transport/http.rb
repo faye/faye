@@ -65,7 +65,7 @@ module Faye
     end
 
     def handle_response(messages, response)
-      replies = MultiJson.load(response) rescue nil
+      replies = MultiJSON.parse(response) rescue nil
       if replies
         receive(replies)
       else

@@ -11,7 +11,7 @@ describe Faye::RackAdapter do
   after { app.stop }
 
   let(:content_type) { last_response["Content-Type"] }
-  let(:json)         { MultiJson.load(body) }
+  let(:json)         { MultiJSON.parse(body) }
   let(:body)         { last_response.body }
   let(:status)       { last_response.status.to_i }
 

@@ -83,7 +83,7 @@ module Faye
 
   def self.to_json(value)
     case value
-      when Hash, Array then MultiJson.dump(value)
+      when Hash, Array then MultiJSON.generate(value)
       when String, NilClass then value.inspect
       else value.to_s
     end
