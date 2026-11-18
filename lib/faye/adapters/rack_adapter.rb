@@ -253,7 +253,7 @@ module Faye
     end
 
     def parse_json(json)
-      data = MultiJson.load(json)
+      data = MultiJSON.parse(json)
       return data if Array === data or Hash === data
       raise ArgumentError, 'JSON messages must contain an object or array'
     end
